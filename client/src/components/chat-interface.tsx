@@ -34,6 +34,7 @@ export function ChatInterface() {
   const [isTyping, setIsTyping] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [hasStarted, setHasStarted] = useState(false);
   const { toast } = useToast();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -46,6 +47,44 @@ export function ChatInterface() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (message: string) => {
+      const response = await apiRequest("POST", "/api/chat/message", {
+        sessionId,
+        message,
+      });
+      return response.json() as Promise<ChatMessageResponse>;
+    },
+    onSuccess: (data) => {
+      const assistantMessage: ChatMessage = {
+        id: Date.now(),
+        sessionId: sessionId!,
+        role: "assistant",
+        content: data.message.content,
+        metadata: {
+          hasChoices: data.message.hasChoices,
+          choices: data.message.choices,
+        },
+        createdAt: new Date(),
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+      setIsTyping(false);
+    },
+    onError: (error) => {
+      setIsTyping(false);
+      toast({
+        title: "Errore",
+        description: "Impossibile inviare il messaggio. Riprova.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleStartChat = () => {
+    if (!userName.trim()) return;
+    startChatMutation.mutate(userName);
+  };
 
   const startChatMutation = useMutation({
     mutationFn: async (name: string) => {
