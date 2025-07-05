@@ -120,6 +120,77 @@ export class GeminiService {
     }
   }
 
+  async sendMessageWithImage(imagePath: string, message?: string): Promise<ChatResponse> {
+    try {
+      // Read the image file
+      const fs = await import('fs');
+      const imageData = fs.readFileSync(imagePath);
+      const base64Image = imageData.toString('base64');
+      
+      // Get the mime type from file extension
+      const path = await import('path');
+      const ext = path.extname(imagePath).toLowerCase();
+      let mimeType = 'image/jpeg';
+      if (ext === '.png') mimeType = 'image/png';
+      if (ext === '.gif') mimeType = 'image/gif';
+      if (ext === '.webp') mimeType = 'image/webp';
+
+      // Create the content with image and optional text
+      const parts = [
+        {
+          inlineData: {
+            data: base64Image,
+            mimeType: mimeType
+          }
+        }
+      ];
+      
+      if (message) {
+        parts.push({ text: message });
+      }
+
+      // Use conversation history for context
+      const contents = this.conversationHistory.map(msg => ({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }]
+      }));
+      
+      // Add the new content with image
+      contents.push({
+        role: "user",
+        parts: parts
+      });
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+        },
+        contents: contents
+      });
+
+      const content = response.text || "Mi dispiace, non riesco ad analizzare l'immagine. Puoi riprovare?";
+      
+      // Add to conversation history
+      const userMessage = message ? `${message} [Immagine analizzata]` : "[Immagine analizzata]";
+      this.conversationHistory.push({ role: "user", content: userMessage });
+      this.conversationHistory.push({ role: "assistant", content });
+
+      // Check if the response contains multiple choice options
+      const hasChoices = this.detectMultipleChoice(content);
+      const choices = hasChoices ? this.extractChoices(content) : undefined;
+
+      return {
+        content,
+        hasChoices,
+        choices
+      };
+    } catch (error) {
+      console.error("Error sending message with image:", error);
+      throw new Error("Failed to analyze image with Bonnie");
+    }
+  }
+
   async sendMessage(message: string): Promise<ChatResponse> {
     this.conversationHistory.push({ role: "user", content: message });
 

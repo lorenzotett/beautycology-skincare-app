@@ -40,6 +40,20 @@ const upload = multer({
   }
 });
 
+const imageUpload = multer({ 
+  storage: storage_config,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo di file non supportato. Solo immagini sono ammesse.'));
+    }
+  }
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Start a new chat session
   app.post("/api/chat/start", async (req, res) => {
@@ -85,6 +99,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error starting chat:", error);
       res.status(500).json({ error: "Failed to start chat session" });
+    }
+  });
+
+  // Send a message with image to the chat
+  app.post("/api/chat/message-with-image", imageUpload.single('image'), async (req, res) => {
+    try {
+      const { sessionId, message } = req.body;
+      const imageFile = req.file;
+      
+      if (!sessionId) {
+        return res.status(400).json({ error: "Session ID is required" });
+      }
+
+      if (!imageFile) {
+        return res.status(400).json({ error: "Image file is required" });
+      }
+
+      // Verify session exists
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      // Get Gemini service for this session
+      const geminiService = geminiServices.get(sessionId);
+      if (!geminiService) {
+        return res.status(404).json({ error: "Chat service not found" });
+      }
+
+      // Store user message (include image info)
+      const userContent = message ? `${message} [Immagine caricata: ${imageFile.originalname}]` : `[Immagine caricata: ${imageFile.originalname}]`;
+      await storage.addChatMessage({
+        sessionId,
+        role: "user",
+        content: userContent,
+        metadata: {
+          hasImage: true,
+          imagePath: imageFile.path,
+          imageOriginalName: imageFile.originalname
+        },
+      });
+
+      // Send image and message to Gemini
+      const response = await geminiService.sendMessageWithImage(imageFile.path, message);
+
+      // Store assistant response
+      await storage.addChatMessage({
+        sessionId,
+        role: "assistant",
+        content: response.content,
+        metadata: {
+          hasChoices: response.hasChoices,
+          choices: response.choices,
+        },
+      });
+
+      res.json({
+        message: response,
+      });
+    } catch (error) {
+      console.error("Error sending message with image:", error);
+      res.status(500).json({ error: "Failed to send message with image" });
     }
   });
 

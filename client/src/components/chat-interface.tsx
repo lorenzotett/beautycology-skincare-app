@@ -3,10 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { MessageBubble } from "./message-bubble";
 import { TypingIndicator } from "./typing-indicator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { Send, Paperclip } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Card } from "./ui/card";
+import { ScrollArea } from "./ui/scroll-area";
+import { useToast } from "../hooks/use-toast";
+import { Camera, Upload, X } from "lucide-react";
 import { ChatMessage } from "@shared/schema";
 
 interface ChatResponse {
@@ -30,11 +32,12 @@ export function ChatInterface() {
   const [currentMessage, setCurrentMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
-  
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const { toast } = useToast();
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -52,7 +55,7 @@ export function ChatInterface() {
     onSuccess: (data) => {
       setSessionId(data.sessionId);
       setHasStarted(true);
-      
+
       // Add the initial message
       const initialMessage: ChatMessage = {
         id: Date.now(),
@@ -65,7 +68,7 @@ export function ChatInterface() {
         },
         createdAt: new Date(),
       };
-      
+
       setMessages([initialMessage]);
     },
     onError: (error) => {
@@ -77,27 +80,97 @@ export function ChatInterface() {
     },
   });
 
-  const sendMessageMutation = useMutation({
-    mutationFn: async (message: string) => {
-      if (!sessionId) throw new Error("No session");
-      
-      const response = await apiRequest("POST", "/api/chat/message", {
-        sessionId,
-        message,
-      });
-      return response.json() as Promise<ChatMessageResponse>;
-    },
-    onSuccess: (data, variables) => {
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File troppo grande",
+          description: "L'immagine deve essere inferiore a 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Formato non valido",
+          description: "Carica solo immagini (JPG, PNG, etc.)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+
+  const handleSendMessage = async () => {
+    if ((!currentMessage.trim() && !selectedImage) || !sessionId || isTyping) return;
+
+    const messageToSend = currentMessage.trim();
+    const imageToSend = selectedImage;
+
+    setCurrentMessage("");
+    setSelectedImage(null);
+    setImagePreview(null);
+    setIsTyping(true);
+
+    try {
+      let response;
+
+      if (imageToSend) {
+        // Send image with FormData
+        const formData = new FormData();
+        formData.append('sessionId', sessionId);
+        formData.append('image', imageToSend);
+        if (messageToSend) {
+          formData.append('message', messageToSend);
+        }
+
+        response = await fetch("/api/chat/message-with-image", {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        // Send text message
+        response = await fetch("/api/chat/message", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sessionId,
+            message: messageToSend,
+          }),
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json() as ChatMessageResponse;
+
       // Add user message
       const userMessage: ChatMessage = {
         id: Date.now(),
         sessionId: sessionId!,
         role: "user",
-        content: variables,
-        metadata: null,
+        content: messageToSend || (imageToSend ? "Immagine" : ""), // Show "Immagine" if only image sent
+        metadata: imageToSend ? { image: imagePreview } : null, // Store image preview for display
         createdAt: new Date(),
       };
-      
+
       // Add assistant response
       const assistantMessage: ChatMessage = {
         id: Date.now() + 1,
@@ -110,44 +183,23 @@ export function ChatInterface() {
         },
         createdAt: new Date(),
       };
-      
+
       setMessages(prev => [...prev, userMessage, assistantMessage]);
       setIsTyping(false);
-    },
-    onError: (error) => {
+    } catch (error) {
       setIsTyping(false);
       toast({
         title: "Errore",
         description: "Impossibile inviare il messaggio. Riprova.",
         variant: "destructive",
       });
-    },
-  });
-
-  const handleStartChat = () => {
-    if (!userName.trim()) {
-      toast({
-        title: "Nome richiesto",
-        description: "Inserisci il tuo nome per iniziare.",
-        variant: "destructive",
-      });
-      return;
     }
-    
-    startChatMutation.mutate(userName.trim());
   };
 
-  const handleSendMessage = () => {
-    if (!currentMessage.trim() || !sessionId) return;
-    
-    setIsTyping(true);
-    sendMessageMutation.mutate(currentMessage.trim());
-    setCurrentMessage("");
-  };
 
   const handleChoiceSelect = (choice: string) => {
     if (!sessionId) return;
-    
+
     setIsTyping(true);
     sendMessageMutation.mutate(choice);
   };
@@ -248,36 +300,73 @@ export function ChatInterface() {
             onChoiceSelect={handleChoiceSelect}
           />
         ))}
-        
+
         {isTyping && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
       <div className="bg-dark-secondary border-t border-dark-accent p-4">
-        <div className="flex space-x-3">
-          <div className="flex-1 relative">
-            <Input
-              type="text"
-              placeholder="Scrivi un messaggio..."
-              value={currentMessage}
-              onChange={(e) => setCurrentMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              disabled={sendMessageMutation.isPending}
-              className="bg-dark-accent border-gray-600 text-white placeholder-text-muted pr-12"
-            />
-            <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-muted hover:text-white transition-colors">
-              <Paperclip className="w-5 h-5" />
-            </button>
+        <div className="border-t border-dark-accent">
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="p-4 border-b border-dark-accent">
+                <div className="relative inline-block">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-32 h-32 object-cover rounded-lg border border-dark-accent"
+                  />
+                  <button
+                    onClick={removeImage}
+                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <p className="text-sm text-text-muted mt-2">
+                  Foto pronta per l'analisi AI
+                </p>
+              </div>
+            )}
+
+            {/* Message Input */}
+            <div className="flex gap-2 p-4">
+              <div className="flex gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                  disabled={isTyping}
+                />
+                <label
+                  htmlFor="image-upload"
+                  className={`p-2 rounded-lg border border-dark-accent text-text-muted hover:text-white hover:bg-dark-accent transition-colors cursor-pointer ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <Camera size={20} />
+                </label>
+              </div>
+
+              <Input
+                type="text"
+                placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi un messaggio o carica una foto..."}
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                className="flex-1 bg-dark-secondary border-dark-accent text-white placeholder:text-text-muted"
+                disabled={isTyping}
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={(!currentMessage.trim() && !selectedImage) || isTyping}
+                className="bg-assistant-msg hover:bg-assistant-msg/80 text-white"
+              >
+                Invia
+              </Button>
+            </div>
           </div>
-          <Button
-            onClick={handleSendMessage}
-            disabled={!currentMessage.trim() || sendMessageMutation.isPending}
-            className="bg-assistant-msg hover:bg-green-600 text-white px-6"
-          >
-            <Send className="w-5 h-5" />
-          </Button>
-        </div>
         <div className="mt-2 text-xs text-text-muted">
           Premi Invio per inviare • Shift + Invio per andare a capo
         </div>
