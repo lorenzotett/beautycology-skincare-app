@@ -26,7 +26,7 @@ ANALIZZA questa foto del viso e restituisci ESCLUSIVAMENTE un oggetto JSON con q
 ### ROSSORI (0-100):
 - 0-20: Pelle uniforme, tono omogeneo
 - 21-40: Leggeri rossori occasionali su guance/naso
-- 41-60: Rossori evidenti su zona T e guance
+- 41-60: Rossori evidenti su zona T e guanche
 - 61-80: Eritema diffuso, pelle reattiva
 - 81-100: Rossori severi, possibile rosacea
 
@@ -61,7 +61,7 @@ ANALIZZA questa foto del viso e restituisci ESCLUSIVAMENTE un oggetto JSON con q
 ### OLEOSITÀ (0-100):
 - 0-20: Pelle opaca, non lucida
 - 21-40: Leggera lucentezza su zona T
-- 41-60: Oleosità evidente, necessità di assorbere
+- 41-60: Oleosità evidente, necessità di assorbire
 - 61-80: Pelle molto grassa, lucida diffusa
 - 81-100: Oleosità eccessiva, aspetto "unto"
 
@@ -127,6 +127,24 @@ export class SkinAnalysisService {
     });
   }
 
+  private cleanJsonResponse(response: string): string {
+    // Remove markdown code blocks if present
+    let cleaned = response.trim();
+    
+    // Remove ```json and ``` markers
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\s*/, '');
+    }
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*/, '');
+    }
+    if (cleaned.endsWith('```')) {
+      cleaned = cleaned.replace(/\s*```$/, '');
+    }
+    
+    return cleaned.trim();
+  }
+
   async analyzeImage(imagePath: string): Promise<SkinAnalysisResult> {
     try {
       // Read the image file
@@ -158,14 +176,21 @@ export class SkinAnalysisService {
       });
 
       const content = response.text || "";
+      console.log("Raw AI response:", content);
+      
+      // Clean the response to remove markdown formatting
+      const cleanedContent = this.cleanJsonResponse(content);
+      console.log("Cleaned response:", cleanedContent);
       
       // Parse the JSON response
       try {
-        const analysisResult = JSON.parse(content);
+        const analysisResult = JSON.parse(cleanedContent);
+        console.log("Parsed analysis result:", analysisResult);
         return analysisResult as SkinAnalysisResult;
       } catch (parseError) {
         console.error("Error parsing skin analysis JSON:", parseError);
         console.error("Raw response:", content);
+        console.error("Cleaned response:", cleanedContent);
         
         // Fallback: return default values
         return {
