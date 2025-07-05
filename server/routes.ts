@@ -2,9 +2,43 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { GeminiService } from "./services/gemini";
+import { ragService } from "./services/rag-simple";
 import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 const geminiServices = new Map<string, GeminiService>();
+
+// Configure multer for file uploads
+const storage_config = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage_config,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo di file non supportato. Solo PDF, DOCX e TXT sono ammessi.'));
+    }
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Start a new chat session
@@ -145,6 +179,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error ending chat:", error);
       res.status(500).json({ error: "Failed to end chat session" });
+    }
+  });
+
+  // RAG endpoints
+  
+  // Upload document to knowledge base
+  app.post("/api/rag/upload", upload.single('document'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const result = await ragService.addDocument(req.file.path, req.file.originalname);
+      
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+      
+      res.json({ 
+        message: result,
+        filename: req.file.originalname,
+        size: req.file.size
+      });
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      res.status(500).json({ error: "Failed to upload document" });
+    }
+  });
+
+  // Get knowledge base statistics
+  app.get("/api/rag/stats", async (req, res) => {
+    try {
+      const stats = ragService.getKnowledgeBaseStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting knowledge base stats:", error);
+      res.status(500).json({ error: "Failed to get knowledge base stats" });
+    }
+  });
+
+  // Search knowledge base
+  app.post("/api/rag/search", async (req, res) => {
+    try {
+      const { query, limit = 5 } = req.body;
+      
+      if (!query || typeof query !== "string") {
+        return res.status(400).json({ error: "Query is required" });
+      }
+
+      const results = await ragService.searchSimilar(query, limit);
+      res.json(results);
+    } catch (error) {
+      console.error("Error searching knowledge base:", error);
+      res.status(500).json({ error: "Failed to search knowledge base" });
+    }
+  });
+
+  // Clear knowledge base
+  app.delete("/api/rag/clear", async (req, res) => {
+    try {
+      ragService.clearKnowledgeBase();
+      res.json({ message: "Knowledge base cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing knowledge base:", error);
+      res.status(500).json({ error: "Failed to clear knowledge base" });
     }
   });
 

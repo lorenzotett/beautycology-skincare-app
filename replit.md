@@ -95,6 +95,13 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 Changelog:
 - July 05, 2025. Initial setup
+- July 05, 2025. Added RAG (Retrieval-Augmented Generation) system:
+  - Simple in-memory vector search with text similarity
+  - Support for PDF, DOCX, and TXT documents
+  - Backend-only document management via scripts
+  - Integration with Gemini AI for enhanced responses
+  - Documents stored in knowledge-base/ directory
+  - Load via: tsx scripts/load-rag.ts
 
 ## User Preferences
 

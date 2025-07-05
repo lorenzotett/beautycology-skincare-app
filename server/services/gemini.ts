@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { ragService } from "./rag-simple";
 
 const ai = new GoogleGenAI({ 
   apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || ""
@@ -123,18 +124,36 @@ export class GeminiService {
     this.conversationHistory.push({ role: "user", content: message });
 
     try {
+      // Enhance the message with RAG context
+      const conversationContext = this.conversationHistory
+        .slice(-5) // Get last 5 messages for context
+        .map(msg => `${msg.role}: ${msg.content}`)
+        .join('\n');
+      
+      const enhancedMessage = await ragService.enhanceQueryWithRAG(message, conversationContext);
+      
+      // Use the enhanced message for the AI request
+      const contents = this.conversationHistory.slice(0, -1).map(msg => ({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }]
+      }));
+      
+      // Add the enhanced current message
+      contents.push({
+        role: "user",
+        parts: [{ text: enhancedMessage }]
+      });
+
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
         },
-        contents: this.conversationHistory.map(msg => ({
-          role: msg.role === "user" ? "user" : "model",
-          parts: [{ text: msg.content }]
-        }))
+        contents: contents
       });
 
       const content = response.text || "Mi dispiace, non ho capito. Puoi ripetere?";
+      this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message }; // Keep original message in history
       this.conversationHistory.push({ role: "assistant", content });
 
       // Check if the response contains multiple choice options
