@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { GeminiService } from "./services/gemini";
+import { SkinAnalysisService } from "./services/skin-analysis";
 import { ragService } from "./services/rag-simple";
 import { z } from "zod";
 import multer from "multer";
@@ -141,8 +142,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      // Send image and message to Gemini
-      const response = await geminiService.sendMessageWithImage(imageFile.path, message);
+      // First, analyze the skin with specialized service
+      const skinAnalysis = new SkinAnalysisService();
+      const analysisResult = await skinAnalysis.analyzeImage(imageFile.path);
+
+      // Then send the analysis data to Gemini for conversation
+      const analysisMessage = message ? 
+        `${message}\n\nAnalisi AI della pelle: ${JSON.stringify(analysisResult)}` : 
+        `Analisi AI della pelle: ${JSON.stringify(analysisResult)}`;
+      
+      const response = await geminiService.sendMessage(analysisMessage);
 
       // Store assistant response
       await storage.addChatMessage({
@@ -152,6 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: {
           hasChoices: response.hasChoices,
           choices: response.choices,
+          skinAnalysis: analysisResult, // Store the raw analysis data
         },
       });
 
