@@ -23,8 +23,8 @@ export const chatMessages = pgTable("chat_messages", {
   sessionId: text("session_id").notNull(),
   role: text("role").notNull(), // 'user' or 'assistant'
   content: text("content").notNull(),
-  metadata: json("metadata"), // For storing additional data like choices, etc.
-  createdAt: timestamp("created_at").defaultNow(),
+  metadata: json("metadata").$type<unknown>().default(null), // For storing additional data like choices, etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -43,6 +43,8 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
   role: true,
   content: true,
   metadata: true,
+}).extend({
+  metadata: z.unknown().optional(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

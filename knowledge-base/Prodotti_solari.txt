@@ -1,0 +1,89 @@
+Prodotti_solari.txt – GUIDA ALLA PROTEZIONE SOLARE
+
+### RADIAZIONE SOLARE E PELLE
+
+- **UVC (200–290 nm)**: estremamente nocivi, schermati dall'ozono.
+- **UVB (290–320 nm)**: raggi superficiali, causano eritemi e danni all'epidermide.
+- **UVA (320–400 nm)**: raggi profondi, responsabili del fotoinvecchiamento.
+- **Luce visibile (400–700 nm)**: meno dannosa, ma coinvolta in alcune pigmentazioni.
+- **Infrarossi (>700 nm)**: producono calore, aumentano disidratazione.
+
+### EFFETTI DEL SOLE SULLA PELLE
+
+**Benefici:**
+- Sintesi di vitamina D.
+- Miglioramento temporaneo di alcune patologie cutanee (es. psoriasi).
+- Effetto positivo sull'umore.
+
+**Effetti negativi:**
+- Eritema solare, disidratazione, reazioni fototossiche.
+- Fotoinvecchiamento, comparsa di melanopatie, rischio carcinomi cutanei.
+
+---
+
+### MELANOGENESI E FOTOTIPI
+
+**Melanina:**
+- **Eumelanina**: pigmento scuro, altamente protettivo.
+- **Feomelanina**: pigmento giallo-rossastro, meno protettivo.
+
+**Classificazione dei Fototipi:**
+
+| Fototipo | Pelle                  | Reazione al Sole                     |
+|----------|------------------------|--------------------------------------|
+| 0        | Albinismo              | Mai si abbronza, si scotta sempre   |
+| 1        | Molto chiara           | Si scotta facilmente, abbronza poco |
+| 2        | Chiara                 | Si scotta, abbronza leggermente     |
+| 3        | Ambrata                | Si abbronza, scottature moderate    |
+| 4        | Olivastra              | Si abbronza facilmente              |
+| 5        | Scura                  | Abbronzatura intensa, rare scott.   |
+| 6        | Molto scura            | Non si scotta mai                   |
+
+---
+
+### FILTRI SOLARI E SPF
+
+**Cos'è l'SPF (Sun Protection Factor):**
+- Indica quanta energia UVB è necessaria per causare eritema su pelle protetta rispetto a non protetta.
+
+| SPF       | Livello di Protezione |
+|-----------|------------------------|
+| 6–10      | Bassa                  |
+| 15–25     | Media                  |
+| 30–50     | Alta                   |
+| 50+       | Molto alta             |
+
+**Filtri Solari:**
+
+- **Fisici (inorganici):** TiO₂, ZnO  
+  → Riflettono i raggi UV. Fotostabili. Possono lasciare scia bianca.
+
+- **Chimici (organici):** Avobenzone, Octocrylene  
+  → Assorbono i raggi UV e li convertono in calore. Invisibili. Alcuni sono fotoinstabili.
+
+**Normativa UVA (EU):**
+- La protezione UVA deve essere almeno 1/3 di quella UVB (SPF). Certificata secondo ISO 24443.
+
+---
+
+### AUTOABBRONZANTI E DOPOSOLE
+
+**Autoabbronzanti:**
+- **DHA (diidrossiacetone):** reazione con aminoacidi → pigmentazione temporanea.
+- **Eritrulosio:** colorazione più graduale e uniforme.
+
+_Non proteggono dai raggi UV._
+
+**Doposole:**
+- **Pelli non abbronzate:** idratanti e lenitivi (es. aloe, mentolo, pantenolo).
+- **Pelli abbronzate:** attivi illuminanti o prolungatori dell'abbronzatura.
+
+---
+
+### CONCLUSIONI
+
+- La protezione solare è essenziale per prevenire danni acuti e cronici.
+- La scelta del filtro solare deve basarsi su:
+  - **Fototipo**
+  - **Tempo di esposizione**
+  - **Tipo di pelle**
