@@ -374,7 +374,7 @@ export function ChatInterface() {
               <span className="text-white font-semibold text-sm">B</span>
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-white">Bonnie AI</h1>
+              <h1 className="text-lg font-semibold text-white text-left">AI-DermaSense</h1>
               <p className="text-text-muted text-sm">Assistente Dermocosmetico</p>
             </div>
           </div>
