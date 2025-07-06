@@ -100,6 +100,15 @@ export function ChatInterface() {
     scrollToBottom();
   }, [messages, isTyping]);
 
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
       const response = await apiRequest("POST", "/api/chat/message", {
@@ -179,7 +188,7 @@ export function ChatInterface() {
     },
   });
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
@@ -215,15 +224,53 @@ export function ChatInterface() {
       }
 
       setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      
+      // Check if it's a HEIC/HEIF file and convert for preview
+      const isHEIC = fileExtension === '.heic' || fileExtension === '.heif' || 
+                     file.type === 'image/heic' || file.type === 'image/heif';
+      
+      if (isHEIC) {
+        try {
+          // Dynamic import for heic2any
+          const heic2any = (await import('heic2any')).default;
+          
+          // Convert HEIC to JPEG for browser preview
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.8
+          }) as Blob;
+          
+          // Create preview URL from converted blob
+          const previewUrl = URL.createObjectURL(convertedBlob);
+          setImagePreview(previewUrl);
+          
+        } catch (error) {
+          console.error('Errore nella conversione HEIC:', error);
+          toast({
+            title: "Errore conversione",
+            description: "Impossibile creare l'anteprima del file HEIC, ma verrà comunque elaborato",
+            variant: "destructive",
+          });
+          // Fallback: set a placeholder or try regular FileReader
+          setImagePreview(null);
+        }
+      } else {
+        // For other formats, use regular FileReader
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
   const removeImage = () => {
+    // Cleanup object URL if it exists
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
     setSelectedImage(null);
     setImagePreview(null);
   };
