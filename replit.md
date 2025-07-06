@@ -129,6 +129,9 @@ Changelog:
   - Fixed questionnaire bypass issue with mandatory phase transitions
   - Implemented strict enforcement to prevent skipping to summary without complete data collection
   - Added explicit checklist validation before final consultation phase
+  - Implemented multiple bypass prevention mechanisms with detailed verification lists
+  - Enhanced automatic questionnaire triggering after user concern collection
+  - Added core behavioral rule prohibiting summary without complete data collection
 
 ## User Preferences
 
