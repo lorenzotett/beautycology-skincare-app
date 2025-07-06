@@ -281,8 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      // const result = await ragService.addDocument(req.file.path, req.file.originalname);
-      const result = "RAG service temporarily disabled";
+      const result = await ragService.addDocument(req.file.path, req.file.originalname);
       
       // Clean up uploaded file
       fs.unlinkSync(req.file.path);
@@ -301,8 +300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get knowledge base statistics
   app.get("/api/rag/stats", async (req, res) => {
     try {
-      // const stats = ragService.getKnowledgeBaseStats();
-      const stats = { totalDocuments: 0, totalChunks: 0, sources: [] };
+      const stats = ragService.getKnowledgeBaseStats();
       res.json(stats);
     } catch (error) {
       console.error("Error getting knowledge base stats:", error);
@@ -319,8 +317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Query is required" });
       }
 
-      // const results = await ragService.searchSimilar(query, limit);
-      const results = { content: "RAG search temporarily disabled", sources: [] };
+      const results = await ragService.searchSimilar(query, limit);
       res.json(results);
     } catch (error) {
       console.error("Error searching knowledge base:", error);
@@ -331,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clear knowledge base
   app.delete("/api/rag/clear", async (req, res) => {
     try {
-      // ragService.clearKnowledgeBase();
+      ragService.clearKnowledgeBase();
       res.json({ message: "Knowledge base cleared successfully" });
     } catch (error) {
       console.error("Error clearing knowledge base:", error);
@@ -339,24 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get auto-learning statistics
-  app.get("/api/learning/stats", async (req, res) => {
-    try {
-      // const stats = ragService.getAutoLearningStats();
-      const stats = {
-        totalConversations: 0,
-        successfulConversations: 0,
-        commonSkinConcerns: [],
-        topRecommendations: [],
-        learningRate: "0%"
-      };
-      
-      res.json(stats);
-    } catch (error) {
-      console.error("Error getting learning stats:", error);
-      res.status(500).json({ error: "Failed to get learning statistics" });
-    }
-  });
+  
 
   // Admin endpoints
   
