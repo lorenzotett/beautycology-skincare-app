@@ -167,6 +167,8 @@ export function ChatInterface() {
     setIsTyping(true);
 
     // Set up appropriate typing message based on whether there's an image
+    let messageRotation: NodeJS.Timeout | null = null;
+    
     if (imageToSend) {
       const analysisMessages = [
         "Sto analizzando la tua immagine...",
@@ -179,15 +181,10 @@ export function ChatInterface() {
       let messageIndex = 0;
       setTypingMessage(analysisMessages[0]);
       
-      const messageRotation = setInterval(() => {
+      messageRotation = setInterval(() => {
         messageIndex = (messageIndex + 1) % analysisMessages.length;
         setTypingMessage(analysisMessages[messageIndex]);
       }, 3000); // Change message every 3 seconds
-      
-      // Clear interval when done
-      setTimeout(() => {
-        clearInterval(messageRotation);
-      }, 50000); // Stop after 50 seconds max
     } else {
       setTypingMessage("AI-DermaSense sta scrivendo");
     }
@@ -253,9 +250,19 @@ export function ChatInterface() {
       setMessages(prev => [...prev, userMessage, assistantMessage]);
       setIsTyping(false);
       setTypingMessage("AI-DermaSense sta scrivendo"); // Reset to default message
+      
+      // Clear rotation interval if it exists
+      if (messageRotation) {
+        clearInterval(messageRotation);
+      }
     } catch (error) {
       setIsTyping(false);
       setTypingMessage("AI-DermaSense sta scrivendo"); // Reset to default message
+      
+      // Clear rotation interval if it exists
+      if (messageRotation) {
+        clearInterval(messageRotation);
+      }
       toast({
         title: "Errore",
         description: "Impossibile inviare il messaggio. Riprova.",
