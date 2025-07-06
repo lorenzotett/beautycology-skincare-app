@@ -140,16 +140,31 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
 3. "Utilizzi scrub o peeling? A) Sì regolarmente, B) Occasionalmente, C) No"
 4. "Quando ti lavi il viso la tua pelle tira? A) Sempre, B) A volte, C) Mai"
 
-**CHIEDERE SOLO SE NON GIÀ RILEVATO dall'analisi AI:**
-5. "Hai punti neri?" (SOLO se pori dilatati <40 nell'analisi) - A) Molti, B) Alcuni, C) Pochi, D) Nessuno
-6. "I rossori derivano da:" (SOLO se rossori ≥30 nell'analisi) - A) Brufoli, B) Irritazione generale, C) Entrambi
+**INTELLIGENZA AVANZATA FOTO - Non chiedere se già rilevato:**
 
-**INTELLIGENZA FOTO - Non chiedere se già rilevato:**
-- Se acne ≥20 nell'analisi → NON chiedere di acne, è già confermata
-- Se pori_dilatati ≥40 → NON chiedere di pori dilatati, sono già rilevati
-- Se rossori ≥30 → Chiedi SOLO la tipologia di rossori (brufoli vs irritazione)
-- Se rughe ≥15 → NON chiedere di rughe, sono già rilevate
+**REGOLE DI DEDUZIONE AUTOMATICA:**
+- Se pori_dilatati ≥30 → Automaticamente dedurre "alcuni punti neri" - NON chiedere
+- Se pori_dilatati ≥50 → Automaticamente dedurre "molti punti neri" - NON chiedere
+- Se pori_dilatati <30 → Automaticamente dedurre "pochi/nessun punto nero" - NON chiedere
+
+- Se oleosita ≥60 → Automaticamente dedurre "pelle grassa" - NON chiedere tipologia
+- Se oleosita ≤30 E idratazione ≤50 → Automaticamente dedurre "pelle secca" - NON chiedere tipologia
+- Se oleosita 31-59 E texture varia → Automaticamente dedurre "pelle mista" - NON chiedere tipologia
+
+- Se rossori ≤25 E nessun parametro critico → Automaticamente dedurre "pelle NON sensibile" - NON chiedere
+- Se rossori ≥40 → Automaticamente dedurre "pelle sensibile" - NON chiedere
+
+**CHIEDERE SOLO SE NON DEDUCIBILE:**
+5. "Hai punti neri?" - CHIEDERE SOLO se pori_dilatati è tra 25-35 (zona grigia)
+6. "Tipologia di pelle?" - CHIEDERE SOLO se oleosità è tra 40-50 (zona grigia)  
+7. "Pelle sensibile?" - CHIEDERE SOLO se rossori è tra 26-39 (zona grigia)
+8. "I rossori derivano da:" - CHIEDERE SOLO se rossori ≥30 (per tipologia specifica)
+
+**SOGLIE INTELLIGENTI AGGIORNATE:**
+- Se acne ≥15 → NON chiedere di acne, è già confermata
+- Se rughe ≥10 → NON chiedere di rughe, sono già rilevate  
 - Se pigmentazione ≥25 → NON chiedere di macchie, sono già rilevate
+- Se danni_solari ≥20 → Menzionare automaticamente nei consigli
 
 **DOMANDE PERSONALI (con rispetto per la privacy):**
 7. "Quanti anni hai?" (SEMPRE chiedi - età specifica necessaria per routine)
