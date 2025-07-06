@@ -324,7 +324,7 @@ export class GeminiService {
       };
     } catch (error) {
       console.error("Error initializing conversation:", error);
-      
+
       // Fallback message if Gemini fails
       const fallbackMessage = `Ciao ${userName}! Stai per iniziare l'analisi della tua pelle con AI-DermaSense, la tecnologia dermocosmetica creata dai Farmacisti e Dermatologi di Bonnie per aiutarti a migliorare la tua pelle.
 
@@ -494,17 +494,22 @@ A te la scelta!`;
 
   private detectMultipleChoice(content: string): boolean {
     // Look for pattern like "A) option" or "A. option" but only if it's a question
-    const multipleChoicePattern = /[A-Z]\)\s+.+/g;
+    const multipleChoicePattern = /^[A-Z]\)\s+.+$/gm;
     const matches = content.match(multipleChoicePattern);
 
     // Only treat as multiple choice if:
     // 1. There are at least 2 matches
-    // 2. The content contains a question mark
+    // 2. The content contains a question mark OR specific choice-indicating phrases
     // 3. The matches are actual answer options (not just formatting)
     if (!matches || matches.length < 2) return false;
 
     const hasQuestion = content.includes('?');
-    const isActualQuestion = hasQuestion && matches.length <= 6; // Max 6 options is reasonable
+    const hasChoiceIndicator = content.toLowerCase().includes('scegli') || 
+                              content.toLowerCase().includes('seleziona') ||
+                              content.toLowerCase().includes('quale') ||
+                              content.toLowerCase().includes('preferisci');
+
+    const isActualQuestion = (hasQuestion || hasChoiceIndicator) && matches.length >= 2 && matches.length <= 6;
 
     return isActualQuestion;
   }
@@ -539,7 +544,7 @@ A te la scelta!`;
       // Check if this is a successful conversation milestone
       const isSuccessful = this.isConversationSuccessful(latestResponse);
 
-      if (isSuccessful && this.conversationHistory.length >= 6) {
+      if (isSuccessful && this.conversationhistory.length >= 6) {
         // Save the conversation to knowledge base
         await this.saveConversationToKnowledgeBase();
       }
