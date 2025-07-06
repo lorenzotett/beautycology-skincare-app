@@ -192,20 +192,8 @@ export class SkinAnalysisService {
         console.error("Raw response:", content);
         console.error("Cleaned response:", cleanedContent);
         
-        // Fallback: return default values
-        return {
-          rossori: 25,
-          acne: 20,
-          rughe: 30,
-          pigmentazione: 25,
-          pori_dilatati: 30,
-          oleosita: 35,
-          danni_solari: 20,
-          occhiaie: 25,
-          idratazione: 60,
-          elasticita: 65,
-          texture_uniforme: 70
-        };
+        // No fallback - throw error to force retry
+        throw new Error(`Failed to parse skin analysis JSON: ${parseError.message}`);
       }
     } catch (error) {
       console.error("Error analyzing skin image:", error);
