@@ -115,11 +115,15 @@ export function ChatInterface() {
         role: "assistant",
         content: data.message.content,
         metadata: {
-          hasChoices: data.message.hasChoices,
-          choices: data.message.choices,
+          hasChoices: data.message.hasChoices || false,
+          choices: data.message.choices || [],
         },
         createdAt: new Date(),
       };
+      
+      // Debug log to verify choices are being set
+      console.log('Assistant message choices:', data.message.choices);
+      console.log('Assistant message hasChoices:', data.message.hasChoices);
       setMessages(prev => [...prev, assistantMessage]);
       setIsTyping(false);
     },
@@ -154,11 +158,15 @@ export function ChatInterface() {
         role: "assistant",
         content: data.message.content,
         metadata: {
-          hasChoices: data.message.hasChoices,
-          choices: data.message.choices,
+          hasChoices: data.message.hasChoices || false,
+          choices: data.message.choices || [],
         },
         createdAt: new Date(),
       };
+      
+      // Debug log for initial message
+      console.log('Initial message choices:', data.message.choices);
+      console.log('Initial message hasChoices:', data.message.hasChoices);
 
       setMessages([initialMessage]);
     },
@@ -302,11 +310,15 @@ export function ChatInterface() {
         role: "assistant",
         content: data.message.content,
         metadata: {
-          hasChoices: data.message.hasChoices,
-          choices: data.message.choices,
+          hasChoices: data.message.hasChoices || false,
+          choices: data.message.choices || [],
         },
         createdAt: new Date(),
       };
+      
+      // Debug log for message with image
+      console.log('Send message response choices:', data.message.choices);
+      console.log('Send message response hasChoices:', data.message.hasChoices);
 
       setMessages(prev => [...prev, userMessage, assistantMessage]);
       setIsTyping(false);

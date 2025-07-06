@@ -36,6 +36,11 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false }: M
   const metadata = message.metadata as any;
   const hasChoices = metadata?.hasChoices || false;
   const choices = metadata?.choices || [];
+  
+  // Debug log to check if choices are properly passed
+  console.log('Message metadata:', metadata);
+  console.log('Has choices:', hasChoices);
+  console.log('Choices:', choices);
 
   if (isUser) {
     return (
