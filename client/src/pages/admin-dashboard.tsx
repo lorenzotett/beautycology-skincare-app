@@ -49,10 +49,24 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  // Lock body scroll when modal is open
+  // Lock body scroll when modal is open and handle ESC key
   useEffect(() => {
     if (selectedSession) {
       document.body.style.overflow = 'hidden';
+      
+      // Add ESC key listener
+      const handleEscKey = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          setSelectedSession(null);
+        }
+      };
+      
+      document.addEventListener('keydown', handleEscKey);
+      
+      return () => {
+        document.body.style.overflow = 'unset';
+        document.removeEventListener('keydown', handleEscKey);
+      };
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -419,6 +433,7 @@ export default function AdminDashboard() {
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedSession(null)}
+                  className="hover:bg-gray-100 border-gray-300 text-gray-600 hover:text-gray-900"
                 >
                   <X className="h-4 w-4" />
                 </Button>
