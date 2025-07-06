@@ -612,7 +612,8 @@ export class GeminiService {
         completedSuccessfully: true
       }
     };
-  }<replit_final_file>
+  }
+
   private extractSkinConcerns(): string[] {
     const concerns: string[] = [];
     const concernKeywords = [
