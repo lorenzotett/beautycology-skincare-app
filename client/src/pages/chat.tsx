@@ -11,13 +11,12 @@ import { useToast } from "@/hooks/use-toast";
 import { BrowserFingerprint } from "@/utils/fingerprint";
 
 export default function Chat() {
-  return (
-    <div className="min-h-screen bg-dark-primary">
-      <ChatInterface />
-    </div>
-  );
-}
-const startChatMutation = useMutation({
+  const { toast } = useToast();
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+
+  const startChatMutation = useMutation({
     mutationFn: async (userName: string) => {
       // Generate or get existing fingerprint
       const fingerprint = await BrowserFingerprint.getOrCreateFingerprint();
@@ -52,3 +51,10 @@ const startChatMutation = useMutation({
       setIsTyping(false);
     },
   });
+
+  return (
+    <div className="min-h-screen bg-dark-primary">
+      <ChatInterface startChatMutation={startChatMutation} sessionId={sessionId} messages={messages} setMessages={setMessages} isTyping={isTyping} setIsTyping={setIsTyping}/>
+    </div>
+  );
+}
