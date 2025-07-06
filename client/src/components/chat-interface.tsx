@@ -74,7 +74,7 @@ export function ChatInterface() {
     return { isValid: true };
   };
 
-  // Check if we're expecting an email
+  // Check if we're expecting an email (more specific check)
   const isEmailContext = (): boolean => {
     const lastAssistantMessage = messages
       .slice()
@@ -83,17 +83,12 @@ export function ChatInterface() {
     
     if (!lastAssistantMessage) return false;
     
-    const emailKeywords = [
-      "email",
-      "mail",
-      "indirizzo email",
-      "routine personalizzata",
-      "per inviarti"
-    ];
-    
-    return emailKeywords.some(keyword => 
-      lastAssistantMessage.content.toLowerCase().includes(keyword)
-    );
+    // Only consider it email context if the message explicitly asks for email
+    const emailRequest = lastAssistantMessage.content.toLowerCase();
+    return emailRequest.includes("per inviarti la routine personalizzata") ||
+           emailRequest.includes("potresti condividere la tua email") ||
+           emailRequest.includes("condividi la tua email") ||
+           (emailRequest.includes("email") && emailRequest.includes("?"));
   };
 
   const scrollToBottom = () => {

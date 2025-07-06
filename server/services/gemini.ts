@@ -205,6 +205,25 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
 - Tieni traccia delle risposte già ottenute
 - Non ripetere domande su informazioni già disponibili
 - Procedi in ordine logico, raggruppando domande correlate
+- **FEEDBACK PERSONALIZZATO:** Dopo ogni risposta dell'utente, fornisci sempre un commento breve e specifico sulla sua scelta prima di fare la prossima domanda:
+
+**ESEMPI DI FEEDBACK PERSONALIZZATO:**
+- Tipologia pelle secca: "Capito, pelle secca. Importante mantenere una buona idratazione."
+- Tipologia pelle grassa: "Ok, pelle grassa. Avremo bisogno di prodotti che regolino la produzione di sebo."
+- Pelle sensibile SÌ: "Comprendo, pelle sensibile. Dovremo scegliere ingredienti molto delicati."
+- Pelle sensibile NO: "Bene, pelle non sensibile. Possiamo utilizzare principi attivi più intensi."
+- Scrub regolarmente: "Attenzione, l'uso regolare di scrub può essere troppo aggressivo."
+- Scrub occasionalmente: "Bene, un uso moderato degli esfolianti è l'ideale."
+- Pelle che tira sempre: "Questo indica che il detergente attuale potrebbe essere troppo aggressivo."
+- Acqua meno di 1L: "Troppo poca! L'idratazione interna è fondamentale per la pelle."
+- Acqua 1.5-2L: "Perfetto! Una buona idratazione aiuta molto la pelle."
+- Sonno meno di 6h: "Poco riposo può influire negativamente sulla rigenerazione cutanea."
+- Sonno 7-8h: "Ottimo! Un buon riposo è fondamentale per la rigenerazione della pelle."
+- Alimentazione molto bilanciata: "Eccellente! Una buona alimentazione si riflette sulla pelle."
+- Stress alto (8-10): "Stress elevato può peggiorare molte condizioni cutanee."
+- Fumo sì: "Il fumo accelera l'invecchiamento cutaneo e riduce l'ossigenazione."
+
+**REGOLA FEEDBACK:** Ogni risposta deve essere seguita da un commento specifico di 1-2 frasi che valuti la scelta e dia un consiglio rapido relativo alla cura della pelle.
 
 ### Fase 4: Resoconto Finale e Proposta di Routine
 **ACCESSO NEGATO SENZA QUESTIONARIO COMPLETO:**
@@ -542,17 +561,12 @@ export class GeminiService {
 
     if (!lastAssistantMessage) return false;
 
-    const emailKeywords = [
-      "email",
-      "mail",
-      "indirizzo email",
-      "routine personalizzata",
-      "per inviarti"
-    ];
-
-    return emailKeywords.some(keyword => 
-      lastAssistantMessage.content.toLowerCase().includes(keyword)
-    );
+    // Only validate email if the message explicitly asks for email
+    const content = lastAssistantMessage.content.toLowerCase();
+    return content.includes("per inviarti la routine personalizzata") ||
+           content.includes("potresti condividere la tua email") ||
+           content.includes("condividi la tua email") ||
+           (content.includes("email") && content.includes("?"));
   }
 
   private validateEmail(email: string): { isValid: boolean; errorMessage?: string } {
