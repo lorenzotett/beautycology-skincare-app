@@ -126,6 +126,9 @@ Changelog:
   - Enhanced data collection for personalized routine generation
   - Integrated lifestyle factors (sleep, stress, diet, smoking) into consultation
   - Added allergy tracking and ingredient exclusion functionality
+  - Fixed questionnaire bypass issue with mandatory phase transitions
+  - Implemented strict enforcement to prevent skipping to summary without complete data collection
+  - Added explicit checklist validation before final consultation phase
 
 ## User Preferences
 

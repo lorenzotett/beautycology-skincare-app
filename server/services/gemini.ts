@@ -116,11 +116,15 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
     
     **DOPO L'ANALISI - REGOLA OBBLIGATORIA:**
     SE NESSUN PARAMETRO HA PUNTEGGIO ≥61, aggiungi SEMPRE subito dopo l'analisi: "Basandomi sull'analisi AI, la tua pelle mostra un ottimo stato di salute generale, e non sono state rilevate problematiche significative che richiedano approfondimenti immediati. Tuttavia, c'è qualche problematica specifica che hai notato o sensazioni riguardo la tua pelle che vorresti condividere?"
+    
+    **IMPORTANTE:** DOPO questa domanda, NON procedere MAI direttamente al resoconto finale. Devi SEMPRE passare alla Fase 3 per raccogliere tutte le informazioni obbligatorie del questionario.
 
 2.  **Se l'utente descrive la sua pelle:** Analizza il testo per identificare le **Problematiche Principali**.
 
-### Fase 3: Questionario Completo Obbligatorio
-DOPO aver presentato l'analisi e raccolto eventuali preoccupazioni dell'utente, devi raccogliere TUTTE le seguenti informazioni prima di procedere al resoconto finale. **PONI SOLO LE DOMANDE PER CUI NON HAI GIÀ LA RISPOSTA** dall'analisi dell'immagine o dalle risposte precedenti dell'utente.
+### Fase 3: Questionario Completo Obbligatorio - NON SALTARE MAI QUESTA FASE
+**REGOLA ASSOLUTA:** DOPO aver presentato l'analisi dell'immagine e raccolto eventuali preoccupazioni dell'utente, devi OBBLIGATORIAMENTE iniziare il questionario completo dicendo: "Perfetto! Ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche."
+
+**NON PUOI PROCEDERE AL RESOCONTO FINALE SENZA AVER RACCOLTO TUTTE LE SEGUENTI INFORMAZIONI.** **PONI SOLO LE DOMANDE PER CUI NON HAI GIÀ LA RISPOSTA** dall'analisi dell'immagine o dalle risposte precedenti dell'utente.
 
 **LISTA COMPLETA INFORMAZIONI OBBLIGATORIE:**
 
@@ -163,7 +167,13 @@ DOPO aver presentato l'analisi e raccolto eventuali preoccupazioni dell'utente, 
 - Procedi in ordine logico, raggruppando domande correlate
 
 ### Fase 4: Resoconto Finale e Proposta di Routine
-**SOLO DOPO aver raccolto TUTTE le informazioni obbligatorie della Fase 3:**
+**ACCESSO NEGATO SENZA QUESTIONARIO COMPLETO:**
+**PUOI ACCEDERE A QUESTA FASE SOLO DOPO aver raccolto TUTTE le 19 informazioni obbligatorie della Fase 3. Se non le hai, torna IMMEDIATAMENTE alla Fase 3.**
+
+**CHECKLIST OBBLIGATORIA prima di procedere:**
+✓ Tipologia di pelle ✓ Pelle sensibile ✓ Scrub/peeling ✓ Pelle che tira ✓ Punti neri ✓ Tipo rossori ✓ Età ✓ Genere ✓ Farmaci ✓ Allergie ✓ Fragranza ✓ Crema solare ✓ Acqua ✓ Sonno ✓ Alimentazione ✓ Fumo ✓ Stress ✓ Info aggiuntive ✓ Email
+
+**SOLO DOPO aver completato il checklist:**
 
 1.  Chiedi conferma: "Perfetto! Ora ho tutte le informazioni necessarie. Sei pronto per ricevere un riepilogo delle caratteristiche della tua pelle e, se lo desideri, una proposta di routine personalizzata?"
 
@@ -187,7 +197,13 @@ DOPO aver presentato l'analisi e raccolto eventuali preoccupazioni dell'utente, 
 5.  Concludi SEMPRE con: "Per ricevere la routine via email e accedere ai prodotti consigliati: \`https://tinyurl.com/bonnie-beauty\`"
 
 **IMPORTANT TRACKING RULE:**
-Durante tutto il processo, tieni una "memoria mentale" delle informazioni già raccolte per non ripetere domande su dati già disponibili dall'analisi dell'immagine o dalle risposte precedenti.`;
+Durante tutto il processo, tieni una "memoria mentale" delle informazioni già raccolte per non ripetere domande su dati già disponibili dall'analisi dell'immagine o dalle risposte precedenti.
+
+**REGOLA CRITICA DI TRANSIZIONE TRA FASI:**
+- Dopo la Fase 2 (analisi immagine) → SEMPRE Fase 3 (questionario completo)
+- Dopo la Fase 3 (questionario completo) → SOLO ALLORA Fase 4 (resoconto finale)
+- **MAI saltare dalla Fase 2 direttamente alla Fase 4**
+- **MAI chiedere "Sei pronto per il resoconto" senza aver completato tutto il questionario**`;
 
 export interface ChatResponse {
   content: string;
