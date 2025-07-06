@@ -298,8 +298,8 @@ export class GeminiService {
       { role: "user", content: userName }
     ];
 
-    try {
-      const initialMessage = `Ciao ${userName}! Stai per iniziare l'analisi della tua pelle con AI-DermaSense, la tecnologia dermocosmetica creata dai Farmacisti e Dermatologi di Bonnie per aiutarti a migliorare la tua pelle.
+    // Define the exact message we want to return
+    const initialMessage = `Ciao ${userName}! Stai per iniziare l'analisi della tua pelle con AI-DermaSense, la tecnologia dermocosmetica creata dai Farmacisti e Dermatologi di Bonnie per aiutarti a migliorare la tua pelle.
 
 Puoi iniziare l'analisi in due modi:
 - **Carica una foto del tuo viso (struccato e con buona luce naturale)** per farla analizzare da una skin specialist AI.
@@ -307,28 +307,13 @@ Puoi iniziare l'analisi in due modi:
 
 A te la scelta!`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-        },
-        contents: this.conversationHistory.map(msg => ({
-          role: msg.role === "user" ? "user" : "model",
-          parts: [{ text: msg.content }]
-        }))
-      });
+    // Add the message directly to conversation history without calling Gemini
+    this.conversationHistory.push({ role: "assistant", content: initialMessage });
 
-      const content = response.text || "Ciao! Come posso aiutarti oggi?";
-      this.conversationHistory.push({ role: "assistant", content });
-
-      return {
-        content,
-        hasChoices: false
-      };
-    } catch (error) {
-      console.error("Error initializing conversation:", error);
-      throw new Error("Failed to initialize conversation with Bonnie");
-    }
+    return {
+      content: initialMessage,
+      hasChoices: false
+    };
   }
 
   async sendMessageWithImage(imagePath: string, message?: string): Promise<ChatResponse> {
