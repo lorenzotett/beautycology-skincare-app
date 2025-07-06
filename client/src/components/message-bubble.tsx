@@ -5,6 +5,15 @@ interface MessageBubbleProps {
   onChoiceSelect?: (choice: string) => void;
 }
 
+// Function to format markdown (specifically, bold text)
+const formatMarkdown = (text: string): string => {
+  // Replace *bold text* with <strong>bold text</strong>
+  let formattedText = text.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
+
+  // Use dangerouslySetInnerHTML to render the HTML
+  return formattedText;
+};
+
 export function MessageBubble({ message, onChoiceSelect }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const timestamp = new Date(message.createdAt!).toLocaleTimeString('it-IT', {
@@ -38,9 +47,10 @@ export function MessageBubble({ message, onChoiceSelect }: MessageBubbleProps) {
         <span className="text-white font-medium text-xs">B</span>
       </div>
       <div className="message-bubble bg-dark-secondary rounded-lg p-3 flex-1">
-        <div className="text-sm leading-relaxed text-white whitespace-pre-wrap">
-          {message.content}
-        </div>
+        <div
+          className="text-sm leading-relaxed text-white whitespace-pre-wrap"
+          dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
+        />
         {hasChoices && choices.length > 0 && (
           <div className="space-y-2 mt-3">
             {choices.map((choice: string, index: number) => (
@@ -64,3 +74,4 @@ export function MessageBubble({ message, onChoiceSelect }: MessageBubbleProps) {
     </div>
   );
 }
+```
