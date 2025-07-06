@@ -53,8 +53,15 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
 3.  **NON ESSERE RIDONDANTE:** Non fare MAI una domanda se la risposta è già chiara dall'analisi foto o da una risposta precedente.
 4.  **SEGUI IL FLUSSO LOGICO:** Rispetta l'ordine delle fasi descritte sotto. Dai sempre priorità alle domande più pertinenti.
 5.  **TONO DI VOCE:** Amichevole, semplice, facile da capire. Evita parole complicate. Usa frasi brevi e chiare. Parla come se stessi spiegando a un amico, non a un dottore.
-6.  **FORMATO SCELTA MULTIPLA:** Quando poni una domanda con opzioni di risposta predefinite, presentale sempre come un elenco letterato (A, B, C...). Esempio: "Che tipo di pelle hai? A) Secca, B) Grassa, C) Mista". 
-**IMPORTANTE:** Le scelte multiple devono essere SOLO per domande dirette con opzioni prestabilite. NON usare scelte multiple per spiegazioni, consigli o informazioni generali.
+6.  **FORMATO SCELTA MULTIPLA:** IMPORTANTE: Quando fai domande con opzioni di scelta, usa SEMPRE questo formato ESATTO:
+
+[La tua domanda]?
+
+A) Prima opzione
+B) Seconda opzione
+C) Terza opzione
+
+NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime righe del messaggio. Questo permette all'interfaccia di creare pulsanti cliccabili automaticamente.
 7.  **LINGUAGGIO SEMPLICE:** Usa sempre un linguaggio molto semplice e comprensibile. Evita termini tecnici complicati. Invece di "dermocosmetico" usa "per la cura della pelle". Invece di "problematiche cutanee" usa "problemi della pelle". Spiega tutto in modo che sia facile da capire.
 8.  **QUESTIONARIO OBBLIGATORIO:** È VIETATO fornire resoconto finale o routine senza aver completato TUTTE le 19 domande del questionario. Se provi a saltare questa fase, FERMATI e torna al questionario.
 
@@ -405,6 +412,12 @@ A te la scelta!`;
       const hasChoices = this.detectMultipleChoice(content);
       const choices = hasChoices ? this.extractChoices(content) : undefined;
 
+      // Debug logging
+      console.log('=== CHOICE DETECTION DEBUG ===');
+      console.log('Content:', content);
+      console.log('Has choices:', hasChoices);
+      console.log('Extracted choices:', choices);
+
       // Remove choice options from content if we have clickable choices
       const finalContent = hasChoices ? this.removeChoicesFromContent(content) : content;
 
@@ -479,6 +492,12 @@ A te la scelta!`;
       const hasChoices = this.detectMultipleChoice(content);
       const choices = hasChoices ? this.extractChoices(content) : undefined;
 
+      // Debug logging
+      console.log('=== CHOICE DETECTION DEBUG ===');
+      console.log('Content:', content);
+      console.log('Has choices:', hasChoices);
+      console.log('Extracted choices:', choices);
+
       // Remove choice options from content if we have clickable choices
       const finalContent = hasChoices ? this.removeChoicesFromContent(content) : content;
 
@@ -517,21 +536,25 @@ A te la scelta!`;
   }
 
   private extractChoices(content: string): string[] {
-    const choicePattern = /[A-Z]\)\s+(.+)/g;
     const choices: string[] = [];
-    let match;
+    const lines = content.split('\n');
 
-    while ((match = choicePattern.exec(content)) !== null) {
-      choices.push(match[1].trim());
+    for (const line of lines) {
+      const match = line.match(/^[A-D]\)\s+(.+)$/);
+      if (match) {
+        choices.push(match[1].trim());
+      }
     }
 
     return choices;
   }
 
     private removeChoicesFromContent(content: string): string {
-        // Remove the multiple choice options from the content
-        return content.replace(/[A-Z]\)\s+.+/g, '').trim();
-    }
+    // Remove lines that start with letter followed by ) and a space
+    const lines = content.split('\n');
+    const filteredLines = lines.filter(line => !line.match(/^[A-D]\)\s+/));
+    return filteredLines.join('\n').trim();
+  }
 
   getConversationHistory(): Array<{ role: string; content: string }> {
     return [...this.conversationHistory];
