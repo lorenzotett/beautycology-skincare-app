@@ -299,13 +299,13 @@ export class GeminiService {
     ];
 
     try {
-      const initialMessage = `Ciao ${userName}! 👋 Stai per iniziare l'analisi della tua pelle con AI-DermaSense, la tecnologia dermocosmetica creata dai Farmacisti e Dermatologi di Bonnie per aiutarti a migliorare la tua pelle. 🌿✨
+      const initialMessage = `Ciao ${userName}! Stai per iniziare l'analisi della tua pelle con AI-DermaSense, la tecnologia dermocosmetica creata dai Farmacisti e Dermatologi di Bonnie per aiutarti a migliorare la tua pelle.
 
 Puoi iniziare l'analisi in due modi:
-- **📸 Carica una foto del tuo viso (struccato e con buona luce naturale)** per farla analizzare da una skin specialist AI 🔬
-- **💬 Oppure descrivimi direttamente la tua pelle**: come appare, che problemi senti o noti, e quali sono le tue abitudini skincare 📝
+- **Carica una foto del tuo viso (struccato e con buona luce naturale)** per farla analizzare da una skin specialist AI.
+- **Oppure descrivimi direttamente la tua pelle**: come appare, che problemi senti o noti, e quali sono le tue abitudini skincare.
 
-A te la scelta! 😊`;
+A te la scelta!`;
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
