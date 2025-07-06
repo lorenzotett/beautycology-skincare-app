@@ -119,6 +119,8 @@ Changelog:
   - Clarified affirmative response detection ("sì", "yes", etc.)
   - Added user concern inquiry for excellent skin analysis results
   - Enhanced Phase 3 logic to ask about user-specific concerns when no issues detected
+  - Moved user concern question to immediately follow skin analysis presentation
+  - Improved conversation flow for comprehensive consultation even with healthy skin
 
 ## User Preferences
 
