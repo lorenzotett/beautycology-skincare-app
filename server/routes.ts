@@ -335,6 +335,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get auto-learning statistics
+  app.get("/api/learning/stats", async (req, res) => {
+    try {
+      // const stats = ragService.getAutoLearningStats();
+      const stats = {
+        totalConversations: 0,
+        successfulConversations: 0,
+        commonSkinConcerns: [],
+        topRecommendations: [],
+        learningRate: "0%"
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting learning stats:", error);
+      res.status(500).json({ error: "Failed to get learning statistics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

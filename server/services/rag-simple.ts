@@ -63,6 +63,78 @@ export class SimpleRAGService {
     }
   }
 
+  async addConversationToKnowledge(conversationDoc: any): Promise<void> {
+    try {
+      // Create structured content from conversation
+      const content = this.formatConversationForKnowledge(conversationDoc);
+      
+      // Split into chunks if needed
+      const chunks = this.splitIntoChunks(content);
+      
+      // Generate documents for each chunk
+      const documents: Document[] = chunks.map((chunk, index) => ({
+        id: `conversation_${Date.now()}_chunk_${index}`,
+        content: chunk,
+        metadata: {
+          source: "auto_learning",
+          type: "successful_conversation",
+          uploadedAt: conversationDoc.timestamp,
+          chunkIndex: index,
+          totalChunks: chunks.length,
+          skinConcerns: conversationDoc.skinConcerns,
+          recommendations: conversationDoc.recommendations,
+          conversationLength: conversationDoc.conversationLength,
+          hasImageAnalysis: conversationDoc.metadata.hasImageAnalysis
+        }
+      }));
+
+      // Add to in-memory storage
+      this.documents.push(...documents);
+
+      console.log(`✅ Auto-learning: Added conversation with ${chunks.length} chunks to knowledge base`);
+    } catch (error) {
+      console.error('Error adding conversation to knowledge base:', error);
+      throw error;
+    }
+  }
+
+  private formatConversationForKnowledge(conversationDoc: any): string {
+    let content = `CONVERSAZIONE DI SUCCESSO - ${conversationDoc.timestamp}\n\n`;
+    
+    // Add skin concerns
+    if (conversationDoc.skinConcerns.length > 0) {
+      content += `PROBLEMATICHE DELLA PELLE:\n`;
+      conversationDoc.skinConcerns.forEach((concern: string) => {
+        content += `- ${concern}\n`;
+      });
+      content += '\n';
+    }
+    
+    // Add recommendations
+    if (conversationDoc.recommendations.length > 0) {
+      content += `INGREDIENTI CONSIGLIATI:\n`;
+      conversationDoc.recommendations.forEach((rec: string) => {
+        content += `- ${rec}\n`;
+      });
+      content += '\n';
+    }
+    
+    // Add conversation flow
+    content += `FLUSSO CONVERSAZIONALE:\n`;
+    conversationDoc.conversationFlow.forEach((flow: any, index: number) => {
+      content += `${index + 1}. DOMANDA: ${flow.question}\n`;
+      content += `   RISPOSTA: ${flow.answer}\n\n`;
+    });
+    
+    // Add metadata
+    content += `METADATA:\n`;
+    content += `- Lunghezza conversazione: ${conversationDoc.conversationLength} messaggi\n`;
+    content += `- Analisi immagine: ${conversationDoc.metadata.hasImageAnalysis ? 'Sì' : 'No'}\n`;
+    content += `- Completata con successo: ${conversationDoc.metadata.completedSuccessfully ? 'Sì' : 'No'}\n`;
+    
+    return content;
+  }
+
   async searchSimilar(query: string, limit: number = 5): Promise<RAGResult> {
     try {
       // Simple text similarity search

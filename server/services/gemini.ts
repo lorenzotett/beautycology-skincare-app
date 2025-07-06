@@ -275,6 +275,9 @@ export class GeminiService {
       this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message }; // Keep original message in history
       this.conversationHistory.push({ role: "assistant", content });
 
+      // Auto-learning: Check if this is a successful conversation milestone
+      await this.checkAndSaveSuccessfulConversation(content);
+
       // Check if the response contains multiple choice options
       const hasChoices = this.detectMultipleChoice(content);
       const choices = hasChoices ? this.extractChoices(content) : undefined;
@@ -282,7 +285,8 @@ export class GeminiService {
       return {
         content,
         hasChoices,
-        choices
+        choices,
+        isComplete: this.isConversationComplete(content)
       };
     } catch (error) {
       console.error("Error sending message:", error);
@@ -315,5 +319,136 @@ export class GeminiService {
 
   clearConversation(): void {
     this.conversationHistory = [];
+  }
+
+  private async checkAndSaveSuccessfulConversation(latestResponse: string): Promise<void> {
+    try {
+      // Check if this is a successful conversation milestone
+      const isSuccessful = this.isConversationSuccessful(latestResponse);
+      
+      if (isSuccessful && this.conversationHistory.length >= 6) {
+        // Save the conversation to knowledge base
+        await this.saveConversationToKnowledgeBase();
+      }
+    } catch (error) {
+      console.error("Error in auto-learning:", error);
+      // Non-blocking error, continue normally
+    }
+  }
+
+  private isConversationSuccessful(response: string): boolean {
+    // Detect successful conversation patterns
+    const successIndicators = [
+      "routine personalizzata",
+      "resoconto finale",
+      "bonnie-beauty",
+      "ingredienti consigliati",
+      "problematiche identificate"
+    ];
+    
+    return successIndicators.some(indicator => 
+      response.toLowerCase().includes(indicator)
+    );
+  }
+
+  private isConversationComplete(response: string): boolean {
+    // Check if conversation has reached completion
+    return response.toLowerCase().includes("bonnie-beauty") || 
+           response.toLowerCase().includes("routine personalizzata");
+  }
+
+  private async saveConversationToKnowledgeBase(): Promise<void> {
+    try {
+      // Create a structured conversation document
+      const conversationDoc = this.createConversationDocument();
+      
+      // Save to RAG knowledge base
+      await ragService.addConversationToKnowledge(conversationDoc);
+      
+      console.log("✅ Successful conversation saved to knowledge base");
+    } catch (error) {
+      console.error("Error saving conversation to knowledge base:", error);
+    }
+  }
+
+  private createConversationDocument(): any {
+    const userMessages = this.conversationHistory.filter(msg => msg.role === "user");
+    const assistantMessages = this.conversationHistory.filter(msg => msg.role === "assistant");
+    
+    // Extract key information
+    const skinConcerns = this.extractSkinConcerns();
+    const recommendations = this.extractRecommendations();
+    const conversationFlow = this.extractConversationFlow();
+    
+    return {
+      timestamp: new Date().toISOString(),
+      type: "successful_conversation",
+      skinConcerns,
+      recommendations,
+      conversationFlow,
+      userQuestions: userMessages.map(msg => msg.content),
+      successfulResponses: assistantMessages.map(msg => msg.content),
+      conversationLength: this.conversationHistory.length,
+      metadata: {
+        hasImageAnalysis: this.conversationHistory.some(msg => 
+          msg.content.includes("Analisi AI della pelle")
+        ),
+        completedSuccessfully: true
+      }
+    };
+  }
+
+  private extractSkinConcerns(): string[] {
+    const concerns: string[] = [];
+    const concernKeywords = [
+      "acne", "brufoli", "rossori", "rughe", "macchie", "pori dilatati",
+      "oleosità", "secchezza", "sensibilità", "discromie", "elasticità"
+    ];
+    
+    const allText = this.conversationHistory.join(" ").toLowerCase();
+    
+    concernKeywords.forEach(keyword => {
+      if (allText.includes(keyword)) {
+        concerns.push(keyword);
+      }
+    });
+    
+    return concerns;
+  }
+
+  private extractRecommendations(): string[] {
+    const recommendations: string[] = [];
+    const ingredients = [
+      "bardana", "mirto", "elicriso", "centella asiatica", "liquirizia",
+      "malva", "ginkgo biloba", "amamelide", "kigelia africana"
+    ];
+    
+    const allText = this.conversationHistory.join(" ").toLowerCase();
+    
+    ingredients.forEach(ingredient => {
+      if (allText.includes(ingredient)) {
+        recommendations.push(ingredient);
+      }
+    });
+    
+    return recommendations;
+  }
+
+  private extractConversationFlow(): Array<{question: string, answer: string}> {
+    const flow: Array<{question: string, answer: string}> = [];
+    
+    for (let i = 0; i < this.conversationHistory.length - 1; i++) {
+      const current = this.conversationHistory[i];
+      const next = this.conversationHistory[i + 1];
+      
+      if (current.role === "user" && next.role === "assistant") {
+        flow.push({
+          question: current.content,
+          answer: next.content
+        });
+      }
+    }
+    
+    return flow;
   }
 }
