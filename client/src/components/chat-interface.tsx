@@ -275,6 +275,16 @@ export function ChatInterface() {
   const handleChoiceSelect = (choice: string) => {
     if (!sessionId) return;
 
+    // Add the user's choice to the chat immediately
+    const userMessage: ChatMessage = {
+      id: Date.now(),
+      sessionId: sessionId!,
+      role: "user",
+      content: choice,
+      createdAt: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
     sendMessageMutation.mutate(choice);
   };
