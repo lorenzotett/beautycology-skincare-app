@@ -36,10 +36,65 @@ export function ChatInterface() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+
+  // Email validation function
+  const validateEmail = (email: string): { isValid: boolean; errorMessage?: string } => {
+    const trimmedEmail = email.trim();
+    
+    if (!trimmedEmail) return { isValid: true }; // Allow empty while typing
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailRegex.test(trimmedEmail)) {
+      return {
+        isValid: false,
+        errorMessage: "Formato email non valido (es. nome@example.com)"
+      };
+    }
+    
+    if (trimmedEmail.length < 5) {
+      return {
+        isValid: false,
+        errorMessage: "Email troppo corta"
+      };
+    }
+    
+    if (trimmedEmail.includes('..')) {
+      return {
+        isValid: false,
+        errorMessage: "Email contiene caratteri non validi"
+      };
+    }
+    
+    return { isValid: true };
+  };
+
+  // Check if we're expecting an email
+  const isEmailContext = (): boolean => {
+    const lastAssistantMessage = messages
+      .slice()
+      .reverse()
+      .find(msg => msg.role === "assistant");
+    
+    if (!lastAssistantMessage) return false;
+    
+    const emailKeywords = [
+      "email",
+      "mail",
+      "indirizzo email",
+      "routine personalizzata",
+      "per inviarti"
+    ];
+    
+    return emailKeywords.some(keyword => 
+      lastAssistantMessage.content.toLowerCase().includes(keyword)
+    );
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -434,18 +489,36 @@ export function ChatInterface() {
                 </label>
               </div>
 
-              <Input
-                type="text"
-                placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi un messaggio o carica una foto..."}
-                value={currentMessage}
-                onChange={(e) => setCurrentMessage(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                className="flex-1 bg-dark-secondary border-dark-accent text-white placeholder:text-text-muted"
-                disabled={isTyping}
-              />
+              <div className="flex-1">
+                <Input
+                  type="text"
+                  placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi un messaggio o carica una foto..."}
+                  value={currentMessage}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    setCurrentMessage(newValue);
+                    
+                    // Validate email in real-time if we're in email context
+                    if (isEmailContext() && newValue.trim()) {
+                      const validation = validateEmail(newValue);
+                      setEmailError(validation.isValid ? null : validation.errorMessage || null);
+                    } else {
+                      setEmailError(null);
+                    }
+                  }}
+                  onKeyPress={(e) => e.key === "Enter" && !emailError && handleSendMessage()}
+                  className={`bg-dark-secondary border-dark-accent text-white placeholder:text-text-muted ${emailError ? 'border-red-500' : ''}`}
+                  disabled={isTyping}
+                />
+                {emailError && (
+                  <p className="text-red-400 text-xs mt-1 px-1">
+                    {emailError}
+                  </p>
+                )}
+              </div>
               <Button
                 onClick={handleSendMessage}
-                disabled={(!currentMessage.trim() && !selectedImage) || isTyping}
+                disabled={(!currentMessage.trim() && !selectedImage) || isTyping || emailError !== null}
                 className="bg-assistant-msg hover:bg-assistant-msg/80 text-white"
               >
                 Invia

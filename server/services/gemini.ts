@@ -77,24 +77,24 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
     - **PUNTEGGIO TOTALE DELLA PELLE** (media di tutti i parametri): "Il tuo punteggio generale della pelle è di {media}/100 - {interpretazione}"
     - **TUTTI GLI 11 PARAMETRI** con i loro punteggi, usando descrizioni brevi
     - Identificazione delle **2-3 Problematiche Principali** (punteggi più alti) per le domande successive
-    
+
     **INTERPRETAZIONE DEL PUNTEGGIO TOTALE:**
     - 0-30: "Eccellente! La tua pelle è in ottime condizioni"
     - 31-45: "Buono, la tua pelle è complessivamente sana"
     - 46-60: "Discreto, ci sono alcuni aspetti da migliorare"
     - 61-75: "Da migliorare, la tua pelle ha bisogno di attenzioni specifiche"
     - 76-100: "Critico, la tua pelle richiede un intervento mirato"
-    
+
     **IMPORTANTE:** NON ripetere il saluto se la conversazione è già iniziata. Inizia sempre con un messaggio di ringraziamento per la foto, poi procedi con l'analisi.
-    
+
     **FORMATO OBBLIGATORIO - MOSTRA SEMPRE TUTTI I PARAMETRI:**
-    
+
     Grazie per aver condiviso la tua foto! 📸 Ho completato l'analisi della tua pelle utilizzando la tecnologia AI dermocosmetica di Bonnie.
-    
+
     📊 **ANALISI COMPLETA DELLA PELLE:**
-    
+
     **Punteggio Generale:** {media}/100 - {interpretazione_basata_sul_punteggio}
-    
+
     - **Rossori:** {valore}/100 - {descrizione_breve}
     - **Acne:** {valore}/100 - {descrizione_breve}
     - **Rughe:** {valore}/100 - {descrizione_breve}
@@ -106,21 +106,21 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
     - **Idratazione:** {valore}/100 - {descrizione_breve}
     - **Elasticità:** {valore}/100 - {descrizione_breve}
     - **Texture Uniforme:** {valore}/100 - {descrizione_breve}
-    
+
     **DESCRIZIONI BREVI STANDARD:**
     - Per valori 0-30: "Ottimo"
     - Per valori 31-60: "Discreto" 
     - Per valori 61-80: "Da migliorare"
     - Per valori 81-100: "Critico"
-    
+
     (Per idratazione, elasticità e texture_uniforme inverti la valutazione: valori bassi = problema)
-    
+
     **DOPO L'ANALISI - REGOLA OBBLIGATORIA:**
     SE NESSUN PARAMETRO HA PUNTEGGIO ≥61, aggiungi SEMPRE subito dopo l'analisi: "Basandomi sull'analisi AI, la tua pelle mostra un ottimo stato di salute generale, e non sono state rilevate problematiche significative che richiedano approfondimenti immediati. Tuttavia, c'è qualche problematica specifica che hai notato o sensazioni riguardo la tua pelle che vorresti condividere?"
-    
+
     **DOPO LA RISPOSTA DELL'UTENTE (qualunque essa sia - "no", "niente", "si" o altro):**
     Devi IMMEDIATAMENTE dire: "Perfetto! Ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche, iniziamo:"
-    
+
     **POI INIZIA SUBITO con la prima domanda del questionario. NON chiedere "vuoi procedere al resoconto" - DEVI FARE IL QUESTIONARIO PRIMA.**
 
 2.  **Se l'utente descrive la sua pelle:** Analizza il testo per identificare le **Problematiche Principali**.
@@ -249,7 +249,7 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
     - **Ingredienti chiave** specifici dal database di mappatura
     - **Consigli personalizzati** basati su età, stile di vita, abitudini
     - **Avvertenze** specifiche (es. non usare esfolianti se pelle sovraesfoliata)
-    
+
 4.  Concludi SEMPRE con: "Per ricevere la routine via email e accedere ai prodotti consigliati: **[https://tinyurl.com/bonnie-beauty](https://tinyurl.com/bonnie-beauty)**"
 
 **IMPORTANT TRACKING RULE:**
@@ -308,7 +308,7 @@ export class GeminiService {
       const fs = await import('fs');
       const imageData = fs.readFileSync(imagePath);
       const base64Image = imageData.toString('base64');
-      
+
       // Get the mime type from file extension
       const path = await import('path');
       const ext = path.extname(imagePath).toLowerCase();
@@ -326,7 +326,7 @@ export class GeminiService {
           }
         }
       ];
-      
+
       if (message) {
         parts.push({ text: message });
       }
@@ -336,7 +336,7 @@ export class GeminiService {
         role: msg.role === "user" ? "user" : "model",
         parts: [{ text: msg.content }]
       }));
-      
+
       // Add the new content with image
       contents.push({
         role: "user",
@@ -352,7 +352,7 @@ export class GeminiService {
       });
 
       const content = response.text || "Mi dispiace, non riesco ad analizzare l'immagine. Puoi riprovare?";
-      
+
       // Add to conversation history
       const userMessage = message ? `${message} [Immagine analizzata]` : "[Immagine analizzata]";
       this.conversationHistory.push({ role: "user", content: userMessage });
@@ -362,8 +362,11 @@ export class GeminiService {
       const hasChoices = this.detectMultipleChoice(content);
       const choices = hasChoices ? this.extractChoices(content) : undefined;
 
+      // Remove choice options from content if we have clickable choices
+      const finalContent = hasChoices ? this.removeChoicesFromContent(content) : content;
+
       return {
-        content,
+        content: finalContent,
         hasChoices,
         choices
       };
@@ -379,14 +382,14 @@ export class GeminiService {
     try {
       // Check if this is an email validation context
       const isEmailRequest = this.isEmailValidationNeeded();
-      
+
       if (isEmailRequest) {
         const emailValidation = this.validateEmail(message);
         if (!emailValidation.isValid) {
           // Remove the invalid email from history and add validation error
           this.conversationHistory.pop();
           this.conversationHistory.push({ role: "assistant", content: emailValidation.errorMessage });
-          
+
           return {
             content: emailValidation.errorMessage,
             hasChoices: false
@@ -399,15 +402,15 @@ export class GeminiService {
         .slice(-5) // Get last 5 messages for context
         .map(msg => `${msg.role}: ${msg.content}`)
         .join('\n');
-      
+
       const enhancedMessage = await ragService.enhanceQueryWithRAG(message, conversationContext);
-      
+
       // Use the enhanced message for the AI request
       const contents = this.conversationHistory.slice(0, -1).map(msg => ({
         role: msg.role === "user" ? "user" : "model",
         parts: [{ text: msg.content }]
       }));
-      
+
       // Add the enhanced current message
       contents.push({
         role: "user",
@@ -433,8 +436,11 @@ export class GeminiService {
       const hasChoices = this.detectMultipleChoice(content);
       const choices = hasChoices ? this.extractChoices(content) : undefined;
 
+      // Remove choice options from content if we have clickable choices
+      const finalContent = hasChoices ? this.removeChoicesFromContent(content) : content;
+
       return {
-        content,
+        content: finalContent,
         hasChoices,
         choices,
         isComplete: this.isConversationComplete(content)
@@ -456,13 +462,18 @@ export class GeminiService {
     const choicePattern = /[A-Z]\)\s+(.+)/g;
     const choices: string[] = [];
     let match;
-    
+
     while ((match = choicePattern.exec(content)) !== null) {
       choices.push(match[1].trim());
     }
-    
+
     return choices;
   }
+
+    private removeChoicesFromContent(content: string): string {
+        // Remove the multiple choice options from the content
+        return content.replace(/[A-Z]\)\s+.+/g, '').trim();
+    }
 
   getConversationHistory(): Array<{ role: string; content: string }> {
     return [...this.conversationHistory];
@@ -476,7 +487,7 @@ export class GeminiService {
     try {
       // Check if this is a successful conversation milestone
       const isSuccessful = this.isConversationSuccessful(latestResponse);
-      
+
       if (isSuccessful && this.conversationHistory.length >= 6) {
         // Save the conversation to knowledge base
         await this.saveConversationToKnowledgeBase();
@@ -496,7 +507,7 @@ export class GeminiService {
       "ingredienti consigliati",
       "problematiche identificate"
     ];
-    
+
     return successIndicators.some(indicator => 
       response.toLowerCase().includes(indicator)
     );
@@ -512,10 +523,10 @@ export class GeminiService {
     try {
       // Create a structured conversation document
       const conversationDoc = this.createConversationDocument();
-      
+
       // Save to RAG knowledge base
       await ragService.addConversationToKnowledge(conversationDoc);
-      
+
       console.log("✅ Successful conversation saved to knowledge base");
     } catch (error) {
       console.error("Error saving conversation to knowledge base:", error);
@@ -528,9 +539,9 @@ export class GeminiService {
       .slice()
       .reverse()
       .find(msg => msg.role === "assistant");
-    
+
     if (!lastAssistantMessage) return false;
-    
+
     const emailKeywords = [
       "email",
       "mail",
@@ -538,7 +549,7 @@ export class GeminiService {
       "routine personalizzata",
       "per inviarti"
     ];
-    
+
     return emailKeywords.some(keyword => 
       lastAssistantMessage.content.toLowerCase().includes(keyword)
     );
@@ -547,17 +558,17 @@ export class GeminiService {
   private validateEmail(email: string): { isValid: boolean; errorMessage?: string } {
     // Remove whitespace
     const trimmedEmail = email.trim();
-    
+
     // Basic email regex pattern
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     if (!emailRegex.test(trimmedEmail)) {
       return {
         isValid: false,
         errorMessage: "Mi dispiace, l'indirizzo email inserito non è valido. Potresti inserire un indirizzo email corretto? (es. nome@example.com)"
       };
     }
-    
+
     // Additional validation for common issues
     if (trimmedEmail.length < 5) {
       return {
@@ -565,26 +576,26 @@ export class GeminiService {
         errorMessage: "L'indirizzo email sembra troppo corto. Potresti controllare e reinserirlo?"
       };
     }
-    
+
     if (trimmedEmail.includes('..')) {
       return {
         isValid: false,
         errorMessage: "L'indirizzo email contiene caratteri non validi. Potresti inserire un indirizzo email corretto?"
       };
     }
-    
+
     return { isValid: true };
   }
 
   private createConversationDocument(): any {
     const userMessages = this.conversationHistory.filter(msg => msg.role === "user");
     const assistantMessages = this.conversationHistory.filter(msg => msg.role === "assistant");
-    
+
     // Extract key information
     const skinConcerns = this.extractSkinConcerns();
     const recommendations = this.extractRecommendations();
     const conversationFlow = this.extractConversationFlow();
-    
+
     return {
       timestamp: new Date().toISOString(),
       type: "successful_conversation",
@@ -601,23 +612,22 @@ export class GeminiService {
         completedSuccessfully: true
       }
     };
-  }
-
+  }<replit_final_file>
   private extractSkinConcerns(): string[] {
     const concerns: string[] = [];
     const concernKeywords = [
       "acne", "brufoli", "rossori", "rughe", "macchie", "pori dilatati",
       "oleosità", "secchezza", "sensibilità", "discromie", "elasticità"
     ];
-    
+
     const allText = this.conversationHistory.join(" ").toLowerCase();
-    
+
     concernKeywords.forEach(keyword => {
       if (allText.includes(keyword)) {
         concerns.push(keyword);
       }
     });
-    
+
     return concerns;
   }
 
@@ -627,25 +637,25 @@ export class GeminiService {
       "bardana", "mirto", "elicriso", "centella asiatica", "liquirizia",
       "malva", "ginkgo biloba", "amamelide", "kigelia africana"
     ];
-    
+
     const allText = this.conversationHistory.join(" ").toLowerCase();
-    
+
     ingredients.forEach(ingredient => {
       if (allText.includes(ingredient)) {
         recommendations.push(ingredient);
       }
     });
-    
+
     return recommendations;
   }
 
   private extractConversationFlow(): Array<{question: string, answer: string}> {
     const flow: Array<{question: string, answer: string}> = [];
-    
+
     for (let i = 0; i < this.conversationHistory.length - 1; i++) {
       const current = this.conversationHistory[i];
       const next = this.conversationHistory[i + 1];
-      
+
       if (current.role === "user" && next.role === "assistant") {
         flow.push({
           question: current.content,
@@ -653,7 +663,7 @@ export class GeminiService {
         });
       }
     }
-    
+
     return flow;
   }
 }
