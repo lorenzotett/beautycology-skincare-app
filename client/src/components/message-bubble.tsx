@@ -5,12 +5,23 @@ interface MessageBubbleProps {
   onChoiceSelect?: (choice: string) => void;
 }
 
-// Function to format markdown (specifically, bold text)
+// Function to format markdown and make links clickable
 const formatMarkdown = (text: string): string => {
   // Replace *bold text* with <strong>bold text</strong>
   let formattedText = text.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
+  
+  // Make URLs clickable - matches http/https URLs and www URLs
+  formattedText = formattedText.replace(
+    /(https?:\/\/[^\s]+|www\.[^\s]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline cursor-pointer">$1</a>'
+  );
+  
+  // Handle URLs that start with www (add https://)
+  formattedText = formattedText.replace(
+    /href="www\./g,
+    'href="https://www.'
+  );
 
-  // Use dangerouslySetInnerHTML to render the HTML
   return formattedText;
 };
 
