@@ -77,11 +77,11 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
     - **PUNTEGGIO TOTALE DELLA PELLE** (media di tutti i parametri): "Il tuo punteggio generale della pelle è di {media}/100"
     - **TUTTI GLI 11 PARAMETRI** con i loro punteggi, usando descrizioni brevi
     - Identificazione delle **2-3 Problematiche Principali** (punteggi più alti) per le domande successive
-
+    
     **FORMATO OBBLIGATORIO - MOSTRA SEMPRE TUTTI I PARAMETRI:**
-
+    
     📊 **ANALISI COMPLETA DELLA PELLE:**
-
+    
     - **Rossori:** {valore}/100 - {descrizione_breve}
     - **Acne:** {valore}/100 - {descrizione_breve}
     - **Rughe:** {valore}/100 - {descrizione_breve}
@@ -93,13 +93,13 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
     - **Idratazione:** {valore}/100 - {descrizione_breve}
     - **Elasticità:** {valore}/100 - {descrizione_breve}
     - **Texture Uniforme:** {valore}/100 - {descrizione_breve}
-
+    
     **DESCRIZIONI BREVI STANDARD:**
     - Per valori 0-30: "Ottimo"
     - Per valori 31-60: "Discreto" 
     - Per valori 61-80: "Da migliorare"
     - Per valori 81-100: "Critico"
-
+    
     (Per idratazione, elasticità e texture_uniforme inverti la valutazione: valori bassi = problema)
 
 2.  **Se l'utente descrive la sua pelle:** Analizza il testo per identificare le **Problematiche Principali**.
@@ -174,7 +174,7 @@ export class GeminiService {
       const fs = await import('fs');
       const imageData = fs.readFileSync(imagePath);
       const base64Image = imageData.toString('base64');
-
+      
       // Get the mime type from file extension
       const path = await import('path');
       const ext = path.extname(imagePath).toLowerCase();
@@ -192,7 +192,7 @@ export class GeminiService {
           }
         }
       ];
-
+      
       if (message) {
         parts.push({ text: message });
       }
@@ -202,7 +202,7 @@ export class GeminiService {
         role: msg.role === "user" ? "user" : "model",
         parts: [{ text: msg.content }]
       }));
-
+      
       // Add the new content with image
       contents.push({
         role: "user",
@@ -218,7 +218,7 @@ export class GeminiService {
       });
 
       const content = response.text || "Mi dispiace, non riesco ad analizzare l'immagine. Puoi riprovare?";
-
+      
       // Add to conversation history
       const userMessage = message ? `${message} [Immagine analizzata]` : "[Immagine analizzata]";
       this.conversationHistory.push({ role: "user", content: userMessage });
@@ -248,15 +248,15 @@ export class GeminiService {
         .slice(-5) // Get last 5 messages for context
         .map(msg => `${msg.role}: ${msg.content}`)
         .join('\n');
-
+      
       const enhancedMessage = await ragService.enhanceQueryWithRAG(message, conversationContext);
-
+      
       // Use the enhanced message for the AI request
       const contents = this.conversationHistory.slice(0, -1).map(msg => ({
         role: msg.role === "user" ? "user" : "model",
         parts: [{ text: msg.content }]
       }));
-
+      
       // Add the enhanced current message
       contents.push({
         role: "user",
@@ -305,11 +305,11 @@ export class GeminiService {
     const choicePattern = /[A-Z]\)\s+(.+)/g;
     const choices: string[] = [];
     let match;
-
+    
     while ((match = choicePattern.exec(content)) !== null) {
       choices.push(match[1].trim());
     }
-
+    
     return choices;
   }
 
@@ -325,7 +325,7 @@ export class GeminiService {
     try {
       // Check if this is a successful conversation milestone
       const isSuccessful = this.isConversationSuccessful(latestResponse);
-
+      
       if (isSuccessful && this.conversationHistory.length >= 6) {
         // Save the conversation to knowledge base
         await this.saveConversationToKnowledgeBase();
@@ -345,7 +345,7 @@ export class GeminiService {
       "ingredienti consigliati",
       "problematiche identificate"
     ];
-
+    
     return successIndicators.some(indicator => 
       response.toLowerCase().includes(indicator)
     );
@@ -361,10 +361,10 @@ export class GeminiService {
     try {
       // Create a structured conversation document
       const conversationDoc = this.createConversationDocument();
-
+      
       // Save to RAG knowledge base
       await ragService.addConversationToKnowledge(conversationDoc);
-
+      
       console.log("✅ Successful conversation saved to knowledge base");
     } catch (error) {
       console.error("Error saving conversation to knowledge base:", error);
@@ -374,12 +374,12 @@ export class GeminiService {
   private createConversationDocument(): any {
     const userMessages = this.conversationHistory.filter(msg => msg.role === "user");
     const assistantMessages = this.conversationHistory.filter(msg => msg.role === "assistant");
-
+    
     // Extract key information
     const skinConcerns = this.extractSkinConcerns();
     const recommendations = this.extractRecommendations();
     const conversationFlow = this.extractConversationFlow();
-
+    
     return {
       timestamp: new Date().toISOString(),
       type: "successful_conversation",
@@ -404,15 +404,15 @@ export class GeminiService {
       "acne", "brufoli", "rossori", "rughe", "macchie", "pori dilatati",
       "oleosità", "secchezza", "sensibilità", "discromie", "elasticità"
     ];
-
+    
     const allText = this.conversationHistory.join(" ").toLowerCase();
-
+    
     concernKeywords.forEach(keyword => {
       if (allText.includes(keyword)) {
         concerns.push(keyword);
       }
     });
-
+    
     return concerns;
   }
 
@@ -422,25 +422,25 @@ export class GeminiService {
       "bardana", "mirto", "elicriso", "centella asiatica", "liquirizia",
       "malva", "ginkgo biloba", "amamelide", "kigelia africana"
     ];
-
+    
     const allText = this.conversationHistory.join(" ").toLowerCase();
-
+    
     ingredients.forEach(ingredient => {
       if (allText.includes(ingredient)) {
         recommendations.push(ingredient);
       }
     });
-
+    
     return recommendations;
   }
 
   private extractConversationFlow(): Array<{question: string, answer: string}> {
     const flow: Array<{question: string, answer: string}> = [];
-
+    
     for (let i = 0; i < this.conversationHistory.length - 1; i++) {
       const current = this.conversationHistory[i];
       const next = this.conversationHistory[i + 1];
-
+      
       if (current.role === "user" && next.role === "assistant") {
         flow.push({
           question: current.content,
@@ -448,7 +448,7 @@ export class GeminiService {
         });
       }
     }
-
+    
     return flow;
   }
 }
