@@ -213,12 +213,22 @@ export function ChatInterface() {
   const handleSendMessage = async () => {
     if ((!currentMessage.trim() && !selectedImage) || !sessionId || isTyping) return;
 
+    // Check for email validation error before sending
+    if (isEmailContext() && currentMessage.trim()) {
+      const validation = validateEmail(currentMessage.trim());
+      if (!validation.isValid) {
+        // Don't send the message if email is invalid
+        return;
+      }
+    }
+
     const messageToSend = currentMessage.trim();
     const imageToSend = selectedImage;
 
     setCurrentMessage("");
     setSelectedImage(null);
     setImagePreview(null);
+    setEmailError(null); // Clear any email errors when sending
     setIsTyping(true);
 
     // Set up appropriate typing message based on whether there's an image
@@ -506,7 +516,7 @@ export function ChatInterface() {
                       setEmailError(null);
                     }
                   }}
-                  onKeyPress={(e) => e.key === "Enter" && !emailError && handleSendMessage()}
+                  onKeyPress={(e) => e.key === "Enter" && !(emailError && isEmailContext()) && handleSendMessage()}
                   className={`bg-dark-secondary border-dark-accent text-white placeholder:text-text-muted ${emailError ? 'border-red-500' : ''}`}
                   disabled={isTyping}
                 />
@@ -518,7 +528,7 @@ export function ChatInterface() {
               </div>
               <Button
                 onClick={handleSendMessage}
-                disabled={(!currentMessage.trim() && !selectedImage) || isTyping || emailError !== null}
+                disabled={(!currentMessage.trim() && !selectedImage) || isTyping || (emailError !== null && isEmailContext())}
                 className="bg-assistant-msg hover:bg-assistant-msg/80 text-white"
               >
                 Invia
