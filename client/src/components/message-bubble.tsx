@@ -1,3 +1,5 @@
+import { Button } from "./ui/button";
+import { Upload } from "lucide-react";
 import { ChatMessage } from "@shared/schema";
 
 interface MessageBubbleProps {
@@ -86,24 +88,39 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false }: M
           dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
         />
         {/* Image display */}
-        {message.metadata?.image && (
-          <div className="mt-2">
-            <div className="relative inline-block">
-              <img 
-                src={message.metadata.image} 
-                alt={message.metadata.imageName || "Uploaded image"} 
-                className="max-w-xs rounded-lg border border-dark-accent cursor-pointer hover:opacity-80 transition-opacity"
-                style={{ maxHeight: '200px', objectFit: 'cover' }}
-                onClick={() => window.open(message.metadata.image, '_blank')}
-              />
-              {message.metadata.imageName && (
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs p-1 rounded-b-lg">
-                  {message.metadata.imageName}
-                </div>
-              )}
-            </div>
+        {message.metadata?.hasImage && (
+        <div className="mt-2">
+          {message.metadata?.image ? (
+            <img 
+              src={message.metadata.image} 
+              alt="Immagine caricata" 
+              className="max-w-48 rounded-lg border border-dark-accent cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => window.open(message.metadata.image, '_blank')}
+              onError={(e) => {
+                // Se l'immagine non carica, mostra un placeholder
+                const target = e.currentTarget;
+                target.style.display = 'none';
+                const placeholder = target.nextSibling as HTMLElement;
+                if (placeholder) placeholder.style.display = 'flex';
+              }}
+            />
+          ) : null}
+
+          {/* Placeholder per file che non possono essere visualizzati */}
+          <div 
+            className="max-w-48 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
+            style={{ display: message.metadata?.image ? 'none' : 'flex' }}
+          >
+            <Upload size={24} className="text-text-muted mb-2" />
+            <span className="text-xs text-text-muted text-center px-2">
+              {message.metadata?.imageName || "File caricato"}
+            </span>
+            <span className="text-xs text-text-muted/60 mt-1">
+              (Anteprima non disponibile)
+            </span>
           </div>
-        )}
+        </div>
+      )}
         {hasChoices && choices.length > 0 && (
           <div className="space-y-2 mt-3">
             {choices.map((choice: string, index: number) => (

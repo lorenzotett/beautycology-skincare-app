@@ -230,21 +230,18 @@ export function ChatInterface() {
                      file.type === 'image/heic' || file.type === 'image/heif';
       
       if (isHEIC) {
-        try {
-          // Try to create a basic preview first
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            setImagePreview(e.target?.result as string);
-          };
-          reader.readAsDataURL(file);
-          
-          // Note: HEIC conversion would require heic2any library
-          // For now, we'll show the file name and a placeholder
-        } catch (error) {
-          console.error('Errore nella conversione HEIC:', error);
-          // Create a placeholder preview for HEIC files
-          setImagePreview("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjY0IiB5PSI2NCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SEVJQzwvdGV4dD4KPHN2Zz4=");
-        }
+        // Per i file HEIC, mostra sempre un placeholder con icona camera
+        const placeholderSvg = `data:image/svg+xml;base64,${btoa(`
+          <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="128" height="128" fill="#374151" rx="8"/>
+            <circle cx="64" cy="64" r="30" fill="#6B7280"/>
+            <circle cx="64" cy="64" r="20" fill="#9CA3AF"/>
+            <circle cx="64" cy="64" r="6" fill="#374151"/>
+            <rect x="45" y="45" width="8" height="6" fill="#9CA3AF" rx="2"/>
+            <text x="64" y="100" font-family="Arial" font-size="10" fill="#D1D5DB" text-anchor="middle">HEIC</text>
+          </svg>
+        `)}`;
+        setImagePreview(placeholderSvg);</old_str>
       } else {
         // For other formats, use regular FileReader
         const reader = new FileReader();
@@ -531,30 +528,41 @@ export function ChatInterface() {
                       src={imagePreview} 
                       alt="Preview" 
                       className="w-32 h-32 object-cover rounded-lg border border-dark-accent"
+                      onError={(e) => {
+                        // Se l'immagine non carica, mostra un placeholder
+                        e.currentTarget.style.display = 'none';
+                        const placeholder = e.currentTarget.nextSibling as HTMLElement;
+                        if (placeholder) placeholder.style.display = 'flex';
+                      }}
                     />
-                  ) : selectedImage ? (
-                    <div className="w-32 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center">
-                      <Paperclip size={24} className="text-text-muted mb-1" />
-                      <span className="text-xs text-text-muted text-center px-2">
-                        {selectedImage.name}
-                      </span>
-                    </div>
                   ) : null}
+                  
+                  {/* Fallback placeholder sempre presente ma nascosto */}
+                  <div 
+                    className="w-32 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center"
+                    style={{ display: imagePreview ? 'none' : 'flex' }}
+                  >
+                    <Upload size={24} className="text-text-muted mb-1" />
+                    <span className="text-xs text-text-muted text-center px-2">
+                      {selectedImage?.name || "File caricato"}
+                    </span>
+                  </div>
+                  
                   <button
                     onClick={removeImage}
-                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1"
+                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 z-10"
                   >
                     <X size={16} />
                   </button>
                 </div>
                 <p className="text-sm text-text-muted mt-2">
-                  {selectedImage?.name && selectedImage.name.toLowerCase().includes('.heic') 
-                    ? `File HEIC: ${selectedImage.name}` 
-                    : "Foto pronta per l'analisi AI"
+                  {selectedImage?.name && (selectedImage.name.toLowerCase().includes('.heic') || selectedImage.name.toLowerCase().includes('.heif'))
+                    ? `📷 File iPhone: ${selectedImage.name}` 
+                    : "📷 Foto pronta per l'analisi AI"
                   }
                 </p>
               </div>
-            )}
+            )}</old_str>
 
             {/* Message Input */}
             <div className="flex gap-2 p-4">
