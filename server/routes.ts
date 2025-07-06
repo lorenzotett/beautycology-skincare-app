@@ -354,6 +354,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoints
+  
+  // Get admin statistics
+  app.get("/api/admin/stats", async (req, res) => {
+    try {
+      const allSessions = await storage.getAllChatSessions();
+      const allMessages = await storage.getAllChatMessages();
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const todaySessions = allSessions.filter(session => 
+        new Date(session.createdAt) >= today
+      );
+      
+      const activeSessions = allSessions.filter(session => session.isActive);
+      
+      const averageMessagesPerSession = allSessions.length > 0 
+        ? allMessages.length / allSessions.length 
+        : 0;
+      
+      const stats = {
+        totalSessions: allSessions.length,
+        totalMessages: allMessages.length,
+        activeSessions: activeSessions.length,
+        todaySessions: todaySessions.length,
+        averageMessagesPerSession: Math.round(averageMessagesPerSession * 10) / 10
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting admin stats:", error);
+      res.status(500).json({ error: "Failed to get admin statistics" });
+    }
+  });
+
+  // Get all sessions with message counts
+  app.get("/api/admin/sessions", async (req, res) => {
+    try {
+      const allSessions = await storage.getAllChatSessions();
+      const sessionsWithDetails = await Promise.all(
+        allSessions.map(async (session) => {
+          const messages = await storage.getChatMessages(session.sessionId);
+          const hasImages = messages.some(msg => 
+            msg.metadata && (msg.metadata as any).hasImage
+          );
+          const skinAnalysisCount = messages.filter(msg => 
+            msg.metadata && (msg.metadata as any).skinAnalysis
+          ).length;
+          
+          const lastActivity = messages.length > 0 
+            ? new Date(Math.max(...messages.map(msg => new Date(msg.createdAt).getTime())))
+            : session.updatedAt;
+          
+          return {
+            ...session,
+            messages: [],
+            messageCount: messages.length,
+            lastActivity,
+            hasImages,
+            skinAnalysisCount
+          };
+        })
+      );
+      
+      // Sort by last activity (most recent first)
+      sessionsWithDetails.sort((a, b) => 
+        new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
+      );
+      
+      res.json(sessionsWithDetails);
+    } catch (error) {
+      console.error("Error getting admin sessions:", error);
+      res.status(500).json({ error: "Failed to get admin sessions" });
+    }
+  });
+
+  // Get specific session details with all messages
+  app.get("/api/admin/sessions/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      
+      const messages = await storage.getChatMessages(sessionId);
+      const hasImages = messages.some(msg => 
+        msg.metadata && (msg.metadata as any).hasImage
+      );
+      const skinAnalysisCount = messages.filter(msg => 
+        msg.metadata && (msg.metadata as any).skinAnalysis
+      ).length;
+      
+      const lastActivity = messages.length > 0 
+        ? new Date(Math.max(...messages.map(msg => new Date(msg.createdAt).getTime())))
+        : session.updatedAt;
+      
+      res.json({
+        ...session,
+        messages,
+        messageCount: messages.length,
+        lastActivity,
+        hasImages,
+        skinAnalysisCount
+      });
+    } catch (error) {
+      console.error("Error getting admin session details:", error);
+      res.status(500).json({ error: "Failed to get session details" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

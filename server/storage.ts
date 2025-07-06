@@ -26,6 +26,10 @@ export interface IStorage {
   addChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
   getChatMessages(sessionId: string): Promise<ChatMessage[]>;
   getRecentChatMessages(sessionId: string, limit: number): Promise<ChatMessage[]>;
+  
+  // Admin methods
+  getAllChatSessions(): Promise<ChatSession[]>;
+  getAllChatMessages(): Promise<ChatMessage[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -113,6 +117,18 @@ export class MemStorage implements IStorage {
     const messages = this.chatMessages.get(sessionId) || [];
     return messages.slice(-limit);
   }
+
+  async getAllChatSessions(): Promise<ChatSession[]> {
+    return Array.from(this.chatSessions.values());
+  }
+
+  async getAllChatMessages(): Promise<ChatMessage[]> {
+    const allMessages: ChatMessage[] = [];
+    for (const messages of this.chatMessages.values()) {
+      allMessages.push(...messages);
+    }
+    return allMessages;
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -185,6 +201,20 @@ export class DatabaseStorage implements IStorage {
       .where(eq(chatMessages.sessionId, sessionId))
       .orderBy(desc(chatMessages.createdAt))
       .limit(limit);
+  }
+
+  async getAllChatSessions(): Promise<ChatSession[]> {
+    return await db
+      .select()
+      .from(chatSessions)
+      .orderBy(desc(chatSessions.updatedAt));
+  }
+
+  async getAllChatMessages(): Promise<ChatMessage[]> {
+    return await db
+      .select()
+      .from(chatMessages)
+      .orderBy(chatMessages.createdAt);
   }
 }
 
