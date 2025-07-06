@@ -10,13 +10,13 @@ interface MessageBubbleProps {
 const formatMarkdown = (text: string): string => {
   // Replace *bold text* with <strong>bold text</strong>
   let formattedText = text.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
-  
+
   // Make URLs clickable - matches http/https URLs and www URLs
   formattedText = formattedText.replace(
     /(https?:\/\/[^\s]+|www\.[^\s]+)/g,
     '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline cursor-pointer">$1</a>'
   );
-  
+
   // Handle URLs that start with www (add https://)
   formattedText = formattedText.replace(
     /href="www\./g,
@@ -36,7 +36,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false }: M
   const metadata = message.metadata as any;
   const hasChoices = metadata?.hasChoices || false;
   const choices = metadata?.choices || [];
-  
+
   // Debug log to check if choices are properly passed
   console.log('Message metadata:', metadata);
   console.log('Has choices:', hasChoices);
@@ -85,6 +85,25 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false }: M
           className="text-sm leading-relaxed text-white whitespace-pre-wrap"
           dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
         />
+        {/* Image display */}
+        {message.metadata?.image && (
+          <div className="mt-2">
+            <div className="relative inline-block">
+              <img 
+                src={message.metadata.image} 
+                alt={message.metadata.imageName || "Uploaded image"} 
+                className="max-w-xs rounded-lg border border-dark-accent cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ maxHeight: '200px', objectFit: 'cover' }}
+                onClick={() => window.open(message.metadata.image, '_blank')}
+              />
+              {message.metadata.imageName && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs p-1 rounded-b-lg">
+                  {message.metadata.imageName}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         {hasChoices && choices.length > 0 && (
           <div className="space-y-2 mt-3">
             {choices.map((choice: string, index: number) => (

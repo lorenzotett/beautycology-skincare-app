@@ -231,29 +231,19 @@ export function ChatInterface() {
       
       if (isHEIC) {
         try {
-          // Dynamic import for heic2any
-          const heic2any = (await import('heic2any')).default;
+          // Try to create a basic preview first
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setImagePreview(e.target?.result as string);
+          };
+          reader.readAsDataURL(file);
           
-          // Convert HEIC to JPEG for browser preview
-          const convertedBlob = await heic2any({
-            blob: file,
-            toType: 'image/jpeg',
-            quality: 0.8
-          }) as Blob;
-          
-          // Create preview URL from converted blob
-          const previewUrl = URL.createObjectURL(convertedBlob);
-          setImagePreview(previewUrl);
-          
+          // Note: HEIC conversion would require heic2any library
+          // For now, we'll show the file name and a placeholder
         } catch (error) {
           console.error('Errore nella conversione HEIC:', error);
-          toast({
-            title: "Errore conversione",
-            description: "Impossibile creare l'anteprima del file HEIC, ma verrà comunque elaborato",
-            variant: "destructive",
-          });
-          // Fallback: set a placeholder or try regular FileReader
-          setImagePreview(null);
+          // Create a placeholder preview for HEIC files
+          setImagePreview("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjY0IiB5PSI2NCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SEVJQzwvdGV4dD4KPHN2Zz4=");
         }
       } else {
         // For other formats, use regular FileReader
@@ -359,8 +349,12 @@ export function ChatInterface() {
         id: Date.now(),
         sessionId: sessionId!,
         role: "user",
-        content: messageToSend || "", // Don't show "Immagine" text if only image sent
-        metadata: imageToSend ? { image: imagePreview } : null, // Store image preview for display
+        content: messageToSend || (imageToSend ? "📷 Immagine caricata" : ""),
+        metadata: imageToSend ? { 
+          image: imagePreview,
+          hasImage: true,
+          imageName: imageToSend.name 
+        } : null,
         createdAt: new Date(),
       };
 
@@ -529,14 +523,23 @@ export function ChatInterface() {
       <div className="bg-dark-secondary border-t border-dark-accent p-4">
         <div className="border-t border-dark-accent">
             {/* Image Preview */}
-            {imagePreview && (
+            {(imagePreview || selectedImage) && (
               <div className="p-4 border-b border-dark-accent">
                 <div className="relative inline-block">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
-                    className="w-32 h-32 object-cover rounded-lg border border-dark-accent"
-                  />
+                  {imagePreview ? (
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="w-32 h-32 object-cover rounded-lg border border-dark-accent"
+                    />
+                  ) : selectedImage ? (
+                    <div className="w-32 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center">
+                      <Paperclip size={24} className="text-text-muted mb-1" />
+                      <span className="text-xs text-text-muted text-center px-2">
+                        {selectedImage.name}
+                      </span>
+                    </div>
+                  ) : null}
                   <button
                     onClick={removeImage}
                     className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1"
@@ -545,7 +548,10 @@ export function ChatInterface() {
                   </button>
                 </div>
                 <p className="text-sm text-text-muted mt-2">
-                  Foto pronta per l'analisi AI
+                  {selectedImage?.name && selectedImage.name.toLowerCase().includes('.heic') 
+                    ? `File HEIC: ${selectedImage.name}` 
+                    : "Foto pronta per l'analisi AI"
+                  }
                 </p>
               </div>
             )}
