@@ -166,7 +166,7 @@ export function ChatInterface() {
     setImagePreview(null);
     setIsTyping(true);
 
-    // Set up rotating messages for image analysis
+    // Set up appropriate typing message based on whether there's an image
     if (imageToSend) {
       const analysisMessages = [
         "Sto analizzando la tua immagine...",
@@ -189,7 +189,7 @@ export function ChatInterface() {
         clearInterval(messageRotation);
       }, 50000); // Stop after 50 seconds max
     } else {
-      setTypingMessage("Bonnie sta scrivendo");
+      setTypingMessage("AI-DermaSense sta scrivendo");
     }
 
     try {
@@ -252,10 +252,10 @@ export function ChatInterface() {
 
       setMessages(prev => [...prev, userMessage, assistantMessage]);
       setIsTyping(false);
-      setTypingMessage("Bonnie sta scrivendo"); // Reset to default message
+      setTypingMessage("AI-DermaSense sta scrivendo"); // Reset to default message
     } catch (error) {
       setIsTyping(false);
-      setTypingMessage("Bonnie sta scrivendo"); // Reset to default message
+      setTypingMessage("AI-DermaSense sta scrivendo"); // Reset to default message
       toast({
         title: "Errore",
         description: "Impossibile inviare il messaggio. Riprova.",
