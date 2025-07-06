@@ -62,15 +62,15 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
 
 ### Fase 1: Messaggio di Benvenuto Obbligatorio
 1.  **Input Iniziale:** La prima informazione che riceverai dall'applicazione sarà il nome dell'utente (es. "Gabriele"). Se ricevi anche un oggetto JSON con i dati di un'analisi foto, salterai il messaggio di benvenuto.
-2.  **Azione:** Se NON ricevi i dati dell'analisi foto, il tuo primo messaggio, dopo aver ricevuto il nome, deve essere ESATTAMENTE questo (sostituendo NOME):
+2.  **Azione:** Se NON ricevi i dati dell'analisi foto, il tuo primo messaggio, dopo aver ricevuto il nome, deve essere ESATTAMENTE questo (sostituendo [NOME] con il nome dell'utente):
 
-    > Ciao NOME! Sono Bonnie, la tua assistente per la cura della pelle. Ti aiuto a capire la tua pelle e a trovare i prodotti giusti per te.
+    > Ciao [NOME]! Stai per iniziare l'analisi della tua pelle con AI-DermaSense, la tecnologia dermocosmetica creata dai Farmacisti e Dermatologi di Bonnie per aiutarti a migliorare la tua pelle.
     >
-    > Puoi iniziare in due modi:
-    > • Manda una foto del tuo viso (senza trucco e con buona luce) così la analizzo per te 📸
-    > • Oppure dimmi come va la tua pelle: che problemi hai, come la senti, che prodotti usi ✨
+    > Puoi iniziare l'analisi in due modi:
+    > - **Carica una foto del tuo viso (struccato e con buona luce naturale)** per farla analizzare da una skin specialist AI. 📸
+    > - **Oppure descrivimi direttamente la tua pelle**: come appare, che problemi senti o noti, e quali sono le tue abitudini skincare. ✨
     >
-    > Come preferisci iniziare?
+    > A te la scelta!
 
 3.  **Attendi la Scelta:** Dopo aver inviato questo messaggio, attendi la risposta dell'utente (che sarà una foto o una descrizione) per procedere alla Fase 2.
 
@@ -298,8 +298,35 @@ export class GeminiService {
       { role: "user", content: userName }
     ];
 
-    // Define the exact message we want to return
-    const initialMessage = `Ciao ${userName}! Stai per iniziare l'analisi della tua pelle con AI-DermaSense, la tecnologia dermocosmetica creata dai Farmacisti e Dermatologi di Bonnie per aiutarti a migliorare la tua pelle.
+    try {
+      // Let Gemini generate the initial message based on the system instruction
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+        },
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: userName }]
+          }
+        ]
+      });
+
+      const content = response.text || "Ciao! Come posso aiutarti oggi?";
+
+      // Add the generated message to conversation history
+      this.conversationHistory.push({ role: "assistant", content });
+
+      return {
+        content,
+        hasChoices: false
+      };
+    } catch (error) {
+      console.error("Error initializing conversation:", error);
+      
+      // Fallback message if Gemini fails
+      const fallbackMessage = `Ciao ${userName}! Stai per iniziare l'analisi della tua pelle con AI-DermaSense, la tecnologia dermocosmetica creata dai Farmacisti e Dermatologi di Bonnie per aiutarti a migliorare la tua pelle.
 
 Puoi iniziare l'analisi in due modi:
 - **Carica una foto del tuo viso (struccato e con buona luce naturale)** per farla analizzare da una skin specialist AI.
@@ -307,13 +334,13 @@ Puoi iniziare l'analisi in due modi:
 
 A te la scelta!`;
 
-    // Add the message directly to conversation history without calling Gemini
-    this.conversationHistory.push({ role: "assistant", content: initialMessage });
+      this.conversationHistory.push({ role: "assistant", content: fallbackMessage });
 
-    return {
-      content: initialMessage,
-      hasChoices: false
-    };
+      return {
+        content: fallbackMessage,
+        hasChoices: false
+      };
+    }
   }
 
   async sendMessageWithImage(imagePath: string, message?: string): Promise<ChatResponse> {
