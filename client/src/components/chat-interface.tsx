@@ -258,91 +258,51 @@ export function ChatInterface() {
     return (
       <div className="chat-container flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-subtle border-b border-dark-accent px-6 py-4 flex items-center justify-between shadow-lg">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-skincare rounded-full flex items-center justify-center shadow-md">
-              <span className="text-white font-bold text-lg">B</span>
+        <div className="bg-dark-secondary border-b border-dark-accent px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-assistant-msg rounded-full flex items-center justify-center">
+              <span className="text-white font-semibold text-sm">B</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Bonnie AI</h1>
-              <p className="text-skincare-primary text-sm font-medium">Assistente Dermocosmetico</p>
+              <h1 className="text-lg font-semibold text-white">Bonnie AI</h1>
+              <p className="text-text-muted text-sm">Assistente Dermocosmetico</p>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-3 h-3 bg-skincare-primary rounded-full animate-pulse shadow-sm"></div>
-            <span className="text-text-muted text-sm font-medium">Online</span>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-text-muted text-sm">Online</span>
           </div>
         </div>
 
         {/* Welcome Screen */}
-        <div className="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-dark-primary via-dark-secondary to-dark-accent">
-          <div className="max-w-lg w-full space-y-8 text-center">
-            {/* Logo/Avatar */}
-            <div className="relative">
-              <div className="w-24 h-24 bg-gradient-skincare rounded-full flex items-center justify-center mx-auto shadow-2xl">
-                <span className="text-white font-bold text-3xl">B</span>
-              </div>
-              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-skincare-primary rounded-full flex items-center justify-center shadow-lg">
-                <div className="w-3 h-3 bg-white rounded-full"></div>
-              </div>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="max-w-md w-full space-y-6 text-center">
+            <div className="w-20 h-20 bg-assistant-msg rounded-full flex items-center justify-center mx-auto">
+              <span className="text-white font-bold text-2xl">B</span>
             </div>
-            
-            {/* Welcome Text */}
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-text-muted bg-clip-text text-transparent">
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-2">
                 Benvenuto in Bonnie AI
               </h2>
-              <p className="text-text-muted text-lg leading-relaxed">
-                Il tuo assistente dermocosmetico personale.<br />
-                <span className="text-skincare-primary font-medium">Analisi AI della pelle e consigli personalizzati</span>
+              <p className="text-text-muted">
+                Il tuo assistente dermocosmetico personale
               </p>
             </div>
-            
-            {/* Features */}
-            <div className="grid grid-cols-3 gap-4 my-8">
-              <div className="bg-dark-accent/50 backdrop-blur-sm rounded-lg p-4 border border-dark-accent">
-                <div className="w-8 h-8 bg-skincare-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Camera className="w-4 h-4 text-skincare-primary" />
-                </div>
-                <p className="text-xs text-text-muted">Analisi Foto</p>
-              </div>
-              <div className="bg-dark-accent/50 backdrop-blur-sm rounded-lg p-4 border border-dark-accent">
-                <div className="w-8 h-8 bg-skincare-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <span className="text-skincare-primary text-sm">🧴</span>
-                </div>
-                <p className="text-xs text-text-muted">Consigli Prodotti</p>
-              </div>
-              <div className="bg-dark-accent/50 backdrop-blur-sm rounded-lg p-4 border border-dark-accent">
-                <div className="w-8 h-8 bg-skincare-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <span className="text-skincare-primary text-sm">✨</span>
-                </div>
-                <p className="text-xs text-text-muted">Routine Personale</p>
-              </div>
-            </div>
-            
-            {/* Input Form */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <Input
                 type="text"
-                placeholder="Inserisci il tuo nome per iniziare..."
+                placeholder="Inserisci il tuo nome..."
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="bg-dark-accent/50 backdrop-blur-sm border-dark-accent text-white placeholder-text-muted h-12 text-center text-lg font-medium rounded-xl"
+                className="bg-dark-accent border-gray-600 text-white placeholder-text-muted"
               />
               <Button
                 onClick={handleStartChat}
                 disabled={startChatMutation.isPending || !userName.trim()}
-                className="w-full bg-gradient-skincare hover:shadow-lg hover:scale-[1.02] text-white h-12 text-lg font-semibold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:transform-none"
+                className="w-full bg-assistant-msg hover:bg-green-600 text-white"
               >
-                {startChatMutation.isPending ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Avvio...</span>
-                  </div>
-                ) : (
-                  "Inizia Consulenza"
-                )}
+                {startChatMutation.isPending ? "Avvio..." : "Inizia Chat"}
               </Button>
             </div>
           </div>
@@ -354,24 +314,24 @@ export function ChatInterface() {
   return (
     <div className="chat-container flex flex-col">
       {/* Header */}
-      <div className="bg-gradient-subtle border-b border-dark-accent px-6 py-4 flex items-center justify-between shadow-lg">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-gradient-skincare rounded-full flex items-center justify-center shadow-md">
-            <span className="text-white font-bold text-lg">B</span>
+      <div className="bg-dark-secondary border-b border-dark-accent px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-assistant-msg rounded-full flex items-center justify-center">
+            <span className="text-white font-semibold text-sm">B</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Bonnie AI</h1>
-            <p className="text-skincare-primary text-sm font-medium">Assistente Dermocosmetico</p>
+            <h1 className="text-lg font-semibold text-white">Bonnie AI</h1>
+            <p className="text-text-muted text-sm">Assistente Dermocosmetico</p>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <div className="w-3 h-3 bg-skincare-primary rounded-full animate-pulse shadow-sm"></div>
-          <span className="text-text-muted text-sm font-medium">Online</span>
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <span className="text-text-muted text-sm">Online</span>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div className="messages-area flex-1 p-6 space-y-6 overflow-y-auto bg-gradient-to-b from-dark-primary/50 to-dark-secondary/30">
+      <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto">
         {messages.map((message) => (
           <MessageBubble
             key={message.id}
@@ -385,71 +345,69 @@ export function ChatInterface() {
       </div>
 
       {/* Input Area */}
-      <div className="bg-gradient-subtle border-t border-dark-accent p-6 shadow-2xl">
-        {/* Image Preview */}
-        {imagePreview && (
-          <div className="mb-6 p-4 bg-dark-accent/50 backdrop-blur-sm rounded-xl border border-dark-accent">
-            <div className="relative inline-block">
-              <img 
-                src={imagePreview} 
-                alt="Preview" 
-                className="w-36 h-36 object-cover rounded-xl border-2 border-skincare-primary/30 shadow-lg"
-              />
-              <button
-                onClick={removeImage}
-                className="absolute -top-3 -right-3 bg-skincare-secondary hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 hover:scale-110"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="mt-3 flex items-center space-x-2">
-              <div className="w-2 h-2 bg-skincare-primary rounded-full animate-pulse"></div>
-              <p className="text-sm text-skincare-primary font-medium">
-                Foto pronta per l'analisi AI
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Message Input */}
-        <div className="flex gap-3 items-end bg-dark-accent/30 backdrop-blur-sm rounded-2xl p-4 border border-dark-accent/50">
-          <div className="flex gap-2">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-              id="image-upload"
-              disabled={isTyping}
-            />
-            <label
-              htmlFor="image-upload"
-              className={`p-3 rounded-xl border-2 border-skincare-primary/30 text-skincare-primary hover:text-white hover:bg-skincare-primary hover:border-skincare-primary transition-all duration-300 cursor-pointer shadow-lg ${isTyping ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
-            >
-              <Camera size={20} />
-            </label>
-          </div>
-
-          <Input
-            type="text"
-            placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Descrivi il tuo problema o carica una foto..."}
-            value={currentMessage}
-            onChange={(e) => setCurrentMessage(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-            className="flex-1 bg-dark-secondary/50 backdrop-blur-sm border-dark-accent/50 text-white placeholder:text-text-muted rounded-xl h-12 px-4 focus:border-skincare-primary focus:ring-2 focus:ring-skincare-primary/20 transition-all duration-300"
-            disabled={isTyping}
-          />
-          <Button
-            onClick={handleSendMessage}
-            disabled={(!currentMessage.trim() && !selectedImage) || isTyping}
-            className="bg-gradient-skincare hover:shadow-lg hover:scale-105 text-white px-6 h-12 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:transform-none"
-          >
-            {isTyping ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              "Invia"
+      <div className="bg-dark-secondary border-t border-dark-accent p-4">
+        <div className="border-t border-dark-accent">
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="p-4 border-b border-dark-accent">
+                <div className="relative inline-block">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-32 h-32 object-cover rounded-lg border border-dark-accent"
+                  />
+                  <button
+                    onClick={removeImage}
+                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <p className="text-sm text-text-muted mt-2">
+                  Foto pronta per l'analisi AI
+                </p>
+              </div>
             )}
-          </Button>
+
+            {/* Message Input */}
+            <div className="flex gap-2 p-4">
+              <div className="flex gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                  disabled={isTyping}
+                />
+                <label
+                  htmlFor="image-upload"
+                  className={`p-2 rounded-lg border border-dark-accent text-text-muted hover:text-white hover:bg-dark-accent transition-colors cursor-pointer ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <Camera size={20} />
+                </label>
+              </div>
+
+              <Input
+                type="text"
+                placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi un messaggio o carica una foto..."}
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                className="flex-1 bg-dark-secondary border-dark-accent text-white placeholder:text-text-muted"
+                disabled={isTyping}
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={(!currentMessage.trim() && !selectedImage) || isTyping}
+                className="bg-assistant-msg hover:bg-assistant-msg/80 text-white"
+              >
+                Invia
+              </Button>
+            </div>
+          </div>
+        <div className="mt-2 text-xs text-text-muted">
+          Premi Invio per inviare • Shift + Invio per andare a capo
         </div>
       </div>
     </div>

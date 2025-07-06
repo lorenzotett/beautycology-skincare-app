@@ -24,18 +24,13 @@
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
 
-  /* Skincare-themed colors */
-  --dark-primary: hsl(220, 13%, 9%);
-  --dark-secondary: hsl(220, 14%, 14%);
-  --dark-accent: hsl(220, 13%, 20%);
-  --assistant-msg: hsl(162, 63%, 41%);
-  --user-msg: hsl(213, 93%, 67%);
-  --text-muted: hsl(215, 13%, 65%);
-  --skincare-primary: hsl(162, 63%, 41%);
-  --skincare-secondary: hsl(340, 82%, 52%);
-  --skincare-accent: hsl(45, 100%, 70%);
-  --gradient-start: hsl(162, 63%, 41%);
-  --gradient-end: hsl(213, 93%, 67%);
+  /* Dark theme custom properties */
+  --dark-primary: hsl(0, 0%, 10%);
+  --dark-secondary: hsl(0, 0%, 18%);
+  --dark-accent: hsl(0, 0%, 24%);
+  --assistant-msg: hsl(122, 39%, 49%);
+  --user-msg: hsl(207, 90%, 54%);
+  --text-muted: hsl(0, 0%, 62%);
 }
 
 .dark {
@@ -111,30 +106,6 @@
     border-color: var(--dark-accent);
   }
   
-  .bg-skincare-primary {
-    background-color: var(--skincare-primary);
-  }
-  
-  .bg-skincare-secondary {
-    background-color: var(--skincare-secondary);
-  }
-  
-  .bg-skincare-accent {
-    background-color: var(--skincare-accent);
-  }
-  
-  .text-skincare-primary {
-    color: var(--skincare-primary);
-  }
-  
-  .bg-gradient-skincare {
-    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
-  }
-  
-  .bg-gradient-subtle {
-    background: linear-gradient(135deg, var(--dark-secondary) 0%, var(--dark-accent) 100%);
-  }
-  
   .chat-container {
     height: 100vh;
     max-height: 100vh;
@@ -156,12 +127,8 @@
   }
   
   .messages-area::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, var(--skincare-primary), var(--assistant-msg));
-    border-radius: 6px;
-  }
-  
-  .messages-area::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(to bottom, var(--skincare-primary), var(--user-msg));
+    background: hsl(0, 0%, 29%);
+    border-radius: 3px;
   }
   
   .message-bubble {
@@ -171,16 +138,15 @@
   
   .choice-button {
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
   }
   
   .choice-button:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(52, 168, 83, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
   }
   
-  .choice-button:active {
-    transform: translateY(0) scale(0.98);
+  .choice-button:hover:not(:disabled) {
+    background-color: var(--assistant-msg);
   }
   
   @keyframes pulse-dot {
@@ -196,36 +162,13 @@
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
   
-  /* Animazioni aggiuntive */
-  @keyframes shimmer {
-    0% {
-      background-position: -200px 0;
-    }
-    100% {
-      background-position: calc(200px + 100%) 0;
-    }
-  }
-  
-  .shimmer {
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    background-size: 200px 100%;
-    animation: shimmer 1.5s infinite;
-  }
-  
-  /* Responsive design */
   @media (max-width: 768px) {
     .messages-area {
       height: calc(100vh - 140px);
-      padding: 1rem;
-      gap: 1rem;
     }
     
     .message-bubble {
       max-width: 90%;
-    }
-    
-    .chat-container {
-      font-size: 14px;
     }
   }
 }
