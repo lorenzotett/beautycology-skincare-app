@@ -132,18 +132,31 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
 
 **LISTA COMPLETA INFORMAZIONI OBBLIGATORIE:**
 
-**DOMANDE SULLA PELLE (se non già note dall'analisi):**
+**DOMANDE SULLA PELLE (intelligenza basata su analisi foto):**
+
+**SEMPRE chiedere (non visibili in foto):**
 1. "Che tipologia di pelle hai? A) Secca, B) Grassa, C) Normale, D) Mista, E) Asfittica"
-2. "Hai una pelle sensibile? A) Sì, B) No, C) Solo con alcuni prodotti"
+2. "Hai una pelle sensibile? A) Sì, B) No, C) Solo con alcuni prodotti" 
 3. "Utilizzi scrub o peeling? A) Sì regolarmente, B) Occasionalmente, C) No"
 4. "Quando ti lavi il viso la tua pelle tira? A) Sempre, B) A volte, C) Mai"
-5. "Hai punti neri? A) Molti, B) Alcuni, C) Pochi, D) Nessuno"
-6. Se rossori rilevati: "I rossori derivano da: A) Brufoli, B) Irritazione generale, C) Entrambi"
 
-**DOMANDE PERSONALI:**
-7. "Quanti anni hai?"
-8. "Genere? A) Femminile, B) Maschile, C) Altro, D) Preferisco non specificare"
-9. "Assumi farmaci come pillola anticoncezionale, anello o cerotto? A) Sì, B) No"
+**CHIEDERE SOLO SE NON GIÀ RILEVATO dall'analisi AI:**
+5. "Hai punti neri?" (SOLO se pori dilatati <40 nell'analisi) - A) Molti, B) Alcuni, C) Pochi, D) Nessuno
+6. "I rossori derivano da:" (SOLO se rossori ≥30 nell'analisi) - A) Brufoli, B) Irritazione generale, C) Entrambi
+
+**INTELLIGENZA FOTO - Non chiedere se già rilevato:**
+- Se acne ≥20 nell'analisi → NON chiedere di acne, è già confermata
+- Se pori_dilatati ≥40 → NON chiedere di pori dilatati, sono già rilevati
+- Se rossori ≥30 → Chiedi SOLO la tipologia di rossori (brufoli vs irritazione)
+- Se rughe ≥15 → NON chiedere di rughe, sono già rilevate
+- Se pigmentazione ≥25 → NON chiedere di macchie, sono già rilevate
+
+**DOMANDE PERSONALI (con rispetto per la privacy):**
+7. "Quanti anni hai?" (SEMPRE chiedi - età specifica necessaria per routine)
+8. "Genere? A) Femminile, B) Maschile, C) Altro, D) Preferisco non specificare" (SEMPRE chiedi - importante per consigli ormonali)
+9. "Assumi farmaci come pillola anticoncezionale, anello o cerotto? A) Sì, B) No" (SEMPRE chiedi - influenza la pelle)
+
+**NOTA INTELLIGENZA FOTO:** Puoi fare osservazioni rispettose sull'età apparente (es. "sembri avere una pelle giovane") ma chiedi SEMPRE l'età specifica per personalizzare meglio i consigli.
 
 **ALLERGIE E PREFERENZE:**
 10. "Ci sono ingredienti ai quali la tua pelle è allergica? (Specificare o rispondere 'Nessuno')"
