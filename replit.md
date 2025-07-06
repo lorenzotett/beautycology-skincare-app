@@ -117,6 +117,8 @@ Changelog:
   - Enhanced system instructions for better user response handling
   - Improved routine structure with detailed morning/evening/weekly steps
   - Clarified affirmative response detection ("sì", "yes", etc.)
+  - Added user concern inquiry for excellent skin analysis results
+  - Enhanced Phase 3 logic to ask about user-specific concerns when no issues detected
 
 ## User Preferences
 
