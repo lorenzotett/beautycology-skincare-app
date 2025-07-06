@@ -377,6 +377,23 @@ export class GeminiService {
     this.conversationHistory.push({ role: "user", content: message });
 
     try {
+      // Check if this is an email validation context
+      const isEmailRequest = this.isEmailValidationNeeded();
+      
+      if (isEmailRequest) {
+        const emailValidation = this.validateEmail(message);
+        if (!emailValidation.isValid) {
+          // Remove the invalid email from history and add validation error
+          this.conversationHistory.pop();
+          this.conversationHistory.push({ role: "assistant", content: emailValidation.errorMessage });
+          
+          return {
+            content: emailValidation.errorMessage,
+            hasChoices: false
+          };
+        }
+      }
+
       // Enhance the message with RAG context
       const conversationContext = this.conversationHistory
         .slice(-5) // Get last 5 messages for context
@@ -503,6 +520,60 @@ export class GeminiService {
     } catch (error) {
       console.error("Error saving conversation to knowledge base:", error);
     }
+  }
+
+  private isEmailValidationNeeded(): boolean {
+    // Check if the last assistant message asked for email
+    const lastAssistantMessage = this.conversationHistory
+      .slice()
+      .reverse()
+      .find(msg => msg.role === "assistant");
+    
+    if (!lastAssistantMessage) return false;
+    
+    const emailKeywords = [
+      "email",
+      "mail",
+      "indirizzo email",
+      "routine personalizzata",
+      "per inviarti"
+    ];
+    
+    return emailKeywords.some(keyword => 
+      lastAssistantMessage.content.toLowerCase().includes(keyword)
+    );
+  }
+
+  private validateEmail(email: string): { isValid: boolean; errorMessage?: string } {
+    // Remove whitespace
+    const trimmedEmail = email.trim();
+    
+    // Basic email regex pattern
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailRegex.test(trimmedEmail)) {
+      return {
+        isValid: false,
+        errorMessage: "Mi dispiace, l'indirizzo email inserito non è valido. Potresti inserire un indirizzo email corretto? (es. nome@example.com)"
+      };
+    }
+    
+    // Additional validation for common issues
+    if (trimmedEmail.length < 5) {
+      return {
+        isValid: false,
+        errorMessage: "L'indirizzo email sembra troppo corto. Potresti controllare e reinserirlo?"
+      };
+    }
+    
+    if (trimmedEmail.includes('..')) {
+      return {
+        isValid: false,
+        errorMessage: "L'indirizzo email contiene caratteri non validi. Potresti inserire un indirizzo email corretto?"
+      };
+    }
+    
+    return { isValid: true };
   }
 
   private createConversationDocument(): any {
