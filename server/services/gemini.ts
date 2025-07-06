@@ -128,9 +128,11 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
     Subito dopo aver mostrato tutti i parametri, aggiungi SEMPRE una sezione di panoramica:
     
     **🔍 PANORAMICA PROBLEMI PRINCIPALI:**
-    [Elenca i 2-3 problemi più critici con punteggi ≥61, spiegando brevemente cosa significano]
+    [SEMPRE presente - Se ci sono punteggi ≥61, elenca i 2-3 problemi più critici spiegando cosa significano. Se tutti i punteggi sono <61, scrivi comunque una panoramica generale dello stato della pelle evidenziando i parametri con punteggi più alti anche se sono nella norma]
     
-    **SE NESSUN PARAMETRO HA PUNTEGGIO ≥61**, aggiungi: "Basandomi sull'analisi AI, la tua pelle mostra un ottimo stato di salute generale, e non sono state rilevate problematiche significative che richiedano approfondimenti immediati. Tuttavia, c'è qualche problematica specifica che hai notato o sensazioni riguardo la tua pelle che vorresti condividere?"
+    **IMPORTANTE:** La panoramica deve SEMPRE esserci, anche se la pelle è in buone condizioni. In quel caso scrivi: "La tua pelle mostra complessivamente un buono stato di salute. I parametri più rilevanti sono: [elenca i 2-3 parametri con punteggi più alti anche se normali, spiegando brevemente]"
+    
+    **SE NESSUN PARAMETRO HA PUNTEGGIO ≥61**, dopo la panoramica aggiungi: "Tuttavia, c'è qualche problematica specifica che hai notato o sensazioni riguardo la tua pelle che vorresti condividere?"
 
     **DOPO LA RISPOSTA DELL'UTENTE (qualunque essa sia - "no", "niente", "si" o altro):**
     Devi IMMEDIATAMENTE dire: "Perfetto! Ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche, iniziamo:"
@@ -280,10 +282,15 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 3.  **QUANDO l'utente risponde affermativamente:** Fornisci IMMEDIATAMENTE la routine completa personalizzata che deve includere:
 
     **🌟 INGREDIENTI CONSIGLIATI SPECIFICI:**
-    Basandoti ESCLUSIVAMENTE sul database di mappatura, elenca gli ingredienti specifici:
-    - **Per [problema 1]:** [Ingrediente dal database] - [breve spiegazione benefici]
-    - **Per [problema 2]:** [Ingrediente dal database] - [breve spiegazione benefici]
-    - **Per [problema 3]:** [Ingrediente dal database] - [breve spiegazione benefici]
+    Basandoti ESCLUSIVAMENTE sul database di mappatura, elenca OBBLIGATORIAMENTE gli ingredienti specifici per OGNI problematica rilevata dall'analisi foto o dalle risposte del questionario:
+    
+    **REGOLA FERREA:** Per ogni problema identificato (acne, rossori, rughe, pigmentazione, pori dilatati, oleosità, danni solari, scarsa idratazione, scarsa elasticità, ecc.) devi SEMPRE indicare l'ingrediente corrispondente dal database.
+    
+    Formato obbligatorio:
+    - **Per [problema rilevato]:** [Ingrediente specifico dal database] - [breve spiegazione benefici]
+    - **Per [altro problema]:** [Altro ingrediente dal database] - [breve spiegazione benefici]
+    
+    **ATTENZIONE:** Non puoi saltare questa sezione. Anche se la pelle è in buone condizioni, identifica gli ingredienti preventivi basandoti sui parametri con punteggi più alti.
 
     **📋 ROUTINE PERSONALIZZATA:**
     - **Mattina:** Detergente delicato (se pelle tira), siero/trattamento mirato, crema idratante, protezione solare
@@ -523,28 +530,37 @@ A te la scelta!`;
   }
 
   private detectMultipleChoice(content: string): boolean {
-    // Look for pattern like "A) option" or "A. option" but only if it's a question
+    // Look for pattern like "A) option" or "A. option"
     const multipleChoicePattern = /^[A-E]\)\s+.+$/gm;
     const matches = content.match(multipleChoicePattern);
 
-    // Only treat as multiple choice if:
-    // 1. There are at least 2 matches
-    // 2. The content contains a question mark OR specific choice-indicating phrases
-    // 3. The matches are actual answer options (not just formatting)
+    // Only treat as multiple choice if there are at least 2 matches
     if (!matches || matches.length < 2) return false;
 
+    // More relaxed detection - check for common question patterns
     const hasQuestion = content.includes('?');
     const hasChoiceIndicator = content.toLowerCase().includes('scegli') || 
                               content.toLowerCase().includes('seleziona') ||
                               content.toLowerCase().includes('quale') ||
                               content.toLowerCase().includes('preferisci') ||
-                              content.toLowerCase().includes('derivano da:') ||
+                              content.toLowerCase().includes('derivano da') ||
                               content.toLowerCase().includes('metti la crema') ||
-                              content.toLowerCase().includes('genere?');
+                              content.toLowerCase().includes('genere') ||
+                              content.toLowerCase().includes('tipologia') ||
+                              content.toLowerCase().includes('tipo di pelle') ||
+                              content.toLowerCase().includes('sensibile') ||
+                              content.toLowerCase().includes('utilizzi') ||
+                              content.toLowerCase().includes('punti neri') ||
+                              content.toLowerCase().includes('quanti anni') ||
+                              content.toLowerCase().includes('ore dormi') ||
+                              content.toLowerCase().includes('litri') ||
+                              content.toLowerCase().includes('alimentazione') ||
+                              content.toLowerCase().includes('fumi') ||
+                              content.toLowerCase().includes('stress') ||
+                              content.toLowerCase().includes('fragranza');
 
-    const isActualQuestion = (hasQuestion || hasChoiceIndicator) && matches.length >= 2 && matches.length <= 6;
-
-    return isActualQuestion;
+    // Accept if it has choices and either a question mark or choice indicators
+    return matches.length >= 2 && matches.length <= 6 && (hasQuestion || hasChoiceIndicator);
   }
 
   private extractChoices(content: string): string[] {
