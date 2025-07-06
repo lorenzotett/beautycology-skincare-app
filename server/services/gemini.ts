@@ -149,22 +149,24 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
 - Se pori_dilatati ≥50 → Automaticamente dedurre "molti punti neri" - NON chiedere
 - Se pori_dilatati <30 → Automaticamente dedurre "pochi/nessun punto nero" - NON chiedere
 
-- Se oleosita ≥65 → Automaticamente dedurre "pelle grassa" - NON chiedere tipologia
-- Se oleosita ≤25 E idratazione ≤40 → Automaticamente dedurre "pelle secca" - NON chiedere tipologia
-- Se oleosita 26-64 E idratazione ≥50 → Automaticamente dedurre "pelle normale/mista" - NON chiedere tipologia
-- Se oleosita 40-64 E pori_dilatati ≥30 → Automaticamente dedurre "pelle mista (zona T grassa)" - NON chiedere tipologia
+**DEDUZIONE TIPO DI PELLE (SEMPRE AUTOMATICA SE ANALISI PRESENTE):**
+- Se oleosita ≥60 → Automaticamente dedurre "pelle grassa" - NON chiedere tipologia
+- Se oleosita ≤30 E idratazione ≤45 → Automaticamente dedurre "pelle secca" - NON chiedere tipologia
+- Se oleosita 31-59 E pori_dilatati ≥40 → Automaticamente dedurre "pelle mista" - NON chiedere tipologia
+- Se oleosita 31-59 E pori_dilatati <40 E idratazione ≥50 → Automaticamente dedurre "pelle normale" - NON chiedere tipologia
+- Se oleosita 31-59 E pori_dilatati <40 E idratazione <50 → Automaticamente dedurre "pelle normale tendente al secco" - NON chiedere tipologia
 
-- Se rossori ≤25 E nessun parametro critico → Automaticamente dedurre "pelle NON sensibile" - NON chiedere
-- Se rossori ≥40 → Automaticamente dedurre "pelle sensibile" - NON chiedere
+**DEDUZIONE SENSIBILITÀ:**
+- Se rossori ≤30 E nessun parametro critico → Automaticamente dedurre "pelle NON sensibile" - NON chiedere
+- Se rossori ≥35 → Automaticamente dedurre "pelle sensibile" - NON chiedere
 
-**CHIEDERE SOLO SE NON DEDUCIBILE:**
-5. "Hai punti neri?" - CHIEDERE SOLO se pori_dilatati è tra 20-29 (zona grigia)
-6. "Tipologia di pelle?" - CHIEDERE SOLO se oleosità è tra 25-39 E idratazione è tra 41-49 (zona grigia)  
-7. "Pelle sensibile?" - CHIEDERE SOLO se rossori è tra 26-39 (zona grigia)
-8. "I rossori derivano da:" - CHIEDERE SOLO se rossori ≥30 (per tipologia specifica)
+**CHIEDERE SOLO SE NON DEDUCIBILE (casi rari con analisi foto):**
+5. "Hai punti neri?" - CHIEDERE SOLO se pori_dilatati è tra 25-29 (zona grigia molto ristretta)
+6. "Tipologia di pelle?" - MAI chiedere se hai dati di analisi foto, sempre dedurre automaticamente
+7. "Pelle sensibile?" - CHIEDERE SOLO se rossori è tra 31-34 (zona grigia molto ristretta)
+8. "I rossori derivano da:" - CHIEDERE SOLO se rossori ≥35 (per tipologia specifica)
 
-**DEDUZIONE AUTOMATICA SEMPRE ATTIVA:**
-- Con oleosita=38, idratazione=75, pori_dilatati=35 → DEDUZIONE: "pelle mista/normale" - NON chiedere tipologia
+**REGOLA FONDAMENTALE:** Se hai ricevuto dati JSON di analisi foto, NON chiedere MAI il tipo di pelle - deducilo SEMPRE automaticamente dai valori di oleosità, idratazione e pori_dilatati.
 
 **SOGLIE INTELLIGENTI AGGIORNATE:**
 - Se acne ≥15 → NON chiedere di acne, è già confermata
