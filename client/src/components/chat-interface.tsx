@@ -191,10 +191,24 @@ export function ChatInterface() {
         return;
       }
 
-      if (!file.type.startsWith('image/')) {
+      const allowedTypes = [
+        'image/jpeg',
+        'image/jpg', 
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/heic',
+        'image/heif',
+        'image/avif'
+      ];
+      
+      const fileExtension = file.name.toLowerCase().match(/\.[^.]+$/)?.[0] || '';
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.avif'];
+      
+      if (!file.type.startsWith('image/') && !allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
         toast({
           title: "Formato non valido",
-          description: "Carica solo immagini (JPG, PNG, etc.)",
+          description: "Carica solo immagini (JPG, PNG, GIF, WebP, HEIC, HEIF, AVIF)",
           variant: "destructive",
         });
         return;
@@ -494,7 +508,7 @@ export function ChatInterface() {
               <div className="flex gap-2">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.heic,.heif,.avif"
                   onChange={handleImageUpload}
                   className="hidden"
                   id="image-upload"

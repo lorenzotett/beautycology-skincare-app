@@ -158,6 +158,8 @@ export class SkinAnalysisService {
       if (ext === '.png') mimeType = 'image/png';
       if (ext === '.gif') mimeType = 'image/gif';
       if (ext === '.webp') mimeType = 'image/webp';
+      if (ext === '.heic' || ext === '.heif') mimeType = 'image/heic';
+      if (ext === '.avif') mimeType = 'image/avif';
 
       const response = await this.ai.models.generateContent({
         model: "gemini-2.5-pro", // Use Pro for better image analysis

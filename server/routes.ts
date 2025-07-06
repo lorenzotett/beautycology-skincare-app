@@ -47,10 +47,24 @@ const imageUpload = multer({
     fileSize: 10 * 1024 * 1024 // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/heic',
+      'image/heif',
+      'image/avif'
+    ];
+    
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.avif'];
+    const fileExtension = req.file?.originalname?.toLowerCase().match(/\.[^.]+$/)?.[0] || '';
+    
+    if (file.mimetype.startsWith('image/') || allowedMimeTypes.includes(file.mimetype) || allowedExtensions.includes(fileExtension)) {
       cb(null, true);
     } else {
-      cb(new Error('Tipo di file non supportato. Solo immagini sono ammesse.'));
+      cb(new Error('Tipo di file non supportato. Formati supportati: JPG, PNG, GIF, WebP, HEIC, HEIF, AVIF.'));
     }
   }
 });
