@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatMessage, ChatSession } from "@shared/schema";
-import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3 } from "lucide-react";
+import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3, Copy, X, Eye, ChevronDown } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface AdminStats {
   totalSessions: number;
@@ -26,14 +27,21 @@ interface SessionWithMessages extends ChatSession {
   skinAnalysisCount: number;
 }
 
+type PeriodType = "Tutto il tempo" | "Oggi" | "Ultima settimana" | "Ultimo mese" | "Personalizzato";
+
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPeriod, setSelectedPeriod] = useState("Tutto il tempo");
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>("Tutto il tempo");
+  const [customDateFrom, setCustomDateFrom] = useState("");
+  const [customDateTo, setCustomDateTo] = useState("");
+  const [selectedSession, setSelectedSession] = useState<SessionWithMessages | null>(null);
+  const [showCustomPeriod, setShowCustomPeriod] = useState(false);
+  const { toast } = useToast();
 
-  // Check if user is already authenticated (simple localStorage check)
+  // Check if user is already authenticated
   useEffect(() => {
     const authStatus = localStorage.getItem('admin-authenticated');
     if (authStatus === 'true') {
@@ -43,7 +51,6 @@ export default function AdminDashboard() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple hardcoded login - in production use proper authentication
     if (username === "admin" && password === "password123") {
       setIsAuthenticated(true);
       localStorage.setItem('admin-authenticated', 'true');
@@ -55,6 +62,22 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('admin-authenticated');
+  };
+
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Copiato!",
+        description: `${label} copiato negli appunti`,
+      });
+    } catch (err) {
+      toast({
+        title: "Errore",
+        description: "Impossibile copiare negli appunti",
+        variant: "destructive",
+      });
+    }
   };
 
   const { data: stats } = useQuery({
@@ -77,10 +100,52 @@ export default function AdminDashboard() {
     enabled: isAuthenticated,
   });
 
-  const filteredSessions = sessions?.filter(session =>
+  const { data: sessionDetails } = useQuery({
+    queryKey: ["admin-session-details", selectedSession?.sessionId],
+    queryFn: async () => {
+      if (!selectedSession) return null;
+      const response = await apiRequest("GET", `/api/admin/sessions/${selectedSession.sessionId}`);
+      return response.json() as Promise<SessionWithMessages>;
+    },
+    enabled: !!selectedSession,
+  });
+
+  const filterSessionsByPeriod = (sessions: SessionWithMessages[]) => {
+    if (!sessions) return [];
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    return sessions.filter(session => {
+      const sessionDate = new Date(session.createdAt);
+
+      switch (selectedPeriod) {
+        case "Oggi":
+          return sessionDate >= today;
+        case "Ultima settimana":
+          const weekAgo = new Date(today);
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return sessionDate >= weekAgo;
+        case "Ultimo mese":
+          const monthAgo = new Date(today);
+          monthAgo.setMonth(monthAgo.getMonth() - 1);
+          return sessionDate >= monthAgo;
+        case "Personalizzato":
+          if (!customDateFrom || !customDateTo) return true;
+          const fromDate = new Date(customDateFrom);
+          const toDate = new Date(customDateTo);
+          toDate.setHours(23, 59, 59, 999);
+          return sessionDate >= fromDate && sessionDate <= toDate;
+        default:
+          return true;
+      }
+    });
+  };
+
+  const filteredSessions = sessions ? filterSessionsByPeriod(sessions).filter(session =>
     session.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     session.sessionId.includes(searchTerm)
-  ) || [];
+  ) : [];
 
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('it-IT', {
@@ -247,35 +312,131 @@ export default function AdminDashboard() {
 
         {/* Filters */}
         <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-700">Periodo:</span>
-              <select 
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1 text-sm"
-              >
-                <option>Tutto il tempo</option>
-                <option>Oggi</option>
-                <option>Ultima settimana</option>
-                <option>Ultimo mese</option>
-              </select>
-            </div>
-            
-            <div className="flex-1 max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Cerca per nome utente, email, thread ID..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-700">Periodo:</span>
+                <div className="relative">
+                  <select 
+                    value={selectedPeriod}
+                    onChange={(e) => {
+                      const value = e.target.value as PeriodType;
+                      setSelectedPeriod(value);
+                      setShowCustomPeriod(value === "Personalizzato");
+                    }}
+                    className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 appearance-none pr-8"
+                  >
+                    <option value="Tutto il tempo">Tutto il tempo</option>
+                    <option value="Oggi">Oggi</option>
+                    <option value="Ultima settimana">Ultima settimana</option>
+                    <option value="Ultimo mese">Ultimo mese</option>
+                    <option value="Personalizzato">Personalizzato</option>
+                  </select>
+                  <ChevronDown className="absolute right-2 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+              
+              <div className="flex-1 max-w-md">
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Cerca per nome utente, email, thread ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 border-gray-300"
+                  />
+                </div>
               </div>
             </div>
+
+            {/* Custom Date Range */}
+            {showCustomPeriod && (
+              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm text-gray-700">Da:</label>
+                  <Input
+                    type="date"
+                    value={customDateFrom}
+                    onChange={(e) => setCustomDateFrom(e.target.value)}
+                    className="border-gray-300"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm text-gray-700">A:</label>
+                  <Input
+                    type="date"
+                    value={customDateTo}
+                    onChange={(e) => setCustomDateTo(e.target.value)}
+                    className="border-gray-300"
+                  />
+                </div>
+                <div className="text-sm text-gray-600">
+                  <strong>{filteredSessions.length}</strong> conversazioni trovate
+                </div>
+              </div>
+            )}
+
+            {selectedPeriod !== "Personalizzato" && (
+              <div className="text-sm text-gray-600">
+                <strong>{filteredSessions.length}</strong> conversazioni trovate nel periodo selezionato
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Chat Detail Modal */}
+        {selectedSession && sessionDetails && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Chat Details</h2>
+                  <p className="text-gray-600">User: {sessionDetails.userName}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedSession(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <ScrollArea className="h-[600px] p-6">
+                <div className="space-y-4">
+                  {sessionDetails.messages.map((message) => (
+                    <div key={message.id} className={`p-4 rounded-lg ${
+                      message.role === 'user' ? 'bg-blue-50 ml-8' : 'bg-gray-50 mr-8'
+                    }`}>
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="font-medium text-sm text-gray-600">
+                          {message.role === 'user' ? 'Utente' : 'Bonnie AI'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {formatDate(message.createdAt)} {formatTime(message.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-gray-900">{message.content}</p>
+                      {message.metadata && (message.metadata as any).hasImage && (
+                        <div className="mt-2 flex items-center text-sm text-blue-600">
+                          <Image className="h-4 w-4 mr-1" />
+                          Immagine allegata
+                        </div>
+                      )}
+                      {message.metadata && (message.metadata as any).skinAnalysis && (
+                        <div className="mt-2 flex items-center text-sm text-purple-600">
+                          <Brain className="h-4 w-4 mr-1" />
+                          Analisi AI della pelle
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+        )}
 
         {/* Conversations Table */}
         <Card className="bg-white border border-gray-200">
@@ -303,13 +464,23 @@ export default function AdminDashboard() {
                       <div className="font-medium text-gray-900">{session.userName}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 font-mono">
-                        {session.sessionId.substring(0, 12)}...
+                      <div 
+                        className="text-sm text-blue-600 font-mono cursor-pointer hover:text-blue-800 flex items-center group"
+                        title={session.sessionId}
+                        onClick={() => copyToClipboard(session.sessionId, "Thread ID")}
+                      >
+                        <span>{session.sessionId.substring(0, 12)}...</span>
+                        <Copy className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 font-mono">
-                        {session.sessionId.substring(0, 12)}...
+                      <div 
+                        className="text-sm text-blue-600 font-mono cursor-pointer hover:text-blue-800 flex items-center group"
+                        title={session.userId}
+                        onClick={() => copyToClipboard(session.userId, "User Fingerprint")}
+                      >
+                        <span>{session.userId.substring(0, 12)}...</span>
+                        <Copy className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -330,8 +501,14 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Button variant="outline" size="sm" className="text-blue-600 border-blue-600 hover:bg-blue-50">
-                        View Chat
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-blue-600 border-blue-600 hover:bg-blue-50 flex items-center space-x-1"
+                        onClick={() => setSelectedSession(session)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>View Chat</span>
                       </Button>
                     </td>
                   </tr>
