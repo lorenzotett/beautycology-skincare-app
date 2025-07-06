@@ -32,6 +32,7 @@ export function ChatInterface() {
   const [currentMessage, setCurrentMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [typingMessage, setTypingMessage] = useState("Bonnie sta scrivendo");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
@@ -165,6 +166,32 @@ export function ChatInterface() {
     setImagePreview(null);
     setIsTyping(true);
 
+    // Set up rotating messages for image analysis
+    if (imageToSend) {
+      const analysisMessages = [
+        "Sto analizzando la tua immagine...",
+        "Analizzo i dettagli della tua pelle...",
+        "Ancora un momento...",
+        "Sto elaborando l'analisi AI...",
+        "Quasi fatto, analizzo gli ultimi dettagli..."
+      ];
+      
+      let messageIndex = 0;
+      setTypingMessage(analysisMessages[0]);
+      
+      const messageRotation = setInterval(() => {
+        messageIndex = (messageIndex + 1) % analysisMessages.length;
+        setTypingMessage(analysisMessages[messageIndex]);
+      }, 3000); // Change message every 3 seconds
+      
+      // Clear interval when done
+      setTimeout(() => {
+        clearInterval(messageRotation);
+      }, 50000); // Stop after 50 seconds max
+    } else {
+      setTypingMessage("Bonnie sta scrivendo");
+    }
+
     try {
       let response;
 
@@ -225,8 +252,10 @@ export function ChatInterface() {
 
       setMessages(prev => [...prev, userMessage, assistantMessage]);
       setIsTyping(false);
+      setTypingMessage("Bonnie sta scrivendo"); // Reset to default message
     } catch (error) {
       setIsTyping(false);
+      setTypingMessage("Bonnie sta scrivendo"); // Reset to default message
       toast({
         title: "Errore",
         description: "Impossibile inviare il messaggio. Riprova.",
@@ -340,7 +369,7 @@ export function ChatInterface() {
           />
         ))}
 
-        {isTyping && <TypingIndicator />}
+        {isTyping && <TypingIndicator message={typingMessage} />}
         <div ref={messagesEndRef} />
       </div>
 

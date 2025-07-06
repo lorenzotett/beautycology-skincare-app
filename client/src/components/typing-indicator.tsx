@@ -1,4 +1,8 @@
-export function TypingIndicator() {
+interface TypingIndicatorProps {
+  message?: string;
+}
+
+export function TypingIndicator({ message = "Bonnie sta scrivendo" }: TypingIndicatorProps) {
   return (
     <div className="flex items-start space-x-3">
       <div className="w-8 h-8 bg-assistant-msg rounded-full flex items-center justify-center flex-shrink-0">
@@ -6,7 +10,7 @@ export function TypingIndicator() {
       </div>
       <div className="bg-dark-secondary rounded-lg p-3">
         <div className="flex items-center gap-2">
-          <span className="text-text-muted text-sm">Bonnie sta scrivendo</span>
+          <span className="text-text-muted text-sm">{message}</span>
           <div className="flex gap-1">
             <div className="w-2 h-2 bg-assistant-msg rounded-full animate-pulse-dot"></div>
             <div className="w-2 h-2 bg-assistant-msg rounded-full animate-pulse-dot" style={{ animationDelay: '0.2s' }}></div>
