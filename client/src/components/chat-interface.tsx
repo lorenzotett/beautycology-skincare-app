@@ -8,7 +8,7 @@ import { Input } from "./ui/input";
 import { Card } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { useToast } from "../hooks/use-toast";
-import { Camera, Upload, X } from "lucide-react";
+import { Paperclip, Upload, X } from "lucide-react";
 import { ChatMessage } from "@shared/schema";
 
 interface ChatResponse {
@@ -384,7 +384,7 @@ export function ChatInterface() {
                   htmlFor="image-upload"
                   className={`p-2 rounded-lg border border-dark-accent text-text-muted hover:text-white hover:bg-dark-accent transition-colors cursor-pointer ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <Camera size={20} />
+                  <Paperclip size={20} />
                 </label>
               </div>
 
