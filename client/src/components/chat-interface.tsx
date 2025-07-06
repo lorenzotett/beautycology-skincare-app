@@ -383,7 +383,6 @@ export function ChatInterface() {
             <span className="text-text-muted text-sm">Online</span>
           </div>
         </div>
-
         {/* Welcome Screen */}
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="max-w-md w-full space-y-6 text-center">
@@ -391,9 +390,7 @@ export function ChatInterface() {
               <span className="text-white font-bold text-2xl">B</span>
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">
-                Benvenuto in Bonnie AI
-              </h2>
+              <h2 className="text-2xl text-white mb-2 font-black">Benvenuto in AI-DermaSense</h2>
               <p className="text-text-muted">
                 Il tuo assistente dermocosmetico personale
               </p>
