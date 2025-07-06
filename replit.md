@@ -112,6 +112,11 @@ Changelog:
   - Chat sessions working properly with personalized AI responses
   - Image upload and processing fully functional
   - All core features tested and operational
+- July 06, 2025. Conversation flow optimization:
+  - Fixed AI repetitive question issue in routine generation phase
+  - Enhanced system instructions for better user response handling
+  - Improved routine structure with detailed morning/evening/weekly steps
+  - Clarified affirmative response detection ("sì", "yes", etc.)
 
 ## User Preferences
 

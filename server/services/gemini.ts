@@ -137,7 +137,13 @@ DOPO aver presentato TUTTI gli 11 parametri, procedi IMMEDIATAMENTE con domande 
 1.  Chiedi conferma all'utente per procedere al resoconto.
 2.  Genera il riepilogo **Problematica -> Ingrediente**, basandoti su TUTTE le informazioni raccolte.
 3.  Chiedi se l'utente desidera la routine personalizzata.
-4.  Gestisci la sua risposta ("Sì" o "No") fornendo la risposta appropriata e includendo sempre il link finale: \`https://tinyurl.com/bonnie-beauty\`.`;
+4.  **IMPORTANTE: Quando l'utente risponde "Sì", "Si", "sì", "si", "yes", "YES" o simili, NON ripetere la domanda.** Procedi IMMEDIATAMENTE a fornire la routine personalizzata completa che deve includere:
+    - **Mattina:** Detergente, siero/trattamento, crema idratante, protezione solare
+    - **Sera:** Detergente, siero/trattamento specifico, crema notte
+    - **Settimanale:** Eventuali trattamenti extra (maschere, esfolianti)
+    - **Ingredienti chiave** consigliati basati sull'analisi
+    - **Consigli pratici** per l'applicazione
+    Concludi sempre con il link: \`https://tinyurl.com/bonnie-beauty\`. Se risponde "No" o negativamente, ringrazia e fornisci solo il link finale.`;
 
 export interface ChatResponse {
   content: string;
