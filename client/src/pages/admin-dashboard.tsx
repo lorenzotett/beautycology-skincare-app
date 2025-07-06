@@ -192,8 +192,23 @@ export default function AdminDashboard() {
 
   const getUniqueUsers = () => {
     if (!sessions) return 0;
-    const uniqueUsers = new Set(sessions.map(session => session.userName));
-    return uniqueUsers.size;
+    
+    // Count unique users by fingerprint (userId starting with 'fp_')
+    // and fallback to username for old sessions without fingerprint
+    const uniqueFingerprints = new Set();
+    const uniqueUsernames = new Set();
+    
+    sessions.forEach(session => {
+      if (session.userId.startsWith('fp_')) {
+        // Modern fingerprint-based user ID
+        uniqueFingerprints.add(session.userId);
+      } else {
+        // Legacy username-based tracking (fallback)
+        uniqueUsernames.add(session.userName);
+      }
+    });
+    
+    return uniqueFingerprints.size + uniqueUsernames.size;
   };
 
   const getAverageDuration = () => {
@@ -316,7 +331,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Unique Users</p>
                 <p className="text-3xl font-bold text-gray-900">{getUniqueUsers()}</p>
-                <p className="text-xs text-gray-500">Distinct direct Responses</p>
+                <p className="text-xs text-gray-500">Browser fingerprint tracking</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
                 <Users className="h-6 w-6 text-purple-600" />

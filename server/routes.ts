@@ -59,14 +59,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Start a new chat session
   app.post("/api/chat/start", async (req, res) => {
     try {
-      const { userName } = req.body;
+      const { userName, fingerprint } = req.body;
       
       if (!userName || typeof userName !== "string") {
         return res.status(400).json({ error: "User name is required" });
       }
 
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const userId = `user_${Date.now()}`;
+      
+      // Use fingerprint as userId if provided, otherwise fallback to timestamp
+      const userId = fingerprint && typeof fingerprint === "string" 
+        ? `fp_${fingerprint.substring(0, 16)}` 
+        : `user_${Date.now()}`;
       
       // Create chat session in storage
       const session = await storage.createChatSession({
