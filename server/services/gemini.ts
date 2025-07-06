@@ -299,6 +299,16 @@ export class GeminiService {
     ];
 
     try {
+      const initialMessage = `Ciao ${userName}! 👋 
+
+Stai per iniziare l'analisi della tua pelle con AI-DermaSense, la tecnologia dermocosmetica creata dai Farmacisti e Dermatologi di Bonnie per aiutarti a migliorare la tua pelle. 🌿✨
+
+Puoi iniziare l'analisi in due modi:
+- **📸 Carica una foto del tuo viso (struccato e con buona luce naturale)** per farla analizzare da una skin specialist AI 🔬
+- **💬 Oppure descrivimi direttamente la tua pelle**: come appare, che problemi senti o noti, e quali sono le tue abitudini skincare 📝
+
+A te la scelta! 😊`;
+
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         config: {
@@ -476,16 +486,16 @@ export class GeminiService {
     // Look for pattern like "A) option" or "A. option" but only if it's a question
     const multipleChoicePattern = /[A-Z]\)\s+.+/g;
     const matches = content.match(multipleChoicePattern);
-    
+
     // Only treat as multiple choice if:
     // 1. There are at least 2 matches
     // 2. The content contains a question mark
     // 3. The matches are actual answer options (not just formatting)
     if (!matches || matches.length < 2) return false;
-    
+
     const hasQuestion = content.includes('?');
     const isActualQuestion = hasQuestion && matches.length <= 6; // Max 6 options is reasonable
-    
+
     return isActualQuestion;
   }
 
