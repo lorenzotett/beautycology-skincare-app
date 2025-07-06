@@ -241,7 +241,7 @@ export function ChatInterface() {
             <text x="64" y="100" font-family="Arial" font-size="10" fill="#D1D5DB" text-anchor="middle">HEIC</text>
           </svg>
         `)}`;
-        setImagePreview(placeholderSvg);</old_str>
+        setImagePreview(placeholderSvg);
       } else {
         // For other formats, use regular FileReader
         const reader = new FileReader();
@@ -410,6 +410,7 @@ export function ChatInterface() {
       role: "user",
       content: choice,
       createdAt: new Date(),
+      metadata: null,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -518,10 +519,9 @@ export function ChatInterface() {
 
       {/* Input Area */}
       <div className="bg-dark-secondary border-t border-dark-accent p-4">
-        <div className="border-t border-dark-accent">
-            {/* Image Preview */}
-            {(imagePreview || selectedImage) && (
-              <div className="p-4 border-b border-dark-accent">
+        {/* Image Preview */}
+        {(imagePreview || selectedImage) && (
+          <div className="p-4 border-b border-dark-accent">
                 <div className="relative inline-block">
                   {imagePreview ? (
                     <img 
@@ -562,65 +562,66 @@ export function ChatInterface() {
                   }
                 </p>
               </div>
-            )}</old_str>
+            )}
 
-            {/* Message Input */}
-            <div className="flex gap-2 p-4">
-              <div className="flex gap-2">
-                <input
-                  type="file"
-                  accept="image/*,.heic,.heif,.avif"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                  disabled={isTyping}
-                />
-                <label
-                  htmlFor="image-upload"
-                  className={`p-2 rounded-lg border border-dark-accent text-text-muted hover:text-white hover:bg-dark-accent transition-colors cursor-pointer ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <Paperclip size={20} />
-                </label>
-              </div>
-
-              <div className="flex-1">
-                <Input
-                  type="text"
-                  placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi un messaggio o carica una foto..."}
-                  value={currentMessage}
-                  onChange={(e) => {
-                    const newValue = e.target.value;
-                    setCurrentMessage(newValue);
-                    
-                    // Validate email in real-time if we're in email context
-                    if (isEmailContext() && newValue.trim()) {
-                      const validation = validateEmail(newValue);
-                      setEmailError(validation.isValid ? null : validation.errorMessage || null);
-                    } else {
-                      setEmailError(null);
-                    }
-                  }}
-                  onKeyPress={(e) => e.key === "Enter" && !(emailError && isEmailContext()) && handleSendMessage()}
-                  className={`bg-dark-secondary border-dark-accent text-white placeholder:text-text-muted ${emailError ? 'border-red-500' : ''}`}
-                  disabled={isTyping}
-                />
-                {emailError && (
-                  <p className="text-red-400 text-xs mt-1 px-1">
-                    {emailError}
-                  </p>
-                )}
-              </div>
-              <Button
-                onClick={handleSendMessage}
-                disabled={(!currentMessage.trim() && !selectedImage) || isTyping || (emailError !== null && isEmailContext())}
-                className="bg-assistant-msg hover:bg-assistant-msg/80 text-white"
-              >
-                Invia
-              </Button>
-            </div>
+        {/* Message Input */}
+        <div className="flex gap-2 p-4">
+          <div className="flex gap-2">
+            <input
+              type="file"
+              accept="image/*,.heic,.heif,.avif"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="image-upload"
+              disabled={isTyping}
+            />
+            <label
+              htmlFor="image-upload"
+              className={`p-2 rounded-lg border border-dark-accent text-text-muted hover:text-white hover:bg-dark-accent transition-colors cursor-pointer ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Paperclip size={20} />
+            </label>
           </div>
-        <div className="mt-2 text-xs text-text-muted">
-          Premi Invio per inviare • Shift + Invio per andare a capo
+
+          <div className="flex-1">
+            <Input
+              type="text"
+              placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi un messaggio o carica una foto..."}
+              value={currentMessage}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                setCurrentMessage(newValue);
+                
+                // Validate email in real-time if we're in email context
+                if (isEmailContext() && newValue.trim()) {
+                  const validation = validateEmail(newValue);
+                  setEmailError(validation.isValid ? null : validation.errorMessage || null);
+                } else {
+                  setEmailError(null);
+                }
+              }}
+              onKeyPress={(e) => e.key === "Enter" && !(emailError && isEmailContext()) && handleSendMessage()}
+              className={`bg-dark-secondary border-dark-accent text-white placeholder:text-text-muted ${emailError ? 'border-red-500' : ''}`}
+              disabled={isTyping}
+            />
+            {emailError && (
+              <p className="text-red-400 text-xs mt-1 px-1">
+                {emailError}
+              </p>
+            )}
+          </div>
+          
+          <Button
+            onClick={handleSendMessage}
+            disabled={(!currentMessage.trim() && !selectedImage) || isTyping || (emailError !== null && isEmailContext())}
+            className="bg-assistant-msg hover:bg-assistant-msg/80 text-white"
+          >
+            Invia
+          </Button>
+        </div>
+        
+        <div className="mt-2 text-xs text-text-muted px-4 pb-2">
+          Premi Invio per inviare - Shift + Invio per andare a capo
         </div>
       </div>
     </div>

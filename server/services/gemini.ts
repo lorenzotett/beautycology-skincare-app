@@ -465,10 +465,11 @@ A te la scelta!`;
         if (!emailValidation.isValid) {
           // Remove the invalid email from history and add validation error
           this.conversationHistory.pop();
-          this.conversationHistory.push({ role: "assistant", content: emailValidation.errorMessage });
+          const errorMessage = emailValidation.errorMessage || "Email non valida. Riprova.";
+          this.conversationHistory.push({ role: "assistant", content: errorMessage });
 
           return {
-            content: emailValidation.errorMessage,
+            content: errorMessage,
             hasChoices: false
           };
         }
