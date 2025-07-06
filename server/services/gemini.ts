@@ -124,8 +124,13 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 
     (Per idratazione, elasticità e texture_uniforme inverti la valutazione: valori bassi = problema)
 
-    **DOPO L'ANALISI - REGOLA OBBLIGATORIA:**
-    SE NESSUN PARAMETRO HA PUNTEGGIO ≥61, aggiungi SEMPRE subito dopo l'analisi: "Basandomi sull'analisi AI, la tua pelle mostra un ottimo stato di salute generale, e non sono state rilevate problematiche significative che richiedano approfondimenti immediati. Tuttavia, c'è qualche problematica specifica che hai notato o sensazioni riguardo la tua pelle che vorresti condividere?"
+    **DOPO L'ANALISI - PANORAMICA PROBLEMI OBBLIGATORIA:**
+    Subito dopo aver mostrato tutti i parametri, aggiungi SEMPRE una sezione di panoramica:
+    
+    **🔍 PANORAMICA PROBLEMI PRINCIPALI:**
+    [Elenca i 2-3 problemi più critici con punteggi ≥61, spiegando brevemente cosa significano]
+    
+    **SE NESSUN PARAMETRO HA PUNTEGGIO ≥61**, aggiungi: "Basandomi sull'analisi AI, la tua pelle mostra un ottimo stato di salute generale, e non sono state rilevate problematiche significative che richiedano approfondimenti immediati. Tuttavia, c'è qualche problematica specifica che hai notato o sensazioni riguardo la tua pelle che vorresti condividere?"
 
     **DOPO LA RISPOSTA DELL'UTENTE (qualunque essa sia - "no", "niente", "si" o altro):**
     Devi IMMEDIATAMENTE dire: "Perfetto! Ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche, iniziamo:"
@@ -273,10 +278,17 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 2.  Dopo il riepilogo, chiedi se desidera la routine: "Vorresti che ti fornissi una routine personalizzata completa basata su tutte queste informazioni?"
 
 3.  **QUANDO l'utente risponde affermativamente:** Fornisci IMMEDIATAMENTE la routine completa personalizzata che deve includere:
+
+    **🌟 INGREDIENTI CONSIGLIATI SPECIFICI:**
+    Basandoti ESCLUSIVAMENTE sul database di mappatura, elenca gli ingredienti specifici:
+    - **Per [problema 1]:** [Ingrediente dal database] - [breve spiegazione benefici]
+    - **Per [problema 2]:** [Ingrediente dal database] - [breve spiegazione benefici]
+    - **Per [problema 3]:** [Ingrediente dal database] - [breve spiegazione benefici]
+
+    **📋 ROUTINE PERSONALIZZATA:**
     - **Mattina:** Detergente delicato (se pelle tira), siero/trattamento mirato, crema idratante, protezione solare
     - **Sera:** Detergente, siero/trattamento specifico per problematiche rilevate, crema notte
     - **Settimanale:** Trattamenti extra basati sulle necessità (maschere, esfolianti delicati se non controindicati)
-    - **Ingredienti chiave** specifici dal database di mappatura
     - **Consigli personalizzati** basati su età, stile di vita, abitudini
     - **Avvertenze** specifiche (es. non usare esfolianti se pelle sovraesfoliata)
 
@@ -515,7 +527,7 @@ A te la scelta!`;
 
   private detectMultipleChoice(content: string): boolean {
     // Look for pattern like "A) option" or "A. option" but only if it's a question
-    const multipleChoicePattern = /^[A-Z]\)\s+.+$/gm;
+    const multipleChoicePattern = /^[A-E]\)\s+.+$/gm;
     const matches = content.match(multipleChoicePattern);
 
     // Only treat as multiple choice if:
@@ -528,7 +540,10 @@ A te la scelta!`;
     const hasChoiceIndicator = content.toLowerCase().includes('scegli') || 
                               content.toLowerCase().includes('seleziona') ||
                               content.toLowerCase().includes('quale') ||
-                              content.toLowerCase().includes('preferisci');
+                              content.toLowerCase().includes('preferisci') ||
+                              content.toLowerCase().includes('derivano da:') ||
+                              content.toLowerCase().includes('metti la crema') ||
+                              content.toLowerCase().includes('genere?');
 
     const isActualQuestion = (hasQuestion || hasChoiceIndicator) && matches.length >= 2 && matches.length <= 6;
 
@@ -540,7 +555,7 @@ A te la scelta!`;
     const lines = content.split('\n');
 
     for (const line of lines) {
-      const match = line.match(/^[A-D]\)\s+(.+)$/);
+      const match = line.match(/^[A-E]\)\s+(.+)$/);
       if (match) {
         choices.push(match[1].trim());
       }
@@ -552,7 +567,7 @@ A te la scelta!`;
     private removeChoicesFromContent(content: string): string {
     // Remove lines that start with letter followed by ) and a space
     const lines = content.split('\n');
-    const filteredLines = lines.filter(line => !line.match(/^[A-D]\)\s+/));
+    const filteredLines = lines.filter(line => !line.match(/^[A-E]\)\s+/));
     return filteredLines.join('\n').trim();
   }
 
@@ -569,7 +584,7 @@ A te la scelta!`;
       // Check if this is a successful conversation milestone
       const isSuccessful = this.isConversationSuccessful(latestResponse);
 
-      if (isSuccessful && this.conversationhistory.length >= 6) {
+      if (isSuccessful && this.conversationHistory.length >= 6) {
         // Save the conversation to knowledge base
         await this.saveConversationToKnowledgeBase();
       }
