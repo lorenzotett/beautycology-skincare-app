@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { GeminiService } from "./services/gemini";
 import { SkinAnalysisService } from "./services/skin-analysis";
-import { ragService } from "./services/rag-simple";
+// import { ragService } from "./services/rag-simple";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -277,7 +277,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      const result = await ragService.addDocument(req.file.path, req.file.originalname);
+      // const result = await ragService.addDocument(req.file.path, req.file.originalname);
+      const result = "RAG service temporarily disabled";
       
       // Clean up uploaded file
       fs.unlinkSync(req.file.path);
@@ -296,7 +297,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get knowledge base statistics
   app.get("/api/rag/stats", async (req, res) => {
     try {
-      const stats = ragService.getKnowledgeBaseStats();
+      // const stats = ragService.getKnowledgeBaseStats();
+      const stats = { totalDocuments: 0, totalChunks: 0, sources: [] };
       res.json(stats);
     } catch (error) {
       console.error("Error getting knowledge base stats:", error);
@@ -313,7 +315,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Query is required" });
       }
 
-      const results = await ragService.searchSimilar(query, limit);
+      // const results = await ragService.searchSimilar(query, limit);
+      const results = { content: "RAG search temporarily disabled", sources: [] };
       res.json(results);
     } catch (error) {
       console.error("Error searching knowledge base:", error);
@@ -324,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clear knowledge base
   app.delete("/api/rag/clear", async (req, res) => {
     try {
-      ragService.clearKnowledgeBase();
+      // ragService.clearKnowledgeBase();
       res.json({ message: "Knowledge base cleared successfully" });
     } catch (error) {
       console.error("Error clearing knowledge base:", error);

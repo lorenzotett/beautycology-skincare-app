@@ -193,7 +193,7 @@ export class SkinAnalysisService {
         console.error("Cleaned response:", cleanedContent);
         
         // No fallback - throw error to force retry
-        throw new Error(`Failed to parse skin analysis JSON: ${parseError.message}`);
+        throw new Error(`Failed to parse skin analysis JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
       }
     } catch (error) {
       console.error("Error analyzing skin image:", error);

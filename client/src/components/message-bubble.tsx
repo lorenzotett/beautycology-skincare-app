@@ -74,4 +74,3 @@ export function MessageBubble({ message, onChoiceSelect }: MessageBubbleProps) {
     </div>
   );
 }
-```

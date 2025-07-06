@@ -203,7 +203,7 @@ Rispondi utilizzando sia le informazioni dalla knowledge base che il contesto de
     totalChunks: number;
     sources: string[];
   } {
-    const sources = [...new Set(this.documents.map(doc => doc.metadata.source))];
+    const sources = Array.from(new Set(this.documents.map(doc => doc.metadata.source)));
     
     return {
       totalDocuments: sources.length,

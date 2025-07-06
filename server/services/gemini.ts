@@ -184,7 +184,7 @@ export class GeminiService {
       if (ext === '.webp') mimeType = 'image/webp';
 
       // Create the content with image and optional text
-      const parts = [
+      const parts: any[] = [
         {
           inlineData: {
             data: base64Image,
@@ -206,7 +206,7 @@ export class GeminiService {
       // Add the new content with image
       contents.push({
         role: "user",
-        parts: parts
+        parts: parts as any
       });
 
       const response = await ai.models.generateContent({
