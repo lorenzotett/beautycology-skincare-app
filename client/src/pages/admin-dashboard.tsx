@@ -132,7 +132,7 @@ export default function AdminDashboard() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full"
+                className="w-full text-gray-900"
                 required
               />
             </div>
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full"
+                className="w-full text-gray-900"
                 required
               />
             </div>
