@@ -24,13 +24,18 @@
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
 
-  /* Dark theme custom properties */
-  --dark-primary: hsl(0, 0%, 10%);
-  --dark-secondary: hsl(0, 0%, 18%);
-  --dark-accent: hsl(0, 0%, 24%);
-  --assistant-msg: hsl(122, 39%, 49%);
-  --user-msg: hsl(207, 90%, 54%);
-  --text-muted: hsl(0, 0%, 62%);
+  /* Skincare-themed colors */
+  --dark-primary: hsl(220, 13%, 9%);
+  --dark-secondary: hsl(220, 14%, 14%);
+  --dark-accent: hsl(220, 13%, 20%);
+  --assistant-msg: hsl(162, 63%, 41%);
+  --user-msg: hsl(213, 93%, 67%);
+  --text-muted: hsl(215, 13%, 65%);
+  --skincare-primary: hsl(162, 63%, 41%);
+  --skincare-secondary: hsl(340, 82%, 52%);
+  --skincare-accent: hsl(45, 100%, 70%);
+  --gradient-start: hsl(162, 63%, 41%);
+  --gradient-end: hsl(213, 93%, 67%);
 }
 
 .dark {
@@ -104,6 +109,30 @@
   
   .border-dark-accent {
     border-color: var(--dark-accent);
+  }
+  
+  .bg-skincare-primary {
+    background-color: var(--skincare-primary);
+  }
+  
+  .bg-skincare-secondary {
+    background-color: var(--skincare-secondary);
+  }
+  
+  .bg-skincare-accent {
+    background-color: var(--skincare-accent);
+  }
+  
+  .text-skincare-primary {
+    color: var(--skincare-primary);
+  }
+  
+  .bg-gradient-skincare {
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+  }
+  
+  .bg-gradient-subtle {
+    background: linear-gradient(135deg, var(--dark-secondary) 0%, var(--dark-accent) 100%);
   }
   
   .chat-container {
