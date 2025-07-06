@@ -37,6 +37,7 @@ export function ChatInterface() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [answeredMessageIds, setAnsweredMessageIds] = useState<Set<number>>(new Set());
   const { toast } = useToast();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -332,8 +333,11 @@ export function ChatInterface() {
   };
 
 
-  const handleChoiceSelect = (choice: string) => {
+  const handleChoiceSelect = (choice: string, messageId: number) => {
     if (!sessionId) return;
+
+    // Mark this message as answered
+    setAnsweredMessageIds(prev => new Set(prev).add(messageId));
 
     // Add the user's choice to the chat immediately
     const userMessage: ChatMessage = {
@@ -442,7 +446,8 @@ export function ChatInterface() {
           <MessageBubble
             key={message.id}
             message={message}
-            onChoiceSelect={handleChoiceSelect}
+            onChoiceSelect={(choice) => handleChoiceSelect(choice, message.id!)}
+            isAnswered={answeredMessageIds.has(message.id!)}
           />
         ))}
 

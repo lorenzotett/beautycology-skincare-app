@@ -3,6 +3,7 @@ import { ChatMessage } from "@shared/schema";
 interface MessageBubbleProps {
   message: ChatMessage;
   onChoiceSelect?: (choice: string) => void;
+  isAnswered?: boolean;
 }
 
 // Function to format markdown and make links clickable
@@ -25,7 +26,7 @@ const formatMarkdown = (text: string): string => {
   return formattedText;
 };
 
-export function MessageBubble({ message, onChoiceSelect }: MessageBubbleProps) {
+export function MessageBubble({ message, onChoiceSelect, isAnswered = false }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const timestamp = new Date(message.createdAt!).toLocaleTimeString('it-IT', {
     hour: '2-digit',
@@ -67,15 +68,25 @@ export function MessageBubble({ message, onChoiceSelect }: MessageBubbleProps) {
             {choices.map((choice: string, index: number) => (
               <button
                 key={index}
-                onClick={() => onChoiceSelect?.(choice)}
-                className="choice-button w-full text-left p-3 bg-dark-accent hover:bg-assistant-msg rounded-lg text-sm transition-all duration-200 text-white"
+                onClick={() => !isAnswered && onChoiceSelect?.(choice)}
+                disabled={isAnswered}
+                className={`choice-button w-full text-left p-3 rounded-lg text-sm transition-all duration-200 ${
+                  isAnswered 
+                    ? 'bg-gray-600 cursor-not-allowed opacity-60 text-gray-400' 
+                    : 'bg-dark-accent hover:bg-assistant-msg text-white cursor-pointer'
+                }`}
               >
-                <span className="font-medium text-assistant-msg">
+                <span className={`font-medium ${isAnswered ? 'text-gray-500' : 'text-assistant-msg'}`}>
                   {String.fromCharCode(65 + index)})
                 </span>{" "}
                 {choice}
               </button>
             ))}
+            {isAnswered && (
+              <div className="text-xs text-gray-500 mt-2 italic">
+                ✓ Risposta già fornita
+              </div>
+            )}
           </div>
         )}
         <div className="text-xs text-text-muted mt-2">
