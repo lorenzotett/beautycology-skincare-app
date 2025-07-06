@@ -121,6 +121,11 @@ Changelog:
   - Enhanced Phase 3 logic to ask about user-specific concerns when no issues detected
   - Moved user concern question to immediately follow skin analysis presentation
   - Improved conversation flow for comprehensive consultation even with healthy skin
+  - Implemented comprehensive 19-question mandatory questionnaire system
+  - Added intelligent question filtering to avoid asking about known information
+  - Enhanced data collection for personalized routine generation
+  - Integrated lifestyle factors (sleep, stress, diet, smoking) into consultation
+  - Added allergy tracking and ingredient exclusion functionality
 
 ## User Preferences
 
