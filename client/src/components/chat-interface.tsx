@@ -359,7 +359,7 @@ export function ChatInterface() {
         id: Date.now(),
         sessionId: sessionId!,
         role: "user",
-        content: messageToSend || (imageToSend ? "Immagine" : ""), // Show "Immagine" if only image sent
+        content: messageToSend || "", // Don't show "Immagine" text if only image sent
         metadata: imageToSend ? { image: imagePreview } : null, // Store image preview for display
         createdAt: new Date(),
       };

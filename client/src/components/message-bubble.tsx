@@ -46,7 +46,24 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false }: M
     return (
       <div className="flex items-start space-x-3 justify-end">
         <div className="message-bubble bg-user-msg rounded-lg p-3 max-w-xs lg:max-w-md">
-          <p className="text-sm leading-relaxed text-white">{message.content}</p>
+          {/* Show image preview if available */}
+          {metadata?.image && (
+            <div className="mb-2">
+              <img 
+                src={metadata.image} 
+                alt="Immagine caricata" 
+                className="w-full max-w-48 h-auto rounded-lg border border-blue-300/30"
+              />
+            </div>
+          )}
+          {/* Show message content if present */}
+          {message.content && (
+            <p className="text-sm leading-relaxed text-white">{message.content}</p>
+          )}
+          {/* Show "Immagine" as fallback if no content but has image */}
+          {!message.content && metadata?.image && (
+            <p className="text-sm leading-relaxed text-white italic">Immagine</p>
+          )}
           <div className="text-xs text-blue-200 mt-2 text-right">
             <span>{timestamp}</span>
           </div>
