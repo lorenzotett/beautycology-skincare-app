@@ -371,7 +371,7 @@ export function ChatInterface() {
       </div>
 
       {/* Messages Area */}
-      <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto">
+      <div className="messages-area flex-1 p-6 space-y-6 overflow-y-auto bg-gradient-to-b from-dark-primary/50 to-dark-secondary/30">
         {messages.map((message) => (
           <MessageBubble
             key={message.id}
@@ -385,69 +385,71 @@ export function ChatInterface() {
       </div>
 
       {/* Input Area */}
-      <div className="bg-dark-secondary border-t border-dark-accent p-4">
-        <div className="border-t border-dark-accent">
-            {/* Image Preview */}
-            {imagePreview && (
-              <div className="p-4 border-b border-dark-accent">
-                <div className="relative inline-block">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
-                    className="w-32 h-32 object-cover rounded-lg border border-dark-accent"
-                  />
-                  <button
-                    onClick={removeImage}
-                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-                <p className="text-sm text-text-muted mt-2">
-                  Foto pronta per l'analisi AI
-                </p>
-              </div>
-            )}
-
-            {/* Message Input */}
-            <div className="flex gap-2 p-4">
-              <div className="flex gap-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                  disabled={isTyping}
-                />
-                <label
-                  htmlFor="image-upload"
-                  className={`p-2 rounded-lg border border-dark-accent text-text-muted hover:text-white hover:bg-dark-accent transition-colors cursor-pointer ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <Camera size={20} />
-                </label>
-              </div>
-
-              <Input
-                type="text"
-                placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi un messaggio o carica una foto..."}
-                value={currentMessage}
-                onChange={(e) => setCurrentMessage(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                className="flex-1 bg-dark-secondary border-dark-accent text-white placeholder:text-text-muted"
-                disabled={isTyping}
+      <div className="bg-gradient-subtle border-t border-dark-accent p-6 shadow-2xl">
+        {/* Image Preview */}
+        {imagePreview && (
+          <div className="mb-6 p-4 bg-dark-accent/50 backdrop-blur-sm rounded-xl border border-dark-accent">
+            <div className="relative inline-block">
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                className="w-36 h-36 object-cover rounded-xl border-2 border-skincare-primary/30 shadow-lg"
               />
-              <Button
-                onClick={handleSendMessage}
-                disabled={(!currentMessage.trim() && !selectedImage) || isTyping}
-                className="bg-assistant-msg hover:bg-assistant-msg/80 text-white"
+              <button
+                onClick={removeImage}
+                className="absolute -top-3 -right-3 bg-skincare-secondary hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 hover:scale-110"
               >
-                Invia
-              </Button>
+                <X size={16} />
+              </button>
+            </div>
+            <div className="mt-3 flex items-center space-x-2">
+              <div className="w-2 h-2 bg-skincare-primary rounded-full animate-pulse"></div>
+              <p className="text-sm text-skincare-primary font-medium">
+                Foto pronta per l'analisi AI
+              </p>
             </div>
           </div>
-        <div className="mt-2 text-xs text-text-muted">
-          Premi Invio per inviare • Shift + Invio per andare a capo
+        )}
+
+        {/* Message Input */}
+        <div className="flex gap-3 items-end bg-dark-accent/30 backdrop-blur-sm rounded-2xl p-4 border border-dark-accent/50">
+          <div className="flex gap-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="image-upload"
+              disabled={isTyping}
+            />
+            <label
+              htmlFor="image-upload"
+              className={`p-3 rounded-xl border-2 border-skincare-primary/30 text-skincare-primary hover:text-white hover:bg-skincare-primary hover:border-skincare-primary transition-all duration-300 cursor-pointer shadow-lg ${isTyping ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+            >
+              <Camera size={20} />
+            </label>
+          </div>
+
+          <Input
+            type="text"
+            placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Descrivi il tuo problema o carica una foto..."}
+            value={currentMessage}
+            onChange={(e) => setCurrentMessage(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+            className="flex-1 bg-dark-secondary/50 backdrop-blur-sm border-dark-accent/50 text-white placeholder:text-text-muted rounded-xl h-12 px-4 focus:border-skincare-primary focus:ring-2 focus:ring-skincare-primary/20 transition-all duration-300"
+            disabled={isTyping}
+          />
+          <Button
+            onClick={handleSendMessage}
+            disabled={(!currentMessage.trim() && !selectedImage) || isTyping}
+            className="bg-gradient-skincare hover:shadow-lg hover:scale-105 text-white px-6 h-12 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:transform-none"
+          >
+            {isTyping ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              "Invia"
+            )}
+          </Button>
         </div>
       </div>
     </div>

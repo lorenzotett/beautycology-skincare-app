@@ -156,8 +156,12 @@
   }
   
   .messages-area::-webkit-scrollbar-thumb {
-    background: hsl(0, 0%, 29%);
-    border-radius: 3px;
+    background: linear-gradient(to bottom, var(--skincare-primary), var(--assistant-msg));
+    border-radius: 6px;
+  }
+  
+  .messages-area::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, var(--skincare-primary), var(--user-msg));
   }
   
   .message-bubble {
@@ -167,15 +171,16 @@
   
   .choice-button {
     transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
   }
   
   .choice-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(52, 168, 83, 0.3);
   }
   
-  .choice-button:hover:not(:disabled) {
-    background-color: var(--assistant-msg);
+  .choice-button:active {
+    transform: translateY(0) scale(0.98);
   }
   
   @keyframes pulse-dot {
@@ -191,13 +196,36 @@
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
   
+  /* Animazioni aggiuntive */
+  @keyframes shimmer {
+    0% {
+      background-position: -200px 0;
+    }
+    100% {
+      background-position: calc(200px + 100%) 0;
+    }
+  }
+  
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    background-size: 200px 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  /* Responsive design */
   @media (max-width: 768px) {
     .messages-area {
       height: calc(100vh - 140px);
+      padding: 1rem;
+      gap: 1rem;
     }
     
     .message-bubble {
       max-width: 90%;
+    }
+    
+    .chat-container {
+      font-size: 14px;
     }
   }
 }
