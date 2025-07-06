@@ -49,6 +49,20 @@ export default function AdminDashboard() {
     }
   }, []);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedSession) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedSession]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (username === "admin" && password === "password123") {
@@ -387,9 +401,16 @@ export default function AdminDashboard() {
 
         {/* Chat Detail Modal */}
         {selectedSession && sessionDetails && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
-              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setSelectedSession(null);
+              }
+            }}
+          >
+            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">Chat Details</h2>
                   <p className="text-gray-600">User: {sessionDetails.userName}</p>
@@ -403,7 +424,7 @@ export default function AdminDashboard() {
                 </Button>
               </div>
               
-              <ScrollArea className="h-[600px] p-6">
+              <div className="flex-1 overflow-y-auto p-6">
                 <div className="space-y-4">
                   {sessionDetails.messages.map((message) => (
                     <div key={message.id} className={`p-4 rounded-lg ${
@@ -433,7 +454,7 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                 </div>
-              </ScrollArea>
+              </div>
             </div>
           </div>
         )}
