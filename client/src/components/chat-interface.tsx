@@ -454,20 +454,18 @@ export function ChatInterface() {
           <div className="max-w-lg w-full space-y-8 text-center bg-white rounded-3xl p-8 shadow-xl border border-slate-200">
             {/* Logo Bonnie */}
             <div className="space-y-2">
-              <div className="w-16 h-16 mx-auto bg-white rounded-full flex items-center justify-center shadow-md">
-                <img 
-                  src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
-                  alt="Bonnie Logo" 
-                  className="w-12 h-12 object-contain"
-                />
-              </div>
+              <img 
+                src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
+                alt="Bonnie Logo" 
+                className="w-16 h-16 mx-auto object-contain"
+              />
               <div className="text-xl font-medium text-gray-700 tracking-wide">AI-DermaSense</div>
             </div>
 
             {/* Hero Image */}
             <div className="relative mx-auto w-80 h-80 rounded-2xl overflow-hidden shadow-lg">
               <img 
-                src="/attached_assets/IMG_0312_1751878091359.png" 
+                src="/attached_assets/Mockup image_1751894588863.png" 
                 alt="Analizza la tua pelle" 
                 className="w-full h-full object-cover"
                 onError={(e) => {
