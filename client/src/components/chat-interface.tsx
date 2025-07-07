@@ -448,46 +448,28 @@ export function ChatInterface() {
 
   if (!hasStarted) {
     return (
-      <div className="chat-container flex flex-col">
-        {/* Header */}
-        <div className="bg-dark-secondary border-b border-dark-accent px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
-            <img 
-              src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
-              alt="Bonnie Logo" 
-              className="w-8 h-8 object-contain"
-            />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-white text-left">AI-DermaSense</h1>
-            <p className="text-text-muted text-sm">Assistente Dermocosmetico</p>
-          </div>
-        </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-text-muted text-sm">Online</span>
-          </div>
-        </div>
+      <div className="chat-container flex flex-col h-screen">
         {/* Welcome Screen */}
         <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
           <div className="max-w-lg w-full space-y-8 text-center bg-white rounded-3xl p-8 shadow-xl border border-slate-200">
-            {/* Logo B. */}
+            {/* Logo Bonnie */}
             <div className="space-y-2">
-              <div className="text-6xl font-light text-gray-800 tracking-wider">B.</div>
+              <div className="w-16 h-16 mx-auto bg-white rounded-full flex items-center justify-center shadow-md">
+                <img 
+                  src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
+                  alt="Bonnie Logo" 
+                  className="w-12 h-12 object-contain"
+                />
+              </div>
               <div className="text-xl font-medium text-gray-700 tracking-wide">AI-DermaSense</div>
             </div>
 
             {/* Hero Image */}
             <div className="relative mx-auto w-80 h-80 rounded-2xl overflow-hidden shadow-lg">
               <img 
-                src="/api/placeholder/400/400" 
+                src="/attached_assets/IMG_0312_1751878091359.png" 
                 alt="Analizza la tua pelle" 
                 className="w-full h-full object-cover"
-                style={{
-                  background: 'linear-gradient(135deg, #4ade80 0%, #22d3ee 100%)',
-                  backgroundImage: 'url("data:image/svg+xml,%3Csvg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="400" height="400" fill="url(%23gradient)"%3E%3C/rect%3E%3Cdefs%3E%3ClinearGradient id="gradient" x1="0" y1="0" x2="1" y2="1"%3E%3Cstop offset="0%25" stop-color="%234ade80"%3E%3C/stop%3E%3Cstop offset="100%25" stop-color="%2322d3ee"%3E%3C/stop%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E")'
-                }}
                 onError={(e) => {
                   // Fallback to gradient background if image doesn't load
                   e.currentTarget.style.background = 'linear-gradient(135deg, #4ade80 0%, #22d3ee 100%)';
@@ -557,28 +539,7 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="chat-container flex flex-col">
-      {/* Header */}
-      <div className="bg-dark-secondary border-b border-dark-accent px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
-            <img 
-              src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
-              alt="Bonnie Logo" 
-              className="w-8 h-8 object-contain"
-            />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-white">Bonnie AI</h1>
-            <p className="text-text-muted text-sm">Assistente Dermocosmetico</p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          <span className="text-text-muted text-sm">Online</span>
-        </div>
-      </div>
-
+    <div className="chat-container flex flex-col h-screen">
       {/* Messages Area */}
       <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto">
         {messages.map((message) => (
