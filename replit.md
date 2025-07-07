@@ -164,6 +164,11 @@ Changelog:
   - Enhanced final message organization with clear sections and bold formatting
   - Updated system to require specific problem-ingredient mapping with detailed explanations
   - Improved consultation completeness with comprehensive skincare routine structure
+- July 07, 2025. Restructured consultation flow for clarity:
+  - Modified first summary message to include: riepilogo + problematiche principali + domanda routine
+  - Simplified second message to contain only: routine personalizzata + pulsante link
+  - Enhanced user experience with consolidated information display
+  - Clarified two-message consultation structure as requested by user
 
 ## User Preferences
 
