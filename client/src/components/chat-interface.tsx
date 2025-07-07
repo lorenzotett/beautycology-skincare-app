@@ -38,6 +38,7 @@ export function ChatInterface() {
   const [hasStarted, setHasStarted] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [answeredMessageIds, setAnsweredMessageIds] = useState<Set<number>>(new Set());
+  const [userInitial, setUserInitial] = useState<string>("U");
   const { toast } = useToast();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -176,6 +177,14 @@ export function ChatInterface() {
     onSuccess: (data) => {
       setSessionId(data.sessionId);
       setHasStarted(true);
+
+      // Extract user initial from Gemini's corrected name
+      const content = data.message.content;
+      const nameMatch = content.match(/Ciao,?\s+([A-Za-zÀ-ÿ]+)/i);
+      if (nameMatch && nameMatch[1]) {
+        const correctedName = nameMatch[1];
+        setUserInitial(correctedName.charAt(0).toUpperCase());
+      }
 
       // Add the initial message
       const initialMessage: ChatMessage = {
@@ -535,6 +544,7 @@ export function ChatInterface() {
                 message={message}
                 onChoiceSelect={(choice) => handleChoiceSelect(choice, message.id!)}
                 isAnswered={answeredMessageIds.has(message.id!)}
+                userInitial={userInitial}
               />
             ))}
 

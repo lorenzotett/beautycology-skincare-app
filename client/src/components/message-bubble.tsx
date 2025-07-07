@@ -6,6 +6,7 @@ interface MessageBubbleProps {
   message: ChatMessage;
   onChoiceSelect?: (choice: string) => void;
   isAnswered?: boolean;
+  userInitial?: string;
 }
 
 // Function to format markdown and make links clickable
@@ -28,7 +29,7 @@ const formatMarkdown = (text: string): string => {
   return formattedText;
 };
 
-export function MessageBubble({ message, onChoiceSelect, isAnswered = false }: MessageBubbleProps) {
+export function MessageBubble({ message, onChoiceSelect, isAnswered = false, userInitial = "U" }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const timestamp = new Date(message.createdAt!).toLocaleTimeString('it-IT', {
     hour: '2-digit',
@@ -71,7 +72,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false }: M
           </div>
         </div>
         <div className="w-8 h-8 bg-user-msg rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-medium text-xs">U</span>
+          <span className="text-white font-medium text-xs">{userInitial}</span>
         </div>
       </div>
     );
@@ -79,8 +80,12 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false }: M
 
   return (
     <div className="flex items-start space-x-3">
-      <div className="w-8 h-8 bg-assistant-msg rounded-full flex items-center justify-center flex-shrink-0">
-        <span className="text-white font-medium text-xs">B</span>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <img 
+          src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
+          alt="Bonnie Logo" 
+          className="w-full h-full object-cover"
+        />
       </div>
       <div className="message-bubble bg-dark-secondary rounded-lg p-3 flex-1">
         <div
