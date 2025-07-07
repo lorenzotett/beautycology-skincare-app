@@ -551,10 +551,10 @@ export function ChatInterface() {
           </div>
 
           {/* Input Area */}
-          <div className="bg-dark-secondary border-t border-dark-accent p-4 rounded-b-3xl">
+          <div className="p-4 rounded-b-3xl">
         {/* Image Preview */}
         {(imagePreview || selectedImage) && (
-          <div className="p-4 border-b border-dark-accent">
+          <div className="p-4 border-b border-gray-200">
                 <div className="relative inline-block">
                   {imagePreview ? (
                     <img 
@@ -598,28 +598,26 @@ export function ChatInterface() {
             )}
 
         {/* Message Input */}
-        <div className="flex gap-2 p-4">
-          <div className="flex gap-2">
-            <input
-              type="file"
-              accept="image/*,.heic,.heif,.avif"
-              onChange={handleImageUpload}
-              className="hidden"
-              id="image-upload"
-              disabled={isTyping}
-            />
-            <label
-              htmlFor="image-upload"
-              className={`p-2 rounded-lg border border-dark-accent text-text-muted hover:text-white hover:bg-dark-accent transition-colors cursor-pointer ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Paperclip size={20} />
-            </label>
-          </div>
+        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-full mx-4 mb-4">
+          <input
+            type="file"
+            accept="image/*,.heic,.heif,.avif"
+            onChange={handleImageUpload}
+            className="hidden"
+            id="image-upload"
+            disabled={isTyping}
+          />
+          <label
+            htmlFor="image-upload"
+            className={`text-gray-500 hover:text-gray-700 cursor-pointer ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <Paperclip size={20} />
+          </label>
 
           <div className="flex-1">
             <Input
               type="text"
-              placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi un messaggio o carica una foto..."}
+              placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Come ti chiami?"}
               value={currentMessage}
               onChange={(e) => {
                 const newValue = e.target.value;
@@ -634,7 +632,7 @@ export function ChatInterface() {
                 }
               }}
               onKeyPress={(e) => e.key === "Enter" && !(emailError && isEmailContext()) && handleSendMessage()}
-              className={`bg-dark-secondary border-dark-accent text-white placeholder:text-text-muted ${emailError ? 'border-red-500' : ''}`}
+              className={`bg-transparent border-none text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-0 ${emailError ? 'border-red-500' : ''}`}
               disabled={isTyping}
             />
             {emailError && (
@@ -644,18 +642,22 @@ export function ChatInterface() {
             )}
           </div>
 
-          <Button
+          <button className="text-gray-500 hover:text-gray-700">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h4v1h-7v2h6c1.66 0 3-1.34 3-3V10c0-4.97-4.03-9-9-9z"/>
+            </svg>
+          </button>
+          
+          <button
             onClick={handleSendMessage}
             disabled={(!currentMessage.trim() && !selectedImage) || isTyping || (emailError !== null && isEmailContext())}
-            className="bg-assistant-msg hover:bg-assistant-msg/80 text-white"
+            className="bg-teal-600 hover:bg-teal-700 text-white p-2 rounded-full disabled:opacity-50"
           >
-            Invia
-          </Button>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
         </div>
-
-            <div className="mt-2 text-xs text-text-muted">
-              Premi Invio per inviare - Shift + Invio per andare a capo
-            </div>
           </div>
         </div>
       </div>
