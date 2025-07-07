@@ -38,6 +38,7 @@ export function ChatInterface() {
   const [hasStarted, setHasStarted] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [answeredMessageIds, setAnsweredMessageIds] = useState<Set<number>>(new Set());
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [userInitial, setUserInitial] = useState<string>("U");
   const { toast } = useToast();
 
@@ -166,7 +167,14 @@ export function ChatInterface() {
 
   const handleStartChat = () => {
     if (!userName.trim()) return;
-    startChatMutation.mutate(userName);
+    
+    // Start transition animation
+    setIsTransitioning(true);
+    
+    // Wait for fade out animation, then start chat
+    setTimeout(() => {
+      startChatMutation.mutate(userName);
+    }, 300);
   };
 
   const startChatMutation = useMutation({
@@ -471,7 +479,7 @@ export function ChatInterface() {
       <div className="chat-container flex flex-col h-screen">
         {/* Welcome Screen */}
         <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-          <div className="max-w-lg w-full space-y-8 text-center rounded-3xl p-8 shadow-xl border border-slate-200" style={{backgroundColor: '#E5F1F2'}}>
+          <div className={`max-w-lg w-full space-y-8 text-center rounded-3xl p-8 shadow-xl border border-slate-200 transition-container ${isTransitioning ? 'transition-fade-out' : 'transition-fade-in'}`} style={{backgroundColor: '#E5F1F2'}}>
             {/* Logo Bonnie */}
             <div className="space-y-2">
               <img 
@@ -546,7 +554,7 @@ export function ChatInterface() {
     <div className="chat-container flex flex-col h-screen">
       {/* Chat Area Container - Same size as welcome screen */}
       <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-        <div className="max-w-lg w-full rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "calc(100vh - 8rem)", backgroundColor: '#E5F1F2'}}>
+        <div className={`max-w-lg w-full rounded-3xl shadow-xl border border-slate-200 flex flex-col transition-container ${isTransitioning ? 'transition-fade-out' : 'transition-fade-in'}`} style={{height: "calc(100vh - 8rem)", backgroundColor: '#E5F1F2'}}>
           {/* Header with Logo */}
           <div className="p-4 flex items-center justify-between">
             <img 

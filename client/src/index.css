@@ -108,6 +108,42 @@
     color: var(--text-muted);
   }
   
+  .fade-enter {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  
+  .fade-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
+  }
+  
+  .fade-exit {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .fade-exit-active {
+    opacity: 0;
+    transform: scale(1.05);
+    transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
+  }
+  
+  .transition-container {
+    transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
+  }
+  
+  .transition-fade-out {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  
+  .transition-fade-in {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
   .border-dark-accent {
     border-color: var(--dark-accent);
   }
