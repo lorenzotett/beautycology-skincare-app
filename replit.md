@@ -151,6 +151,13 @@ Changelog:
   - Fixed title font size to 14px (removed conflicting inline styles)
   - Enhanced HEIC file support with proper error handling and SVG placeholder
   - Improved file upload feedback for iPhone HEIC images
+- July 07, 2025. Chat interface responsiveness improvements:
+  - Chat interface now appears immediately when user enters name
+  - User messages display instantly in chat before AI response
+  - Fixed typing indicator to show "AI-DermaSense sta scrivendo" consistently
+  - User's name appears as first message in chat conversation
+  - Removed filename text display below image preview
+  - Working on HEIC image preview display in message bubbles
 
 ## User Preferences
 

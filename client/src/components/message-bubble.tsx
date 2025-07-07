@@ -44,6 +44,11 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   console.log('Message metadata:', metadata);
   console.log('Has choices:', hasChoices);
   console.log('Choices:', choices);
+  
+  // Debug log for images
+  if (metadata?.image) {
+    console.log('User message has image:', metadata.image.substring(0, 100) + '...');
+  }
 
   if (isUser) {
     return (
@@ -56,7 +61,12 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                 src={metadata.image} 
                 alt="Immagine caricata" 
                 className="w-full max-w-48 h-auto rounded-lg border border-blue-300/30"
+                style={{ maxHeight: '200px', minHeight: '100px' }}
+                onLoad={(e) => {
+                  console.log('Image loaded successfully:', metadata.image.substring(0, 50) + '...');
+                }}
                 onError={(e) => {
+                  console.log('Image failed to load:', metadata.image.substring(0, 50) + '...');
                   // Se l'immagine non carica, mostra un placeholder
                   const target = e.currentTarget;
                   target.style.display = 'none';
