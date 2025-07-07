@@ -64,26 +64,10 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   display: 'block'
                 }}
                 onError={(e) => {
-                  // Se l'immagine non carica, mostra un placeholder
-                  const target = e.currentTarget;
-                  target.style.display = 'none';
-                  const placeholder = target.nextSibling as HTMLElement;
-                  if (placeholder) placeholder.style.display = 'flex';
+                  console.warn('Errore nel caricamento dell\'immagine:', e);
                 }}
               />
-              {/* Fallback placeholder sempre presente ma nascosto */}
-              <div 
-                className="w-full max-w-48 h-32 bg-blue-100 rounded-lg border border-blue-300/30 flex flex-col items-center justify-center"
-                style={{ display: 'none' }}
-              >
-                <Upload size={24} className="text-blue-600 mb-1" />
-                <span className="text-xs text-blue-600 text-center px-2">
-                  Immagine caricata
-                </span>
-                <span className="text-xs text-blue-400 mt-1">
-                  Pronta per analisi
-                </span>
-              </div>
+
             </div>
           )}
           {/* Show message content if present */}
