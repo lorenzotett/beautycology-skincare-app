@@ -144,6 +144,13 @@ Changelog:
   - Application fully stabilized and operational on port 5000
   - All core features (chat interface, image upload, AI analysis) working correctly
   - User requested checkpoint creation after successful debugging completion
+- July 07, 2025. UI/UX improvements and HEIC support:
+  - Reorganized header layout: logo B left, AI-DermaSense title right
+  - Removed separator line between header and chat area
+  - Changed font from Playfair Display Black to Bold (700 weight)
+  - Fixed title font size to 14px (removed conflicting inline styles)
+  - Enhanced HEIC file support with proper error handling and SVG placeholder
+  - Improved file upload feedback for iPhone HEIC images
 
 ## User Preferences
 

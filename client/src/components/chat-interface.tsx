@@ -554,7 +554,7 @@ export function ChatInterface() {
               alt="Bonnie Logo" 
               className="w-8 h-8 object-cover"
             />
-            <h1 className="dermaSense-title font-bold text-[#007381] text-[14px]" style={{color: '#007381', fontSize: '18px'}}>
+            <h1 className="dermaSense-title font-bold" style={{color: '#007381', fontSize: '14px'}}>
               AI-DermaSense
             </h1>
           </div>
