@@ -532,23 +532,26 @@ export function ChatInterface() {
 
   return (
     <div className="chat-container flex flex-col h-screen">
-      {/* Messages Area */}
-      <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto">
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            onChoiceSelect={(choice) => handleChoiceSelect(choice, message.id!)}
-            isAnswered={answeredMessageIds.has(message.id!)}
-          />
-        ))}
+      {/* Chat Area Container - Same size as welcome screen */}
+      <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+        <div className="max-w-lg w-full h-[600px] bg-white rounded-3xl shadow-xl border border-slate-200 flex flex-col">
+          {/* Messages Area */}
+          <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto">
+            {messages.map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                onChoiceSelect={(choice) => handleChoiceSelect(choice, message.id!)}
+                isAnswered={answeredMessageIds.has(message.id!)}
+              />
+            ))}
 
-        {isTyping && <TypingIndicator message={typingMessage} />}
-        <div ref={messagesEndRef} />
-      </div>
+            {isTyping && <TypingIndicator message={typingMessage} />}
+            <div ref={messagesEndRef} />
+          </div>
 
-      {/* Input Area */}
-      <div className="bg-dark-secondary border-t border-dark-accent p-4">
+          {/* Input Area */}
+          <div className="bg-dark-secondary border-t border-dark-accent p-4 rounded-b-3xl">
         {/* Image Preview */}
         {(imagePreview || selectedImage) && (
           <div className="p-4 border-b border-dark-accent">
@@ -650,8 +653,10 @@ export function ChatInterface() {
           </Button>
         </div>
 
-        <div className="mt-2 text-xs text-text-muted px-4 pb-2">
-          Premi Invio per inviare - Shift + Invio per andare a capo
+            <div className="mt-2 text-xs text-text-muted">
+              Premi Invio per inviare - Shift + Invio per andare a capo
+            </div>
+          </div>
         </div>
       </div>
     </div>
