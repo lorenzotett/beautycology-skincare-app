@@ -616,7 +616,7 @@ A te la scelta!`;
 
     // Only treat as multiple choice if there are at least 2 matches
     if (!matches || matches.length < 2) {
-      console.log('Not enough matches:', matches.length);
+      console.log('Not enough matches:', matches?.length || 0);
       return false;
     }
 
