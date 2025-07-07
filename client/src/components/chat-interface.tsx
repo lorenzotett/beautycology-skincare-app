@@ -250,24 +250,43 @@ export function ChatInterface() {
       }
 
       setSelectedImage(file);
+      setCurrentMessage(''); // Clear message when image is selected
 
       // Check if it's a HEIC/HEIF file and convert for preview
       const isHEIC = fileExtension === '.heic' || fileExtension === '.heif' || 
                      file.type === 'image/heic' || file.type === 'image/heif';
 
       if (isHEIC) {
-        // Per i file HEIC, mostra sempre un placeholder con icona camera
-        const placeholderSvg = `data:image/svg+xml;base64,${btoa(`
-          <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="128" height="128" fill="#374151" rx="8"/>
-            <circle cx="64" cy="64" r="30" fill="#6B7280"/>
-            <circle cx="64" cy="64" r="20" fill="#9CA3AF"/>
-            <circle cx="64" cy="64" r="6" fill="#374151"/>
-            <rect x="45" y="45" width="8" height="6" fill="#9CA3AF" rx="2"/>
-            <text x="64" y="100" font-family="Arial" font-size="10" fill="#D1D5DB" text-anchor="middle">HEIC</text>
-          </svg>
-        `)}`;
-        setImagePreview(placeholderSvg);
+        try {
+          // Convert HEIC to JPEG for preview
+          const heic2any = await import('heic2any');
+          const convertedBlob = await heic2any.default({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.8
+          });
+          
+          const blobArray = Array.isArray(convertedBlob) ? convertedBlob : [convertedBlob];
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setImagePreview(e.target?.result as string);
+          };
+          reader.readAsDataURL(blobArray[0]);
+        } catch (error) {
+          console.error('Error converting HEIC:', error);
+          // Fallback to placeholder
+          const placeholderSvg = `data:image/svg+xml;base64,${btoa(`
+            <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="128" height="128" fill="#374151" rx="8"/>
+              <circle cx="64" cy="64" r="30" fill="#6B7280"/>
+              <circle cx="64" cy="64" r="20" fill="#9CA3AF"/>
+              <circle cx="64" cy="64" r="6" fill="#374151"/>
+              <rect x="45" y="45" width="8" height="6" fill="#9CA3AF" rx="2"/>
+              <text x="64" y="100" font-family="Arial" font-size="10" fill="#D1D5DB" text-anchor="middle">HEIC</text>
+            </svg>
+          `)}`;
+          setImagePreview(placeholderSvg);
+        }
       } else {
         // For other formats, use regular FileReader
         const reader = new FileReader();
@@ -286,6 +305,7 @@ export function ChatInterface() {
     }
     setSelectedImage(null);
     setImagePreview(null);
+    setCurrentMessage(''); // Clear message when image is removed
   };
 
   const handleSendMessage = async () => {
@@ -627,9 +647,11 @@ export function ChatInterface() {
               <div className="flex-1">
                 <input
                   type="text"
-                  placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi il tuo messaggio..."}
+                  placeholder={selectedImage ? "Invia l'immagine" : "Scrivi il tuo messaggio..."}
                   value={currentMessage}
                   onChange={(e) => {
+                    if (selectedImage) return; // Disable input when image is selected
+                    
                     const newValue = e.target.value;
                     setCurrentMessage(newValue);
 
@@ -642,8 +664,8 @@ export function ChatInterface() {
                     }
                   }}
                   onKeyPress={(e) => e.key === "Enter" && !(emailError && isEmailContext()) && handleSendMessage()}
-                  className={`w-full bg-transparent border-none text-gray-700 placeholder:text-gray-400 focus:outline-none text-base ${emailError ? 'border-red-500' : ''}`}
-                  disabled={isTyping}
+                  className={`w-full bg-transparent border-none text-gray-700 placeholder:text-gray-400 focus:outline-none text-base ${emailError ? 'border-red-500' : ''} ${selectedImage ? 'cursor-not-allowed opacity-50' : ''}`}
+                  disabled={isTyping || selectedImage}
                 />
                 {emailError && (
                   <p className="text-red-400 text-xs mt-1 px-1">
