@@ -46,32 +46,32 @@ export function ChatInterface() {
   // Email validation function
   const validateEmail = (email: string): { isValid: boolean; errorMessage?: string } => {
     const trimmedEmail = email.trim();
-    
+
     if (!trimmedEmail) return { isValid: true }; // Allow empty while typing
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     if (!emailRegex.test(trimmedEmail)) {
       return {
         isValid: false,
         errorMessage: "Formato email non valido (es. nome@example.com)"
       };
     }
-    
+
     if (trimmedEmail.length < 5) {
       return {
         isValid: false,
         errorMessage: "Email troppo corta"
       };
     }
-    
+
     if (trimmedEmail.includes('..')) {
       return {
         isValid: false,
         errorMessage: "Email contiene caratteri non validi"
       };
     }
-    
+
     return { isValid: true };
   };
 
@@ -81,21 +81,21 @@ export function ChatInterface() {
       .slice()
       .reverse()
       .find(msg => msg.role === "assistant");
-    
+
     if (!lastAssistantMessage) return false;
-    
+
     // Only consider it email context if the message explicitly asks for email
     const emailRequest = lastAssistantMessage.content.toLowerCase();
     const isEmailRequest = emailRequest.includes("per inviarti la routine personalizzata") ||
            emailRequest.includes("potresti condividere la tua email") ||
            emailRequest.includes("condividi la tua email") ||
            (emailRequest.includes("email") && emailRequest.includes("?"));
-           
+
     // Check if we already have sent a valid email by looking at user messages after the email request
     if (isEmailRequest) {
       const lastAssistantIndex = messages.lastIndexOf(lastAssistantMessage);
       const userMessagesAfterEmail = messages.slice(lastAssistantIndex + 1).filter(msg => msg.role === "user");
-      
+
       // If there's a user message after the email request, check if it's a valid email
       if (userMessagesAfterEmail.length > 0) {
         const lastUserMessage = userMessagesAfterEmail[userMessagesAfterEmail.length - 1];
@@ -105,7 +105,7 @@ export function ChatInterface() {
         }
       }
     }
-    
+
     return isEmailRequest;
   };
 
@@ -146,7 +146,7 @@ export function ChatInterface() {
         },
         createdAt: new Date(),
       };
-      
+
       // Debug log to verify choices are being set
       console.log('Assistant message choices:', data.message.choices);
       console.log('Assistant message hasChoices:', data.message.hasChoices);
@@ -189,7 +189,7 @@ export function ChatInterface() {
         },
         createdAt: new Date(),
       };
-      
+
       // Debug log for initial message
       console.log('Initial message choices:', data.message.choices);
       console.log('Initial message hasChoices:', data.message.hasChoices);
@@ -227,10 +227,10 @@ export function ChatInterface() {
         'image/heif',
         'image/avif'
       ];
-      
+
       const fileExtension = file.name.toLowerCase().match(/\.[^.]+$/)?.[0] || '';
       const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.avif'];
-      
+
       if (!file.type.startsWith('image/') && !allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
         toast({
           title: "Formato non valido",
@@ -241,11 +241,11 @@ export function ChatInterface() {
       }
 
       setSelectedImage(file);
-      
+
       // Check if it's a HEIC/HEIF file and convert for preview
       const isHEIC = fileExtension === '.heic' || fileExtension === '.heif' || 
                      file.type === 'image/heic' || file.type === 'image/heif';
-      
+
       if (isHEIC) {
         // Per i file HEIC, mostra sempre un placeholder con icona camera
         const placeholderSvg = `data:image/svg+xml;base64,${btoa(`
@@ -302,7 +302,7 @@ export function ChatInterface() {
 
     // Set up appropriate typing message based on whether there's an image
     let messageRotation: NodeJS.Timeout | null = null;
-    
+
     if (imageToSend) {
       const analysisMessages = [
         "Sto analizzando la tua immagine...",
@@ -311,10 +311,10 @@ export function ChatInterface() {
         "Sto elaborando l'analisi AI...",
         "Quasi fatto, analizzo gli ultimi dettagli..."
       ];
-      
+
       let messageIndex = 0;
       setTypingMessage(analysisMessages[0]);
-      
+
       messageRotation = setInterval(() => {
         messageIndex = (messageIndex + 1) % analysisMessages.length;
         setTypingMessage(analysisMessages[messageIndex]);
@@ -384,7 +384,7 @@ export function ChatInterface() {
         },
         createdAt: new Date(),
       };
-      
+
       // Debug log for message with image
       console.log('Send message response choices:', data.message.choices);
       console.log('Send message response hasChoices:', data.message.hasChoices);
@@ -392,7 +392,7 @@ export function ChatInterface() {
       setMessages(prev => [...prev, userMessage, assistantMessage]);
       setIsTyping(false);
       setTypingMessage("AI-DermaSense sta scrivendo"); // Reset to default message
-      
+
       // Clear rotation interval if it exists
       if (messageRotation) {
         clearInterval(messageRotation);
@@ -400,7 +400,7 @@ export function ChatInterface() {
     } catch (error) {
       setIsTyping(false);
       setTypingMessage("AI-DermaSense sta scrivendo"); // Reset to default message
-      
+
       // Clear rotation interval if it exists
       if (messageRotation) {
         clearInterval(messageRotation);
@@ -452,14 +452,18 @@ export function ChatInterface() {
         {/* Header */}
         <div className="bg-dark-secondary border-b border-dark-accent px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-assistant-msg rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold text-sm">B</span>
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-white text-left">AI-DermaSense</h1>
-              <p className="text-text-muted text-sm">Assistente Dermocosmetico</p>
-            </div>
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
+            <img 
+              src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
+              alt="Bonnie Logo" 
+              className="w-8 h-8 object-contain"
+            />
           </div>
+          <div>
+            <h1 className="text-lg font-semibold text-white text-left">AI-DermaSense</h1>
+            <p className="text-text-muted text-sm">Assistente Dermocosmetico</p>
+          </div>
+        </div>
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             <span className="text-text-muted text-sm">Online</span>
@@ -473,7 +477,7 @@ export function ChatInterface() {
               <div className="text-6xl font-light text-gray-800 tracking-wider">B.</div>
               <div className="text-xl font-medium text-gray-700 tracking-wide">AI-DermaSense</div>
             </div>
-            
+
             {/* Hero Image */}
             <div className="relative mx-auto w-80 h-80 rounded-2xl overflow-hidden shadow-lg">
               <img 
@@ -557,8 +561,12 @@ export function ChatInterface() {
       {/* Header */}
       <div className="bg-dark-secondary border-b border-dark-accent px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-assistant-msg rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold text-sm">B</span>
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
+            <img 
+              src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
+              alt="Bonnie Logo" 
+              className="w-8 h-8 object-contain"
+            />
           </div>
           <div>
             <h1 className="text-lg font-semibold text-white">Bonnie AI</h1>
@@ -605,7 +613,7 @@ export function ChatInterface() {
                       }}
                     />
                   ) : null}
-                  
+
                   {/* Fallback placeholder sempre presente ma nascosto */}
                   <div 
                     className="w-32 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center"
@@ -616,7 +624,7 @@ export function ChatInterface() {
                       {selectedImage?.name || "File caricato"}
                     </span>
                   </div>
-                  
+
                   <button
                     onClick={removeImage}
                     className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 z-10"
@@ -660,7 +668,7 @@ export function ChatInterface() {
               onChange={(e) => {
                 const newValue = e.target.value;
                 setCurrentMessage(newValue);
-                
+
                 // Validate email in real-time if we're in email context
                 if (isEmailContext() && newValue.trim()) {
                   const validation = validateEmail(newValue);
@@ -679,7 +687,7 @@ export function ChatInterface() {
               </p>
             )}
           </div>
-          
+
           <Button
             onClick={handleSendMessage}
             disabled={(!currentMessage.trim() && !selectedImage) || isTyping || (emailError !== null && isEmailContext())}
@@ -688,7 +696,7 @@ export function ChatInterface() {
             Invia
           </Button>
         </div>
-        
+
         <div className="mt-2 text-xs text-text-muted px-4 pb-2">
           Premi Invio per inviare - Shift + Invio per andare a capo
         </div>
