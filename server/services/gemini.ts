@@ -188,7 +188,10 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
 5. "Hai punti neri?" - CHIEDERE SOLO se pori_dilatati è tra 25-29 (zona grigia molto ristretta)
 
 **IMPORTANTE**: Con oleosità 30, pori dilatati 35, idratazione 75 → NON chiedere tipo pelle, dedurre "normale"
-8. "I rossori derivano da:" - CHIEDERE SOLO se rossori ≥35 (per tipologia specifica)
+
+**DOMANDA SUI ROSSORI (LINGUAGGIO CORRETTO):**
+- Se rossori ≥35 dall'analisi AI: "L'analisi ha rilevato dei rossori sulla tua pelle. Secondo te derivano principalmente da:"
+- Se l'utente ha menzionato rossori autonomamente: "I rossori che hai segnalato derivano principalmente da:"
 
 **REGOLA FONDAMENTALE:** Se hai ricevuto dati JSON di analisi foto, NON chiedere MAI il tipo di pelle - deducilo SEMPRE automaticamente dai valori di oleosità, idratazione e pori_dilatati.
 
@@ -606,14 +609,10 @@ A te la scelta!`;
   private detectMultipleChoice(content: string): boolean {
     console.log('=== CHOICE DETECTION DEBUG ===');
     console.log('Content:', content);
-    console.log('Content lines:', content.split('\n'));
     
     // Look for pattern like "A) option" or "A. option" (allowing leading whitespace)
     const multipleChoicePattern = /^\s*[A-E]\)\s+.+$/gm;
     const matches = content.match(multipleChoicePattern);
-    
-    console.log('Raw matches:', matches);
-    console.log('Matches length:', matches?.length || 0);
 
     // Only treat as multiple choice if there are at least 2 matches
     if (!matches || matches.length < 2) {
