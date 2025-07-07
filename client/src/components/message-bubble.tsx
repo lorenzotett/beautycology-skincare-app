@@ -32,17 +32,18 @@ const formatMarkdown = (text: string): string => {
 
 // Function to parse and extract link buttons from content
 const parseContentWithLinkButtons = (content: string) => {
-  // Look for the specific pattern that appears in the final message
-  const linkButtonRegex = /\[Accedi ai Prodotti Bonnie\]/g;
+  // Look for the LINK_BUTTON pattern
+  const linkButtonRegex = /\*\*\[LINK_BUTTON:(https?:\/\/[^:]+):([^\]]+)\]\*\*/g;
   const linkButtons: Array<{ url: string; text: string }> = [];
   let cleanContent = content;
 
-  if (linkButtonRegex.test(content)) {
+  let match;
+  while ((match = linkButtonRegex.exec(content)) !== null) {
     linkButtons.push({
-      url: 'https://tinyurl.com/formulabonnie',
-      text: 'Accedi alla tua crema personalizzata'
+      url: match[1],
+      text: 'Accedi alla tua crema personalizzata' // Override with our custom text
     });
-    cleanContent = cleanContent.replace(/\[Accedi ai Prodotti Bonnie\]/g, '');
+    cleanContent = cleanContent.replace(match[0], '');
   }
 
   return {
@@ -112,6 +113,12 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   
   // Parse link buttons from content
   const contentWithButtons = !isUser ? parseContentWithLinkButtons(message.content) : { content: message.content, linkButtons: [] };
+  
+  // Debug log to verify link button parsing
+  if (!isUser && message.content.includes('LINK_BUTTON')) {
+    console.log('Link button found in content:', message.content);
+    console.log('Parsed link buttons:', contentWithButtons.linkButtons);
+  }
   
 
 

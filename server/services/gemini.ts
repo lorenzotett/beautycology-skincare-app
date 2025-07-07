@@ -202,7 +202,7 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 - Se l'utente risponde "A) Femminile", "C) Altro", o "D) Preferisco non specificare", ALLORA chiedi la domanda sugli anticoncezionali
 
 **ALLERGIE E PREFERENZE:**
-10. "Ci sono ingredienti ai quali la tua pelle è allergica? (Specificare o rispondere 'Nessuno')"
+10. "Ci sono ingredienti ai quali la tua pelle è allergica?"
 11. "Ti piacerebbe avere una fragranza che profumi di fiori per la tua skincare?
 
       A) Sì
