@@ -90,10 +90,14 @@ const parseSkinAnalysis = (content: string) => {
   };
 
   // Extract remaining content (everything after the metrics)
-  const splitContent = content.split('**🔍 PANORAMICA PROBLEMI PRINCIPALI:**');
+  // Try different patterns for the section header
+  let splitContent = content.split('🔍 **PANORAMICA PROBLEMI PRINCIPALI:**');
+  if (splitContent.length === 1) {
+    splitContent = content.split('**🔍 PANORAMICA PROBLEMI PRINCIPALI:**');
+  }
   const remainingContent = splitContent.length > 1 ? splitContent[1] : '';
   
-  console.log('Skin analysis remaining content:', remainingContent);
+
   
   return {
     overallScore,
@@ -202,7 +206,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
               className="text-sm leading-relaxed whitespace-pre-wrap mt-3"
               style={{color: '#007381'}}
               dangerouslySetInnerHTML={{ 
-                __html: formatMarkdown('**🔍 PANORAMICA PROBLEMI PRINCIPALI:**' + skinAnalysis.remainingContent) 
+                __html: formatMarkdown('🔍 **PANORAMICA PROBLEMI PRINCIPALI:**' + skinAnalysis.remainingContent) 
               }}
             />
           )}
