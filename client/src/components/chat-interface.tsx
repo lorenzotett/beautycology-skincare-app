@@ -275,17 +275,7 @@ export function ChatInterface() {
         } catch (error) {
           console.error('Error converting HEIC:', error);
           // Migliore placeholder per file HEIC
-          const placeholderSvg = `data:image/svg+xml;base64,${btoa(`
-            <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="128" height="128" fill="#E5F1F2" rx="8" stroke="#007381" stroke-width="2"/>
-              <circle cx="64" cy="64" r="25" fill="#007381" opacity="0.1"/>
-              <circle cx="64" cy="64" r="18" fill="none" stroke="#007381" stroke-width="2"/>
-              <circle cx="64" cy="64" r="4" fill="#007381"/>
-              <rect x="52" y="52" width="6" height="4" fill="#007381" rx="1"/>
-              <text x="64" y="95" font-family="Arial" font-size="12" fill="#007381" text-anchor="middle" font-weight="bold">📱 HEIC</text>
-              <text x="64" y="110" font-family="Arial" font-size="8" fill="#007381" text-anchor="middle" opacity="0.7">Pronto per analisi</text>
-            </svg>
-          `)}`;
+          const placeholderSvg = `data:image/svg+xml;base64,${btoa(`<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="128" height="128" fill="#E5F1F2" rx="8" stroke="#007381" stroke-width="2"/><circle cx="64" cy="64" r="25" fill="#007381" opacity="0.1"/><circle cx="64" cy="64" r="18" fill="none" stroke="#007381" stroke-width="2"/><circle cx="64" cy="64" r="4" fill="#007381"/><rect x="52" y="52" width="6" height="4" fill="#007381" rx="1"/><text x="64" y="95" font-family="Arial" font-size="12" fill="#007381" text-anchor="middle" font-weight="bold">HEIC</text><text x="64" y="110" font-family="Arial" font-size="8" fill="#007381" text-anchor="middle" opacity="0.7">Pronto per analisi</text></svg>`)}`;
           setImagePreview(placeholderSvg);
         }
       } else {
@@ -624,8 +614,8 @@ export function ChatInterface() {
                 </div>
                 <p className="text-sm text-text-muted mt-2">
                   {selectedImage?.name && (selectedImage.name.toLowerCase().includes('.heic') || selectedImage.name.toLowerCase().includes('.heif'))
-                    ? `📱 File iPhone HEIC caricato: ${selectedImage.name.substring(0, 20)}...` 
-                    : "📷 Foto pronta per l'analisi AI"
+                    ? `File iPhone HEIC caricato: ${selectedImage.name.substring(0, 25)}...` 
+                    : "Foto pronta per l'analisi AI"
                   }
                 </p>
               </div>
