@@ -554,9 +554,9 @@ export function ChatInterface() {
 
           {/* Input Area */}
           <div className="p-4 rounded-b-3xl flex-shrink-0">
-        {/* Image Preview */}
-        {(imagePreview || selectedImage) && (
-          <div className="p-4 border-b border-gray-200">
+            {/* Image Preview */}
+            {(imagePreview || selectedImage) && (
+              <div className="p-4 border-b border-gray-200">
                 <div className="relative inline-block">
                   {imagePreview ? (
                     <img 
@@ -599,69 +599,69 @@ export function ChatInterface() {
               </div>
             )}
 
-        {/* Message Input - Match screenshot style */}
-        <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-sm border border-gray-100 mx-4 mb-4">
-          <input
-            type="file"
-            accept="image/*,.heic,.heif,.avif"
-            onChange={handleImageUpload}
-            className="hidden"
-            id="image-upload"
-            disabled={isTyping}
-          />
-          <label
-            htmlFor="image-upload"
-            className={`text-gray-400 hover:text-gray-600 cursor-pointer ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <Paperclip size={16} />
-          </label>
+            {/* Message Input - Match screenshot style */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-sm border border-gray-100">
+              <input
+                type="file"
+                accept="image/*,.heic,.heif,.avif"
+                onChange={handleImageUpload}
+                className="hidden"
+                id="image-upload"
+                disabled={isTyping}
+              />
+              <label
+                htmlFor="image-upload"
+                className={`text-gray-400 hover:text-gray-600 cursor-pointer ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <Paperclip size={16} />
+              </label>
 
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi il tuo messaggio..."}
-              value={currentMessage}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                setCurrentMessage(newValue);
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi il tuo messaggio..."}
+                  value={currentMessage}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    setCurrentMessage(newValue);
 
-                // Validate email in real-time if we're in email context
-                if (isEmailContext() && newValue.trim()) {
-                  const validation = validateEmail(newValue);
-                  setEmailError(validation.isValid ? null : validation.errorMessage || null);
-                } else {
-                  setEmailError(null);
-                }
-              }}
-              onKeyPress={(e) => e.key === "Enter" && !(emailError && isEmailContext()) && handleSendMessage()}
-              className={`w-full bg-transparent border-none text-gray-700 placeholder:text-gray-400 focus:outline-none text-base ${emailError ? 'border-red-500' : ''}`}
-              disabled={isTyping}
-            />
-            {emailError && (
-              <p className="text-red-400 text-xs mt-1 px-1">
-                {emailError}
-              </p>
-            )}
-          </div>
+                    // Validate email in real-time if we're in email context
+                    if (isEmailContext() && newValue.trim()) {
+                      const validation = validateEmail(newValue);
+                      setEmailError(validation.isValid ? null : validation.errorMessage || null);
+                    } else {
+                      setEmailError(null);
+                    }
+                  }}
+                  onKeyPress={(e) => e.key === "Enter" && !(emailError && isEmailContext()) && handleSendMessage()}
+                  className={`w-full bg-transparent border-none text-gray-700 placeholder:text-gray-400 focus:outline-none text-base ${emailError ? 'border-red-500' : ''}`}
+                  disabled={isTyping}
+                />
+                {emailError && (
+                  <p className="text-red-400 text-xs mt-1 px-1">
+                    {emailError}
+                  </p>
+                )}
+              </div>
 
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
-            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="23"/>
-            <line x1="8" y1="23" x2="16" y2="23"/>
-          </svg>
-          
-          <button
-            onClick={handleSendMessage}
-            disabled={(!currentMessage.trim() && !selectedImage) || isTyping || (emailError !== null && isEmailContext())}
-            className="text-white p-1.5 rounded-md disabled:opacity-50"
-            style={{backgroundColor: '#007381'}}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z"/>
-            </svg>
-          </button>
-        </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
+                <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+              
+              <button
+                onClick={handleSendMessage}
+                disabled={(!currentMessage.trim() && !selectedImage) || isTyping || (emailError !== null && isEmailContext())}
+                className="text-white p-1.5 rounded-md disabled:opacity-50"
+                style={{backgroundColor: '#007381'}}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
