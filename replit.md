@@ -158,6 +158,12 @@ Changelog:
   - User's name appears as first message in chat conversation
   - Removed filename text display below image preview
   - Working on HEIC image preview display in message bubbles
+- July 07, 2025. Enhanced consultation output structure:
+  - Implemented mandatory problematic skin analysis section in final consultation
+  - Added structured format for identifying skin problems with corresponding ingredients
+  - Enhanced final message organization with clear sections and bold formatting
+  - Updated system to require specific problem-ingredient mapping with detailed explanations
+  - Improved consultation completeness with comprehensive skincare routine structure
 
 ## User Preferences
 
