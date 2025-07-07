@@ -174,6 +174,12 @@ Changelog:
   - Added explicit instructions for Gemini to round scores (26.45 → 27, 26.3 → 26)
   - Fixed frontend parsing to handle integer-only general scores
   - Enhanced scoring accuracy and display consistency
+- July 07, 2025. Simplified consultation message structure:
+  - Removed "Ecco un riepilogo dettagliato" section from consultation message
+  - Removed "📊 ANALISI COMPLETA DELLA PELLE" section with detailed scores
+  - Removed "📝 LE TUE RISPOSTE E ABITUDINI" section with user responses
+  - Kept only "🔎 LE TUE PRINCIPALI NECESSITÀ E CONSIGLI SPECIFICI" section
+  - Fixed email validation bug that prevented message sending after valid email input
 
 ## User Preferences
 

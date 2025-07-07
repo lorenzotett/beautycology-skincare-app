@@ -39,6 +39,7 @@ export function ChatInterface() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [answeredMessageIds, setAnsweredMessageIds] = useState<Set<number>>(new Set());
   const [userInitial, setUserInitial] = useState<string>("U");
+  const [emailSent, setEmailSent] = useState<boolean>(false);
   const { toast } = useToast();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -78,6 +79,9 @@ export function ChatInterface() {
 
   // Check if we're expecting an email (more specific check)
   const isEmailContext = (): boolean => {
+    // If email was already sent, never show as email context
+    if (emailSent) return false;
+
     const lastAssistantMessage = messages
       .slice()
       .reverse()
@@ -324,6 +328,8 @@ export function ChatInterface() {
         // Don't send the message if email is invalid
         return;
       }
+      // Mark email as sent if we're in email context and email is valid
+      setEmailSent(true);
     }
 
     const messageToSend = currentMessage.trim();
