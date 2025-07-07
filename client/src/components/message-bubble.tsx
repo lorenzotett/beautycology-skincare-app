@@ -40,7 +40,7 @@ const parseContentWithLinkButtons = (content: string) => {
   if (linkButtonRegex.test(content)) {
     linkButtons.push({
       url: 'https://tinyurl.com/formulabonnie',
-      text: 'Accedi ai Prodotti Bonnie'
+      text: 'Accedi alla tua crema personalizzata'
     });
     cleanContent = cleanContent.replace(/\[Accedi ai Prodotti Bonnie\]/g, '');
   }
@@ -113,11 +113,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   // Parse link buttons from content
   const contentWithButtons = !isUser ? parseContentWithLinkButtons(message.content) : { content: message.content, linkButtons: [] };
   
-  // Debug log to see the actual content
-  if (!isUser && message.content.includes('Accedi ai Prodotti Bonnie')) {
-    console.log('Link button content debug:', message.content);
-    console.log('Parsed buttons:', contentWithButtons.linkButtons);
-  }
+
 
   // Debug log to check if choices are properly passed
   console.log('Message metadata:', metadata);
