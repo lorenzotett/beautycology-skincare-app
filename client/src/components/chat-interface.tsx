@@ -299,17 +299,55 @@ export function ChatInterface() {
           reader.readAsDataURL(blobArray[0]);
         } catch (error) {
           console.error('Error converting HEIC:', error);
-          // Simpler placeholder for HEIC files
-          const placeholderSvg = `data:image/svg+xml;base64,${btoa(`<svg width="200" height="150" viewBox="0 0 200 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="200" height="150" fill="#E5F1F2" rx="8" stroke="#007381" stroke-width="2"/>
-            <circle cx="100" cy="75" r="35" fill="#007381" opacity="0.1"/>
-            <circle cx="100" cy="75" r="25" fill="none" stroke="#007381" stroke-width="2"/>
-            <circle cx="100" cy="75" r="6" fill="#007381"/>
-            <rect x="85" y="65" width="8" height="5" fill="#007381" rx="1"/>
-            <text x="100" y="120" font-family="Arial" font-size="16" fill="#007381" text-anchor="middle" font-weight="bold">HEIC</text>
-            <text x="100" y="135" font-family="Arial" font-size="12" fill="#007381" text-anchor="middle" opacity="0.8">Pronto per analisi</text>
-          </svg>`)}`;
-          setImagePreview(placeholderSvg);
+          // Create a data URL for a simple colored rectangle as placeholder
+          const canvas = document.createElement('canvas');
+          canvas.width = 200;
+          canvas.height = 150;
+          const ctx = canvas.getContext('2d');
+          
+          // Fill background
+          ctx.fillStyle = '#E5F1F2';
+          ctx.fillRect(0, 0, 200, 150);
+          
+          // Draw border
+          ctx.strokeStyle = '#007381';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(1, 1, 198, 148);
+          
+          // Draw camera icon circle
+          ctx.fillStyle = '#007381';
+          ctx.globalAlpha = 0.1;
+          ctx.beginPath();
+          ctx.arc(100, 75, 35, 0, 2 * Math.PI);
+          ctx.fill();
+          
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = '#007381';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(100, 75, 25, 0, 2 * Math.PI);
+          ctx.stroke();
+          
+          // Draw camera center
+          ctx.fillStyle = '#007381';
+          ctx.beginPath();
+          ctx.arc(100, 75, 6, 0, 2 * Math.PI);
+          ctx.fill();
+          
+          // Draw camera flash
+          ctx.fillRect(85, 65, 8, 5);
+          
+          // Add text
+          ctx.fillStyle = '#007381';
+          ctx.font = 'bold 16px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText('HEIC', 100, 120);
+          
+          ctx.font = '12px Arial';
+          ctx.globalAlpha = 0.8;
+          ctx.fillText('Pronto per analisi', 100, 135);
+          
+          setImagePreview(canvas.toDataURL('image/png'));
         }
       } else {
         // For other formats, use regular FileReader
