@@ -90,7 +90,10 @@ const parseSkinAnalysis = (content: string) => {
   };
 
   // Extract remaining content (everything after the metrics)
-  const remainingContent = content.split('**🔍 PANORAMICA PROBLEMI PRINCIPALI:**')[1] || '';
+  const splitContent = content.split('**🔍 PANORAMICA PROBLEMI PRINCIPALI:**');
+  const remainingContent = splitContent.length > 1 ? splitContent[1] : '';
+  
+  console.log('Skin analysis remaining content:', remainingContent);
   
   return {
     overallScore,
