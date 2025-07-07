@@ -488,7 +488,7 @@ export function ChatInterface() {
             </div>
 
             {/* Input Section - Exact match to screenshot */}
-            <div className="flex items-center gap-4 px-6 py-4 bg-white rounded-full shadow-sm border border-gray-100">
+            <div className="flex items-center gap-4 px-6 py-4 bg-white rounded-lg shadow-sm border border-gray-100">
               <input
                 type="text"
                 placeholder="Il tuo nome"
@@ -590,7 +590,7 @@ export function ChatInterface() {
             )}
 
         {/* Message Input - Match screenshot style */}
-        <div className="flex items-center gap-4 px-6 py-4 bg-white rounded-full shadow-sm border border-gray-100 mx-4 mb-4">
+        <div className="flex items-center gap-4 px-6 py-4 bg-white rounded-lg shadow-sm border border-gray-100 mx-4 mb-4">
           <input
             type="file"
             accept="image/*,.heic,.heif,.avif"
