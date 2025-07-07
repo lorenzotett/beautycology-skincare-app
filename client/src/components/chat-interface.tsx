@@ -32,7 +32,7 @@ export function ChatInterface() {
   const [currentMessage, setCurrentMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [typingMessage, setTypingMessage] = useState("Bonnie sta scrivendo");
+  const [typingMessage, setTypingMessage] = useState("AI-DermaSense sta scrivendo");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
@@ -170,6 +170,7 @@ export function ChatInterface() {
     // Show chat interface immediately
     setHasStarted(true);
     setIsTyping(true);
+    setTypingMessage("AI-DermaSense sta scrivendo");
     setUserInitial(userName.charAt(0).toUpperCase());
     
     startChatMutation.mutate(userName);
