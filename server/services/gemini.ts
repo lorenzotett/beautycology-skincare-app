@@ -126,12 +126,12 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 
     **DOPO L'ANALISI - PANORAMICA PROBLEMI OBBLIGATORIA:**
     Subito dopo aver mostrato tutti i parametri, aggiungi SEMPRE una sezione di panoramica:
-    
+
     **🔍 PANORAMICA PROBLEMI PRINCIPALI:**
     [SEMPRE presente - Se ci sono punteggi ≥61, elenca i 2-3 problemi più critici spiegando cosa significano. Se tutti i punteggi sono <61, scrivi comunque una panoramica generale dello stato della pelle evidenziando i parametri con punteggi più alti anche se sono nella norma]
-    
+
     **IMPORTANTE:** La panoramica deve SEMPRE esserci, anche se la pelle è in buone condizioni. In quel caso scrivi: "La tua pelle mostra complessivamente un buono stato di salute. I parametri più rilevanti sono: [elenca i 2-3 parametri con punteggi più alti anche se normali, spiegando brevemente]"
-    
+
     **SE NESSUN PARAMETRO HA PUNTEGGIO ≥61**, dopo la panoramica aggiungi: "Tuttavia, c'è qualche problematica specifica che hai notato o sensazioni riguardo la tua pelle che vorresti condividere?"
 
     **DOPO LA RISPOSTA DELL'UTENTE (qualunque essa sia - "no", "niente", "si" o altro):**
@@ -201,7 +201,10 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 
 **ALLERGIE E PREFERENZE:**
 10. "Ci sono ingredienti ai quali la tua pelle è allergica? (Specificare o rispondere 'Nessuno')"
-11. "Vuoi aggiungere una fragranza alla tua skincare? A) Sì, B) No, C) Indifferente"
+11. "Ti piacerebbe avere una fragranza che profumi di fiori per la tua skincare?
+
+      A) Sì
+      B) No"
 
 **ABITUDINI E STILE DI VITA:**
 12. "Metti la crema solare ogni giorno? A) Sempre, B) Solo d'estate, C) Solo quando esco, D) Raramente, E) Mai"
@@ -283,13 +286,13 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 
     **🌟 INGREDIENTI CONSIGLIATI SPECIFICI:**
     Basandoti ESCLUSIVAMENTE sul database di mappatura, elenca OBBLIGATORIAMENTE gli ingredienti specifici per OGNI problematica rilevata dall'analisi foto o dalle risposte del questionario:
-    
+
     **REGOLA FERREA:** Per ogni problema identificato (acne, rossori, rughe, pigmentazione, pori dilatati, oleosità, danni solari, scarsa idratazione, scarsa elasticità, ecc.) devi SEMPRE indicare l'ingrediente corrispondente dal database.
-    
+
     Formato obbligatorio:
     - **Per [problema rilevato]:** [Ingrediente specifico dal database] - [breve spiegazione benefici]
     - **Per [altro problema]:** [Altro ingrediente dal database] - [breve spiegazione benefici]
-    
+
     **ATTENZIONE:** Non puoi saltare questa sezione. Anche se la pelle è in buone condizioni, identifica gli ingredienti preventivi basandoti sui parametri con punteggi più alti.
 
     **📋 ROUTINE PERSONALIZZATA:**
@@ -518,7 +521,7 @@ A te la scelta!`;
       console.log('Extracted choices:', choices);
 
       // Remove choice options from content if we have clickable choices
-      const finalContent = hasChoices ? this.removeChoicesFromContent(content) : content;
+      const finalContent = hasChoices ? this.removeChoicesFromContent(content): content;
 
       return {
         content: finalContent,
@@ -650,5 +653,5 @@ A te la scelta!`;
     return { isValid: true };
   }
 
-  
+
 }

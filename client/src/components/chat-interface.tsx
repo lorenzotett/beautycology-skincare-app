@@ -86,10 +86,27 @@ export function ChatInterface() {
     
     // Only consider it email context if the message explicitly asks for email
     const emailRequest = lastAssistantMessage.content.toLowerCase();
-    return emailRequest.includes("per inviarti la routine personalizzata") ||
+    const isEmailRequest = emailRequest.includes("per inviarti la routine personalizzata") ||
            emailRequest.includes("potresti condividere la tua email") ||
            emailRequest.includes("condividi la tua email") ||
            (emailRequest.includes("email") && emailRequest.includes("?"));
+           
+    // Check if we already have sent a valid email by looking at user messages after the email request
+    if (isEmailRequest) {
+      const lastAssistantIndex = messages.lastIndexOf(lastAssistantMessage);
+      const userMessagesAfterEmail = messages.slice(lastAssistantIndex + 1).filter(msg => msg.role === "user");
+      
+      // If there's a user message after the email request, check if it's a valid email
+      if (userMessagesAfterEmail.length > 0) {
+        const lastUserMessage = userMessagesAfterEmail[userMessagesAfterEmail.length - 1];
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailRegex.test(lastUserMessage.content.trim())) {
+          return false; // Valid email already sent, no longer in email context
+        }
+      }
+    }
+    
+    return isEmailRequest;
   };
 
   const scrollToBottom = () => {
