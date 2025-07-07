@@ -32,7 +32,7 @@ const formatMarkdown = (text: string): string => {
 
 // Function to parse and extract link buttons from content
 const parseContentWithLinkButtons = (content: string) => {
-  // Look for the LINK_BUTTON pattern
+  // Look for the LINK_BUTTON pattern first
   const linkButtonRegex = /\*\*\[LINK_BUTTON:(https?:\/\/[^:]+):([^\]]+)\]\*\*/g;
   const linkButtons: Array<{ url: string; text: string }> = [];
   let cleanContent = content;
@@ -41,9 +41,19 @@ const parseContentWithLinkButtons = (content: string) => {
   while ((match = linkButtonRegex.exec(content)) !== null) {
     linkButtons.push({
       url: match[1],
-      text: 'Accedi alla tua crema personalizzata' // Override with our custom text
+      text: 'Accedi alla tua crema personalizzata'
     });
     cleanContent = cleanContent.replace(match[0], '');
+  }
+
+  // Also look for the fallback pattern [Accedi ai Prodotti Bonnie]
+  if (linkButtons.length === 0 && content.includes('[Accedi ai Prodotti Bonnie]')) {
+    linkButtons.push({
+      url: 'https://tinyurl.com/formulabonnie',
+      text: 'Accedi alla tua crema personalizzata'
+    });
+    // Replace the entire sentence with the new format
+    cleanContent = cleanContent.replace(/Per ricevere la routine via email e accedere ai prodotti consigliati: \[Accedi ai Prodotti Bonnie\]/g, 'Puoi accedere tramite questo pulsante alla tua crema personalizzata:');
   }
 
   return {
