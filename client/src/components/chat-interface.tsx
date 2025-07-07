@@ -557,13 +557,13 @@ export function ChatInterface() {
       <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
         <div className="max-w-lg w-full rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "calc(100vh - 8rem)", backgroundColor: '#E5F1F2'}}>
           {/* Header with Logo */}
-          <div className="p-4 border-b border-gray-200 flex flex-col items-center">
+          <div className="p-4 flex items-center justify-between">
             <img 
               src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
               alt="Bonnie Logo" 
-              className="w-8 h-8 object-cover mb-2"
+              className="w-8 h-8 object-cover"
             />
-            <h1 className="dermaSense-title font-black" style={{color: '#007381', fontSize: '18px'}}>
+            <h1 className="dermaSense-title font-bold" style={{color: '#007381', fontSize: '18px'}}>
               AI-DermaSense
             </h1>
           </div>
