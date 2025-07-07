@@ -487,39 +487,37 @@ export function ChatInterface() {
               </p>
             </div>
 
-            {/* Input Section */}
-            <div className="space-y-4">
-              <div className="relative">
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-full">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500">
-                    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                  </svg>
-                  
-                  <input
-                    type="text"
-                    placeholder="Il tuo nome"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="flex-1 bg-transparent border-none text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-0"
-                  />
-                  
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500">
-                    <path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h4v1h-7v2h6c1.66 0 3-1.34 3-3V10c0-4.97-4.03-9-9-9z"/>
-                  </svg>
-                  
-                  <button
-                    onClick={handleStartChat}
-                    disabled={startChatMutation.isPending || !userName.trim()}
-                    className="text-white p-2 rounded-full disabled:opacity-50"
-                    style={{backgroundColor: '#007381'}}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
+            {/* Input Section - Match screenshot exactly */}
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-full">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+              </svg>
+              
+              <input
+                type="text"
+                placeholder="Il tuo nome"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="flex-1 bg-transparent border-none text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-0"
+              />
+              
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-gray-400">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <circle cx="12" cy="19" r="3"/>
+              </svg>
+              
+              <button
+                onClick={handleStartChat}
+                disabled={startChatMutation.isPending || !userName.trim()}
+                className="text-white p-2 rounded-lg disabled:opacity-50"
+                style={{backgroundColor: '#007381'}}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -614,7 +612,7 @@ export function ChatInterface() {
           <div className="flex-1">
             <Input
               type="text"
-              placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Il tuo nome"}
+              placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Scrivi il tuo messaggio..."}
               value={currentMessage}
               onChange={(e) => {
                 const newValue = e.target.value;
