@@ -477,9 +477,9 @@ export function ChatInterface() {
               <img 
                 src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
                 alt="Bonnie Logo" 
-                className="w-16 h-16 mx-auto object-contain"
+                className="w-12 h-12 mx-auto object-contain"
               />
-              <div className="dermaSense-title text-xl text-gray-700 tracking-wide font-bold">AI-DermaSense</div>
+              <div className="dermaSense-title text-xl text-black tracking-wide font-bold">AI-DermaSense</div>
             </div>
 
             {/* Hero Image */}
