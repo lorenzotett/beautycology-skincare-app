@@ -96,13 +96,17 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 
     **IMPORTANTE:** NON ripetere il saluto se la conversazione è già iniziata. Inizia sempre con un messaggio di ringraziamento per la foto, poi procedi con l'analisi.
 
+    **CALCOLO PUNTEGGIO GENERALE:**
+    Calcola la media aritmetica di tutti gli 11 parametri e arrotonda al numero intero più vicino (es: 26.45 → 27, 26.3 → 26).
+    NON utilizzare mai decimali nel punteggio generale finale.
+
     **FORMATO OBBLIGATORIO - MOSTRA SEMPRE TUTTI I PARAMETRI:**
 
     Grazie per aver condiviso la tua foto! 📸 Ho completato l'analisi della tua pelle utilizzando la tecnologia AI dermocosmetica di Bonnie.
 
     📊 **ANALISI COMPLETA DELLA PELLE:**
 
-    **Punteggio Generale:** {media}/100 - {interpretazione_basata_sul_punteggio}
+    **Punteggio Generale:** {media_arrotondata_senza_decimali}/100 - {interpretazione_basata_sul_punteggio}
 
     - **Rossori:** {valore}/100 - {descrizione_breve}
     - **Acne:** {valore}/100 - {descrizione_breve}

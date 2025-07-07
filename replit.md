@@ -169,6 +169,11 @@ Changelog:
   - Simplified second message to contain only: routine personalizzata + pulsante link
   - Enhanced user experience with consolidated information display
   - Clarified two-message consultation structure as requested by user
+- July 07, 2025. Improved general score calculation and display:
+  - Updated backend to calculate general score as rounded integer (no decimals)
+  - Added explicit instructions for Gemini to round scores (26.45 → 27, 26.3 → 26)
+  - Fixed frontend parsing to handle integer-only general scores
+  - Enhanced scoring accuracy and display consistency
 
 ## User Preferences
 
