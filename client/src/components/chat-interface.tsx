@@ -361,6 +361,12 @@ export function ChatInterface() {
       createdAt: new Date(),
     };
 
+    // Debug log to see what image data we're sending
+    if (imageToSend && imagePreview) {
+      console.log('Creating user message with image preview:', imagePreview.substring(0, 100) + '...');
+      console.log('Image file name:', imageToSend.name);
+    }
+
     setMessages(prev => [...prev, userMessage]);
     setCurrentMessage("");
     setSelectedImage(null);
