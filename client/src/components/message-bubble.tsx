@@ -1,6 +1,7 @@
 import { Button } from "./ui/button";
 import { Upload } from "lucide-react";
 import { ChatMessage } from "@shared/schema";
+import { SkinAnalysisTable } from "./skin-analysis-table";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -29,6 +30,51 @@ const formatMarkdown = (text: string): string => {
   return formattedText;
 };
 
+// Function to parse skin analysis data from message content
+const parseSkinAnalysis = (content: string) => {
+  // Check if this is a skin analysis message
+  if (!content.includes('📊 **ANALISI COMPLETA DELLA PELLE:**')) {
+    return null;
+  }
+
+  // Extract overall score and description
+  const overallMatch = content.match(/\*\*Punteggio Generale:\*\* (\d+)\/100 - ([^-]+)/);
+  const overallScore = overallMatch ? parseInt(overallMatch[1]) : 0;
+  const overallDescription = overallMatch ? overallMatch[2].trim() : '';
+
+  // Extract individual metrics
+  const metrics = {
+    rossori: extractMetric(content, 'Rossori'),
+    acne: extractMetric(content, 'Acne'),
+    rughe: extractMetric(content, 'Rughe'),
+    pigmentazione: extractMetric(content, 'Pigmentazione'),
+    pori_dilatati: extractMetric(content, 'Pori Dilatati'),
+    oleosita: extractMetric(content, 'Oleosità'),
+    danni_solari: extractMetric(content, 'Danni Solari'),
+    occhiaie: extractMetric(content, 'Occhiaie'),
+    idratazione: extractMetric(content, 'Idratazione'),
+    elasticita: extractMetric(content, 'Elasticità'),
+    texture_uniforme: extractMetric(content, 'Texture Uniforme'),
+  };
+
+  // Extract remaining content (everything after the metrics)
+  const remainingContent = content.split('**🔍 PANORAMICA PROBLEMI PRINCIPALI:**')[1] || '';
+  
+  return {
+    overallScore,
+    overallDescription,
+    metrics,
+    remainingContent: remainingContent.trim()
+  };
+};
+
+// Helper function to extract metric value
+const extractMetric = (content: string, metricName: string): number => {
+  const regex = new RegExp(`\\*\\*${metricName}:\\*\\* (\\d+)\\/100`, 'i');
+  const match = content.match(regex);
+  return match ? parseInt(match[1]) : 0;
+};
+
 export function MessageBubble({ message, onChoiceSelect, isAnswered = false, userInitial = "U" }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const timestamp = new Date(message.createdAt!).toLocaleTimeString('it-IT', {
@@ -39,6 +85,9 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   const metadata = message.metadata as any;
   const hasChoices = metadata?.hasChoices || false;
   const choices = metadata?.choices || [];
+
+  // Parse skin analysis data if present
+  const skinAnalysis = !isUser ? parseSkinAnalysis(message.content) : null;
 
   // Debug log to check if choices are properly passed
   console.log('Message metadata:', metadata);
@@ -85,11 +134,44 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
 
   return (
     <div className="message-bubble bg-assistant-msg rounded-lg p-3">
-      <div
-        className="text-sm leading-relaxed whitespace-pre-wrap"
-        style={{color: '#007381'}}
-        dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
-      />
+      {skinAnalysis ? (
+        <>
+          {/* Show intro text if present */}
+          {message.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim() && (
+            <div
+              className="text-sm leading-relaxed whitespace-pre-wrap mb-3"
+              style={{color: '#007381'}}
+              dangerouslySetInnerHTML={{ 
+                __html: formatMarkdown(message.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim()) 
+              }}
+            />
+          )}
+          
+          {/* Skin Analysis Table */}
+          <SkinAnalysisTable 
+            data={skinAnalysis.metrics}
+            overallScore={skinAnalysis.overallScore}
+            overallDescription={skinAnalysis.overallDescription}
+          />
+          
+          {/* Show remaining content after analysis */}
+          {skinAnalysis.remainingContent && (
+            <div
+              className="text-sm leading-relaxed whitespace-pre-wrap mt-3"
+              style={{color: '#007381'}}
+              dangerouslySetInnerHTML={{ 
+                __html: formatMarkdown('**🔍 PANORAMICA PROBLEMI PRINCIPALI:**' + skinAnalysis.remainingContent) 
+              }}
+            />
+          )}
+        </>
+      ) : (
+        <div
+          className="text-sm leading-relaxed whitespace-pre-wrap"
+          style={{color: '#007381'}}
+          dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
+        />
+      )}
       {/* Image display */}
       {message.metadata?.hasImage && (
       <div className="mt-2">
