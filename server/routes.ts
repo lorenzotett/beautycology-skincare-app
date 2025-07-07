@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { GeminiService } from "./services/gemini";
@@ -70,6 +71,8 @@ const imageUpload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve static files from attached_assets directory
+  app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
   // Start a new chat session
   app.post("/api/chat/start", async (req, res) => {
     try {
