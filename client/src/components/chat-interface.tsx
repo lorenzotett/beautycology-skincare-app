@@ -460,7 +460,7 @@ export function ChatInterface() {
       <div className="chat-container flex flex-col h-screen">
         {/* Welcome Screen */}
         <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-          <div className="max-w-lg w-full space-y-8 text-center rounded-3xl p-8 shadow-xl border border-slate-200" style={{backgroundColor: '#DEEDE9'}}>
+          <div className="max-w-lg w-full space-y-8 text-center rounded-3xl p-8 shadow-xl border border-slate-200" style={{backgroundColor: '#E5F1F2'}}>
             {/* Logo Bonnie */}
             <div className="space-y-2">
               <img 
@@ -535,7 +535,7 @@ export function ChatInterface() {
     <div className="chat-container flex flex-col h-screen">
       {/* Chat Area Container - Same size as welcome screen */}
       <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-        <div className="max-w-lg w-full rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{minHeight: "calc(100vh - 8rem)", backgroundColor: '#DEEDE9'}}>
+        <div className="max-w-lg w-full rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{minHeight: "calc(100vh - 8rem)", backgroundColor: '#E5F1F2'}}>
           {/* Messages Area */}
           <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto">
             {messages.map((message) => (
