@@ -327,6 +327,23 @@ export class GeminiService {
   private askedQuestions: Set<string> = new Set();
   private lastQuestionAsked: string | null = null;
 
+  private async callGeminiWithRetry(params: any, maxRetries: number = 3, baseDelay: number = 1000): Promise<any> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await ai.models.generateContent(params);
+      } catch (error: any) {
+        if (error.status === 429 && attempt < maxRetries) {
+          // Rate limiting - wait before retry
+          const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+          console.log(`Rate limit hit. Retrying in ${delay}ms... (attempt ${attempt}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error; // Re-throw if not rate limited or max retries reached
+      }
+    }
+  }
+
   async initializeConversation(userName: string): Promise<ChatResponse> {
     // Start with the user's name
     this.conversationHistory = [
@@ -335,7 +352,7 @@ export class GeminiService {
 
     try {
       // Let Gemini generate the initial message based on the system instruction
-      const response = await ai.models.generateContent({
+      const response = await this.callGeminiWithRetry({
         model: "gemini-2.5-flash",
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
@@ -421,7 +438,7 @@ A te la scelta!`;
         parts: parts as any
       });
 
-      const response = await ai.models.generateContent({
+      const response = await this.callGeminiWithRetry({
         model: "gemini-2.5-flash",
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
@@ -521,7 +538,7 @@ A te la scelta!`;
         parts: [{ text: enhancedMessage }]
       });
 
-      const response = await ai.models.generateContent({
+      const response = await this.callGeminiWithRetry({
         model: "gemini-2.5-flash",
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
@@ -655,12 +672,24 @@ A te la scelta!`;
     
     if (!isEmailRequest) return false;
 
-    // Check if we already have a valid email in the conversation
-    const userMessages = this.conversationHistory.filter(msg => msg.role === "user");
-    for (let i = userMessages.length - 1; i >= 0; i--) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (emailRegex.test(userMessages[i].content.trim())) {
-        return false; // Valid email already provided
+    // Look for the email request message
+    const emailRequestIndex = this.conversationHistory.findIndex(msg => 
+      msg.role === "assistant" && 
+      (msg.content.toLowerCase().includes("per inviarti la routine personalizzata") || 
+       msg.content.toLowerCase().includes("potresti condividere la tua email"))
+    );
+    
+    if (emailRequestIndex !== -1) {
+      // Check user messages after the email request
+      const userMessagesAfterRequest = this.conversationHistory
+        .slice(emailRequestIndex + 1)
+        .filter(msg => msg.role === "user");
+      
+      for (const userMsg of userMessagesAfterRequest) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailRegex.test(userMsg.content.trim())) {
+          return false; // Valid email already provided after the request
+        }
       }
     }
     

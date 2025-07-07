@@ -114,11 +114,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   // Parse link buttons from content
   const contentWithButtons = !isUser ? parseContentWithLinkButtons(message.content) : { content: message.content, linkButtons: [] };
   
-  // Debug log to verify link button parsing
-  if (!isUser && message.content.includes('LINK_BUTTON')) {
-    console.log('Link button found in content:', message.content);
-    console.log('Parsed link buttons:', contentWithButtons.linkButtons);
-  }
+
   
 
 
