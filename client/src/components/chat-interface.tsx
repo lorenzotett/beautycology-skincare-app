@@ -490,37 +490,34 @@ export function ChatInterface() {
             {/* Input Section */}
             <div className="space-y-4">
               <div className="relative">
-                <Input
-                  type="text"
-                  placeholder="Come ti chiami?"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="w-full h-12 px-4 text-base bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:ring-0 text-gray-800 placeholder-gray-500"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-2">
-                  <button className="p-2 text-gray-400 hover:text-teal-500 transition-colors">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                    </svg>
-                  </button>
-                  <button className="p-2 text-gray-400 hover:text-teal-500 transition-colors">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                      <circle cx="12" cy="19" r="3"/>
-                    </svg>
-                  </button>
-                  <Button
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-full">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-500">
+                    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                  </svg>
+                  
+                  <input
+                    type="text"
+                    placeholder="Il tuo nome"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="flex-1 bg-transparent border-none text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-0"
+                  />
+                  
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500">
+                    <path d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h4v1h-7v2h6c1.66 0 3-1.34 3-3V10c0-4.97-4.03-9-9-9z"/>
+                  </svg>
+                  
+                  <button
                     onClick={handleStartChat}
                     disabled={startChatMutation.isPending || !userName.trim()}
-                    className="p-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-white p-2 rounded-full disabled:opacity-50"
+                    style={{backgroundColor: '#007381'}}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="22" y1="2" x2="11" y2="13"/>
-                      <polygon points="22,2 15,22 11,13 2,9 22,2"/>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                     </svg>
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
@@ -536,7 +533,7 @@ export function ChatInterface() {
       <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
         <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{minHeight: "calc(100vh - 8rem)"}}>
           {/* Messages Area */}
-          <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto">
+          <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto" style={{backgroundColor: '#DEEDE9'}}>
             {messages.map((message) => (
               <MessageBubble
                 key={message.id}
@@ -617,7 +614,7 @@ export function ChatInterface() {
           <div className="flex-1">
             <Input
               type="text"
-              placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Come ti chiami?"}
+              placeholder={selectedImage ? "Aggiungi un messaggio (opzionale)..." : "Il tuo nome"}
               value={currentMessage}
               onChange={(e) => {
                 const newValue = e.target.value;
@@ -651,7 +648,8 @@ export function ChatInterface() {
           <button
             onClick={handleSendMessage}
             disabled={(!currentMessage.trim() && !selectedImage) || isTyping || (emailError !== null && isEmailContext())}
-            className="bg-teal-600 hover:bg-teal-700 text-white p-2 rounded-full disabled:opacity-50"
+            className="text-white p-2 rounded-full disabled:opacity-50"
+            style={{backgroundColor: '#007381'}}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
