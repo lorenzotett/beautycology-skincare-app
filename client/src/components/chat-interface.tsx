@@ -645,27 +645,21 @@ export function ChatInterface() {
 
             {/* Image Preview in Input Area */}
             {selectedImage && imagePreview && (
-              <div className="mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="flex items-center gap-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Anteprima immagine" 
-                    className="w-10 h-10 object-cover rounded border"
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-700 font-medium">Immagine selezionata</p>
-                    <p className="text-xs text-gray-500">{selectedImage.name}</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setSelectedImage(null);
-                      setImagePreview(null);
-                    }}
-                    className="text-gray-400 hover:text-gray-600 p-1"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
+              <div className="mb-2 relative">
+                <img 
+                  src={imagePreview} 
+                  alt="Anteprima immagine" 
+                  className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                />
+                <button
+                  onClick={() => {
+                    setSelectedImage(null);
+                    setImagePreview(null);
+                  }}
+                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1"
+                >
+                  <X size={12} />
+                </button>
               </div>
             )}
 
