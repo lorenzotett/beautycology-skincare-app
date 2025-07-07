@@ -314,16 +314,6 @@ export function ChatInterface() {
     }
   };
 
-  const removeImage = () => {
-    // Cleanup object URL if it exists
-    if (imagePreview && imagePreview.startsWith('blob:')) {
-      URL.revokeObjectURL(imagePreview);
-    }
-    setSelectedImage(null);
-    setImagePreview(null);
-    setCurrentMessage(''); // Clear message when image is removed
-  };
-
   const handleSendMessage = async () => {
     if ((!currentMessage.trim() && !selectedImage) || !sessionId || isTyping) return;
 
@@ -604,48 +594,11 @@ export function ChatInterface() {
 
           {/* Input Area */}
           <div className="p-4 rounded-b-3xl flex-shrink-0">
-            {/* Image Preview */}
-            {(imagePreview || selectedImage) && (
-              <div className="p-4 border-b border-gray-200">
-                <div className="relative inline-block">
-                  {imagePreview ? (
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
-                      className="w-32 h-32 object-cover rounded-lg border border-dark-accent"
-                      onError={(e) => {
-                        // Se l'immagine non carica, mostra un placeholder
-                        e.currentTarget.style.display = 'none';
-                        const placeholder = e.currentTarget.nextSibling as HTMLElement;
-                        if (placeholder) placeholder.style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
 
-                  {/* Fallback placeholder sempre presente ma nascosto */}
-                  <div 
-                    className="w-32 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center"
-                    style={{ display: imagePreview ? 'none' : 'flex' }}
-                  >
-                    <Upload size={24} className="text-text-muted mb-1" />
-                    <span className="text-xs text-text-muted text-center px-2">
-                      {selectedImage?.name || "File caricato"}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={removeImage}
-                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 z-10"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Image Preview in Input Area */}
             {selectedImage && imagePreview && (
-              <div className="mb-2 relative">
+              <div className="mb-2 relative inline-block">
                 <img 
                   src={imagePreview} 
                   alt="Anteprima immagine" 
@@ -653,12 +606,17 @@ export function ChatInterface() {
                 />
                 <button
                   onClick={() => {
+                    // Cleanup object URL if it exists
+                    if (imagePreview && imagePreview.startsWith('blob:')) {
+                      URL.revokeObjectURL(imagePreview);
+                    }
                     setSelectedImage(null);
                     setImagePreview(null);
+                    setCurrentMessage(''); // Clear message when image is removed
                   }}
-                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1"
+                  className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 z-10"
                 >
-                  <X size={12} />
+                  <X size={10} />
                 </button>
               </div>
             )}
