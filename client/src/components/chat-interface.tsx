@@ -668,7 +668,7 @@ export function ChatInterface() {
                 <input
                   type="text"
                   placeholder={selectedImage ? "Invia l'immagine" : "Scrivi il tuo messaggio..."}
-                  value={currentMessage}
+                  value={selectedImage ? "" : currentMessage}
                   onChange={(e) => {
                     if (selectedImage) return; // Disable input when image is selected
                     

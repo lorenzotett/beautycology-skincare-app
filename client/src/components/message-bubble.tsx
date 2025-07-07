@@ -56,7 +56,27 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                 src={metadata.image} 
                 alt="Immagine caricata" 
                 className="w-full max-w-48 h-auto rounded-lg border border-blue-300/30"
+                onError={(e) => {
+                  // Se l'immagine non carica, mostra un placeholder
+                  const target = e.currentTarget;
+                  target.style.display = 'none';
+                  const placeholder = target.nextSibling as HTMLElement;
+                  if (placeholder) placeholder.style.display = 'flex';
+                }}
               />
+              {/* Fallback placeholder sempre presente ma nascosto */}
+              <div 
+                className="w-full max-w-48 h-32 bg-blue-100 rounded-lg border border-blue-300/30 flex flex-col items-center justify-center"
+                style={{ display: 'none' }}
+              >
+                <Upload size={24} className="text-blue-600 mb-1" />
+                <span className="text-xs text-blue-600 text-center px-2">
+                  {metadata?.imageName || "Immagine caricata"}
+                </span>
+                <span className="text-xs text-blue-400 mt-1">
+                  Pronta per analisi
+                </span>
+              </div>
             </div>
           )}
           {/* Show message content if present */}
