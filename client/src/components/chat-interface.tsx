@@ -173,6 +173,18 @@ export function ChatInterface() {
     setTypingMessage("AI-DermaSense sta scrivendo");
     setUserInitial(userName.charAt(0).toUpperCase());
     
+    // Add user's name as first message immediately
+    const userNameMessage: ChatMessage = {
+      id: Date.now(),
+      sessionId: "temp", // Will be updated when session is created
+      role: "user",
+      content: userName.trim(),
+      metadata: null,
+      createdAt: new Date(),
+    };
+    
+    setMessages([userNameMessage]);
+    
     startChatMutation.mutate(userName);
   };
 
@@ -193,7 +205,7 @@ export function ChatInterface() {
         setUserInitial(correctedName.charAt(0).toUpperCase());
       }
 
-      // Add the initial message
+      // Add the bot's response after the user's name
       const initialMessage: ChatMessage = {
         id: Date.now(),
         sessionId: data.sessionId,
@@ -210,7 +222,11 @@ export function ChatInterface() {
       console.log('Initial message choices:', data.message.choices);
       console.log('Initial message hasChoices:', data.message.hasChoices);
 
-      setMessages([initialMessage]);
+      // Update the existing user message with correct sessionId and add bot response
+      setMessages(prev => {
+        const updatedUserMessage = { ...prev[0], sessionId: data.sessionId };
+        return [updatedUserMessage, initialMessage];
+      });
     },
     onError: (error) => {
       setIsTyping(false);
