@@ -30,6 +30,27 @@ const formatMarkdown = (text: string): string => {
   return formattedText;
 };
 
+// Function to parse and extract link buttons from content
+const parseContentWithLinkButtons = (content: string) => {
+  const linkButtonRegex = /\*\*\[LINK_BUTTON:(https?:\/\/[^:]+):([^\]]+)\]\*\*/g;
+  const linkButtons: Array<{ url: string; text: string }> = [];
+  let cleanContent = content;
+
+  let match;
+  while ((match = linkButtonRegex.exec(content)) !== null) {
+    linkButtons.push({
+      url: match[1],
+      text: match[2]
+    });
+    cleanContent = cleanContent.replace(match[0], '');
+  }
+
+  return {
+    content: cleanContent.trim(),
+    linkButtons
+  };
+};
+
 // Function to parse skin analysis data from message content
 const parseSkinAnalysis = (content: string) => {
   // Check if this is a skin analysis message
@@ -88,6 +109,9 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
 
   // Parse skin analysis data if present
   const skinAnalysis = !isUser ? parseSkinAnalysis(message.content) : null;
+  
+  // Parse link buttons from content
+  const contentWithButtons = !isUser ? parseContentWithLinkButtons(message.content) : { content: message.content, linkButtons: [] };
 
   // Debug log to check if choices are properly passed
   console.log('Message metadata:', metadata);
@@ -137,12 +161,12 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       {skinAnalysis ? (
         <>
           {/* Show intro text if present */}
-          {message.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim() && (
+          {contentWithButtons.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim() && (
             <div
               className="text-sm leading-relaxed whitespace-pre-wrap mb-3"
               style={{color: '#007381'}}
               dangerouslySetInnerHTML={{ 
-                __html: formatMarkdown(message.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim()) 
+                __html: formatMarkdown(contentWithButtons.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim()) 
               }}
             />
           )}
@@ -169,8 +193,36 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
         <div
           className="text-sm leading-relaxed whitespace-pre-wrap"
           style={{color: '#007381'}}
-          dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
+          dangerouslySetInnerHTML={{ __html: formatMarkdown(contentWithButtons.content) }}
         />
+      )}
+      
+      {/* Link Buttons */}
+      {contentWithButtons.linkButtons.length > 0 && (
+        <div className="mt-4 space-y-2">
+          {contentWithButtons.linkButtons.map((linkButton, index) => (
+            <button
+              key={index}
+              onClick={() => window.open(linkButton.url, '_blank')}
+              className="w-full p-3 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer"
+              style={{
+                backgroundColor: '#007381',
+                color: '#E5F1F2',
+                border: '2px solid #007381'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#005a62';
+                e.currentTarget.style.borderColor = '#005a62';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#007381';
+                e.currentTarget.style.borderColor = '#007381';
+              }}
+            >
+              🌟 {linkButton.text}
+            </button>
+          ))}
+        </div>
       )}
       {/* Image display */}
       {message.metadata?.hasImage && (
