@@ -166,6 +166,12 @@ export function ChatInterface() {
 
   const handleStartChat = () => {
     if (!userName.trim()) return;
+    
+    // Show chat interface immediately
+    setHasStarted(true);
+    setIsTyping(true);
+    setUserInitial(userName.charAt(0).toUpperCase());
+    
     startChatMutation.mutate(userName);
   };
 
@@ -176,7 +182,7 @@ export function ChatInterface() {
     },
     onSuccess: (data) => {
       setSessionId(data.sessionId);
-      setHasStarted(true);
+      setIsTyping(false);
 
       // Extract user initial from Gemini's corrected name
       const content = data.message.content;
@@ -206,6 +212,8 @@ export function ChatInterface() {
       setMessages([initialMessage]);
     },
     onError: (error) => {
+      setIsTyping(false);
+      setHasStarted(false); // Go back to name input if error
       toast({
         title: "Errore",
         description: "Impossibile avviare la chat. Riprova.",
@@ -314,6 +322,21 @@ export function ChatInterface() {
     const messageToSend = currentMessage.trim();
     const imageToSend = selectedImage;
 
+    // Add user message immediately to chat
+    const userMessage: ChatMessage = {
+      id: Date.now(),
+      sessionId: sessionId!,
+      role: "user",
+      content: messageToSend || (imageToSend ? "📷 Immagine caricata" : ""),
+      metadata: imageToSend ? { 
+        image: imagePreview,
+        hasImage: true,
+        imageName: imageToSend.name 
+      } : null,
+      createdAt: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
     setCurrentMessage("");
     setSelectedImage(null);
     setImagePreview(null);
@@ -378,20 +401,6 @@ export function ChatInterface() {
       }
       const data = await response.json() as ChatMessageResponse;
 
-      // Add user message
-      const userMessage: ChatMessage = {
-        id: Date.now(),
-        sessionId: sessionId!,
-        role: "user",
-        content: messageToSend || (imageToSend ? "📷 Immagine caricata" : ""),
-        metadata: imageToSend ? { 
-          image: imagePreview,
-          hasImage: true,
-          imageName: imageToSend.name 
-        } : null,
-        createdAt: new Date(),
-      };
-
       // Add assistant response
       const assistantMessage: ChatMessage = {
         id: Date.now() + 1,
@@ -409,7 +418,7 @@ export function ChatInterface() {
       console.log('Send message response choices:', data.message.choices);
       console.log('Send message response hasChoices:', data.message.hasChoices);
 
-      setMessages(prev => [...prev, userMessage, assistantMessage]);
+      setMessages(prev => [...prev, assistantMessage]);
       setIsTyping(false);
       setTypingMessage("AI-DermaSense sta scrivendo"); // Reset to default message
 
