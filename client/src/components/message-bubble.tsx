@@ -55,12 +55,12 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
               <img 
                 src={metadata.image} 
                 alt="Immagine caricata" 
-                className="w-full max-w-48 h-auto rounded-lg border border-blue-300/30 bg-white"
+                className="w-full max-w-48 h-auto rounded-lg"
                 style={{ 
                   maxHeight: '200px', 
                   minHeight: '120px',
                   width: '100%',
-                  objectFit: 'contain',
+                  objectFit: 'cover',
                   display: 'block'
                 }}
                 onError={(e) => {
