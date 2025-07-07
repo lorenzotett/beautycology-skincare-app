@@ -466,33 +466,85 @@ export function ChatInterface() {
           </div>
         </div>
         {/* Welcome Screen */}
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="max-w-md w-full space-y-6 text-center">
-            <div className="w-20 h-20 bg-assistant-msg rounded-full flex items-center justify-center mx-auto">
-              <span className="text-white font-bold text-2xl">B</span>
+        <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+          <div className="max-w-lg w-full space-y-8 text-center bg-white rounded-3xl p-8 shadow-xl border border-slate-200">
+            {/* Logo B. */}
+            <div className="space-y-2">
+              <div className="text-6xl font-light text-gray-800 tracking-wider">B.</div>
+              <div className="text-xl font-medium text-gray-700 tracking-wide">AI-DermaSense</div>
             </div>
-            <div>
-              <h2 className="text-2xl text-white mb-2 font-black">Benvenuto in AI-DermaSense</h2>
-              <p className="text-text-muted">
-                Il tuo assistente dermocosmetico personale
+            
+            {/* Hero Image */}
+            <div className="relative mx-auto w-80 h-80 rounded-2xl overflow-hidden shadow-lg">
+              <img 
+                src="/api/placeholder/400/400" 
+                alt="Analizza la tua pelle" 
+                className="w-full h-full object-cover"
+                style={{
+                  background: 'linear-gradient(135deg, #4ade80 0%, #22d3ee 100%)',
+                  backgroundImage: 'url("data:image/svg+xml,%3Csvg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="400" height="400" fill="url(%23gradient)"%3E%3C/rect%3E%3Cdefs%3E%3ClinearGradient id="gradient" x1="0" y1="0" x2="1" y2="1"%3E%3Cstop offset="0%25" stop-color="%234ade80"%3E%3C/stop%3E%3Cstop offset="100%25" stop-color="%2322d3ee"%3E%3C/stop%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E")'
+                }}
+                onError={(e) => {
+                  // Fallback to gradient background if image doesn't load
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #4ade80 0%, #22d3ee 100%)';
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+              <div className="absolute bottom-4 left-0 right-0">
+                <div className="bg-white/90 backdrop-blur-sm mx-4 py-2 px-4 rounded-lg">
+                  <div className="text-teal-600 font-semibold text-lg tracking-wide">ANALIZZA LA TUA PELLE</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Welcome Text */}
+            <div className="space-y-4 text-gray-700">
+              <p className="text-lg leading-relaxed">
+                Ciao! Sono <strong>Bonnie</strong>, la tua <strong>Skin Expert</strong> di fiducia. 
+                Possiamo analizzare insieme la tua pelle per trovare la formula 
+                skincare perfetta per migliorarla!
+              </p>
+              <p className="text-base font-medium">
+                Per iniziare, scrivi qui sotto il tuo nome.
               </p>
             </div>
-            <div className="space-y-3">
-              <Input
-                type="text"
-                placeholder="Inserisci il tuo nome..."
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="bg-dark-accent border-gray-600 text-white placeholder-text-muted"
-              />
-              <Button
-                onClick={handleStartChat}
-                disabled={startChatMutation.isPending || !userName.trim()}
-                className="w-full bg-assistant-msg hover:bg-green-600 text-white"
-              >
-                {startChatMutation.isPending ? "Avvio..." : "Inizia Chat"}
-              </Button>
+
+            {/* Input Section */}
+            <div className="space-y-4">
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Come ti chiami?"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="w-full h-12 px-4 text-base bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-teal-500 focus:ring-0 text-gray-800 placeholder-gray-500"
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-2">
+                  <button className="p-2 text-gray-400 hover:text-teal-500 transition-colors">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                    </svg>
+                  </button>
+                  <button className="p-2 text-gray-400 hover:text-teal-500 transition-colors">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                      <circle cx="12" cy="19" r="3"/>
+                    </svg>
+                  </button>
+                  <Button
+                    onClick={handleStartChat}
+                    disabled={startChatMutation.isPending || !userName.trim()}
+                    className="p-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="22" y1="2" x2="11" y2="13"/>
+                      <polygon points="22,2 15,22 11,13 2,9 22,2"/>
+                    </svg>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
