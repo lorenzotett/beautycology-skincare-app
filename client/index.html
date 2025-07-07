@@ -7,10 +7,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
-      .playfair-title {
-        font-family: 'Playfair Display', serif !important;
+      @font-face {
+        font-family: 'PlayfairDisplayCustom';
+        src: url('https://fonts.gstatic.com/s/playfairdisplay/v36/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvXDYbtXK-F2qC0s.woff2') format('woff2');
+        font-weight: 500;
+        font-style: normal;
         font-display: swap;
+      }
+      .playfair-title {
+        font-family: 'PlayfairDisplayCustom', 'Playfair Display', Georgia, serif !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.02em !important;
       }
     </style>
   </head>
