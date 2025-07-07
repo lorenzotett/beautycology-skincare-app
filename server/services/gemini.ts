@@ -604,12 +604,22 @@ A te la scelta!`;
   }
 
   private detectMultipleChoice(content: string): boolean {
-    // Look for pattern like "A) option" or "A. option"
-    const multipleChoicePattern = /^[A-E]\)\s+.+$/gm;
+    console.log('=== CHOICE DETECTION DEBUG ===');
+    console.log('Content:', content);
+    console.log('Content lines:', content.split('\n'));
+    
+    // Look for pattern like "A) option" or "A. option" (allowing leading whitespace)
+    const multipleChoicePattern = /^\s*[A-E]\)\s+.+$/gm;
     const matches = content.match(multipleChoicePattern);
+    
+    console.log('Raw matches:', matches);
+    console.log('Matches length:', matches?.length || 0);
 
     // Only treat as multiple choice if there are at least 2 matches
-    if (!matches || matches.length < 2) return false;
+    if (!matches || matches.length < 2) {
+      console.log('Not enough matches:', matches.length);
+      return false;
+    }
 
     // More relaxed detection - check for common question patterns
     const hasQuestion = content.includes('?');
@@ -633,6 +643,8 @@ A te la scelta!`;
                               content.toLowerCase().includes('stress') ||
                               content.toLowerCase().includes('fragranza');
 
+    console.log('Choice detection:', { matches: matches.length, hasQuestion, hasChoiceIndicator });
+    
     // Accept if it has choices and either a question mark or choice indicators
     return matches.length >= 2 && matches.length <= 6 && (hasQuestion || hasChoiceIndicator);
   }
@@ -642,7 +654,7 @@ A te la scelta!`;
     const lines = content.split('\n');
 
     for (const line of lines) {
-      const match = line.match(/^[A-E]\)\s+(.+)$/);
+      const match = line.match(/^\s*[A-E]\)\s+(.+)$/);
       if (match) {
         choices.push(match[1].trim());
       }
@@ -652,9 +664,9 @@ A te la scelta!`;
   }
 
     private removeChoicesFromContent(content: string): string {
-    // Remove lines that start with letter followed by ) and a space
+    // Remove lines that start with letter followed by ) and a space (allowing leading whitespace)
     const lines = content.split('\n');
-    const filteredLines = lines.filter(line => !line.match(/^[A-E]\)\s+/));
+    const filteredLines = lines.filter(line => !line.match(/^\s*[A-E]\)\s+/));
     return filteredLines.join('\n').trim();
   }
 
