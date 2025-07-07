@@ -61,18 +61,18 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           )}
           {/* Show message content if present */}
           {message.content && (
-            <p className="text-sm leading-relaxed text-white">{message.content}</p>
+            <p className="text-sm leading-relaxed" style={{color: '#E5F1F2'}}>{message.content}</p>
           )}
           {/* Show "Immagine" as fallback if no content but has image */}
           {!message.content && metadata?.image && (
-            <p className="text-sm leading-relaxed text-white italic">Immagine</p>
+            <p className="text-sm leading-relaxed italic" style={{color: '#E5F1F2'}}>Immagine</p>
           )}
-          <div className="text-xs text-blue-200 mt-2 text-right">
+          <div className="text-xs mt-2 text-right" style={{color: '#E5F1F2'}}>
             <span>{timestamp}</span>
           </div>
         </div>
         <div className="w-8 h-8 bg-user-msg rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-medium text-xs">{userInitial}</span>
+          <span className="font-medium text-xs" style={{color: '#E5F1F2'}}>{userInitial}</span>
         </div>
       </div>
     );
@@ -87,9 +87,10 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           className="w-full h-full object-cover"
         />
       </div>
-      <div className="message-bubble bg-dark-secondary rounded-lg p-3 flex-1">
+      <div className="message-bubble bg-assistant-msg rounded-lg p-3 flex-1">
         <div
-          className="text-sm leading-relaxed text-white whitespace-pre-wrap"
+          className="text-sm leading-relaxed whitespace-pre-wrap"
+          style={{color: '#007381'}}
           dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
         />
         {/* Image display */}
@@ -136,10 +137,24 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                 className={`choice-button w-full text-left p-3 rounded-lg text-sm transition-all duration-200 ${
                   isAnswered 
                     ? 'bg-gray-600 cursor-not-allowed opacity-60 text-gray-400' 
-                    : 'bg-dark-accent hover:bg-assistant-msg text-white cursor-pointer'
+                    : 'cursor-pointer'
                 }`}
+                style={{
+                  backgroundColor: isAnswered ? undefined : '#007381',
+                  color: isAnswered ? undefined : '#E5F1F2'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isAnswered) {
+                    e.currentTarget.style.backgroundColor = '#005a62';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isAnswered) {
+                    e.currentTarget.style.backgroundColor = '#007381';
+                  }
+                }}
               >
-                <span className={`font-medium ${isAnswered ? 'text-gray-500' : 'text-assistant-msg'}`}>
+                <span className={`font-medium ${isAnswered ? 'text-gray-500' : ''}`} style={{color: isAnswered ? undefined : '#E5F1F2'}}>
                   {String.fromCharCode(65 + index)})
                 </span>{" "}
                 {choice}
@@ -152,7 +167,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
             )}
           </div>
         )}
-        <div className="text-xs text-text-muted mt-2">
+        <div className="text-xs mt-2" style={{color: '#007381'}}>
           <span>{timestamp}</span>
         </div>
       </div>
