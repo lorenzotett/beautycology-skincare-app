@@ -535,9 +535,9 @@ export function ChatInterface() {
     <div className="chat-container flex flex-col h-screen">
       {/* Chat Area Container - Same size as welcome screen */}
       <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-        <div className="max-w-lg w-full rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{minHeight: "calc(100vh - 8rem)", backgroundColor: '#E5F1F2'}}>
+        <div className="max-w-lg w-full rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "calc(100vh - 8rem)", backgroundColor: '#E5F1F2'}}>
           {/* Messages Area */}
-          <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto">
+          <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto max-h-0">
             {messages.map((message) => (
               <MessageBubble
                 key={message.id}
@@ -553,7 +553,7 @@ export function ChatInterface() {
           </div>
 
           {/* Input Area */}
-          <div className="p-4 rounded-b-3xl">
+          <div className="p-4 rounded-b-3xl flex-shrink-0">
         {/* Image Preview */}
         {(imagePreview || selectedImage) && (
           <div className="p-4 border-b border-gray-200">
