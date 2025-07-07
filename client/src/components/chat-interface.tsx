@@ -473,12 +473,6 @@ export function ChatInterface() {
                   e.currentTarget.style.background = 'linear-gradient(135deg, #4ade80 0%, #22d3ee 100%)';
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-              <div className="absolute bottom-4 left-0 right-0">
-                <div className="bg-white/90 backdrop-blur-sm mx-4 py-2 px-4 rounded-lg">
-                  <div className="text-teal-600 font-semibold text-lg tracking-wide">ANALIZZA LA TUA PELLE</div>
-                </div>
-              </div>
             </div>
 
             {/* Welcome Text */}
