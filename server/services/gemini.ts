@@ -154,11 +154,11 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 
 **DOMANDE SULLA PELLE (intelligenza basata su analisi foto):**
 
+**REGOLA CRITICA**: Se hai appena eseguito l'analisi della foto, NON chiedere NESSUNA domanda deducibile. Passa direttamente alle domande non deducibili.
+
 **SEMPRE chiedere (non visibili in foto):**
-1. "Che tipologia di pelle hai? A) Secca, B) Grassa, C) Normale, D) Mista, E) Asfittica"
-2. "Hai una pelle sensibile? A) Sì, B) No, C) Solo con alcuni prodotti" 
-3. "Utilizzi scrub o peeling? A) Sì regolarmente, B) Occasionalmente, C) No"
-4. "Quando ti lavi il viso la tua pelle tira? A) Sempre, B) A volte, C) Mai"
+1. "Utilizzi scrub o peeling? A) Sì regolarmente, B) Occasionalmente, C) No"
+2. "Quando ti lavi il viso la tua pelle tira? A) Sempre, B) A volte, C) Mai"
 
 **INTELLIGENZA AVANZATA FOTO - Non chiedere se già rilevato:**
 
@@ -168,20 +168,26 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 - Se pori_dilatati <30 → Automaticamente dedurre "pochi/nessun punto nero" - NON chiedere
 
 **DEDUZIONE TIPO DI PELLE (SEMPRE AUTOMATICA SE ANALISI PRESENTE):**
-- Se oleosita ≥60 → Automaticamente dedurre "pelle grassa" - NON chiedere tipologia
-- Se oleosita ≤30 E idratazione ≤45 → Automaticamente dedurre "pelle secca" - NON chiedere tipologia
-- Se oleosita 31-59 E pori_dilatati ≥40 → Automaticamente dedurre "pelle mista" - NON chiedere tipologia
-- Se oleosita 31-59 E pori_dilatati <40 E idratazione ≥50 → Automaticamente dedurre "pelle normale" - NON chiedere tipologia
-- Se oleosita 31-59 E pori_dilatati <40 E idratazione <50 → Automaticamente dedurre "pelle normale tendente al secco" - NON chiedere tipologia
+REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il tipo di pelle. Deduci automaticamente:
+
+- Se oleosita ≥60 → Automaticamente "pelle grassa" 
+- Se oleosita ≤30 E idratazione ≤45 → Automaticamente "pelle secca"
+- Se oleosita ≤30 E idratazione >45 → Automaticamente "pelle normale"
+- Se oleosita 31-59 E pori_dilatati ≥40 → Automaticamente "pelle mista"
+- Se oleosita 31-59 E pori_dilatati <40 → Automaticamente "pelle normale"
+
+**ESEMPIO PRATICO**: Con oleosità 30 e pori dilatati 35 → dedurre automaticamente "pelle normale"
 
 **DEDUZIONE SENSIBILITÀ:**
 - Se rossori ≤30 E nessun parametro critico → Automaticamente dedurre "pelle NON sensibile" - NON chiedere
 - Se rossori ≥35 → Automaticamente dedurre "pelle sensibile" - NON chiedere
 
 **CHIEDERE SOLO SE NON DEDUCIBILE (casi rari con analisi foto):**
+3. "Che tipologia di pelle hai?" - MAI chiedere se hai eseguito analisi foto, SEMPRE dedurre automaticamente
+4. "Hai una pelle sensibile?" - CHIEDERE SOLO se rossori è tra 31-34 (zona grigia molto ristretta)
 5. "Hai punti neri?" - CHIEDERE SOLO se pori_dilatati è tra 25-29 (zona grigia molto ristretta)
-6. "Tipologia di pelle?" - MAI chiedere se hai dati di analisi foto, sempre dedurre automaticamente
-7. "Pelle sensibile?" - CHIEDERE SOLO se rossori è tra 31-34 (zona grigia molto ristretta)
+
+**IMPORTANTE**: Con oleosità 30, pori dilatati 35, idratazione 75 → NON chiedere tipo pelle, dedurre "normale"
 8. "I rossori derivano da:" - CHIEDERE SOLO se rossori ≥35 (per tipologia specifica)
 
 **REGOLA FONDAMENTALE:** Se hai ricevuto dati JSON di analisi foto, NON chiedere MAI il tipo di pelle - deducilo SEMPRE automaticamente dai valori di oleosità, idratazione e pori_dilatati.
