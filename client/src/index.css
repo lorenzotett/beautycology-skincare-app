@@ -30,7 +30,7 @@
   --dark-primary: hsl(0, 0%, 10%);
   --dark-secondary: hsl(0, 0%, 18%);
   --dark-accent: hsl(0, 0%, 24%);
-  --assistant-msg: #DEEDE9;
+  --assistant-msg: #FFFFFF;
   --user-msg: #007381;
   --text-muted: hsl(0, 0%, 62%);
 }
