@@ -563,7 +563,7 @@ export function ChatInterface() {
               alt="Bonnie Logo" 
               className="w-8 h-8 object-cover mb-2"
             />
-            <h1 className="text-lg font-medium" style={{fontFamily: 'Playfair Display', color: '#007381'}}>
+            <h1 className="text-lg font-medium playfair-display" style={{color: '#007381'}}>
               AI-DermaSense
             </h1>
           </div>
