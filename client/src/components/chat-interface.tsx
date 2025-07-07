@@ -488,7 +488,7 @@ export function ChatInterface() {
                 alt="Bonnie Logo" 
                 className="w-16 h-16 mx-auto object-contain"
               />
-              <div className="text-xl font-medium text-gray-700 tracking-wide">AI-DermaSense</div>
+              <div className="dermaSense-title text-xl font-medium text-gray-700 tracking-wide">AI-DermaSense</div>
             </div>
 
             {/* Hero Image */}
