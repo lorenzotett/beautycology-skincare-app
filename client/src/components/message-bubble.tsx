@@ -71,7 +71,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
               >
                 <Upload size={24} className="text-blue-600 mb-1" />
                 <span className="text-xs text-blue-600 text-center px-2">
-                  {metadata?.imageName || "Immagine caricata"}
+                  Immagine caricata
                 </span>
                 <span className="text-xs text-blue-400 mt-1">
                   Pronta per analisi
