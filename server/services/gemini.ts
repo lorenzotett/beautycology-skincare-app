@@ -182,6 +182,8 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 
 **REGOLA FONDAMENTALE:** Se hai ricevuto dati JSON di analisi foto, NON chiedere MAI il tipo di pelle - deducilo SEMPRE automaticamente dai valori di oleosità, idratazione e pori_dilatati.
 
+**REGOLA ANTI-LOOP:** NON ripetere MAI una domanda se l'utente ha già fornito una risposta valida in precedenza nella conversazione. Controlla sempre la cronologia prima di fare una domanda.
+
 **SOGLIE INTELLIGENTI AGGIORNATE:**
 - Se acne ≥15 → NON chiedere di acne, è già confermata
 - Se rughe ≥10 → NON chiedere di rughe, sono già rilevate  
@@ -322,6 +324,8 @@ export interface ChatResponse {
 
 export class GeminiService {
   private conversationHistory: Array<{ role: string; content: string }> = [];
+  private askedQuestions: Set<string> = new Set();
+  private lastQuestionAsked: string | null = null;
 
   async initializeConversation(userName: string): Promise<ChatResponse> {
     // Start with the user's name
@@ -475,7 +479,26 @@ A te la scelta!`;
             content: errorMessage,
             hasChoices: false
           };
+        } else {
+          // Valid email received, clear the last question to avoid repetition
+          this.lastQuestionAsked = null;
         }
+      }
+
+      // Check if user is answering the last question properly
+      if (this.lastQuestionAsked && this.isValidAnswerToQuestion(message, this.lastQuestionAsked)) {
+        this.lastQuestionAsked = null; // Clear since question was answered
+      } else if (this.lastQuestionAsked && !this.isValidAnswerToQuestion(message, this.lastQuestionAsked)) {
+        // User didn't answer the question properly, repeat it
+        this.conversationHistory.pop(); // Remove user's non-answer
+        const repeatMessage = `Mi dispiace, non ho capito la tua risposta. ${this.lastQuestionAsked}`;
+        this.conversationHistory.push({ role: "assistant", content: repeatMessage });
+        
+        return {
+          content: repeatMessage,
+          hasChoices: this.extractChoicesFromQuestion(this.lastQuestionAsked).length > 0,
+          choices: this.extractChoicesFromQuestion(this.lastQuestionAsked)
+        };
       }
 
       // Enhance the message with RAG context
@@ -509,6 +532,14 @@ A te la scelta!`;
       const content = response.text || "Mi dispiace, non ho capito. Puoi ripetere?";
       this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message }; // Keep original message in history
       this.conversationHistory.push({ role: "assistant", content });
+
+      // Track if this response contains a question
+      if (content.includes('?')) {
+        const questionMatch = content.match(/([^.!?]*\?)/);
+        if (questionMatch) {
+          this.lastQuestionAsked = questionMatch[1].trim();
+        }
+      }
 
       // Check if the response contains multiple choice options
       const hasChoices = this.detectMultipleChoice(content);
@@ -596,6 +627,8 @@ A te la scelta!`;
 
   clearConversation(): void {
     this.conversationHistory = [];
+    this.askedQuestions.clear();
+    this.lastQuestionAsked = null;
   }
 
   private isConversationComplete(response: string): boolean {
@@ -613,12 +646,25 @@ A te la scelta!`;
 
     if (!lastAssistantMessage) return false;
 
-    // Only validate email if the message explicitly asks for email
+    // Only validate email if the message explicitly asks for email and we haven't received a valid one yet
     const content = lastAssistantMessage.content.toLowerCase();
-    return content.includes("per inviarti la routine personalizzata") ||
+    const isEmailRequest = content.includes("per inviarti la routine personalizzata") ||
            content.includes("potresti condividere la tua email") ||
            content.includes("condividi la tua email") ||
            (content.includes("email") && content.includes("?"));
+    
+    if (!isEmailRequest) return false;
+
+    // Check if we already have a valid email in the conversation
+    const userMessages = this.conversationHistory.filter(msg => msg.role === "user");
+    for (let i = userMessages.length - 1; i >= 0; i--) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (emailRegex.test(userMessages[i].content.trim())) {
+        return false; // Valid email already provided
+      }
+    }
+    
+    return true;
   }
 
   private validateEmail(email: string): { isValid: boolean; errorMessage?: string } {
@@ -651,6 +697,50 @@ A te la scelta!`;
     }
 
     return { isValid: true };
+  }
+
+  private isValidAnswerToQuestion(answer: string, question: string): boolean {
+    const lowerAnswer = answer.toLowerCase().trim();
+    const lowerQuestion = question.toLowerCase();
+
+    // Check if it's a multiple choice question
+    if (this.detectMultipleChoice(question)) {
+      const choices = this.extractChoices(question);
+      return choices.some(choice => 
+        lowerAnswer.includes(choice.toLowerCase()) || 
+        choice.toLowerCase().includes(lowerAnswer)
+      );
+    }
+
+    // For open questions, check if it's a reasonable answer
+    if (lowerQuestion.includes("anni hai") || lowerQuestion.includes("età")) {
+      return /^\d{1,3}$/.test(lowerAnswer) && parseInt(lowerAnswer) > 0 && parseInt(lowerAnswer) < 120;
+    }
+
+    if (lowerQuestion.includes("email")) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(lowerAnswer);
+    }
+
+    if (lowerQuestion.includes("stress") && lowerQuestion.includes("1 a 10")) {
+      return /^([1-9]|10)$/.test(lowerAnswer);
+    }
+
+    if (lowerQuestion.includes("allergi")) {
+      return lowerAnswer.length > 0; // Any answer is valid for allergies
+    }
+
+    if (lowerQuestion.includes("informazioni") && lowerQuestion.includes("condividere")) {
+      return lowerAnswer.length > 0; // Any answer is valid
+    }
+
+    // For other questions, assume any substantial answer is valid
+    return lowerAnswer.length >= 2;
+  }
+
+  private extractChoicesFromQuestion(question: string): string[] {
+    if (!this.detectMultipleChoice(question)) return [];
+    return this.extractChoices(question);
   }
 
 
