@@ -47,7 +47,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
 
   if (isUser) {
     return (
-      <div className="flex items-start space-x-3 justify-end">
+      <div className="flex justify-end">
         <div className="message-bubble bg-user-msg rounded-lg p-3 max-w-xs lg:max-w-md">
           {/* Show image preview if available */}
           {metadata?.image && (
@@ -67,110 +67,92 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           {!message.content && metadata?.image && (
             <p className="text-sm leading-relaxed italic" style={{color: '#E5F1F2'}}>Immagine</p>
           )}
-          <div className="text-xs mt-2 text-right" style={{color: '#E5F1F2'}}>
-            <span>{timestamp}</span>
-          </div>
-        </div>
-        <div className="w-8 h-8 bg-user-msg rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="font-medium text-xs" style={{color: '#E5F1F2'}}>{userInitial}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex items-start space-x-3">
-      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-        <img 
-          src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
-          alt="Bonnie Logo" 
-          className="w-full h-full object-cover"
-        />
-      </div>
-      <div className="message-bubble bg-assistant-msg rounded-lg p-3 flex-1">
-        <div
-          className="text-sm leading-relaxed whitespace-pre-wrap"
-          style={{color: '#007381'}}
-          dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
-        />
-        {/* Image display */}
-        {message.metadata?.hasImage && (
-        <div className="mt-2">
-          {message.metadata?.image ? (
-            <img 
-              src={message.metadata.image} 
-              alt="Immagine caricata" 
-              className="max-w-48 rounded-lg border border-dark-accent cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => window.open(message.metadata.image, '_blank')}
-              onError={(e) => {
-                // Se l'immagine non carica, mostra un placeholder
-                const target = e.currentTarget;
-                target.style.display = 'none';
-                const placeholder = target.nextSibling as HTMLElement;
-                if (placeholder) placeholder.style.display = 'flex';
-              }}
-            />
-          ) : null}
+    <div className="message-bubble bg-assistant-msg rounded-lg p-3">
+      <div
+        className="text-sm leading-relaxed whitespace-pre-wrap"
+        style={{color: '#007381'}}
+        dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
+      />
+      {/* Image display */}
+      {message.metadata?.hasImage && (
+      <div className="mt-2">
+        {message.metadata?.image ? (
+          <img 
+            src={message.metadata.image} 
+            alt="Immagine caricata" 
+            className="max-w-48 rounded-lg border border-dark-accent cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => window.open(message.metadata.image, '_blank')}
+            onError={(e) => {
+              // Se l'immagine non carica, mostra un placeholder
+              const target = e.currentTarget;
+              target.style.display = 'none';
+              const placeholder = target.nextSibling as HTMLElement;
+              if (placeholder) placeholder.style.display = 'flex';
+            }}
+          />
+        ) : null}
 
-          {/* Placeholder per file che non possono essere visualizzati */}
-          <div 
-            className="max-w-48 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
-            style={{ display: message.metadata?.image ? 'none' : 'flex' }}
-          >
-            <Upload size={24} className="text-text-muted mb-2" />
-            <span className="text-xs text-text-muted text-center px-2">
-              {message.metadata?.imageName || "File caricato"}
-            </span>
-            <span className="text-xs text-text-muted/60 mt-1">
-              (Anteprima non disponibile)
-            </span>
-          </div>
+        {/* Placeholder per file che non possono essere visualizzati */}
+        <div 
+          className="max-w-48 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
+          style={{ display: message.metadata?.image ? 'none' : 'flex' }}
+        >
+          <Upload size={24} className="text-text-muted mb-2" />
+          <span className="text-xs text-text-muted text-center px-2">
+            {message.metadata?.imageName || "File caricato"}
+          </span>
+          <span className="text-xs text-text-muted/60 mt-1">
+            (Anteprima non disponibile)
+          </span>
+        </div>
+      </div>
+    )}
+      {hasChoices && choices.length > 0 && (
+        <div className="space-y-2 mt-3">
+          {choices.map((choice: string, index: number) => (
+            <button
+              key={index}
+              onClick={() => !isAnswered && onChoiceSelect?.(choice)}
+              disabled={isAnswered}
+              className={`choice-button w-full text-left p-3 rounded-lg text-sm transition-all duration-200 ${
+                isAnswered 
+                  ? 'bg-gray-600 cursor-not-allowed opacity-60 text-gray-400' 
+                  : 'cursor-pointer'
+              }`}
+              style={{
+                backgroundColor: isAnswered ? undefined : '#007381',
+                color: isAnswered ? undefined : '#E5F1F2'
+              }}
+              onMouseEnter={(e) => {
+                if (!isAnswered) {
+                  e.currentTarget.style.backgroundColor = '#005a62';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isAnswered) {
+                  e.currentTarget.style.backgroundColor = '#007381';
+                }
+              }}
+            >
+              <span className={`font-medium ${isAnswered ? 'text-gray-500' : ''}`} style={{color: isAnswered ? undefined : '#E5F1F2'}}>
+                {String.fromCharCode(65 + index)})
+              </span>{" "}
+              {choice}
+            </button>
+          ))}
+          {isAnswered && (
+            <div className="text-xs text-gray-500 mt-2 italic">
+              ✓ Risposta già fornita
+            </div>
+          )}
         </div>
       )}
-        {hasChoices && choices.length > 0 && (
-          <div className="space-y-2 mt-3">
-            {choices.map((choice: string, index: number) => (
-              <button
-                key={index}
-                onClick={() => !isAnswered && onChoiceSelect?.(choice)}
-                disabled={isAnswered}
-                className={`choice-button w-full text-left p-3 rounded-lg text-sm transition-all duration-200 ${
-                  isAnswered 
-                    ? 'bg-gray-600 cursor-not-allowed opacity-60 text-gray-400' 
-                    : 'cursor-pointer'
-                }`}
-                style={{
-                  backgroundColor: isAnswered ? undefined : '#007381',
-                  color: isAnswered ? undefined : '#E5F1F2'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isAnswered) {
-                    e.currentTarget.style.backgroundColor = '#005a62';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isAnswered) {
-                    e.currentTarget.style.backgroundColor = '#007381';
-                  }
-                }}
-              >
-                <span className={`font-medium ${isAnswered ? 'text-gray-500' : ''}`} style={{color: isAnswered ? undefined : '#E5F1F2'}}>
-                  {String.fromCharCode(65 + index)})
-                </span>{" "}
-                {choice}
-              </button>
-            ))}
-            {isAnswered && (
-              <div className="text-xs text-gray-500 mt-2 italic">
-                ✓ Risposta già fornita
-              </div>
-            )}
-          </div>
-        )}
-        <div className="text-xs mt-2" style={{color: '#007381'}}>
-          <span>{timestamp}</span>
-        </div>
-      </div>
     </div>
   );
 }
