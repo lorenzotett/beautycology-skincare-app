@@ -299,55 +299,9 @@ export function ChatInterface() {
           reader.readAsDataURL(blobArray[0]);
         } catch (error) {
           console.error('Error converting HEIC:', error);
-          // Create a data URL for a simple colored rectangle as placeholder
-          const canvas = document.createElement('canvas');
-          canvas.width = 200;
-          canvas.height = 150;
-          const ctx = canvas.getContext('2d');
-          
-          // Fill background
-          ctx.fillStyle = '#E5F1F2';
-          ctx.fillRect(0, 0, 200, 150);
-          
-          // Draw border
-          ctx.strokeStyle = '#007381';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(1, 1, 198, 148);
-          
-          // Draw camera icon circle
-          ctx.fillStyle = '#007381';
-          ctx.globalAlpha = 0.1;
-          ctx.beginPath();
-          ctx.arc(100, 75, 35, 0, 2 * Math.PI);
-          ctx.fill();
-          
-          ctx.globalAlpha = 1;
-          ctx.strokeStyle = '#007381';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(100, 75, 25, 0, 2 * Math.PI);
-          ctx.stroke();
-          
-          // Draw camera center
-          ctx.fillStyle = '#007381';
-          ctx.beginPath();
-          ctx.arc(100, 75, 6, 0, 2 * Math.PI);
-          ctx.fill();
-          
-          // Draw camera flash
-          ctx.fillRect(85, 65, 8, 5);
-          
-          // Add text
-          ctx.fillStyle = '#007381';
-          ctx.font = 'bold 16px Arial';
-          ctx.textAlign = 'center';
-          ctx.fillText('HEIC', 100, 120);
-          
-          ctx.font = '12px Arial';
-          ctx.globalAlpha = 0.8;
-          ctx.fillText('Pronto per analisi', 100, 135);
-          
-          setImagePreview(canvas.toDataURL('image/png'));
+          // Use the original file as a blob URL for preview
+          const originalBlobUrl = URL.createObjectURL(file);
+          setImagePreview(originalBlobUrl);
         }
       } else {
         // For other formats, use regular FileReader
@@ -684,6 +638,32 @@ export function ChatInterface() {
                     className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 z-10"
                   >
                     <X size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Image Preview in Input Area */}
+            {selectedImage && imagePreview && (
+              <div className="mb-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={imagePreview} 
+                    alt="Anteprima immagine" 
+                    className="w-10 h-10 object-cover rounded border"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-700 font-medium">Immagine selezionata</p>
+                    <p className="text-xs text-gray-500">{selectedImage.name}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedImage(null);
+                      setImagePreview(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 p-1"
+                  >
+                    <X size={14} />
                   </button>
                 </div>
               </div>
