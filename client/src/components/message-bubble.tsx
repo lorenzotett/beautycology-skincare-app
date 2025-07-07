@@ -70,8 +70,8 @@ const parseSkinAnalysis = (content: string) => {
   }
 
   // Extract overall score and description
-  const overallMatch = content.match(/\*\*Punteggio Generale:\*\* (\d+)\/100 - ([^-]+)/);
-  const overallScore = overallMatch ? parseInt(overallMatch[1]) : 0;
+  const overallMatch = content.match(/\*\*Punteggio Generale:\*\* (\d+(?:\.\d+)?)\/100 - ([^-\n]+)/);
+  const overallScore = overallMatch ? Math.round(parseFloat(overallMatch[1])) : 0;
   const overallDescription = overallMatch ? overallMatch[2].trim() : '';
 
   // Extract individual metrics
