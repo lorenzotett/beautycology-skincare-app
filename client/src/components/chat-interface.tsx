@@ -500,12 +500,13 @@ export function ChatInterface() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const speechRecog = new SpeechRecognition();
     
-    speechRecog.continuous = false; // Cambiato da true a false
+    speechRecog.continuous = false;
     speechRecog.interimResults = true;
     speechRecog.lang = "it-IT";
     speechRecog.maxAlternatives = 1;
     
     let finalTranscript = "";
+    let isRecognitionActive = false; // Flag per prevenire loop
     
     speechRecog.onresult = (event) => {
       let interimTranscript = "";
@@ -525,22 +526,35 @@ export function ChatInterface() {
     
     speechRecog.onstart = () => {
       console.log("Voice recognition started");
+      isRecognitionActive = true;
       setIsListening(true);
     };
     
     speechRecog.onend = () => {
       console.log("Voice recognition ended");
+      isRecognitionActive = false;
       setIsListening(false);
       
       // Se abbiamo del testo finale, mantienilo
       if (finalTranscript.trim()) {
         setCurrentMessage(finalTranscript.trim());
       }
+      
+      // Reset del transcript per la prossima sessione
+      finalTranscript = "";
     };
     
     speechRecog.onerror = (event) => {
       console.log("Speech recognition error:", event.error);
+      isRecognitionActive = false;
       setIsListening(false);
+      
+      // Ferma esplicitamente il riconoscimento per prevenire loop
+      try {
+        speechRecog.stop();
+      } catch (e) {
+        console.log("Error stopping recognition:", e);
+      }
       
       switch (event.error) {
         case 'no-speech':
@@ -552,8 +566,8 @@ export function ChatInterface() {
           break;
         case 'network':
           toast({
-            title: "Errore di rete",
-            description: "Controlla la tua connessione internet.",
+            title: "Errore di connessione",
+            description: "Il riconoscimento vocale richiede una connessione internet. Verifica la connessione e riprova.",
             variant: "destructive",
           });
           break;
@@ -567,10 +581,17 @@ export function ChatInterface() {
         case 'aborted':
           console.log("Recognition aborted by user");
           break;
+        case 'service-not-allowed':
+          toast({
+            title: "Servizio non disponibile",
+            description: "Il riconoscimento vocale non è disponibile. Riprova più tardi.",
+            variant: "destructive",
+          });
+          break;
         default:
           toast({
             title: "Errore riconoscimento vocale",
-            description: "Si è verificato un errore. Riprova.",
+            description: `Si è verificato un errore (${event.error}). Riprova.`,
             variant: "destructive",
           });
       }
@@ -590,21 +611,48 @@ export function ChatInterface() {
     }
 
     if (isListening) {
-      recognition.current.stop();
+      try {
+        recognition.current.stop();
+      } catch (error) {
+        console.error('Error stopping recognition:', error);
+      }
       setIsListening(false);
     } else {
+      // Controlla se il riconoscimento è già attivo
+      if (recognition.current.readyState && recognition.current.readyState === 'recording') {
+        console.log("Recognition already active");
+        return;
+      }
+      
       try {
+        // Verifica la connessione internet prima di iniziare
+        if (!navigator.onLine) {
+          toast({
+            title: "Nessuna connessione",
+            description: "Il riconoscimento vocale richiede una connessione internet.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         recognition.current.start();
-        // Non impostiamo setIsListening(true) qui, 
-        // lo farà automaticamente l'evento onstart
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error starting recognition:', error);
         setIsListening(false);
-        toast({
-          title: "Errore",
-          description: "Impossibile avviare il riconoscimento vocale. Riprova.",
-          variant: "destructive",
-        });
+        
+        if (error.name === 'InvalidStateError') {
+          toast({
+            title: "Servizio occupato",
+            description: "Il riconoscimento vocale è già in uso. Attendi un momento e riprova.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Errore",
+            description: "Impossibile avviare il riconoscimento vocale. Riprova.",
+            variant: "destructive",
+          });
+        }
       }
     }
   };
