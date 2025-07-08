@@ -200,6 +200,12 @@ Changelog:
   - Fixed image preview not showing in input area when HEIC conversion fails
   - Added fallback placeholder with filename when image preview is unavailable
   - Improved debug logging for image upload and conversion process
+- July 08, 2025. Enhanced AI consultation feedback system:
+  - Updated system instructions to ensure AI ALWAYS comments on user's skincare habits
+  - AI now provides feedback whether habits are optimal or need improvement
+  - Added mandatory brief scientific explanations for all habit assessments
+  - Expanded examples to cover all skincare habits: sun protection, sleep, hydration, exfoliation, cleansing, moisturizing, makeup removal, product actives, allergies
+  - Improved educational value of consultation with consistent habit evaluation
 
 ## User Preferences
 
