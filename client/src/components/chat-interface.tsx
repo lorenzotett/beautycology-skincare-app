@@ -606,9 +606,10 @@ export function ChatInterface() {
                 disabled={isTyping || selectedImage}
                 className={`p-2 rounded-md transition-all duration-200 transform ${
                   isListening 
-                    ? 'text-white bg-red-500 shadow-lg scale-105 animate-pulse' 
+                    ? 'text-white shadow-lg scale-105 animate-pulse' 
                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:scale-95'
                 } ${isTyping || selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                style={isListening ? {backgroundColor: '#007381'} : {}}
                 title={isListening ? "Ferma registrazione" : "Inizia registrazione vocale"}
               >
                 {isListening ? (
@@ -747,9 +748,10 @@ export function ChatInterface() {
                 disabled={isTyping || selectedImage}
                 className={`p-2 rounded-md transition-all duration-200 transform ${
                   isListening 
-                    ? 'text-white bg-red-500 shadow-lg scale-105 animate-pulse' 
+                    ? 'text-white shadow-lg scale-105 animate-pulse' 
                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:scale-95'
                 } ${isTyping || selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                style={isListening ? {backgroundColor: '#007381'} : {}}
                 title={isListening ? "Ferma registrazione" : "Inizia registrazione vocale"}
               >
                 {isListening ? (
