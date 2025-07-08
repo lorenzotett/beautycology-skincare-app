@@ -42,15 +42,39 @@ const formatMarkdown = (text: string): string => {
     '<div class="mb-1 ml-4 text-sm">• $1</div>'
   );
 
+  // Format main problems section header
+  formattedText = formattedText.replace(
+    /🔎\s*\*\*LE TUE PRINCIPALI NECESSITÀ E CONSIGLI SPECIFICI:\*\*/g,
+    '<div class="mb-4 mt-4"><strong class="text-base font-semibold">🔎 LE TUE PRINCIPALI NECESSITÀ E CONSIGLI SPECIFICI:</strong></div>'
+  );
+
+  // Format problem items with levels
+  formattedText = formattedText.replace(
+    /^\s*\*\s*\*\*([^*]+)\s*\(Livello:\s*(\d+)\/100\):\*\*\s*$/gm,
+    '<div class="mb-3 mt-3"><strong class="font-semibold text-sm">• $1 (Livello: $2/100):</strong></div>'
+  );
+
+  // Format problem items without levels
+  formattedText = formattedText.replace(
+    /^\s*\*\s*\*\*([^*]+):\*\*\s*$/gm,
+    '<div class="mb-3 mt-3"><strong class="font-semibold text-sm">• $1:</strong></div>'
+  );
+
   // Format ingredient recommendations
   formattedText = formattedText.replace(
     /\*\*Ingrediente consigliato:\*\*\s*([^\n]+)/g,
-    '<div class="mb-1 ml-4"><strong class="text-sm font-medium">Ingrediente consigliato:</strong> <span class="text-sm">$1</span></div>'
+    '<div class="mb-1 ml-6"><strong class="text-sm font-medium text-green-700">Ingrediente consigliato:</strong> <span class="text-sm">$1</span></div>'
   );
   
   formattedText = formattedText.replace(
     /\*\*Come funziona:\*\*\s*([^\n]+)/g,
-    '<div class="mb-2 ml-4"><strong class="text-sm font-medium">Come funziona:</strong> <span class="text-sm">$1</span></div>'
+    '<div class="mb-3 ml-6"><strong class="text-sm font-medium text-blue-700">Come funziona:</strong> <span class="text-sm">$1</span></div>'
+  );
+
+  // Format specific advice
+  formattedText = formattedText.replace(
+    /\*\*Consiglio specifico:\*\*\s*([^\n]+)/g,
+    '<div class="mb-3 ml-6"><strong class="text-sm font-medium text-purple-700">Consiglio specifico:</strong> <span class="text-sm">$1</span></div>'
   );
 
   // Make URLs clickable - matches http/https URLs and www URLs
