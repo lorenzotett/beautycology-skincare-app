@@ -607,8 +607,9 @@ A te la scelta!`;
   }
 
   private detectMultipleChoice(content: string): boolean {
-    console.log('=== CHOICE DETECTION DEBUG ===');
-    console.log('Content:', content);
+    // Rimuovo solo i log di debug per pulizia del codice
+    // console.log('=== CHOICE DETECTION DEBUG ===');
+    // console.log('Content:', content);
     
     // Look for pattern like "A) option" or "A. option" (allowing leading whitespace)
     const multipleChoicePattern = /^\s*[A-E]\)\s+.+$/gm;
