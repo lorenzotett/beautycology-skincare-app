@@ -506,7 +506,7 @@ export function ChatInterface() {
     speechRecog.maxAlternatives = 1;
     
     let finalTranscript = "";
-    let isRecognitionActive = false; // Flag per prevenire loop
+    let isRecognitionActive = false;
     
     speechRecog.onresult = (event) => {
       let interimTranscript = "";
@@ -520,7 +520,6 @@ export function ChatInterface() {
         }
       }
       
-      // Aggiorna il messaggio con il testo finale o interim
       setCurrentMessage(finalTranscript + interimTranscript);
     };
     
@@ -535,12 +534,10 @@ export function ChatInterface() {
       isRecognitionActive = false;
       setIsListening(false);
       
-      // Se abbiamo del testo finale, mantienilo
       if (finalTranscript.trim()) {
         setCurrentMessage(finalTranscript.trim());
       }
       
-      // Reset del transcript per la prossima sessione
       finalTranscript = "";
     };
     
@@ -549,11 +546,19 @@ export function ChatInterface() {
       isRecognitionActive = false;
       setIsListening(false);
       
-      // Ferma esplicitamente il riconoscimento per prevenire loop
-      try {
-        speechRecog.stop();
-      } catch (e) {
-        console.log("Error stopping recognition:", e);
+      // Previeni loop: non fermare di nuovo se già fermato
+      if (event.error !== 'aborted') {
+        try {
+          speechRecog.stop();
+        } catch (e) {
+          // Ignora errori di stop multipli
+        }
+      }
+      
+      // Non mostrare toast per errori di abort (causati da stop manuale)
+      if (event.error === 'aborted') {
+        console.log("Recognition aborted by user");
+        return;
       }
       
       switch (event.error) {
@@ -578,9 +583,6 @@ export function ChatInterface() {
             variant: "destructive",
           });
           break;
-        case 'aborted':
-          console.log("Recognition aborted by user");
-          break;
         case 'service-not-allowed':
           toast({
             title: "Servizio non disponibile",
@@ -598,6 +600,17 @@ export function ChatInterface() {
     };
     
     recognition.current = speechRecog;
+    
+    // Cleanup function per assicurarsi che il riconoscimento sia fermato al unmount
+    return () => {
+      if (speechRecog) {
+        try {
+          speechRecog.stop();
+        } catch (e) {
+          // Ignora errori di cleanup
+        }
+      }
+    };
   }, [toast]);
 
   const toggleVoiceRecognition = () => {
@@ -618,12 +631,6 @@ export function ChatInterface() {
       }
       setIsListening(false);
     } else {
-      // Controlla se il riconoscimento è già attivo
-      if (recognition.current.readyState && recognition.current.readyState === 'recording') {
-        console.log("Recognition already active");
-        return;
-      }
-      
       try {
         // Verifica la connessione internet prima di iniziare
         if (!navigator.onLine) {
