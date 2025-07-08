@@ -8,7 +8,7 @@ import { Input } from "./ui/input";
 import { Card } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { useToast } from "../hooks/use-toast";
-import { Paperclip, Upload, X } from "lucide-react";
+import { Paperclip, Upload, X, Mic, MicOff } from "lucide-react";
 import { ChatMessage } from "@shared/schema";
 
 interface ChatResponse {
@@ -41,6 +41,8 @@ export function ChatInterface() {
   const [userInitial, setUserInitial] = useState<string>("U");
   const [emailSent, setEmailSent] = useState<boolean>(false);
   const { toast } = useToast();
+  const [isListening, setIsListening] = useState(false);
+  const recognition = useRef<SpeechRecognition | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -170,13 +172,13 @@ export function ChatInterface() {
 
   const handleStartChat = () => {
     if (!userName.trim()) return;
-    
+
     // Show chat interface immediately
     setHasStarted(true);
     setIsTyping(true);
     setTypingMessage("AI-DermaSense sta scrivendo");
     setUserInitial(userName.charAt(0).toUpperCase());
-    
+
     // Add user's name as first message immediately
     const userNameMessage: ChatMessage = {
       id: Date.now(),
@@ -186,9 +188,9 @@ export function ChatInterface() {
       metadata: null,
       createdAt: new Date(),
     };
-    
+
     setMessages([userNameMessage]);
-    
+
     startChatMutation.mutate(userName);
   };
 
@@ -294,7 +296,7 @@ export function ChatInterface() {
             toType: 'image/jpeg',
             quality: 0.8
           });
-          
+
           const blobArray = Array.isArray(convertedBlob) ? convertedBlob : [convertedBlob];
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -457,7 +459,6 @@ export function ChatInterface() {
     }
   };
 
-
   const handleChoiceSelect = (choice: string, messageId: number) => {
     if (!sessionId) return;
 
@@ -487,6 +488,65 @@ export function ChatInterface() {
       } else {
         handleStartChat();
       }
+    }
+  };
+
+  useEffect(() => {
+    if (!("webkitSpeechRecognition" in window)) {
+      console.log("Speech Recognition Not Available");
+    } else {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      const speechRecog = new SpeechRecognition();
+      speechRecog.continuous = true;
+      speechRecog.interimResults = true;
+      speechRecog.lang = "it-IT";
+      speechRecog.onresult = (event) => {
+        let interimTranscript = "";
+        let finalTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        setCurrentMessage(finalTranscript || interimTranscript);
+      };
+      speechRecog.onstart = () => {
+        console.log("starting speech recognition");
+      };
+      speechRecog.onend = () => {
+        console.log("speech recognition ended");
+        setIsListening(false);
+      };
+      speechRecog.onerror = (event) => {
+        console.log("Speech recognition error", event.error);
+        setIsListening(false);
+        if (event.error === 'no-speech') {
+          toast({
+            title: "Errore",
+            description: "Nessun input vocale rilevato. Riprova.",
+            variant: "destructive",
+          });
+        }
+        if (event.error === 'aborted') {
+          console.log("Recognition aborted")
+        }
+      };
+      recognition.current = speechRecog;
+    }
+  }, [toast]);
+
+  const toggleVoiceRecognition = () => {
+    if (!recognition.current) return;
+
+    if (isListening) {
+      recognition.current.stop();
+      setIsListening(false);
+    } else {
+      recognition.current.start();
+      setIsListening(true);
     }
   };
 
@@ -541,14 +601,23 @@ export function ChatInterface() {
                 onKeyPress={handleKeyPress}
                 className="flex-1 bg-transparent border-none text-gray-700 placeholder:text-gray-400 focus:outline-none text-base"
               />
-              
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
-                <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                <line x1="12" y1="19" x2="12" y2="23"/>
-                <line x1="8" y1="23" x2="16" y2="23"/>
-              </svg>
-              
+              <button
+                onClick={toggleVoiceRecognition}
+                disabled={isTyping || selectedImage}
+                className={`p-1 rounded-md transition-colors ${
+                  isListening 
+                    ? 'text-red-500 bg-red-50' 
+                    : 'text-gray-400 hover:text-gray-600'
+                } ${isTyping || selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                title={isListening ? "Ferma registrazione" : "Inizia registrazione vocale"}
+              >
+                {isListening ? (
+                  <MicOff size={16} />
+                ) : (
+                  <Mic size={16} />
+                )}
+              </button>
+
               <button
                 onClick={handleStartChat}
                 disabled={startChatMutation.isPending || !userName.trim()}
@@ -651,7 +720,7 @@ export function ChatInterface() {
                   value={selectedImage ? "" : currentMessage}
                   onChange={(e) => {
                     if (selectedImage) return; // Disable input when image is selected
-                    
+
                     const newValue = e.target.value;
                     setCurrentMessage(newValue);
 
@@ -673,14 +742,23 @@ export function ChatInterface() {
                   </p>
                 )}
               </div>
+              <button
+                onClick={toggleVoiceRecognition}
+                disabled={isTyping || selectedImage}
+                className={`p-1 rounded-md transition-colors ${
+                  isListening 
+                    ? 'text-red-500 bg-red-50' 
+                    : 'text-gray-400 hover:text-gray-600'
+                } ${isTyping || selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                title={isListening ? "Ferma registrazione" : "Inizia registrazione vocale"}
+              >
+                {isListening ? (
+                  <MicOff size={16} />
+                ) : (
+                  <Mic size={16} />
+                )}
+              </button>
 
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
-                <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                <line x1="12" y1="19" x2="12" y2="23"/>
-                <line x1="8" y1="23" x2="16" y2="23"/>
-              </svg>
-              
               <button
                 onClick={handleSendMessage}
                 disabled={(!currentMessage.trim() && !selectedImage) || isTyping || (emailError !== null && isEmailContext())}
