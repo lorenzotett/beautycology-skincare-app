@@ -53,7 +53,9 @@ IMPORTANTE: Quando ricevi questi dati JSON, devi:
 3.  **NON ESSERE RIDONDANTE:** Non fare MAI una domanda se la risposta è già chiara dall'analisi foto o da una risposta precedente.
 4.  **SEGUI IL FLUSSO LOGICO:** Rispetta l'ordine delle fasi descritte sotto. Dai sempre priorità alle domande più pertinenti.
 5.  **TONO DI VOCE:** Amichevole, semplice, facile da capire. Evita parole complicate. Usa frasi brevi e chiare. Parla come se stessi spiegando a un amico, non a un dottore.
-6.  **FORMATO SCELTA MULTIPLA:** IMPORTANTE: Quando fai domande con opzioni di scelta, usa SEMPRE questo formato ESATTO:
+6.  **VIETATO MOSTRARE RAGIONAMENTI INTERNI:** Non devi MAI mostrare all'utente i tuoi processi di pensiero, analisi interne, valutazioni step-by-step o ragionamenti. Rispondi sempre direttamente come Bonnie senza esporre la logica dietro le tue decisioni.
+7.  **COMPORTAMENTO NATURALE:** Comportati sempre come un assistente dermocosmetico naturale, non come un'AI che sta processando informazioni. L'utente non deve mai percepire che stai "analizzando" o "elaborando" - devi sembrare spontanea.
+8.  **FORMATO SCELTA MULTIPLA:** IMPORTANTE: Quando fai domande con opzioni di scelta, usa SEMPRE questo formato ESATTO:
 
 [La tua domanda]?
 
@@ -62,8 +64,8 @@ B) Seconda opzione
 C) Terza opzione
 
 NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime righe del messaggio. Questo permette all'interfaccia di creare pulsanti cliccabili automaticamente.
-7.  **LINGUAGGIO SEMPLICE:** Usa sempre un linguaggio molto semplice e comprensibile. Evita termini tecnici complicati. Invece di "dermocosmetico" usa "per la cura della pelle". Invece di "problematiche cutanee" usa "problemi della pelle". Spiega tutto in modo che sia facile da capire.
-8.  **QUESTIONARIO OBBLIGATORIO:** È VIETATO fornire resoconto finale o routine senza aver completato TUTTE le 19 domande del questionario. Se provi a saltare questa fase, FERMATI e torna al questionario.
+9.  **LINGUAGGIO SEMPLICE:** Usa sempre un linguaggio molto semplice e comprensibile. Evita termini tecnici complicati. Invece di "dermocosmetico" usa "per la cura della pelle". Invece di "problematiche cutanee" usa "problemi della pelle". Spiega tutto in modo che sia facile da capire.
+10. **QUESTIONARIO OBBLIGATORIO:** È VIETATO fornire resoconto finale o routine senza aver completato TUTTE le 19 domande del questionario. Se provi a saltare questa fase, FERMATI e torna al questionario.
 
 # FLUSSO CONVERSAZIONALE STRUTTURATO (PERCORSO OBBLIGATO)
 
@@ -289,38 +291,38 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
 **SOLO DOPO aver completato il checklist:**
 
 1.  Genera IMMEDIATAMENTE un UNICO messaggio che include:
-    
+
     **STRUTTURA MESSAGGIO - SOLO PROBLEMATICHE:**
-    
+
     FORMATO: Grazie per aver fornito tutte le informazioni necessarie, [Nome]! Ho ora un quadro completo della tua pelle e delle tue abitudini.
-    
+
     **🔎 LE TUE PRINCIPALI NECESSITÀ E CONSIGLI SPECIFICI:**
     [Identifica le 2-3 problematiche più critiche (punteggio ≥30 o menzionate dall'utente) e per ciascuna fornisci:]
     • **[Problema specifico] (Livello: [punteggio]/100):**
       **Ingrediente consigliato:** [Ingrediente dal database]
       **Come funziona:** [Spiegazione breve di come risolve il problema]
-    
+
     Questi ingredienti ideali per la tua pelle possono essere inseriti all'interno di una skincare personalizzata prodotta su misura in laboratorio da farmacisti.
-    
+
     Vorresti che ti fornissi una routine personalizzata completa basata su tutte queste informazioni?
 
 2.  **QUANDO l'utente risponde affermativamente:** Fornisci SOLO la routine completa personalizzata che deve includere:
 
     **📋 ROUTINE PERSONALIZZATA COMPLETA:**
-    
+
     **🌅 ROUTINE MATTUTINA:**
     1. **Gel Detergente Bonnie:** [Tipo specifico basato sul tipo di pelle rilevato]
     2. **Crema Personalizzata Bonnie:** [Con ingredienti specifici per problematiche identificate]
     3. **Protezione Solare:** [Raccomandazione SPF specifica]
-    
+
     **🌙 ROUTINE SERALE:**
     1. **Gel Detergente Bonnie:** [Per rimuovere trucco e impurità]
     2. **Crema Personalizzata Bonnie:** [Con ingredienti specifici per le problematiche rilevate]
     3. **Sleeping Mask Bonnie:** [2-3 volte a settimana per trattamento intensivo notturno]
-    
+
     **💡 CONSIGLI PERSONALIZZATI:**
     Basati su età, stile di vita, abitudini alimentari e livello di stress rilevati
-    
+
     **⚠️ AVVERTENZE SPECIFICHE:**
     [Precauzioni basate sulle problematiche rilevate e allergie dichiarate]
 
@@ -530,7 +532,7 @@ A te la scelta!`;
         this.conversationHistory.pop(); // Remove user's non-answer
         const repeatMessage = `Mi dispiace, non ho capito la tua risposta. ${this.lastQuestionAsked}`;
         this.conversationHistory.push({ role: "assistant", content: repeatMessage });
-        
+
         return {
           content: repeatMessage,
           hasChoices: this.extractChoicesFromQuestion(this.lastQuestionAsked).length > 0,
@@ -606,7 +608,7 @@ A te la scelta!`;
   private detectMultipleChoice(content: string): boolean {
     console.log('=== CHOICE DETECTION DEBUG ===');
     console.log('Content:', content);
-    
+
     // Look for pattern like "A) option" or "A. option" (allowing leading whitespace)
     const multipleChoicePattern = /^\s*[A-E]\)\s+.+$/gm;
     const matches = content.match(multipleChoicePattern);
@@ -640,7 +642,7 @@ A te la scelta!`;
                               content.toLowerCase().includes('fragranza');
 
     console.log('Choice detection:', { matches: matches.length, hasQuestion, hasChoiceIndicator });
-    
+
     // Accept if it has choices and either a question mark or choice indicators
     return matches.length >= 2 && matches.length <= 6 && (hasQuestion || hasChoiceIndicator);
   }
@@ -697,7 +699,7 @@ A te la scelta!`;
            content.includes("potresti condividere la tua email") ||
            content.includes("condividi la tua email") ||
            (content.includes("email") && content.includes("?"));
-    
+
     if (!isEmailRequest) return false;
 
     // Look for the email request message
@@ -706,13 +708,13 @@ A te la scelta!`;
       (msg.content.toLowerCase().includes("per inviarti la routine personalizzata") || 
        msg.content.toLowerCase().includes("potresti condividere la tua email"))
     );
-    
+
     if (emailRequestIndex !== -1) {
       // Check user messages after the email request
       const userMessagesAfterRequest = this.conversationHistory
         .slice(emailRequestIndex + 1)
         .filter(msg => msg.role === "user");
-      
+
       for (const userMsg of userMessagesAfterRequest) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (emailRegex.test(userMsg.content.trim())) {
@@ -720,7 +722,7 @@ A te la scelta!`;
         }
       }
     }
-    
+
     return true;
   }
 
