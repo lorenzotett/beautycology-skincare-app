@@ -12,11 +12,8 @@ interface MessageBubbleProps {
 
 // Function to format markdown and make links clickable
 const formatMarkdown = (text: string): string => {
-  // Replace **bold text** with <strong>bold text</strong> (double asterisks first)
-  let formattedText = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-  
-  // Replace *bold text* with <strong>bold text</strong> (single asterisks)
-  formattedText = formattedText.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
+  // Replace *bold text* with <strong>bold text</strong>
+  let formattedText = text.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
 
   // Make URLs clickable - matches http/https URLs and www URLs
   formattedText = formattedText.replace(
@@ -251,45 +248,38 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       )}
       {/* Image display */}
       {message.metadata?.hasImage && (
-        <div className="mt-2">
-          {message.metadata?.image ? (
-            <div className="relative">
-              <img 
-                src={message.metadata.image} 
-                alt="Immagine caricata" 
-                className="max-w-48 rounded-lg border border-dark-accent cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => window.open(message.metadata.image, '_blank')}
-                onError={(e) => {
-                  // Se l'immagine non carica, nascondere l'img e mostrare il placeholder
-                  const target = e.currentTarget;
-                  const container = target.parentElement;
-                  if (container) {
-                    target.style.display = 'none';
-                    const placeholder = container.nextElementSibling as HTMLElement;
-                    if (placeholder && placeholder.classList.contains('image-placeholder')) {
-                      placeholder.style.display = 'flex';
-                    }
-                  }
-                }}
-              />
-            </div>
-          ) : null}
+      <div className="mt-2">
+        {message.metadata?.image ? (
+          <img 
+            src={message.metadata.image} 
+            alt="Immagine caricata" 
+            className="max-w-48 rounded-lg border border-dark-accent cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => window.open(message.metadata.image, '_blank')}
+            onError={(e) => {
+              // Se l'immagine non carica, mostra un placeholder
+              const target = e.currentTarget;
+              target.style.display = 'none';
+              const placeholder = target.nextSibling as HTMLElement;
+              if (placeholder) placeholder.style.display = 'flex';
+            }}
+          />
+        ) : null}
 
-          {/* Placeholder per file che non possono essere visualizzati */}
-          <div 
-            className="image-placeholder max-w-48 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
-            style={{ display: message.metadata?.image ? 'none' : 'flex' }}
-          >
-            <Upload size={24} className="text-text-muted mb-2" />
-            <span className="text-xs text-text-muted text-center px-2">
-              {message.metadata?.imageName || "File caricato"}
-            </span>
-            <span className="text-xs text-text-muted/60 mt-1">
-              (Anteprima non disponibile)
-            </span>
-          </div>
+        {/* Placeholder per file che non possono essere visualizzati */}
+        <div 
+          className="max-w-48 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
+          style={{ display: message.metadata?.image ? 'none' : 'flex' }}
+        >
+          <Upload size={24} className="text-text-muted mb-2" />
+          <span className="text-xs text-text-muted text-center px-2">
+            {message.metadata?.imageName || "File caricato"}
+          </span>
+          <span className="text-xs text-text-muted/60 mt-1">
+            (Anteprima non disponibile)
+          </span>
         </div>
-      )}
+      </div>
+    )}
       {hasChoices && choices.length > 0 && (
         <div className="space-y-2 mt-3">
           {choices.map((choice: string, index: number) => (

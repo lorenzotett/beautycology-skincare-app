@@ -287,11 +287,8 @@ export function ChatInterface() {
       const isHEIC = fileExtension === '.heic' || fileExtension === '.heif' || 
                      file.type === 'image/heic' || file.type === 'image/heif';
 
-
-
       if (isHEIC) {
         try {
-          console.log('Converting HEIC file:', file.name, file.type);
           // Convert HEIC to JPEG for preview
           const heic2any = await import('heic2any');
           const convertedBlob = await heic2any.default({
@@ -303,30 +300,20 @@ export function ChatInterface() {
           const blobArray = Array.isArray(convertedBlob) ? convertedBlob : [convertedBlob];
           const reader = new FileReader();
           reader.onload = (e) => {
-            const dataUrl = e.target?.result as string;
-            console.log('HEIC converted successfully, data URL length:', dataUrl?.length);
-            setImagePreview(dataUrl);
+            setImagePreview(e.target?.result as string);
           };
           reader.readAsDataURL(blobArray[0]);
         } catch (error) {
           console.error('Error converting HEIC:', error);
-          // For HEIC files that can't be converted, always use FileReader for data URL
-          // This works better than blob URLs in environments like Replit
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const result = e.target?.result as string;
-            console.log('Using FileReader as fallback for HEIC, length:', result?.length);
-            setImagePreview(result);
-          };
-          reader.readAsDataURL(file);
+          // Use the original file as a blob URL for preview
+          const originalBlobUrl = URL.createObjectURL(file);
+          setImagePreview(originalBlobUrl);
         }
       } else {
         // For other formats, use regular FileReader
         const reader = new FileReader();
         reader.onload = (e) => {
-          const result = e.target?.result as string;
-          console.log('Standard image loaded, data URL length:', result?.length);
-          setImagePreview(result);
+          setImagePreview(e.target?.result as string);
         };
         reader.readAsDataURL(file);
       }
@@ -357,7 +344,7 @@ export function ChatInterface() {
       role: "user",
       content: messageToSend || (imageToSend ? "📷 Immagine caricata" : ""),
       metadata: imageToSend ? { 
-        image: imagePreview || undefined, // Use undefined instead of null for hasImage detection
+        image: imagePreview,
         hasImage: true,
         imageName: imageToSend.name 
       } : null,
@@ -800,22 +787,13 @@ export function ChatInterface() {
 
 
             {/* Image Preview in Input Area */}
-            {selectedImage && (
+            {selectedImage && imagePreview && (
               <div className="mb-2 relative inline-block">
-                {imagePreview ? (
-                  <img 
-                    src={imagePreview} 
-                    alt="Anteprima immagine" 
-                    className="w-20 h-20 object-cover rounded-lg border border-gray-200"
-                  />
-                ) : (
-                  <div className="w-20 h-20 bg-gray-100 rounded-lg border border-gray-200 flex flex-col items-center justify-center">
-                    <Upload size={16} className="text-gray-400 mb-1" />
-                    <span className="text-xs text-gray-400 text-center px-1">
-                      {selectedImage.name.length > 8 ? selectedImage.name.substring(0, 8) + '...' : selectedImage.name}
-                    </span>
-                  </div>
-                )}
+                <img 
+                  src={imagePreview} 
+                  alt="Anteprima immagine" 
+                  className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                />
                 <button
                   onClick={() => {
                     // Cleanup object URL if it exists
