@@ -427,6 +427,12 @@ export function ChatInterface() {
         metadata: {
           hasChoices: data.message.hasChoices || false,
           choices: data.message.choices || [],
+          // Copy image metadata from user message if it was an image upload
+          ...(imageToSend && {
+            image: imagePreview,
+            hasImage: true,
+            imageName: imageToSend.name
+          })
         },
         createdAt: new Date(),
       };

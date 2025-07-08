@@ -192,6 +192,11 @@ Changelog:
   - Simplified routine to include only 3 Bonnie products: gel detergente, crema personalizzata, sleeping mask
   - Updated final message to use "skincare personalizzata" instead of "crema personalizzata"
   - Removed references to serums, clay masks, and non-Bonnie products from routine structure
+- July 08, 2025. Fixed image display bug in chat interface:
+  - Corrected image metadata copying from user messages to assistant response messages
+  - Fixed HEIC image display issue where images weren't showing in skin analysis responses
+  - Improved fallback placeholder display for images that cannot be rendered in browser
+  - Enhanced error handling for image loading failures with better DOM manipulation
 
 ## User Preferences
 
