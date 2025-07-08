@@ -231,6 +231,11 @@ Changelog:
   - Eliminated AI reasoning exposure ("Basandomi sull'analisi della tua foto, ho dedotto...")
   - Unified feedback rules for concise but consistent habit commentary
   - Corrected syntax errors and removed duplicate rule sections
+- July 08, 2025. Questionnaire logic improvements:
+  - Standardized gender question to "Qual è il tuo genere?" with options: Femmina, Maschio, Preferisco non specificare, Altro
+  - Added conditional logic to skip hormonal medication question for male users
+  - Enhanced questionnaire flow to reduce irrelevant questions based on user gender
+  - Improved question targeting and efficiency in data collection phase
 
 ## User Preferences
 
