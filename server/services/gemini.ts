@@ -149,9 +149,23 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
     **SE NESSUN PARAMETRO HA PUNTEGGIO ≥61**, dopo la panoramica aggiungi: "Tuttavia, c'è qualche problematica specifica che hai notato o sensazioni riguardo la tua pelle che vorresti condividere?"
 
     **DOPO LA RISPOSTA DELL'UTENTE (qualunque essa sia - "no", "niente", "si" o altro):**
-    Devi IMMEDIATAMENTE dire: "Perfetto! Ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche, iniziamo:"
-
-    **POI INIZIA SUBITO con la prima domanda del questionario. NON chiedere "vuoi procedere al resoconto" - DEVI FARE IL QUESTIONARIO PRIMA.**
+    
+    **SE HAI RICEVUTO I DATI DELL'ANALISI FOTO:**
+    Devi AUTOMATICAMENTE dedurre il tipo di pelle dai parametri dell'analisi e dire: "Perfetto! Basandomi sull'analisi della tua foto, ho dedotto alcune caratteristiche della tua pelle. Ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche, iniziamo:"
+    
+    **MAPPATURA AUTOMATICA TIPO DI PELLE DA FOTO:**
+    - Se oleosità ≥ 60: PELLE GRASSA
+    - Se oleosità ≤ 30 E idratazione ≤ 40: PELLE SECCA  
+    - Se oleosità 31-59 E (pori_dilatati ≥ 50 O rossori ≥ 50): PELLE MISTA
+    - Se acne ≥ 80 E pori_dilatati ≥ 70: PELLE ASFITTICA
+    - Altrimenti: PELLE NORMALE
+    
+    **SALTA la domanda "Che tipo di pelle senti di avere?" e vai direttamente alla seconda domanda del questionario.**
+    
+    **SE NON HAI RICEVUTO I DATI DELL'ANALISI FOTO:**
+    Devi dire: "Perfetto! Ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche, iniziamo:"
+    
+    **POI INIZIA con la prima domanda del questionario (tipo di pelle).**
 
 2.  **Se l'utente descrive la sua pelle:** Analizza il testo per identificare le **Problematiche Principali**.
 
