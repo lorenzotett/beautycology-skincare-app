@@ -212,6 +212,12 @@ Changelog:
   - Added specific examples of correct vs incorrect phrasing for natural conversation
   - Implemented language check rule: "Would I say this to a friend?" before each question
   - Enhanced user experience with more natural, friendly conversation flow
+- July 08, 2025. Fixed AI question redundancy and formatting issues:
+  - Corrected AI asking about skin parameters already analyzed in photo (rossori, pori dilatati)
+  - Added specific rules to skip questions on aspects visible in photo analysis
+  - Simplified question format: maximum 8-10 words, no duplicated options
+  - Removed asterisks and bold formatting from multiple choice answers
+  - Improved conversation logic to focus only on non-visual aspects (habits, age, products)
 
 ## User Preferences
 
