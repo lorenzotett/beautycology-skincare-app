@@ -197,6 +197,9 @@ Changelog:
   - Fixed HEIC image display issue where images weren't showing in skin analysis responses
   - Improved fallback placeholder display for images that cannot be rendered in browser
   - Enhanced error handling for image loading failures with better DOM manipulation
+  - Fixed image preview not showing in input area when HEIC conversion fails
+  - Added fallback placeholder with filename when image preview is unavailable
+  - Improved debug logging for image upload and conversion process
 
 ## User Preferences
 

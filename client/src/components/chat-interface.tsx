@@ -800,13 +800,22 @@ export function ChatInterface() {
 
 
             {/* Image Preview in Input Area */}
-            {selectedImage && imagePreview && (
+            {selectedImage && (
               <div className="mb-2 relative inline-block">
-                <img 
-                  src={imagePreview} 
-                  alt="Anteprima immagine" 
-                  className="w-20 h-20 object-cover rounded-lg border border-gray-200"
-                />
+                {imagePreview ? (
+                  <img 
+                    src={imagePreview} 
+                    alt="Anteprima immagine" 
+                    className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                  />
+                ) : (
+                  <div className="w-20 h-20 bg-gray-100 rounded-lg border border-gray-200 flex flex-col items-center justify-center">
+                    <Upload size={16} className="text-gray-400 mb-1" />
+                    <span className="text-xs text-gray-400 text-center px-1">
+                      {selectedImage.name.length > 8 ? selectedImage.name.substring(0, 8) + '...' : selectedImage.name}
+                    </span>
+                  </div>
+                )}
                 <button
                   onClick={() => {
                     // Cleanup object URL if it exists
