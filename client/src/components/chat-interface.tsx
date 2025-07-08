@@ -604,10 +604,10 @@ export function ChatInterface() {
               <button
                 onClick={toggleVoiceRecognition}
                 disabled={isTyping || selectedImage}
-                className={`p-1 rounded-md transition-colors ${
+                className={`p-2 rounded-md transition-all duration-200 transform ${
                   isListening 
-                    ? 'text-red-500 bg-red-50' 
-                    : 'text-gray-400 hover:text-gray-600'
+                    ? 'text-white bg-red-500 shadow-lg scale-105 animate-pulse' 
+                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:scale-95'
                 } ${isTyping || selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 title={isListening ? "Ferma registrazione" : "Inizia registrazione vocale"}
               >
@@ -745,10 +745,10 @@ export function ChatInterface() {
               <button
                 onClick={toggleVoiceRecognition}
                 disabled={isTyping || selectedImage}
-                className={`p-1 rounded-md transition-colors ${
+                className={`p-2 rounded-md transition-all duration-200 transform ${
                   isListening 
-                    ? 'text-red-500 bg-red-50' 
-                    : 'text-gray-400 hover:text-gray-600'
+                    ? 'text-white bg-red-500 shadow-lg scale-105 animate-pulse' 
+                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:scale-95'
                 } ${isTyping || selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 title={isListening ? "Ferma registrazione" : "Inizia registrazione vocale"}
               >
