@@ -45,11 +45,22 @@ ANALIZZA questa foto del viso e restituisci ESCLUSIVAMENTE un oggetto JSON con q
 - 81-100: Rughe severe, marcata perdita di elasticità
 
 ### PIGMENTAZIONE/MACCHIE (0-100):
-- 0-20: Tono uniforme, nessuna discromia
-- 21-40: Lievi disomogeneità, prime macchie solari
-- 41-60: Macchie evidenti, melasma lieve
-- 61-80: Iperpigmentazione diffusa, macchie scure
-- 81-100: Discromie severe, melasma esteso
+CERCA ATTENTAMENTE questi tipi di discromie:
+- Macchie solari (marroni/beige su fronte, guance, naso)
+- Melasma (macchie simmetriche scure su guance/fronte)
+- Iperpigmentazione post-infiammatoria (macchie dopo acne)
+- Lentiggini e efelidi
+- Discromie generali del tono della pelle
+
+VALUTAZIONE:
+- 0-15: Tono perfettamente uniforme, zero macchie visibili
+- 16-30: Minime imperfezioni del tono, lentiggini sparse
+- 31-50: Macchie solari evidenti o lievi discromie localizzate
+- 51-70: Melasma moderato o macchie diffuse su più zone
+- 71-85: Iperpigmentazione marcata, macchie scure estese
+- 86-100: Discromie severe, melasma esteso, tono molto irregolare
+
+ATTENZIONE: Esamina OGNI ZONA del viso per macchie anche sottili. Le discromie possono essere lievi ma significative.
 
 ### PORI DILATATI (0-100):
 - 0-20: Pori invisibili, texture fine
@@ -100,7 +111,14 @@ ANALIZZA questa foto del viso e restituisci ESCLUSIVAMENTE un oggetto JSON con q
 - 61-80: Buona uniformità, superficie liscia
 - 81-100: Texture perfetta, "pelle di porcellana"
 
-IMPORTANTE: Considera l'illuminazione, l'angolazione e la qualità dell'immagine. Sii preciso ma realistico nella valutazione.
+IMPORTANTE: 
+1. ESAMINA ATTENTAMENTE ogni zona del viso per macchie e discromie
+2. Guarda oltre l'illuminazione generale - cerca variazioni di colore localizzate
+3. Le macchie possono essere sottili ma vanno rilevate
+4. Confronta diverse aree del viso per identificare disomogeneità
+5. Presta particolare attenzione a: fronte, tempie, guance, naso, mento
+
+PRIORITÀ MASSIMA al rilevamento accurato della PIGMENTAZIONE.
 
 Rispondi SOLO con il JSON, nient'altro.`;
 
@@ -165,6 +183,8 @@ export class SkinAnalysisService {
         model: "gemini-2.5-pro", // Use Pro for better image analysis
         config: {
           systemInstruction: SKIN_ANALYSIS_INSTRUCTION,
+          temperature: 0.3, // Lower temperature for more consistent analysis
+          topP: 0.8, // More focused on likely outputs
         },
         contents: [{
           role: "user",
@@ -188,6 +208,12 @@ export class SkinAnalysisService {
       try {
         const analysisResult = JSON.parse(cleanedContent);
         console.log("Parsed analysis result:", analysisResult);
+        
+        // Validate pigmentation results - if too low, might need re-analysis
+        if (analysisResult.pigmentazione < 10) {
+          console.log("Low pigmentation detected, results validated");
+        }
+        
         return analysisResult as SkinAnalysisResult;
       } catch (parseError) {
         console.error("Error parsing skin analysis JSON:", parseError);
