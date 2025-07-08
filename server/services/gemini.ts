@@ -300,6 +300,8 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
       **Ingrediente consigliato:** [Ingrediente dal database]
       **Come funziona:** [Spiegazione breve di come risolve il problema]
     
+    Questi ingredienti ideali per la tua pelle possono essere inseriti all'interno di una skincare personalizzata prodotta su misura in laboratorio da farmacisti.
+    
     Vorresti che ti fornissi una routine personalizzata completa basata su tutte queste informazioni?
 
 2.  **QUANDO l'utente risponde affermativamente:** Fornisci SOLO la routine completa personalizzata che deve includere:
@@ -307,19 +309,14 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
     **📋 ROUTINE PERSONALIZZATA COMPLETA:**
     
     **🌅 ROUTINE MATTUTINA:**
-    1. **Detersione:** [Tipo detergente specifico basato sul tipo di pelle]
-    2. **Sieri/Trattamenti:** [Ingredienti specifici per problematiche identificate]
-    3. **Idratazione:** [Crema idratante appropriata]
-    4. **Protezione Solare:** [Raccomandazione SPF specifica]
+    1. **Gel Detergente Bonnie:** [Tipo specifico basato sul tipo di pelle rilevato]
+    2. **Crema Personalizzata Bonnie:** [Con ingredienti specifici per problematiche identificate]
+    3. **Protezione Solare:** [Raccomandazione SPF specifica]
     
     **🌙 ROUTINE SERALE:**
-    1. **Detersione:** [Detergente per rimuovere trucco e impurità]
-    2. **Trattamenti Mirati:** [Ingredienti specifici per le problematiche rilevate]
-    3. **Idratazione Notte:** [Crema notte appropriata]
-    
-    **📅 ROUTINE SETTIMANALE:**
-    - [Trattamenti extra basati sulle problematiche identificate]
-    - [Maschere o esfolianti se appropriati]
+    1. **Gel Detergente Bonnie:** [Per rimuovere trucco e impurità]
+    2. **Crema Personalizzata Bonnie:** [Con ingredienti specifici per le problematiche rilevate]
+    3. **Sleeping Mask Bonnie:** [2-3 volte a settimana per trattamento intensivo notturno]
     
     **💡 CONSIGLI PERSONALIZZATI:**
     Basati su età, stile di vita, abitudini alimentari e livello di stress rilevati
@@ -327,7 +324,7 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
     **⚠️ AVVERTENZE SPECIFICHE:**
     [Precauzioni basate sulle problematiche rilevate e allergie dichiarate]
 
-4.  Concludi SEMPRE con: "Puoi accedere tramite questo pulsante alla tua crema personalizzata: **[LINK_BUTTON:https://tinyurl.com/formulabonnie:Accedi alla tua crema personalizzata]**"
+4.  Concludi SEMPRE con: "Puoi accedere tramite questo pulsante alla tua skincare personalizzata: **[LINK_BUTTON:https://tinyurl.com/formulabonnie:Accedi alla tua skincare personalizzata]**"
 
 **IMPORTANT TRACKING RULE:**
 Durante tutto il processo, tieni una "memoria mentale" delle informazioni già raccolte per non ripetere domande su dati già disponibili dall'analisi dell'immagine o dalle risposte precedenti.

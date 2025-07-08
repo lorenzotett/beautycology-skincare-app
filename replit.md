@@ -187,6 +187,11 @@ Changelog:
   - Improved question language to distinguish AI-detected vs user-reported skin issues
   - Updated prompt to use "L'analisi ha rilevato dei rossori" instead of "I rossori che hai segnalato"
   - Resolved API quota limits with new Gemini API key configuration
+- July 08, 2025. Enhanced final consultation message structure:
+  - Added explanation that ingredients can be inserted in personalized skincare produced by pharmacists
+  - Simplified routine to include only 3 Bonnie products: gel detergente, crema personalizzata, sleeping mask
+  - Updated final message to use "skincare personalizzata" instead of "crema personalizzata"
+  - Removed references to serums, clay masks, and non-Bonnie products from routine structure
 
 ## User Preferences
 
