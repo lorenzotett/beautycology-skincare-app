@@ -249,15 +249,6 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       {/* Image display */}
       {message.metadata?.hasImage && (
         <div className="mt-2">
-          {/* Debug log for image display */}
-          {console.log('MessageBubble image debug:', {
-            hasImage: message.metadata?.hasImage,
-            imageExists: !!message.metadata?.image,
-            imageName: message.metadata?.imageName,
-            messageRole: message.role,
-            imageUrl: message.metadata?.image?.substring(0, 50) + '...'
-          })}
-          
           {message.metadata?.image ? (
             <div className="relative">
               <img 
@@ -266,7 +257,6 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                 className="max-w-48 rounded-lg border border-dark-accent cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => window.open(message.metadata.image, '_blank')}
                 onError={(e) => {
-                  console.log('Image failed to load:', message.metadata?.image);
                   // Se l'immagine non carica, nascondere l'img e mostrare il placeholder
                   const target = e.currentTarget;
                   const container = target.parentElement;
@@ -278,16 +268,9 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                     }
                   }
                 }}
-                onLoad={() => {
-                  console.log('Image loaded successfully');
-                }}
               />
             </div>
-          ) : (
-            <div>
-              {console.log('No image URL available, showing placeholder')}
-            </div>
-          )}
+          ) : null}
 
           {/* Placeholder per file che non possono essere visualizzati */}
           <div 

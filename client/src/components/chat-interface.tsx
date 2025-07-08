@@ -287,12 +287,7 @@ export function ChatInterface() {
       const isHEIC = fileExtension === '.heic' || fileExtension === '.heif' || 
                      file.type === 'image/heic' || file.type === 'image/heif';
 
-      console.log('File upload debug:', {
-        name: file.name,
-        type: file.type,
-        extension: fileExtension,
-        isHEIC: isHEIC
-      });
+
 
       if (isHEIC) {
         try {
@@ -315,22 +310,15 @@ export function ChatInterface() {
           reader.readAsDataURL(blobArray[0]);
         } catch (error) {
           console.error('Error converting HEIC:', error);
-          // For HEIC files that can't be converted, create a blob URL as fallback
-          try {
-            const blobUrl = URL.createObjectURL(file);
-            console.log('Using blob URL as fallback:', blobUrl);
-            setImagePreview(blobUrl);
-          } catch (blobError) {
-            console.error('Error creating blob URL:', blobError);
-            // If even blob URL fails, set a data URL that works for display
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const result = e.target?.result as string;
-              console.log('Using FileReader as final fallback, length:', result?.length);
-              setImagePreview(result);
-            };
-            reader.readAsDataURL(file);
-          }
+          // For HEIC files that can't be converted, always use FileReader for data URL
+          // This works better than blob URLs in environments like Replit
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const result = e.target?.result as string;
+            console.log('Using FileReader as fallback for HEIC, length:', result?.length);
+            setImagePreview(result);
+          };
+          reader.readAsDataURL(file);
         }
       } else {
         // For other formats, use regular FileReader
@@ -376,13 +364,7 @@ export function ChatInterface() {
       createdAt: new Date(),
     };
 
-    // Debug log for user message metadata
-    console.log('User message metadata:', {
-      hasImage: userMessage.metadata?.hasImage,
-      imageExists: !!userMessage.metadata?.image,
-      imageName: userMessage.metadata?.imageName,
-      imagePreviewLength: imagePreview?.length
-    });
+
 
     setMessages(prev => [...prev, userMessage]);
     setCurrentMessage("");
