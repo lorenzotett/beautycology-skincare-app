@@ -12,8 +12,46 @@ interface MessageBubbleProps {
 
 // Function to format markdown and make links clickable
 const formatMarkdown = (text: string): string => {
-  // Replace *bold text* with <strong>bold text</strong>
-  let formattedText = text.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
+  // Replace **bold text** with <strong>bold text</strong>
+  let formattedText = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  
+  // Replace *bold text* with <strong>bold text</strong>  
+  formattedText = formattedText.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
+
+  // Format sections with emoji headers
+  formattedText = formattedText.replace(
+    /^(📋|🌅|🌙|💡|⚠️)\s*\*\*([^*]+)\*\*/gm,
+    '<div class="mb-3 mt-4"><strong class="text-base font-semibold">$1 $2</strong></div>'
+  );
+
+  // Format numbered list items
+  formattedText = formattedText.replace(
+    /^\s*(\d+)\.\s*\*\*([^*]+)\*\*:\s*(.*?)$/gm,
+    '<div class="mb-2 ml-4"><strong class="font-medium">$1. $2:</strong> <span class="text-sm">$3</span></div>'
+  );
+
+  // Format bullet points
+  formattedText = formattedText.replace(
+    /^\s*[•-]\s*\*\*([^*]+)\*\*:\s*(.*?)$/gm,
+    '<div class="mb-2 ml-4"><strong class="font-medium">• $1:</strong> <span class="text-sm">$2</span></div>'
+  );
+
+  // Format standalone bullet points
+  formattedText = formattedText.replace(
+    /^\s*[•-]\s*(.*?)$/gm,
+    '<div class="mb-1 ml-4 text-sm">• $1</div>'
+  );
+
+  // Format ingredient recommendations
+  formattedText = formattedText.replace(
+    /\*\*Ingrediente consigliato:\*\*\s*([^\n]+)/g,
+    '<div class="mb-1 ml-4"><strong class="text-sm font-medium">Ingrediente consigliato:</strong> <span class="text-sm">$1</span></div>'
+  );
+  
+  formattedText = formattedText.replace(
+    /\*\*Come funziona:\*\*\s*([^\n]+)/g,
+    '<div class="mb-2 ml-4"><strong class="text-sm font-medium">Come funziona:</strong> <span class="text-sm">$1</span></div>'
+  );
 
   // Make URLs clickable - matches http/https URLs and www URLs
   formattedText = formattedText.replace(
