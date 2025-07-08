@@ -316,7 +316,7 @@ export default function AdminDashboard() {
             <Button 
               variant="outline" 
               onClick={handleLogout}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 border-gray-300"
             >
               <LogOut className="h-4 w-4" />
               <span>Logout</span>
