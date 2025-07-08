@@ -494,59 +494,118 @@ export function ChatInterface() {
   useEffect(() => {
     if (!("webkitSpeechRecognition" in window)) {
       console.log("Speech Recognition Not Available");
-    } else {
-      const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
-      const speechRecog = new SpeechRecognition();
-      speechRecog.continuous = true;
-      speechRecog.interimResults = true;
-      speechRecog.lang = "it-IT";
-      speechRecog.onresult = (event) => {
-        let interimTranscript = "";
-        let finalTranscript = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
+      return;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const speechRecog = new SpeechRecognition();
+    
+    speechRecog.continuous = false; // Cambiato da true a false
+    speechRecog.interimResults = true;
+    speechRecog.lang = "it-IT";
+    speechRecog.maxAlternatives = 1;
+    
+    let finalTranscript = "";
+    
+    speechRecog.onresult = (event) => {
+      let interimTranscript = "";
+      
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
         }
-        setCurrentMessage(finalTranscript || interimTranscript);
-      };
-      speechRecog.onstart = () => {
-        console.log("starting speech recognition");
-      };
-      speechRecog.onend = () => {
-        console.log("speech recognition ended");
-        setIsListening(false);
-      };
-      speechRecog.onerror = (event) => {
-        console.log("Speech recognition error", event.error);
-        setIsListening(false);
-        if (event.error === 'no-speech') {
+      }
+      
+      // Aggiorna il messaggio con il testo finale o interim
+      setCurrentMessage(finalTranscript + interimTranscript);
+    };
+    
+    speechRecog.onstart = () => {
+      console.log("Voice recognition started");
+      setIsListening(true);
+    };
+    
+    speechRecog.onend = () => {
+      console.log("Voice recognition ended");
+      setIsListening(false);
+      
+      // Se abbiamo del testo finale, mantienilo
+      if (finalTranscript.trim()) {
+        setCurrentMessage(finalTranscript.trim());
+      }
+    };
+    
+    speechRecog.onerror = (event) => {
+      console.log("Speech recognition error:", event.error);
+      setIsListening(false);
+      
+      switch (event.error) {
+        case 'no-speech':
           toast({
-            title: "Errore",
-            description: "Nessun input vocale rilevato. Riprova.",
+            title: "Nessun audio rilevato",
+            description: "Prova a parlare più chiaramente vicino al microfono.",
             variant: "destructive",
           });
-        }
-        if (event.error === 'aborted') {
-          console.log("Recognition aborted")
-        }
-      };
-      recognition.current = speechRecog;
-    }
+          break;
+        case 'network':
+          toast({
+            title: "Errore di rete",
+            description: "Controlla la tua connessione internet.",
+            variant: "destructive",
+          });
+          break;
+        case 'not-allowed':
+          toast({
+            title: "Permessi microfono",
+            description: "Abilita i permessi del microfono nelle impostazioni del browser.",
+            variant: "destructive",
+          });
+          break;
+        case 'aborted':
+          console.log("Recognition aborted by user");
+          break;
+        default:
+          toast({
+            title: "Errore riconoscimento vocale",
+            description: "Si è verificato un errore. Riprova.",
+            variant: "destructive",
+          });
+      }
+    };
+    
+    recognition.current = speechRecog;
   }, [toast]);
 
   const toggleVoiceRecognition = () => {
-    if (!recognition.current) return;
+    if (!recognition.current) {
+      toast({
+        title: "Riconoscimento vocale non disponibile",
+        description: "Il tuo browser non supporta il riconoscimento vocale.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (isListening) {
       recognition.current.stop();
       setIsListening(false);
     } else {
-      recognition.current.start();
-      setIsListening(true);
+      try {
+        recognition.current.start();
+        // Non impostiamo setIsListening(true) qui, 
+        // lo farà automaticamente l'evento onstart
+      } catch (error) {
+        console.error('Error starting recognition:', error);
+        setIsListening(false);
+        toast({
+          title: "Errore",
+          description: "Impossibile avviare il riconoscimento vocale. Riprova.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
