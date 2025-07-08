@@ -213,13 +213,39 @@ export default function AdminDashboard() {
 
   const getAverageDuration = () => {
     if (!sessions || sessions.length === 0) return "0m";
+    
     const totalDuration = sessions.reduce((acc, session) => {
       const start = new Date(session.createdAt);
-      const end = new Date(session.updatedAt);
-      return acc + (end.getTime() - start.getTime());
+      // Use lastActivity instead of updatedAt for more accurate duration
+      const end = new Date(session.lastActivity);
+      const duration = end.getTime() - start.getTime();
+      
+      // Only count sessions with meaningful duration (at least 30 seconds)
+      if (duration > 30000) {
+        return acc + duration;
+      }
+      return acc;
     }, 0);
-    const avgMinutes = Math.floor(totalDuration / (1000 * 60 * sessions.length));
-    return `${avgMinutes}m`;
+    
+    // Count only sessions with meaningful activity
+    const activeSessions = sessions.filter(session => {
+      const start = new Date(session.createdAt);
+      const end = new Date(session.lastActivity);
+      return (end.getTime() - start.getTime()) > 30000;
+    });
+    
+    if (activeSessions.length === 0) return "0m";
+    
+    const avgMinutes = Math.floor(totalDuration / (1000 * 60 * activeSessions.length));
+    
+    // Format better for display
+    if (avgMinutes < 60) {
+      return `${avgMinutes}m`;
+    } else {
+      const hours = Math.floor(avgMinutes / 60);
+      const minutes = avgMinutes % 60;
+      return `${hours}h ${minutes}m`;
+    }
   };
 
   if (!isAuthenticated) {
