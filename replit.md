@@ -218,6 +218,12 @@ Changelog:
   - Simplified question format: maximum 8-10 words, no duplicated options
   - Removed asterisks and bold formatting from multiple choice answers
   - Improved conversation logic to focus only on non-visual aspects (habits, age, products)
+- July 08, 2025. Critical fixes for conversation logic and response length:
+  - Added RIGID rules to completely skip questions on visually analyzed parameters (rossori, acne, pori, etc.)
+  - Implemented VETO on asking about any skin aspect already in photo analysis
+  - Drastically shortened AI feedback comments to maximum 1-2 sentences
+  - Restricted questions to non-visual aspects only: age, sleep, stress, water, smoking, allergies, products, routine, sun protection
+  - Enhanced conversation efficiency and eliminated redundant visual parameter questions
 
 ## User Preferences
 
