@@ -180,6 +180,13 @@ Changelog:
   - Removed "📝 LE TUE RISPOSTE E ABITUDINI" section with user responses
   - Kept only "🔎 LE TUE PRINCIPALI NECESSITÀ E CONSIGLI SPECIFICI" section
   - Fixed email validation bug that prevented message sending after valid email input
+- July 07, 2025. Critical bug fixes and language improvements:
+  - Fixed message truncation issue where content after skin analysis table wasn't displaying
+  - Corrected regex patterns to handle whitespace in multiple choice detection (A) B) C) D)
+  - Fixed "Cannot read properties of null" error in choice detection system
+  - Improved question language to distinguish AI-detected vs user-reported skin issues
+  - Updated prompt to use "L'analisi ha rilevato dei rossori" instead of "I rossori che hai segnalato"
+  - Resolved API quota limits with new Gemini API key configuration
 
 ## User Preferences
 
