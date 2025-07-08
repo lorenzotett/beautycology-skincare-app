@@ -289,6 +289,7 @@ export function ChatInterface() {
 
       if (isHEIC) {
         try {
+          console.log('Converting HEIC file:', file.name, file.type);
           // Convert HEIC to JPEG for preview
           const heic2any = await import('heic2any');
           const convertedBlob = await heic2any.default({
@@ -300,14 +301,15 @@ export function ChatInterface() {
           const blobArray = Array.isArray(convertedBlob) ? convertedBlob : [convertedBlob];
           const reader = new FileReader();
           reader.onload = (e) => {
-            setImagePreview(e.target?.result as string);
+            const dataUrl = e.target?.result as string;
+            console.log('HEIC converted successfully, data URL length:', dataUrl?.length);
+            setImagePreview(dataUrl);
           };
           reader.readAsDataURL(blobArray[0]);
         } catch (error) {
           console.error('Error converting HEIC:', error);
-          // Use the original file as a blob URL for preview
-          const originalBlobUrl = URL.createObjectURL(file);
-          setImagePreview(originalBlobUrl);
+          // For HEIC files that can't be converted, show placeholder
+          setImagePreview(null);
         }
       } else {
         // For other formats, use regular FileReader
@@ -344,7 +346,7 @@ export function ChatInterface() {
       role: "user",
       content: messageToSend || (imageToSend ? "📷 Immagine caricata" : ""),
       metadata: imageToSend ? { 
-        image: imagePreview,
+        image: imagePreview || undefined, // Use undefined instead of null for hasImage detection
         hasImage: true,
         imageName: imageToSend.name 
       } : null,
@@ -427,12 +429,6 @@ export function ChatInterface() {
         metadata: {
           hasChoices: data.message.hasChoices || false,
           choices: data.message.choices || [],
-          // Copy image metadata from user message if it was an image upload
-          ...(imageToSend && {
-            image: imagePreview,
-            hasImage: true,
-            imageName: imageToSend.name
-          })
         },
         createdAt: new Date(),
       };
