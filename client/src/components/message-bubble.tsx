@@ -12,8 +12,11 @@ interface MessageBubbleProps {
 
 // Function to format markdown and make links clickable
 const formatMarkdown = (text: string): string => {
-  // Replace *bold text* with <strong>bold text</strong>
-  let formattedText = text.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
+  // Replace **bold text** with <strong>bold text</strong> (double asterisks first)
+  let formattedText = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  
+  // Replace *bold text* with <strong>bold text</strong> (single asterisks)
+  formattedText = formattedText.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
 
   // Make URLs clickable - matches http/https URLs and www URLs
   formattedText = formattedText.replace(
