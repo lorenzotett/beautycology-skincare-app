@@ -287,6 +287,13 @@ export function ChatInterface() {
       const isHEIC = fileExtension === '.heic' || fileExtension === '.heif' || 
                      file.type === 'image/heic' || file.type === 'image/heif';
 
+      console.log('File upload debug:', {
+        name: file.name,
+        type: file.type,
+        extension: fileExtension,
+        isHEIC: isHEIC
+      });
+
       if (isHEIC) {
         try {
           console.log('Converting HEIC file:', file.name, file.type);
@@ -308,14 +315,18 @@ export function ChatInterface() {
           reader.readAsDataURL(blobArray[0]);
         } catch (error) {
           console.error('Error converting HEIC:', error);
-          // For HEIC files that can't be converted, show placeholder
-          setImagePreview(null);
+          // For HEIC files that can't be converted, create a blob URL as fallback
+          const blobUrl = URL.createObjectURL(file);
+          console.log('Using blob URL as fallback:', blobUrl);
+          setImagePreview(blobUrl);
         }
       } else {
         // For other formats, use regular FileReader
         const reader = new FileReader();
         reader.onload = (e) => {
-          setImagePreview(e.target?.result as string);
+          const result = e.target?.result as string;
+          console.log('Standard image loaded, data URL length:', result?.length);
+          setImagePreview(result);
         };
         reader.readAsDataURL(file);
       }
