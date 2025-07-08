@@ -224,6 +224,13 @@ Changelog:
   - Drastically shortened AI feedback comments to maximum 1-2 sentences
   - Restricted questions to non-visual aspects only: age, sleep, stress, water, smoking, allergies, products, routine, sun protection
   - Enhanced conversation efficiency and eliminated redundant visual parameter questions
+- July 08, 2025. Major prompt analysis and optimization:
+  - Resolved 4 critical incoherences in AI system instructions
+  - Fixed contradictions between comment length requirements and educational explanations
+  - Simplified message structure by removing detailed skin analysis display
+  - Eliminated AI reasoning exposure ("Basandomi sull'analisi della tua foto, ho dedotto...")
+  - Unified feedback rules for concise but consistent habit commentary
+  - Corrected syntax errors and removed duplicate rule sections
 
 ## User Preferences
 

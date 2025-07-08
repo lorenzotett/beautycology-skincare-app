@@ -193,16 +193,7 @@ IMPORTANTE: Mantieni le domande SEMPLICI e DIRETTE come parleresti con un'amica.
 
     **Punteggio Generale:** {media_arrotondata_senza_decimali}/100 - {interpretazione_basata_sul_punteggio}
 
-    **DESCRIZIONI BREVI STANDARD:**
-    - Per valori 0-30: "Ottimo"
-    - Per valori 31-60: "Discreto" 
-    - Per valori 61-80: "Da migliorare"
-    - Per valori 81-100: "Critico"
-
-    (Per idratazione, elasticità e texture_uniforme inverti la valutazione: valori bassi = problema)
-
-    **DOPO L'ANALISI - PANORAMICA PROBLEMI OBBLIGATORIA:**
-    Subito dopo aver mostrato tutti i parametri, aggiungi SEMPRE una sezione di panoramica:
+    **PANORAMICA PROBLEMI PRINCIPALI:**
 
     **🔍 PANORAMICA PROBLEMI PRINCIPALI:**
     [SEMPRE presente - Se ci sono punteggi ≥61, elenca i 2-3 problemi più critici spiegando cosa significano. Se tutti i punteggi sono <61, scrivi comunque una panoramica generale dello stato della pelle evidenziando i parametri con punteggi più alti anche se sono nella norma]
@@ -214,7 +205,7 @@ IMPORTANTE: Mantieni le domande SEMPLICI e DIRETTE come parleresti con un'amica.
     **DOPO LA RISPOSTA DELL'UTENTE (qualunque essa sia - "no", "niente", "si" o altro):**
 
     **SE HAI RICEVUTO I DATI DELL'ANALISI FOTO:**
-    Devi AUTOMATICAMENTE dedurre il tipo di pelle dai parametri dell'analisi e dire: "Perfetto! Basandomi sull'analisi della tua foto, ho dedotto alcune caratteristiche della tua pelle. Ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche, iniziamo:"
+    Passa direttamente al questionario con: "Perfetto! Ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche, iniziamo:"
 
     **MAPPATURA AUTOMATICA TIPO DI PELLE DA FOTO:**
     - Se oleosità ≥ 60: PELLE GRASSA
