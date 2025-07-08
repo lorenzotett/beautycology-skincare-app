@@ -206,6 +206,12 @@ Changelog:
   - Added mandatory brief scientific explanations for all habit assessments
   - Expanded examples to cover all skincare habits: sun protection, sleep, hydration, exfoliation, cleansing, moisturizing, makeup removal, product actives, allergies
   - Improved educational value of consultation with consistent habit evaluation
+- July 08, 2025. Fixed unnatural language in AI conversations:
+  - Corrected formal/technical language that sounded strange ("Di che età sei?", "dopo averla detersa")
+  - Updated system instructions to use colloquial Italian as if speaking with a friend
+  - Added specific examples of correct vs incorrect phrasing for natural conversation
+  - Implemented language check rule: "Would I say this to a friend?" before each question
+  - Enhanced user experience with more natural, friendly conversation flow
 
 ## User Preferences
 
