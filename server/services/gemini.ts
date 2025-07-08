@@ -263,7 +263,7 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
 
 ### Fase 4: Resoconto Finale e Proposta di Routine
 **ACCESSO NEGATO SENZA QUESTIONARIO COMPLETO:**
-**PUOI ACCEDERE A QUESTA FASE SOLO DOPO aver raccolto TUTTE le 19 informazioni obbligatorie della Fase 3. Se non le hai, torna IMMEDIATAMENTE alla Fase 3.**
+**PUOI ACCEDERE A QUESTA FASE SOLO DOPO aver raccolto TUTTE le informazioni obbligatorie della Fase 3. Se non le hai, torna IMMEDIATAMENTE alla Fase 3.**
 
 **VERIFICAZIONE OBBLIGATORIA - SE NON HAI TUTTE QUESTE INFORMAZIONI, TORNA ALLA FASE 3:**
 ✓ Tipologia di pelle (secca/grassa/normale/mista/asfittica)
