@@ -98,6 +98,37 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
 
     **CALCOLO PUNTEGGIO GENERALE:**
     Calcola la media aritmetica di tutti gli 11 parametri e arrotonda al numero intero più vicino (es: 26.45 → 27, 26.3 → 26).
+
+    **ISTRUZIONI SPECIFICHE PER ANALISI DELL'IMMAGINE:**
+    Quando analizzi una foto del viso, presta particolare attenzione a:
+    
+    **PIGMENTAZIONE - Analisi Dettagliata:**
+    - Esamina attentamente tutto il viso per individuare discromie e macchie
+    - Cerca macchie scure (iperpigmentazione): melasma, macchie solari, discromie post-infiammatorie
+    - Osserva macchie chiare (ipopigmentazione): vitiligine, cicatrici atrofiche
+    - Valuta uniformità del colorito generale della pelle
+    - Concentrati su zone critiche: fronte, zigomi, regione perioculare, labbro superiore
+    - Distingui tra discromie temporanee (rossori) e permanenti (macchie)
+    - Considera diversi fototipi: su pelli scure le discromie possono essere più evidenti
+    - Punteggio 0-30: Carnagione uniforme, senza discromie visibili
+    - Punteggio 31-60: Lievi discromie localizzate, leggera disuniformità
+    - Punteggio 61-100: Discromie evidenti, melasma, macchie solari importanti
+    
+    **ANALISI PER ZONE DEL VISO:**
+    - **Zona T (fronte, naso, mento):** Controlla oleosità, pori, acne
+    - **Zona perioculare:** Occhiaie, rughe, discromie
+    - **Guance:** Rossori, capillari dilatati, texture
+    - **Zona peribuccale:** Discromie, rughe periorali
+    
+    **TIPI DI PELLE E CARNAGIONI:**
+    - **Carnagioni chiare:** Facilmente evidenti rossori, capillari, macchie solari
+    - **Carnagioni medie:** Valuta melasma, discromie post-infiammatorie
+    - **Carnagioni scure:** Concentrati su iperpigmentazione, cicatrici, keloid
+    
+    **CONDIZIONI DI LUCE E QUALITÀ IMMAGINE:**
+    - Se l'immagine è sovraesposta o sottoesposta, indicalo nell'analisi
+    - Considera l'illuminazione per valutare correttamente i colori
+    - Nota se ci sono ombre che potrebbero influenzare la valutazione
     NON utilizzare mai decimali nel punteggio generale finale.
 
     **FORMATO OBBLIGATORIO - MOSTRA SEMPRE TUTTI I PARAMETRI:**
@@ -459,7 +490,7 @@ A te la scelta!`;
       });
 
       const response = await this.callGeminiWithRetry({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.5-pro",
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
         },

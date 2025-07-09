@@ -187,6 +187,13 @@ Changelog:
   - Improved question language to distinguish AI-detected vs user-reported skin issues
   - Updated prompt to use "L'analisi ha rilevato dei rossori" instead of "I rossori che hai segnalato"
   - Resolved API quota limits with new Gemini API key configuration
+- July 09, 2025. Enhanced skin analysis accuracy and reliability:
+  - Upgraded image analysis from Gemini 2.5 Flash to Gemini 2.5 Pro for improved accuracy
+  - Implemented advanced prompt engineering for better pigmentation detection
+  - Added detailed instructions for analyzing discromies, melasma, and skin discoloration
+  - Enhanced analysis for different skin types and complexions
+  - Improved zone-specific analysis (T-zone, eye area, cheeks, mouth area)
+  - Added specific guidance for various lighting conditions and image quality
 
 ## User Preferences
 
