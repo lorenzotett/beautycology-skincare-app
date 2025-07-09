@@ -432,6 +432,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Serve uploaded images
+  app.get("/api/images/:imageName", (req, res) => {
+    try {
+      const { imageName } = req.params;
+      const imagePath = path.join(process.cwd(), 'uploads', imageName);
+      
+      // Check if file exists
+      if (!fs.existsSync(imagePath)) {
+        return res.status(404).json({ error: "Image not found" });
+      }
+      
+      // Send the file
+      res.sendFile(imagePath);
+    } catch (error) {
+      console.error("Error serving image:", error);
+      res.status(500).json({ error: "Failed to serve image" });
+    }
+  });
+
   // Get specific session details with all messages
   app.get("/api/admin/sessions/:sessionId", async (req, res) => {
     try {
@@ -443,6 +462,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const messages = await storage.getChatMessages(sessionId);
+      
+      // Process messages to add image URLs for admin dashboard
+      const processedMessages = messages.map(msg => {
+        if (msg.metadata && (msg.metadata as any).hasImage && (msg.metadata as any).imagePath) {
+          const imagePath = (msg.metadata as any).imagePath;
+          const fileName = path.basename(imagePath);
+          const imageUrl = `/api/images/${fileName}`;
+          
+          return {
+            ...msg,
+            metadata: {
+              ...msg.metadata,
+              image: imageUrl // Add image URL for MessageBubble component
+            }
+          };
+        }
+        return msg;
+      });
+      
       const hasImages = messages.some(msg => 
         msg.metadata && (msg.metadata as any).hasImage
       );
@@ -456,7 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         ...session,
-        messages,
+        messages: processedMessages,
         messageCount: messages.length,
         lastActivity,
         hasImages,
