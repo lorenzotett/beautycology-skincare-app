@@ -378,19 +378,20 @@ export class GeminiService {
   private askedQuestions: Set<string> = new Set();
   private lastQuestionAsked: string | null = null;
 
-  private async callGeminiWithRetry(params: any, maxRetries: number = 3, baseDelay: number = 1000): Promise<any> {
+  private async callGeminiWithRetry(params: any, maxRetries: number = 5, baseDelay: number = 2000): Promise<any> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await ai.models.generateContent(params);
       } catch (error: any) {
-        if (error.status === 429 && attempt < maxRetries) {
-          // Rate limiting - wait before retry
-          const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
-          console.log(`Rate limit hit. Retrying in ${delay}ms... (attempt ${attempt}/${maxRetries})`);
+        if ((error.status === 429 || error.status === 503) && attempt < maxRetries) {
+          // Rate limiting o sovraccarico - exponential backoff più aggressivo
+          const jitter = Math.random() * 1000; // Jitter per evitare thundering herd
+          const delay = (baseDelay * Math.pow(2, attempt - 1)) + jitter;
+          console.log(`API overloaded (${error.status}). Retrying in ${Math.round(delay)}ms... (attempt ${attempt}/${maxRetries})`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
-        throw error; // Re-throw if not rate limited or max retries reached
+        throw error;
       }
     }
   }

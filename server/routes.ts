@@ -10,7 +10,19 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
+// Limite massimo di sessioni in memoria per evitare memory leak
+const MAX_SESSIONS_IN_MEMORY = 1000;
 const geminiServices = new Map<string, GeminiService>();
+
+// Cleanup automatico delle sessioni vecchie
+setInterval(() => {
+  if (geminiServices.size > MAX_SESSIONS_IN_MEMORY) {
+    const sessions = Array.from(geminiServices.keys());
+    const toDelete = sessions.slice(0, sessions.length - MAX_SESSIONS_IN_MEMORY);
+    toDelete.forEach(sessionId => geminiServices.delete(sessionId));
+    console.log(`Cleaned up ${toDelete.length} old sessions`);
+  }
+}, 5 * 60 * 1000); // Ogni 5 minuti
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
@@ -45,7 +57,9 @@ const upload = multer({
 const imageUpload = multer({ 
   storage: storage_config,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 5 * 1024 * 1024, // Ridotto a 5MB per performance
+    files: 1, // Massimo 1 file per request
+    fileSize: 5 * 1024 * 1024
   },
   fileFilter: (req, file, cb) => {
     const allowedMimeTypes = [

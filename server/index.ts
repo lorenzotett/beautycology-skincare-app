@@ -21,6 +21,12 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      
+      // Warning per request lente (potrebbero indicare sovraccarico)
+      if (duration > 5000) {
+        console.warn(`🚨 SLOW REQUEST: ${logLine}`);
+      }
+      
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
