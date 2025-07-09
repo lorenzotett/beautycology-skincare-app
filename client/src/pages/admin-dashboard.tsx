@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ChatMessage, ChatSession } from "@shared/schema";
 import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3, Copy, X, Eye, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { MessageBubble } from "@/components/message-bubble";
 
 interface AdminStats {
   totalSessions: number;
@@ -481,32 +482,13 @@ export default function AdminDashboard() {
               </div>
               
               <div className="flex-1 overflow-y-auto p-6">
-                <div className="space-y-4">
+                <div className="space-y-4 max-w-4xl mx-auto">
                   {sessionDetails.messages.map((message) => (
-                    <div key={message.id} className={`p-4 rounded-lg ${
-                      message.role === 'user' ? 'bg-blue-50 ml-8' : 'bg-gray-50 mr-8'
-                    }`}>
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-medium text-sm text-gray-600">
-                          {message.role === 'user' ? 'Utente' : 'Bonnie AI'}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {formatDate(message.createdAt)} {formatTime(message.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-gray-900">{message.content}</p>
-                      {message.metadata && (message.metadata as any).hasImage && (
-                        <div className="mt-2 flex items-center text-sm text-blue-600">
-                          <Image className="h-4 w-4 mr-1" />
-                          Immagine allegata
-                        </div>
-                      )}
-                      {message.metadata && (message.metadata as any).skinAnalysis && (
-                        <div className="mt-2 flex items-center text-sm text-purple-600">
-                          <Brain className="h-4 w-4 mr-1" />
-                          Analisi AI della pelle
-                        </div>
-                      )}
+                    <div key={message.id} className="w-full">
+                      <MessageBubble 
+                        message={message}
+                        userInitial={sessionDetails.userName?.charAt(0)?.toUpperCase() || 'U'}
+                      />
                     </div>
                   ))}
                 </div>
