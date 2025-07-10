@@ -202,6 +202,13 @@ Changelog:
   - Enhanced CSV with conversation metadata (duration, message count, image uploads)
   - Improved data analysis capabilities with proper column organization
   - Added welcome message formatting with bold text emphasis for key terms
+- July 10, 2025. Fixed CSV extraction for both conversation types:
+  - Calibrated extraction for photo-based conversations (like Gabriele)
+  - Fixed text-based conversation extraction (like Sara)
+  - Corrected data mapping - fragranza now shows "Sì" instead of "No" for Sara
+  - Resolved column shifting issues where data appeared in wrong columns
+  - Added logic to skip initial skin description from answer sequence
+  - All user responses now correctly mapped to appropriate CSV columns
 
 ## User Preferences
 

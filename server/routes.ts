@@ -406,6 +406,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create sequence of Q&A pairs
         const qaSequence: Array<{question: string, answer: string}> = [];
         
+        // Get the first user message (name)
+        const userNameMsg = messages.find(m => m.role === 'user');
+        const userName = userNameMsg?.content || '';
+        
         for (let i = 0; i < messages.length - 1; i++) {
           const currentMsg = messages[i];
           const nextMsg = messages[i + 1];
@@ -420,8 +424,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const question = currentMsg.content.toLowerCase();
             const answer = nextMsg.content;
             
-            // Skip if it's image upload
-            if (answer.includes('[Immagine caricata:') || answer.includes('IMG_')) {
+            // Skip if it's image upload or user name
+            if (answer.includes('[Immagine caricata:') || answer.includes('IMG_') || answer === userName) {
+              continue;
+            }
+            
+            // Skip the initial skin description question for text-based conversations
+            if (question.includes('descrivimi la tua pelle') || 
+                question.includes('raccontami della tua pelle') ||
+                question.includes('quali sono le tue preoccupazioni')) {
               continue;
             }
             
@@ -474,7 +485,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const isImageBasedConversation = firstUserMessage.includes('[Immagine caricata:') || firstUserMessage.includes('IMG_');
         const isTextBasedConversation = firstUserMessage.includes('pelle grassa') || firstUserMessage.includes('pelle sensibile') || (!isImageBasedConversation && firstUserMessage.length > 10);
         
-        const answersInOrder = qaSequence.map(qa => qa.answer);
+        // Filter answers excluding the user's name and initial description for text-based conversations
+        const answersInOrder = qaSequence
+          .map(qa => qa.answer)
+          .filter((answer, index) => {
+            // Skip user name
+            if (answer === userName) return false;
+            // For text-based conversations, skip the first answer if it's the initial description
+            if (isTextBasedConversation && index === 0 && 
+                (answer.includes('pelle grassa') || answer.includes('pelle sensibile') || answer.length > 20)) {
+              return false;
+            }
+            return true;
+          });
         
         if (isImageBasedConversation && answersInOrder.length >= 14) {
           // Image-based conversation pattern (like Gabriele)
@@ -496,29 +519,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (answersInOrder.length > 15) qaData.routine_conferma = answersInOrder[15];
         } else if (isTextBasedConversation && answersInOrder.length >= 10) {
           // Text-based conversation pattern (like Sara)
-          // Exact sequence from Sara's conversation:
-          // 0:"Sì regolarmente" (scrub) -> 1:"Mai" (pelle_tira) -> 2:"Alcuni" (punti_neri) -> 3:"No" (pelle_sensibile) -> 4:"23" (eta) -> 5:"Femminile" (genere) -> 6:"No" (farmaci) -> 7:"No" (allergie) -> 8:"Sì" (fragranza) -> 9:"Sempre" (crema_solare) -> 10:"1-1.5L" (acqua) -> 11:"6-7h" (sonno) -> 12:"Abbastanza" (alimentazione) -> 13:"No" (fumo) -> 14:"6" (stress) -> 15:"Ho cicatrici..." (altre_info) -> 16:"email" -> 17:"Brufoli/Acne attivi" (rossori)
-          qaData.preoccupazioni_specifiche = firstUserMessage; // Initial skin description "Ho la pelle grassa a tendenza acneica"
-          // Fixed mapping based on CSV requirements
-          if (answersInOrder.length >= 17) {
-            qaData.scrub_peeling = answersInOrder[0];             // "Sì regolarmente"
-            qaData.pelle_tira = answersInOrder[1];                // "Mai"
-            qaData.punti_neri = answersInOrder[2];                // "Alcuni"
-            qaData.pelle_sensibile = answersInOrder[3];           // "No"
-            qaData.eta = answersInOrder[4];                       // "23"
-            qaData.genere = answersInOrder[5];                    // "Femminile"
-            // answersInOrder[6] is "No" (farmaci ormonali) - skip this
-            qaData.allergie = answersInOrder[7];                  // "No"
-            qaData.fragranza = answersInOrder[8];                 // "Sì"
-            qaData.crema_solare = answersInOrder[9];              // "Sempre"
-            qaData.acqua = answersInOrder[10];                    // "1-1.5L"
-            qaData.sonno = answersInOrder[11];                    // "6-7h"
-            qaData.alimentazione = answersInOrder[12];            // "Abbastanza"
-            qaData.fumo = answersInOrder[13];                     // "No"
-            qaData.stress = answersInOrder[14];                   // "6"
-            qaData.altre_info = answersInOrder[15];               // "Ho cicatrici da acne sul viso e macchie"
-            qaData.email = answersInOrder[16];                    // "Skibidiboppi@gmail.com"
-          }
+          // Extract preoccupazioni from first user message
+          qaData.preoccupazioni_specifiche = firstUserMessage; // "Ho la pelle grassa a tendenza acneica"
+          
+          // Exact mapping based on Sara's actual conversation order:
+          qaData.scrub_peeling = answersInOrder[0];       // "Sì regolarmente"
+          qaData.pelle_tira = answersInOrder[1];          // "Mai"
+          qaData.punti_neri = answersInOrder[2];          // "Alcuni"
+          qaData.pelle_sensibile = answersInOrder[3];     // "No"
+          qaData.eta = answersInOrder[4];                 // "23"
+          qaData.genere = answersInOrder[5];              // "Femminile"
+          // Skip farmaci ormonali at index 6
+          qaData.allergie = answersInOrder[7];            // "No"
+          qaData.fragranza = answersInOrder[8];           // "Sì" (NOT "No"!)
+          qaData.crema_solare = answersInOrder[9];        // "Sempre"
+          qaData.acqua = answersInOrder[10];              // "1-1.5L"
+          qaData.sonno = answersInOrder[11];              // "6-7h"
+          qaData.alimentazione = answersInOrder[12];      // "Abbastanza"
+          qaData.fumo = answersInOrder[13];               // "No"
+          qaData.stress = answersInOrder[14];             // "6"
+          if (answersInOrder.length > 15) qaData.altre_info = answersInOrder[15];  // "Ho cicatrici da acne sul viso e macchie"
+          if (answersInOrder.length > 16) qaData.email = answersInOrder[16];       // "Skibidiboppi@gmail.com"
+          if (answersInOrder.length > 17) qaData.rossori = answersInOrder[17];     // "Brufoli/Acne attivi"
 
         } else {
           // Fallback to pattern matching for incomplete conversations
