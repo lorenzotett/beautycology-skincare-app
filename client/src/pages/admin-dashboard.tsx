@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatMessage, ChatSession } from "@shared/schema";
-import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3, Copy, X, Eye, ChevronDown } from "lucide-react";
+import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3, Copy, X, Eye, ChevronDown, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MessageBubble } from "@/components/message-bubble";
 
@@ -109,6 +109,51 @@ export default function AdminDashboard() {
       toast({
         title: "Errore",
         description: "Impossibile copiare negli appunti",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadCSV = async () => {
+    try {
+      toast({
+        title: "Generazione CSV",
+        description: "Preparazione del file CSV in corso...",
+      });
+
+      const response = await fetch('/api/admin/export-csv');
+      
+      if (!response.ok) {
+        throw new Error('Failed to download CSV');
+      }
+
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      const filename = contentDisposition
+        ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+        : 'ai-dermasense-export.csv';
+
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download completato!",
+        description: `File ${filename} scaricato con successo`,
+      });
+    } catch (error) {
+      console.error('Error downloading CSV:', error);
+      toast({
+        title: "Errore",
+        description: "Impossibile scaricare il file CSV",
         variant: "destructive",
       });
     }
@@ -315,6 +360,13 @@ export default function AdminDashboard() {
             <p className="text-gray-600">AI DermoSense Conversation Management</p>
           </div>
           <div className="flex items-center space-x-4">
+            <Button 
+              onClick={handleDownloadCSV}
+              className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Download className="h-4 w-4" />
+              <span>Download CSV</span>
+            </Button>
             <div className="flex items-center space-x-2 text-gray-700">
               <User className="h-4 w-4" />
               <span className="text-sm">Admin</span>

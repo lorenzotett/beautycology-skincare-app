@@ -367,6 +367,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export chat data as CSV
+  app.get("/api/admin/export-csv", async (req, res) => {
+    try {
+      const sessions = await storage.getAllChatSessions();
+      const allMessages = await storage.getAllChatMessages();
+      
+      // Group messages by session
+      const messagesGroupedBySession = allMessages.reduce((acc, message) => {
+        if (!acc[message.sessionId]) {
+          acc[message.sessionId] = [];
+        }
+        acc[message.sessionId].push(message);
+        return acc;
+      }, {} as Record<string, ChatMessage[]>);
+
+      // Generate CSV data
+      const csvRows = [];
+      
+      // Headers
+      csvRows.push([
+        'Session ID',
+        'User Name', 
+        'User ID',
+        'Session Created',
+        'Session Updated',
+        'Message ID',
+        'Message Role',
+        'Message Content',
+        'Message Created',
+        'Has Image',
+        'Has Skin Analysis',
+        'Skin Analysis Data'
+      ]);
+
+      // Data rows
+      for (const session of sessions) {
+        const sessionMessages = messagesGroupedBySession[session.sessionId] || [];
+        
+        if (sessionMessages.length === 0) {
+          // Session without messages
+          csvRows.push([
+            session.sessionId,
+            session.userName || '',
+            session.userId,
+            session.createdAt.toISOString(),
+            session.updatedAt.toISOString(),
+            '',
+            '',
+            '',
+            '',
+            'false',
+            'false',
+            ''
+          ]);
+        } else {
+          // Session with messages
+          for (const message of sessionMessages) {
+            const metadata = message.metadata as any || {};
+            const hasImage = metadata.hasImage || false;
+            const hasSkinAnalysis = metadata.skinAnalysis || false;
+            
+            // Clean content for CSV (remove newlines and quotes)
+            const cleanContent = message.content
+              .replace(/"/g, '""')  // Escape quotes
+              .replace(/\n/g, ' ')  // Replace newlines with spaces
+              .replace(/\r/g, '');  // Remove carriage returns
+            
+            // Extract skin analysis data if present
+            let skinAnalysisData = '';
+            if (hasSkinAnalysis && metadata.skinAnalysis) {
+              try {
+                skinAnalysisData = JSON.stringify(metadata.skinAnalysis).replace(/"/g, '""');
+              } catch (e) {
+                skinAnalysisData = String(metadata.skinAnalysis).replace(/"/g, '""');
+              }
+            }
+
+            csvRows.push([
+              session.sessionId,
+              session.userName || '',
+              session.userId,
+              session.createdAt.toISOString(),
+              session.updatedAt.toISOString(),
+              message.id.toString(),
+              message.role,
+              `"${cleanContent}"`,
+              message.createdAt.toISOString(),
+              hasImage.toString(),
+              hasSkinAnalysis.toString(),
+              skinAnalysisData ? `"${skinAnalysisData}"` : ''
+            ]);
+          }
+        }
+      }
+
+      // Convert to CSV string
+      const csvContent = csvRows.map(row => row.join(',')).join('\n');
+      
+      // Set headers for file download
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+      const filename = `ai-dermasense-export-${timestamp}.csv`;
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(csvContent);
+      
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+      res.status(500).json({ error: "Failed to export CSV data" });
+    }
+  });
+
   
 
   // Admin endpoints
