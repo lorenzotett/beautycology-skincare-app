@@ -262,7 +262,7 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
 
 **INFORMAZIONI AGGIUNTIVE:**
 18. "Ci sono informazioni sulla tua pelle che non ti abbiamo chiesto e che vorresti condividere?"
-19. "Per inviarti la routine personalizzata, potresti condividere la tua email?"
+19. "Per visualizzare gli ingredienti perfetti per la tua pelle, potresti condividere la tua mail?"
 
 **REGOLE SPECIALI:**
 - **SE** l'utente risponde "Sì" a scrub/peeling **E** hai rilevato rossori: avvisa immediatamente "Noto che usi prodotti esfolianti e hai rossori. La tua pelle potrebbe essere sovraesfoliata. Ti suggerisco di interrompere temporaneamente peeling e scrub per permettere alla barriera cutanea di ripristinarsi."
@@ -728,8 +728,11 @@ A te la scelta!`;
     const content = lastAssistantMessage.content.toLowerCase();
     const isEmailRequest = content.includes("per inviarti la routine personalizzata") ||
            content.includes("potresti condividere la tua email") ||
+           content.includes("potresti condividere la tua mail") ||
            content.includes("condividi la tua email") ||
-           (content.includes("email") && content.includes("?"));
+           content.includes("condividi la tua mail") ||
+           (content.includes("email") && content.includes("?")) ||
+           (content.includes("mail") && content.includes("?"));
     
     if (!isEmailRequest) return false;
 
@@ -737,7 +740,8 @@ A te la scelta!`;
     const emailRequestIndex = this.conversationHistory.findIndex(msg => 
       msg.role === "assistant" && 
       (msg.content.toLowerCase().includes("per inviarti la routine personalizzata") || 
-       msg.content.toLowerCase().includes("potresti condividere la tua email"))
+       msg.content.toLowerCase().includes("potresti condividere la tua email") ||
+       msg.content.toLowerCase().includes("potresti condividere la tua mail"))
     );
     
     if (emailRequestIndex !== -1) {

@@ -95,8 +95,11 @@ export function ChatInterface() {
     const emailRequest = lastAssistantMessage.content.toLowerCase();
     const isEmailRequest = emailRequest.includes("per inviarti la routine personalizzata") ||
            emailRequest.includes("potresti condividere la tua email") ||
+           emailRequest.includes("potresti condividere la tua mail") ||
            emailRequest.includes("condividi la tua email") ||
-           (emailRequest.includes("email") && emailRequest.includes("?"));
+           emailRequest.includes("condividi la tua mail") ||
+           (emailRequest.includes("email") && emailRequest.includes("?")) ||
+           (emailRequest.includes("mail") && emailRequest.includes("?"));
 
     // Check if we already have sent a valid email by looking at user messages after the email request
     if (isEmailRequest) {
