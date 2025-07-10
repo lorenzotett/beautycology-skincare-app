@@ -506,25 +506,32 @@ export default function AdminDashboard() {
         {/* Image Zoom Modal */}
         {zoomedImage && (
           <div 
-            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-8"
             style={{ zIndex: 9999 }}
             onClick={() => setZoomedImage(null)}
           >
-            <div className="relative max-w-[80vw] max-h-[80vh] bg-white rounded-lg p-4 shadow-2xl">
+            <div className="relative">
               <img 
                 src={zoomedImage} 
                 alt="Immagine ingrandita" 
-                className="max-w-full max-h-full object-contain rounded-lg"
+                style={{ 
+                  maxWidth: '90vw', 
+                  maxHeight: '90vh',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                }}
                 onClick={(e) => e.stopPropagation()}
+                onError={(e) => {
+                  console.error('Errore caricamento immagine zoom:', e);
+                }}
               />
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={() => setZoomedImage(null)}
-                className="absolute top-2 right-2 bg-gray-100 hover:bg-gray-200 border-gray-300 text-gray-600 hover:text-gray-900"
+                className="absolute -top-4 -right-4 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
               >
-                <X className="h-4 w-4" />
-              </Button>
+                <X className="h-4 w-4 text-gray-600" />
+              </button>
             </div>
           </div>
         )}
