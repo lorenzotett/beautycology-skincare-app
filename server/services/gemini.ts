@@ -657,6 +657,8 @@ A te la scelta!`;
                               content.toLowerCase().includes('quale') ||
                               content.toLowerCase().includes('preferisci') ||
                               content.toLowerCase().includes('derivano da') ||
+                              content.toLowerCase().includes('derivano principalmente da') ||
+                              content.toLowerCase().includes('secondo te') ||
                               content.toLowerCase().includes('metti la crema') ||
                               content.toLowerCase().includes('genere') ||
                               content.toLowerCase().includes('tipologia') ||
@@ -670,12 +672,20 @@ A te la scelta!`;
                               content.toLowerCase().includes('alimentazione') ||
                               content.toLowerCase().includes('fumi') ||
                               content.toLowerCase().includes('stress') ||
-                              content.toLowerCase().includes('fragranza');
+                              content.toLowerCase().includes('fragranza') ||
+                              content.toLowerCase().includes('rossori') ||
+                              content.toLowerCase().includes('brufoli') ||
+                              content.toLowerCase().includes('irritazione');
 
     console.log('Choice detection:', { matches: matches.length, hasQuestion, hasChoiceIndicator });
     
     // Accept if it has choices and either a question mark or choice indicators
-    return matches.length >= 2 && matches.length <= 6 && (hasQuestion || hasChoiceIndicator);
+    // Special case: if we have A) B) C) pattern with 2+ matches, accept even without explicit indicators
+    const hasValidPattern = matches.length >= 2 && matches.length <= 6;
+    const hasQuestionOrIndicator = hasQuestion || hasChoiceIndicator;
+    
+    // More flexible approach: if we have valid A) B) C) pattern, accept it
+    return hasValidPattern && (hasQuestionOrIndicator || matches.length >= 2);
   }
 
   private extractChoices(content: string): string[] {
