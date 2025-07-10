@@ -63,7 +63,14 @@ C) Terza opzione
 
 NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime righe del messaggio. Questo permette all'interfaccia di creare pulsanti cliccabili automaticamente.
 7.  **LINGUAGGIO SEMPLICE:** Usa sempre un linguaggio molto semplice e comprensibile. Evita termini tecnici complicati. Invece di "dermocosmetico" usa "per la cura della pelle". Invece di "problematiche cutanee" usa "problemi della pelle". Spiega tutto in modo che sia facile da capire.
-8.  **QUESTIONARIO OBBLIGATORIO:** È VIETATO fornire resoconto finale o routine senza aver completato TUTTE le 19 domande del questionario. Se provi a saltare questa fase, FERMATI e torna al questionario.
+8.  **INTERPRETAZIONE FLESSIBILE DELLE RISPOSTE:** Quando l'utente risponde alle domande a scelta multipla, DEVI ACCETTARE e comprendere vari formati di risposta:
+    - Lettere singole: "A", "B", "C", "D", "E" (corrispondenti alle opzioni)
+    - Numeri: "1", "2", "3", "4", "5" (per indicare la prima, seconda, terza opzione, ecc.)
+    - Risposte numeriche dirette: "7" per "7-8h" nelle domande sul sonno, "8" per stress level, ecc.
+    - Parole chiave parziali: "grassa" per "pelle grassa", "si" per "sì", "no" per "no", ecc.
+    - Frasi complete che contengono la risposta
+    IMPORTANTE: NON chiedere chiarimenti se la risposta è ragionevolmente interpretabile. Procedi con la prossima domanda riconoscendo la scelta dell'utente.
+9.  **QUESTIONARIO OBBLIGATORIO:** È VIETATO fornire resoconto finale o routine senza aver completato TUTTE le 19 domande del questionario. Se provi a saltare questa fase, FERMATI e torna al questionario.
 
 # FLUSSO CONVERSAZIONALE STRUTTURATO (PERCORSO OBBLIGATO)
 
@@ -291,6 +298,13 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
 - Fumo sì: "Il fumo accelera l'invecchiamento cutaneo e riduce l'ossigenazione."
 
 **REGOLA FEEDBACK:** Ogni risposta deve essere seguita da un commento specifico di 1-2 frasi che valuti la scelta e dia un consiglio rapido relativo alla cura della pelle.
+
+**INTERPRETAZIONE RISPOSTE INTELLIGENTE:**
+- Se l'utente scrive "7" nella domanda sul sonno, interpreta come "7-8h" (opzione C)
+- Se l'utente scrive "8" nella domanda sullo stress, accetta come livello di stress 8/10
+- Se l'utente scrive "B" o "2", interpreta come seconda opzione
+- Se l'utente scrive "si" o "sì", interpreta come risposta affermativa
+- NON chiedere chiarimenti, procedi direttamente interpretando la risposta nel modo più logico
 
 ### Fase 4: Resoconto Finale e Proposta di Routine
 **ACCESSO NEGATO SENZA QUESTIONARIO COMPLETO:**
@@ -810,9 +824,43 @@ A te la scelta!`;
     // Check if it's a multiple choice question
     if (this.detectMultipleChoice(question)) {
       const choices = this.extractChoices(question);
+      
+      // Check for letter-based answers (A, B, C, D, E)
+      const letterMatch = lowerAnswer.match(/^[a-e]$/);
+      if (letterMatch) {
+        const letterIndex = letterMatch[0].charCodeAt(0) - 'a'.charCodeAt(0);
+        return letterIndex < choices.length;
+      }
+      
+      // Check for number-based answers (1, 2, 3, 4, 5) or (6h, 7h, 8h for sleep question)
+      const numberMatch = lowerAnswer.match(/^(\d+)h?$/);
+      if (numberMatch) {
+        const number = parseInt(numberMatch[1]);
+        
+        // Special handling for stress level (1-10)
+        if (lowerQuestion.includes("stress") && lowerQuestion.includes("1 a 10")) {
+          return number >= 1 && number <= 10;
+        }
+        
+        // Special handling for sleep hours (convert hours to choice index)
+        if (lowerQuestion.includes("ore dormi")) {
+          // A) Meno di 6h -> any number < 6
+          // B) 6-7h -> 6 or 7
+          // C) 7-8h -> 7 or 8  
+          // D) Più di 8h -> any number > 8
+          return number >= 1 && number <= 12; // reasonable sleep range
+        }
+        
+        // For other numbered choices, check if number is within valid range
+        return number >= 1 && number <= choices.length;
+      }
+      
+      // Check for partial text matches
       return choices.some(choice => 
         lowerAnswer.includes(choice.toLowerCase()) || 
-        choice.toLowerCase().includes(lowerAnswer)
+        choice.toLowerCase().includes(lowerAnswer) ||
+        // More flexible matching for common responses
+        (lowerAnswer.length >= 2 && choice.toLowerCase().includes(lowerAnswer))
       );
     }
 
