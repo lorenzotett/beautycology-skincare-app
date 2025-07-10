@@ -821,12 +821,6 @@ export function ChatInterface() {
                 id="image-upload"
                 disabled={isTyping}
               />
-              <label
-                htmlFor="image-upload"
-                className={`text-gray-400 hover:text-gray-600 cursor-pointer ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <Paperclip size={16} />
-              </label>
 
               <div className="flex-1">
                 <input
@@ -857,6 +851,14 @@ export function ChatInterface() {
                   </p>
                 )}
               </div>
+
+              <label
+                htmlFor="image-upload"
+                className={`text-gray-400 hover:text-gray-600 cursor-pointer p-2 rounded-md transition-all duration-200 ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <Paperclip size={16} />
+              </label>
+
               <button
                 onClick={toggleVoiceRecognition}
                 disabled={isTyping || selectedImage}
