@@ -62,11 +62,6 @@
   .chat-container {
     padding: 0 !important;
   }
-  
-  /* Ensure chat interface takes full width on small screens */
-  .max-w-sm {
-    max-width: calc(100vw - 1rem) !important;
-  }
 }
 
 /* Prevent external scrolling in iframe - make everything fit in viewport */
@@ -95,25 +90,28 @@ body, html {
   position: relative;
 }
 
-/* ULTRA AGGRESSIVE DESKTOP OVERRIDE - Force full width on desktop */
+/* FULL WIDTH OVERRIDE - Force full width on all devices */
+.desktop-wide {
+  max-width: 98vw !important;
+  width: 98vw !important;
+}
+
 @media (min-width: 768px) {
   .desktop-wide {
-    max-width: 98vw !important;
-    width: 98vw !important;
     min-width: 700px !important;
   }
-  
-  .chat-container {
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-  }
-  
-  /* Override all Tailwind max-width classes on desktop */
-  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl, .max-w-3xl, .max-w-4xl, .max-w-5xl, .max-w-6xl, .max-w-7xl {
-    max-width: 98vw !important;
-    width: 98vw !important;
-  }
+}
+
+.chat-container {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+/* Override all Tailwind max-width classes on all devices */
+.max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl, .max-w-3xl, .max-w-4xl, .max-w-5xl, .max-w-6xl, .max-w-7xl {
+  max-width: 98vw !important;
+  width: 98vw !important;
 }
 
 /* Container styling restored after test */
