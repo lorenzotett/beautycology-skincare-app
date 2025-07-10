@@ -445,8 +445,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { key: 'preoccupazioni_specifiche', patterns: ['problematica specifica che hai notato', 'vorresti condividere'] },
           { key: 'scrub_peeling', patterns: ['utilizzi scrub o peeling?'] },
           { key: 'pelle_tira', patterns: ['quando ti lavi il viso la tua pelle tira?'] },
+          { key: 'punti_neri', patterns: ['hai punti neri?'] },
+          { key: 'pelle_sensibile', patterns: ['hai una pelle sensibile?'] },
+          { key: 'tipologia_pelle', patterns: ['che tipologia di pelle hai?'] },
           { key: 'eta', patterns: ['quanti anni hai?'] },
-          { key: 'genere', patterns: ['ora, il genere:'] },
+          { key: 'genere', patterns: ['ora, il genere:', 'genere?'] },
+          { key: 'farmaci_ormonali', patterns: ['assumi farmaci come pillola anticoncezionale', 'pillola anticoncezionale'] },
           { key: 'allergie', patterns: ['ci sono ingredienti ai quali la tua pelle è allergica?'] },
           { key: 'fragranza', patterns: ['ti piacerebbe avere una fragranza che profumi di fiori'] },
           { key: 'crema_solare', patterns: ['metti la crema solare ogni giorno?'] },
@@ -457,7 +461,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { key: 'stress', patterns: ['qual è il tuo livello di stress attuale?'] },
           { key: 'altre_info', patterns: ['informazioni sulla tua pelle che non ti abbiamo chiesto e che vorresti condividere?'] },
           { key: 'email', patterns: ['per visualizzare gli ingredienti perfetti per la tua pelle, potresti condividere la tua mail?'] },
-          { key: 'routine_conferma', patterns: ['vorresti che ti fornissi una routine personalizzata completa'] }
+          { key: 'routine_conferma', patterns: ['vorresti che ti fornissi una routine personalizzata completa'] },
+          { key: 'rossori', patterns: ['rossori che hai segnalato derivano', 'rossori sulla tua pelle'] }
         ];
         
         // Sequential mapping based on conversation flow
@@ -529,7 +534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           qaData.pelle_sensibile = answersInOrder[3];     // "No"
           qaData.eta = answersInOrder[4];                 // "23"
           qaData.genere = answersInOrder[5];              // "Femminile"
-          // Skip farmaci ormonali at index 6
+          qaData.farmaci_ormonali = answersInOrder[6];    // "No" (pillola anticoncezionale)
           qaData.allergie = answersInOrder[7];            // "No"
           qaData.fragranza = answersInOrder[8];           // "Sì" (NOT "No"!)
           qaData.crema_solare = answersInOrder[9];        // "Sempre"
@@ -615,10 +620,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Basic demographics
           ['Età', qaData.eta || ''],
           ['Genere', qaData.genere || ''],
+          ['Farmaci Ormonali', qaData.farmaci_ormonali || ''],
           ['Email', qaData.email || ''],
           
           // Skin concerns
           ['Preoccupazioni Specifiche', qaData.preoccupazioni_specifiche || ''],
+          ['Tipologia Pelle', qaData.tipologia_pelle || ''],
           ['Pelle Sensibile', qaData.pelle_sensibile || ''],
           ['Punti Neri', qaData.punti_neri || ''],
           ['Rossori', qaData.rossori || ''],
@@ -637,6 +644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ['Fumo', qaData.fumo || ''],
           ['Livello Stress', qaData.stress || ''],
           ['Altre Info Pelle', qaData.altre_info || ''],
+          ['Routine Conferma', qaData.routine_conferma || ''],
           
           // Skin analysis scores (if available)
           ['Punteggio Generale', generalScore],
