@@ -757,7 +757,7 @@ export function ChatInterface() {
     <div className="chat-container flex flex-col h-screen">
       {/* Chat Area Container - Same size as welcome screen */}
       <div className="flex-1 flex items-center justify-center p-2 md:p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-        <div className="max-w-lg w-full rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "calc(100vh - 4rem)", backgroundColor: '#E5F1F2'}}></div>
+        <div className="max-w-lg w-full rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "calc(100vh - 4rem)", backgroundColor: '#E5F1F2'}}>
           {/* Header with Logo */}
           <div className="p-4 flex items-center justify-between">
             <img 
