@@ -95,20 +95,16 @@ body, html {
   position: relative;
 }
 
-/* Responsive Design - Mobile first approach */
-.max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
-  max-width: 90vw !important; /* Mobile: 90% of viewport */
-}
-
-/* Tablet and Desktop - Full width */
+/* AGGRESSIVE DESKTOP OVERRIDE - Force full width on desktop */
 @media (min-width: 768px) {
-  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
-    max-width: calc(100vw - 2rem) !important; /* Desktop: Full viewport minus padding */
+  .desktop-wide {
+    max-width: 95vw !important;
+    width: 95vw !important;
   }
   
-  /* Remove centering on desktop to use full width */
   .chat-container {
     max-width: 100% !important;
+    width: 100% !important;
     margin: 0 !important;
   }
 }
