@@ -551,7 +551,7 @@ export default function AdminDashboard() {
                     placeholder="Cerca per nome utente, email, thread ID..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 border-gray-300"
+                    className="pl-10 border-gray-300 text-gray-900 placeholder-gray-500"
                   />
                 </div>
               </div>
