@@ -506,10 +506,11 @@ export default function AdminDashboard() {
         {/* Image Zoom Modal */}
         {zoomedImage && (
           <div 
-            className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-60 p-4"
+            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4"
+            style={{ zIndex: 9999 }}
             onClick={() => setZoomedImage(null)}
           >
-            <div className="relative max-w-[95vw] max-h-[95vh]">
+            <div className="relative max-w-[80vw] max-h-[80vh] bg-white rounded-lg p-4 shadow-2xl">
               <img 
                 src={zoomedImage} 
                 alt="Immagine ingrandita" 
@@ -520,7 +521,7 @@ export default function AdminDashboard() {
                 variant="outline"
                 size="sm"
                 onClick={() => setZoomedImage(null)}
-                className="absolute top-4 right-4 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+                className="absolute top-2 right-2 bg-gray-100 hover:bg-gray-200 border-gray-300 text-gray-600 hover:text-gray-900"
               >
                 <X className="h-4 w-4" />
               </Button>
