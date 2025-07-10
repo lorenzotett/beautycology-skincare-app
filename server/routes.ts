@@ -448,6 +448,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { key: 'punti_neri', patterns: ['hai punti neri?'] },
           { key: 'pelle_sensibile', patterns: ['hai una pelle sensibile?'] },
           { key: 'tipologia_pelle', patterns: ['che tipologia di pelle hai?'] },
+          { key: 'pori_dilatati', patterns: ['hai i pori dilatati?'] },
+          { key: 'rughe', patterns: ['hai rughe di espressione o marcate?'] },
+          { key: 'discromie', patterns: ['hai delle discromie?', 'macchie scure', 'sono rossastre'] },
           { key: 'eta', patterns: ['quanti anni hai?'] },
           { key: 'genere', patterns: ['ora, il genere:', 'genere?'] },
           { key: 'farmaci_ormonali', patterns: ['assumi farmaci come pillola anticoncezionale', 'pillola anticoncezionale'] },
@@ -546,6 +549,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (answersInOrder.length > 15) qaData.altre_info = answersInOrder[15];  // "Ho cicatrici da acne sul viso e macchie"
           if (answersInOrder.length > 16) qaData.email = answersInOrder[16];       // "Skibidiboppi@gmail.com"
           if (answersInOrder.length > 17) qaData.rossori = answersInOrder[17];     // "Brufoli/Acne attivi"
+          
+          // For text-based conversations, derive some missing fields from available data
+          if (qaData.preoccupazioni_specifiche && qaData.preoccupazioni_specifiche.includes('grassa')) {
+            qaData.tipologia_pelle = 'Grassa';
+          } else if (qaData.preoccupazioni_specifiche && qaData.preoccupazioni_specifiche.includes('secca')) {
+            qaData.tipologia_pelle = 'Secca';
+          } else if (qaData.preoccupazioni_specifiche && qaData.preoccupazioni_specifiche.includes('mista')) {
+            qaData.tipologia_pelle = 'Mista';
+          }
+          
+          // Fill missing fields with logical defaults for older conversations
+          if (!qaData.pori_dilatati && qaData.tipologia_pelle === 'Grassa') {
+            qaData.pori_dilatati = 'Alcuni';
+          }
+          if (!qaData.rughe && qaData.eta && parseInt(qaData.eta) < 30) {
+            qaData.rughe = 'No';
+          }
+          if (!qaData.discromie && qaData.altre_info && qaData.altre_info.includes('macchie')) {
+            qaData.discromie = 'Sì';
+          }
 
         } else {
           // Fallback to pattern matching for incomplete conversations
@@ -718,7 +741,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
             derivedData.ingredienti_rossori_consigliati = '';
           }
         } else {
-          // For text-based conversations without photo analysis
+          // For text-based conversations without photo analysis, derive from user answers
+          
+          // Derive acne deduction from user responses
+          if (qaData.rossori && qaData.rossori.includes('Acne attivi')) {
+            derivedData.acne_dedotto = 'Brufoli frequenti';
+          } else if (qaData.preoccupazioni_specifiche && qaData.preoccupazioni_specifiche.includes('acneica')) {
+            derivedData.acne_dedotto = 'Tendenza acneica';
+          }
+          
+          // Use tipologia_pelle from user response
+          if (qaData.tipologia_pelle) {
+            derivedData.tipo_pelle_dedotto = qaData.tipologia_pelle;
+          }
+          
+          // Use pelle_sensibile from user response  
+          if (qaData.pelle_sensibile) {
+            derivedData.sensibile_dedotto = qaData.pelle_sensibile;
+          }
+          
+          // Use pori_dilatati from user response
+          if (qaData.pori_dilatati) {
+            derivedData.pori_dilatati_dedotto = qaData.pori_dilatati;
+          }
+          
+          // Use punti_neri from user response
+          if (qaData.punti_neri) {
+            derivedData.punti_neri_dedotto = qaData.punti_neri;
+          }
+          
+          // Use rughe from user response
+          if (qaData.rughe) {
+            derivedData.rughe_dedotto = qaData.rughe;
+          }
+          
+          // Use discromie from user response
+          if (qaData.discromie) {
+            derivedData.discromie_dedotto = qaData.discromie;
+          }
+          
+          // Recommend ingredients based on text responses
+          if (qaData.rossori && qaData.rossori.includes('Acne')) {
+            derivedData.ingredienti_acne_consigliati = 'Bardana e Mirto';
+          } else if (qaData.preoccupazioni_specifiche && qaData.preoccupazioni_specifiche.includes('acneica')) {
+            derivedData.ingredienti_acne_consigliati = 'Elicriso';
+          }
+          
+          if (qaData.altre_info && qaData.altre_info.includes('macchie')) {
+            derivedData.ingredienti_macchie_consigliati = 'Liquirizia';
+          }
+          
+          if (qaData.rossori && qaData.rossori.includes('rossori')) {
+            derivedData.ingredienti_rossori_consigliati = 'Centella';
+          }
+          
+          // Sovraesfoliazione warning for text-based
           if ((qaData.scrub_peeling === 'Sì regolarmente' || qaData.scrub_peeling?.toLowerCase().includes('sì')) && 
               (qaData.rossori || qaData.preoccupazioni_specifiche?.toLowerCase().includes('rossori'))) {
             derivedData.sovraesfoliazione_avviso = 'Sì - Possibile sovraesfoliazione';
@@ -751,7 +828,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ['Preoccupazioni Specifiche', qaData.preoccupazioni_specifiche || ''],
           ['Tipologia Pelle', qaData.tipologia_pelle || ''],
           ['Pelle Sensibile', qaData.pelle_sensibile || ''],
+          ['Pori Dilatati', qaData.pori_dilatati || ''],
           ['Punti Neri', qaData.punti_neri || ''],
+          ['Rughe', qaData.rughe || ''],
+          ['Discromie', qaData.discromie || ''],
           ['Rossori', qaData.rossori || ''],
           
           // Skincare habits
