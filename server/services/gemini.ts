@@ -568,20 +568,31 @@ A te la scelta!`;
         }
       }
 
-      // Check if user is answering the last question properly
-      if (this.lastQuestionAsked && this.isValidAnswerToQuestion(message, this.lastQuestionAsked)) {
-        this.lastQuestionAsked = null; // Clear since question was answered
-      } else if (this.lastQuestionAsked && !this.isValidAnswerToQuestion(message, this.lastQuestionAsked)) {
-        // User didn't answer the question properly, repeat it
-        this.conversationHistory.pop(); // Remove user's non-answer
-        const repeatMessage = `Mi dispiace, non ho capito la tua risposta. ${this.lastQuestionAsked}`;
-        this.conversationHistory.push({ role: "assistant", content: repeatMessage });
+      // Check if user is answering the last question - be more lenient
+      if (this.lastQuestionAsked) {
+        const isValidAnswer = this.isValidAnswerToQuestion(message, this.lastQuestionAsked);
         
-        return {
-          content: repeatMessage,
-          hasChoices: this.extractChoicesFromQuestion(this.lastQuestionAsked).length > 0,
-          choices: this.extractChoicesFromQuestion(this.lastQuestionAsked)
-        };
+        // Only repeat if the answer is clearly invalid (very strict criteria)
+        const isVeryShortAndMeaningless = message.trim().length < 1 || 
+                                         message.trim() === "?" || 
+                                         message.trim() === "..." ||
+                                         message.trim().match(/^[!@#$%^&*()]+$/);
+        
+        if (isValidAnswer || !isVeryShortAndMeaningless) {
+          // Accept the answer and let AI interpret it naturally
+          this.lastQuestionAsked = null;
+        } else {
+          // Only repeat for clearly meaningless responses
+          this.conversationHistory.pop();
+          const repeatMessage = `Mi dispiace, non ho capito la tua risposta. ${this.lastQuestionAsked}`;
+          this.conversationHistory.push({ role: "assistant", content: repeatMessage });
+          
+          return {
+            content: repeatMessage,
+            hasChoices: this.extractChoicesFromQuestion(this.lastQuestionAsked).length > 0,
+            choices: this.extractChoicesFromQuestion(this.lastQuestionAsked)
+          };
+        }
       }
 
       // Enhance the message with RAG context
@@ -821,73 +832,101 @@ A te la scelta!`;
     const lowerAnswer = answer.toLowerCase().trim();
     const lowerQuestion = question.toLowerCase();
 
+    // Debug logging
+    console.log(`=== ANSWER VALIDATION DEBUG ===`);
+    console.log(`Answer: "${answer}" (trimmed: "${lowerAnswer}")`);
+    console.log(`Question: "${question}"`);
+    console.log(`Is multiple choice: ${this.detectMultipleChoice(question)}`);
+
     // Check if it's a multiple choice question
     if (this.detectMultipleChoice(question)) {
       const choices = this.extractChoices(question);
+      console.log(`Choices available: ${JSON.stringify(choices)}`);
       
-      // Check for letter-based answers (A, B, C, D, E)
-      const letterMatch = lowerAnswer.match(/^[a-e]$/);
+      // Check for letter-based answers (A, B, C, D, E) - be more flexible
+      const letterMatch = lowerAnswer.match(/^[a-e][\)\.]?$/) || lowerAnswer.match(/^[a-e]\s*$/);
       if (letterMatch) {
-        const letterIndex = letterMatch[0].charCodeAt(0) - 'a'.charCodeAt(0);
-        return letterIndex < choices.length;
+        const letter = letterMatch[0].replace(/[\)\.\s]/g, '').toLowerCase();
+        const letterIndex = letter.charCodeAt(0) - 'a'.charCodeAt(0);
+        console.log(`Letter match: "${letterMatch[0]}" -> "${letter}" -> index ${letterIndex}`);
+        const isValid = letterIndex >= 0 && letterIndex < choices.length;
+        console.log(`Letter validation result: ${isValid}`);
+        return isValid;
       }
       
       // Check for number-based answers (1, 2, 3, 4, 5) or (6h, 7h, 8h for sleep question)
       const numberMatch = lowerAnswer.match(/^(\d+)h?$/);
       if (numberMatch) {
         const number = parseInt(numberMatch[1]);
+        console.log(`Number match: "${numberMatch[0]}" -> ${number}`);
         
         // Special handling for stress level (1-10)
         if (lowerQuestion.includes("stress") && lowerQuestion.includes("1 a 10")) {
-          return number >= 1 && number <= 10;
+          const isValid = number >= 1 && number <= 10;
+          console.log(`Stress level validation: ${isValid}`);
+          return isValid;
         }
         
         // Special handling for sleep hours (convert hours to choice index)
         if (lowerQuestion.includes("ore dormi")) {
-          // A) Meno di 6h -> any number < 6
-          // B) 6-7h -> 6 or 7
-          // C) 7-8h -> 7 or 8  
-          // D) Più di 8h -> any number > 8
-          return number >= 1 && number <= 12; // reasonable sleep range
+          const isValid = number >= 1 && number <= 12;
+          console.log(`Sleep hours validation: ${isValid}`);
+          return isValid;
         }
         
         // For other numbered choices, check if number is within valid range
-        return number >= 1 && number <= choices.length;
+        const isValid = number >= 1 && number <= choices.length;
+        console.log(`Number choice validation: ${isValid} (${number} <= ${choices.length})`);
+        return isValid;
       }
       
       // Check for partial text matches
-      return choices.some(choice => 
+      const textMatch = choices.some(choice => 
         lowerAnswer.includes(choice.toLowerCase()) || 
         choice.toLowerCase().includes(lowerAnswer) ||
         // More flexible matching for common responses
         (lowerAnswer.length >= 2 && choice.toLowerCase().includes(lowerAnswer))
       );
+      console.log(`Text match validation: ${textMatch}`);
+      return textMatch;
     }
 
     // For open questions, check if it's a reasonable answer
     if (lowerQuestion.includes("anni hai") || lowerQuestion.includes("età")) {
-      return /^\d{1,3}$/.test(lowerAnswer) && parseInt(lowerAnswer) > 0 && parseInt(lowerAnswer) < 120;
+      const isValid = /^\d{1,3}$/.test(lowerAnswer) && parseInt(lowerAnswer) > 0 && parseInt(lowerAnswer) < 120;
+      console.log(`Age validation: ${isValid}`);
+      return isValid;
     }
 
     if (lowerQuestion.includes("email")) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(lowerAnswer);
+      const isValid = emailRegex.test(lowerAnswer);
+      console.log(`Email validation: ${isValid}`);
+      return isValid;
     }
 
     if (lowerQuestion.includes("stress") && lowerQuestion.includes("1 a 10")) {
-      return /^([1-9]|10)$/.test(lowerAnswer);
+      const isValid = /^([1-9]|10)$/.test(lowerAnswer);
+      console.log(`Stress validation: ${isValid}`);
+      return isValid;
     }
 
     if (lowerQuestion.includes("allergi")) {
-      return lowerAnswer.length > 0; // Any answer is valid for allergies
+      const isValid = lowerAnswer.length > 0;
+      console.log(`Allergy validation: ${isValid}`);
+      return isValid;
     }
 
     if (lowerQuestion.includes("informazioni") && lowerQuestion.includes("condividere")) {
-      return lowerAnswer.length > 0; // Any answer is valid
+      const isValid = lowerAnswer.length > 0;
+      console.log(`General info validation: ${isValid}`);
+      return isValid;
     }
 
     // For other questions, assume any substantial answer is valid
-    return lowerAnswer.length >= 2;
+    const isValid = lowerAnswer.length >= 1; // Made even more lenient
+    console.log(`General validation: ${isValid} (length: ${lowerAnswer.length})`);
+    return isValid;
   }
 
   private extractChoicesFromQuestion(question: string): string[] {
