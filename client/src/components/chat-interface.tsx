@@ -671,8 +671,8 @@ export function ChatInterface() {
     return (
       <div className="chat-container flex flex-col h-screen">
         {/* Welcome Screen */}
-        <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-          <div className="max-w-lg w-full space-y-8 text-center rounded-3xl p-8 shadow-xl border border-slate-200" style={{backgroundColor: '#E5F1F2'}}>
+        <div className="flex-1 flex items-center justify-center p-2 md:p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+          <div className="max-w-lg w-full space-y-4 md:space-y-6 text-center rounded-3xl p-4 md:p-8 shadow-xl border border-slate-200" style={{backgroundColor: '#E5F1F2'}}>
             {/* Logo Bonnie */}
             <div className="space-y-2">
               <img 
@@ -684,7 +684,7 @@ export function ChatInterface() {
             </div>
 
             {/* Hero Image */}
-            <div className="relative mx-auto w-80 h-80 rounded-2xl overflow-hidden shadow-lg">
+            <div className="relative mx-auto w-64 h-64 md:w-80 md:h-80 rounded-2xl overflow-hidden shadow-lg">
               <img 
                 src="/attached_assets/Mockup image_1751894588863.png" 
                 alt="Analizza la tua pelle" 
@@ -697,13 +697,13 @@ export function ChatInterface() {
             </div>
 
             {/* Welcome Text */}
-            <div className="space-y-4 text-gray-700">
-              <p className="text-lg leading-relaxed">
+            <div className="space-y-3 text-gray-700">
+              <p className="text-sm md:text-lg leading-relaxed">
                 Ciao! Sono la tua <strong>Skin Expert</strong> di <strong>Bonnie</strong>. 
                 Possiamo analizzare insieme la tua pelle per trovare la formula 
                 skincare perfetta per <strong>migliorarla</strong>!
               </p>
-              <p className="text-base font-medium">
+              <p className="text-sm md:text-base font-medium">
                 Per iniziare, scrivi qui sotto il tuo nome.
               </p>
             </div>
@@ -756,8 +756,8 @@ export function ChatInterface() {
   return (
     <div className="chat-container flex flex-col h-screen">
       {/* Chat Area Container - Same size as welcome screen */}
-      <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-        <div className="max-w-lg w-full rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "calc(100vh - 8rem)", backgroundColor: '#E5F1F2'}}>
+      <div className="flex-1 flex items-center justify-center p-2 md:p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+        <div className="max-w-lg w-full rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "calc(100vh - 4rem)", backgroundColor: '#E5F1F2'}}></div>
           {/* Header with Logo */}
           <div className="p-4 flex items-center justify-between">
             <img 

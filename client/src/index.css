@@ -4,6 +4,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ottimizzazioni per modalità embed */
+@media (max-width: 450px) {
+  .chat-container {
+    font-size: 14px;
+  }
+  
+  .dermaSense-title {
+    font-size: 16px !important;
+  }
+  
+  /* Riduci padding su schermi molto piccoli */
+  .message-bubble {
+    padding: 8px !important;
+  }
+  
+  /* Ottimizza input per schermi piccoli */
+  .timer-input, input[type="text"] {
+    font-size: 14px;
+  }
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);
