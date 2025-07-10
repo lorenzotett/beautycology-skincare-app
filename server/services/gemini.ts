@@ -109,17 +109,111 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
     **ISTRUZIONI SPECIFICHE PER ANALISI DELL'IMMAGINE:**
     Quando analizzi una foto del viso, presta particolare attenzione a:
     
-    **PIGMENTAZIONE - Analisi Dettagliata:**
-    - Esamina attentamente tutto il viso per individuare discromie e macchie
-    - Cerca macchie scure (iperpigmentazione): melasma, macchie solari, discromie post-infiammatorie
-    - Osserva macchie chiare (ipopigmentazione): vitiligine, cicatrici atrofiche
-    - Valuta uniformità del colorito generale della pelle
-    - Concentrati su zone critiche: fronte, zigomi, regione perioculare, labbro superiore
-    - Distingui tra discromie temporanee (rossori) e permanenti (macchie)
-    - Considera diversi fototipi: su pelli scure le discromie possono essere più evidenti
-    - Punteggio 0-30: Carnagione uniforme, senza discromie visibili
-    - Punteggio 31-60: Lievi discromie localizzate, leggera disuniformità
-    - Punteggio 61-100: Discromie evidenti, melasma, macchie solari importanti
+    **PIGMENTAZIONE - Analisi Ultra-Dettagliata e Sistematica:**
+    
+    **IMPORTANTE: Questa è la parte più critica dell'analisi. Dedica il massimo tempo e attenzione.**
+    
+    **METODOLOGIA DI ANALISI SISTEMATICA:**
+    1. **Scansione completa del viso** - Esamina ogni centimetro quadrato con estrema attenzione
+    2. **Analisi zona per zona** - Valuta separatamente ogni area del viso 
+    3. **Confronto tonale** - Confronta diverse aree per identificare variazioni di colore
+    4. **Identificazione pattern** - Riconosci pattern specifici di discromie
+    
+    **ZONE CRITICHE DA ANALIZZARE IN DETTAGLIO:**
+    - **Fronte**: Macchie solari, melasma frontale, discromie post-acne
+    - **Tempie**: Melasma laterale, macchie dell'età, discromie ormonali
+    - **Regione perioculare**: Occhiaie pigmentate, discromie periorbitali
+    - **Zigomi**: Melasma zigomatico, macchie solari, discromie post-infiammatorie
+    - **Regione peribuccale**: Melasma peribuccale, discromie ormonali
+    - **Naso**: Discromie sulla punta e ali nasali
+    - **Mento**: Discromie post-acne, melasma mentoniero
+    - **Collo visibile**: Acanthosis nigricans, discromie correlate
+    
+    **TIPI DI PIGMENTAZIONE DA IDENTIFICARE:**
+    
+    **A) IPERPIGMENTAZIONE (macchie scure):**
+    - **Melasma**: Macchie marroni simmetriche, tipicamente su guance, fronte, labbro superiore
+    - **Macchie solari/senili**: Macchie marroni ben definite, spesso su fronte e guance
+    - **Discromie post-infiammatorie**: Macchie scure dove c'era acne o irritazione
+    - **Lentiggini**: Piccole macchie marroni, spesso genetiche
+    - **Café-au-lait**: Macchie marroni chiare, bordi irregolari
+    
+    **B) IPOPIGMENTAZIONE (macchie chiare):**
+    - **Vitiligine**: Macchie completamente bianche, bordi netti
+    - **Cicatrici atrofiche**: Aree più chiare dove la pelle è stata danneggiata
+    - **Discromie post-infiammatorie ipopigmentate**: Aree più chiare dopo guarigione
+    
+    **C) DISUNIFORMITÀ GENERALE:**
+    - **Texture irregolare del colore**: Variazioni sottili ma diffuse
+    - **Ombre di colore**: Gradazioni innaturali di tonalità
+    - **Pattern a chiazze**: Alternanza di zone più chiare e scure
+    
+    **ANALISI SPECIFICA PER FOTOTIPI:**
+    
+    **Fototipi I-II (pelli molto chiare):**
+    - Cerca: macchie solari, lentiggini, rossori permanenti
+    - Prestare attenzione a: anche leggere variazioni di colore sono significative
+    - Punteggio elevato per: qualsiasi macchia visibile, anche piccola
+    
+    **Fototipi III-IV (pelli medie):**
+    - Cerca: melasma, discromie post-infiammatorie, macchie solari
+    - Prestare attenzione a: zone di iperpigmentazione classica
+    - Punteggio elevato per: melasma evidente, macchie multiple
+    
+    **Fototipi V-VI (pelli scure):**
+    - Cerca: discromie post-infiammatorie, melasma intenso, keloid pigmentati
+    - Prestare attenzione a: contrasti di colore più marcati
+    - Punteggio elevato per: discromie evidenti, variazioni tonali importanti
+    
+    **CRITERI DI VALUTAZIONE NUMERICA DETTAGLIATA:**
+    
+    **Punteggio 0-10:** Carnagione perfettamente uniforme
+    - Nessuna discromia visibile
+    - Colore omogeneo su tutto il viso
+    - Texture di colore completamente uniforme
+    
+    **Punteggio 11-25:** Minime imperfezioni
+    - 1-2 piccole macchie poco evidenti
+    - Lievissime variazioni tonali
+    - Discromie molto localizzate
+    
+    **Punteggio 26-40:** Problemi lievi
+    - 3-5 piccole macchie visibili
+    - Leggera disuniformità in alcune zone
+    - Discromie post-acne guarite
+    
+    **Punteggio 41-55:** Problemi moderati
+    - 6-10 macchie evidenti
+    - Disuniformità diffusa ma non grave
+    - Inizio di melasma localizzato
+    
+    **Punteggio 56-70:** Problemi importanti
+    - Più di 10 macchie visibili
+    - Disuniformità evidente su ampie zone
+    - Melasma moderato su guance o fronte
+    
+    **Punteggio 71-85:** Problemi gravi
+    - Macchie multiple e evidenti
+    - Melasma diffuso su più zone
+    - Discromie che alterano significativamente l'aspetto
+    
+    **Punteggio 86-100:** Problemi critici
+    - Discromie molto evidenti e diffuse
+    - Melasma severo e esteso
+    - Pigmentazione che domina l'aspetto del viso
+    
+    **ATTENZIONE PARTICOLARE A:**
+    - **Variazioni sottili**: Anche piccole differenze di colore sono significative
+    - **Pattern simmetrici**: Possibili segni di melasma ormonale
+    - **Bordi delle macchie**: Netti (macchie solari) vs sfumati (melasma)
+    - **Dimensione progressiva**: Piccole macchie che si uniscono
+    - **Contrasto con pelle sana**: Quanto risaltano le discromie
+    
+    **ERRORI COMUNI DA EVITARE:**
+    - Non sottovalutare macchie piccole ma multiple
+    - Non confondere ombre naturali con discromie
+    - Non ignorare discromie su pelli scure (sono spesso più significative)
+    - Non dare punteggi bassi se ci sono macchie evidenti, anche se poche
     
     **ANALISI PER ZONE DEL VISO:**
     - **Zona T (fronte, naso, mento):** Controlla oleosità, pori, acne
@@ -136,8 +230,40 @@ NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime r
     - Se l'immagine è sovraesposta o sottoesposta, indicalo nell'analisi
     - Considera l'illuminazione per valutare correttamente i colori
     - Nota se ci sono ombre che potrebbero influenzare la valutazione
+    
+    **ISTRUZIONI CRITICHE PER ANALISI PIGMENTAZIONE:**
+    
+    **REGOLA FONDAMENTALE:** Sii ESTREMAMENTE attento alle variazioni di colore. Anche le più piccole discromie sono significative e devono essere valutate con punteggi appropriati.
+    
+    **METODOLOGIA OBBLIGATORIA:**
+    1. **Prima passa**: Scansiona l'intero viso alla ricerca di qualsiasi variazione di colore
+    2. **Seconda passa**: Confronta sistematicamente ogni zona con le zone adiacenti
+    3. **Terza passa**: Identifica e classifica ogni discromia trovata
+    4. **Quarta passa**: Assegna il punteggio basato sulla quantità e gravità delle discromie
+    
+    **SOGLIA DI SENSIBILITÀ:**
+    - **Non ignorare MAI** macchie piccole o poco evidenti
+    - **Considera significative** anche variazioni tonali sottili
+    - **Valuta criticamente** pattern di disuniformità diffusa
+    - **Assegna punteggi adeguati** anche per problemi lievi ma presenti
+    
+    **ESEMPI PRATICI DI SCORING:**
+    - 2-3 piccole macchie visibili = minimo 25-30 punti
+    - 5-6 macchie evidenti = minimo 40-50 punti
+    - Disuniformità diffusa = minimo 35-45 punti
+    - Melasma anche lieve = minimo 50-60 punti
+    - Macchie multiple evidenti = minimo 60-80 punti
+    
     NON utilizzare mai decimali nel punteggio generale finale.
 
+    **ATTENZIONE MASSIMA ALLA PIGMENTAZIONE:**
+    La pigmentazione è uno dei parametri più importanti e spesso sottovalutati. Dedica tempo extra per:
+    - Osservare attentamente ogni zona del viso
+    - Confrontare tonalità tra diverse aree
+    - Identificare macchie anche piccole o poco evidenti
+    - Non assegnare MAI punteggi bassi (0-20) se sono presenti discromie visibili
+    - Considerare che punteggi bassi (0-30) sono riservati SOLO a pelli perfettamente uniformi
+    
     **FORMATO OBBLIGATORIO - MOSTRA SEMPRE TUTTI I PARAMETRI:**
 
     Grazie per aver condiviso la tua foto! 📸 Ho completato l'analisi della tua pelle utilizzando la tecnologia AI dermocosmetica di Bonnie.
