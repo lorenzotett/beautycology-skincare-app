@@ -106,30 +106,36 @@ body, html {
   position: relative;
 }
 
-/* Force larger container on desktop - Override Tailwind defaults */
+/* FORCE UPDATE v2.0 - Force larger container on desktop - Override Tailwind defaults */
+.max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
+  max-width: 90vw !important; /* Force responsive width */
+}
+
 @media (min-width: 768px) {
-  .max-w-xs, .max-w-sm {
+  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
     max-width: 32rem !important; /* 512px - Force larger on tablet */
   }
 }
 
 @media (min-width: 1024px) {
-  .max-w-xs, .max-w-sm, .max-w-md {
+  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
     max-width: 42rem !important; /* 672px - Force larger on laptop */
   }
 }
 
 @media (min-width: 1280px) {
-  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg {
-    max-width: 48rem !important; /* 768px - Force larger on desktop */
+  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
+    max-width: 50rem !important; /* 800px - Force larger on desktop */
   }
 }
 
 @media (min-width: 1536px) {
-  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl {
-    max-width: 56rem !important; /* 896px - Force larger on large desktop */
+  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
+    max-width: 60rem !important; /* 960px - Force larger on large desktop */
   }
 }
+
+/* Container styling restored after test */
 
 :root {
   --background: hsl(0, 0%, 100%);
