@@ -36,14 +36,20 @@
 /* Responsive breakpoints migliorati */
 @media (min-width: 768px) {
   .chat-container {
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
   }
 }
 
 @media (min-width: 1024px) {
   .chat-container {
-    max-width: 700px;
+    max-width: 900px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .chat-container {
+    max-width: 1000px;
   }
 }
 
@@ -71,6 +77,57 @@
   /* Ensure chat interface takes full width on small screens */
   .max-w-sm {
     max-width: calc(100vw - 1rem) !important;
+  }
+}
+
+/* Prevent external scrolling in iframe - make everything fit in viewport */
+body, html {
+  overflow: hidden;
+  height: 100vh;
+  max-height: 100vh;
+  position: fixed;
+  width: 100%;
+}
+
+#root {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+
+.chat-container {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  position: relative;
+}
+
+/* Force larger container on desktop - Override Tailwind defaults */
+@media (min-width: 768px) {
+  .max-w-xs, .max-w-sm {
+    max-width: 32rem !important; /* 512px - Force larger on tablet */
+  }
+}
+
+@media (min-width: 1024px) {
+  .max-w-xs, .max-w-sm, .max-w-md {
+    max-width: 42rem !important; /* 672px - Force larger on laptop */
+  }
+}
+
+@media (min-width: 1280px) {
+  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg {
+    max-width: 48rem !important; /* 768px - Force larger on desktop */
+  }
+}
+
+@media (min-width: 1536px) {
+  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl {
+    max-width: 56rem !important; /* 896px - Force larger on large desktop */
   }
 }
 

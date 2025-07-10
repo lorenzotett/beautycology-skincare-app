@@ -672,7 +672,7 @@ export function ChatInterface() {
       <div className="chat-container flex flex-col h-screen">
         {/* Welcome Screen */}
         <div className="flex-1 flex items-center justify-center p-2 sm:p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-          <div className="w-full max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl space-y-4 md:space-y-6 text-center rounded-3xl p-6 md:p-8 shadow-xl border border-slate-200" style={{backgroundColor: '#E5F1F2'}}>
+          <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl space-y-4 md:space-y-6 text-center rounded-3xl p-6 md:p-8 shadow-xl border border-slate-200" style={{backgroundColor: '#E5F1F2'}}>
             {/* Logo Bonnie */}
             <div className="space-y-2">
               <img 
@@ -757,7 +757,7 @@ export function ChatInterface() {
     <div className="chat-container flex flex-col h-screen">
       {/* Chat Area Container - Responsive design */}
       <div className="flex-1 flex items-center justify-center p-2 sm:p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-        <div className="w-full max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "calc(100vh - 2rem)", maxHeight: "900px", backgroundColor: '#E5F1F2'}}>
+        <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "calc(100vh - 2rem)", backgroundColor: '#E5F1F2'}}>
           {/* Header with Logo */}
           <div className="p-4 flex items-center justify-between">
             <img 
@@ -770,7 +770,7 @@ export function ChatInterface() {
             </h1>
           </div>
           {/* Messages Area */}
-          <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto">
+          <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto max-h-full">
             {messages.map((message) => (
               <MessageBubble
                 key={message.id}
