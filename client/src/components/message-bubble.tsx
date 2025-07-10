@@ -8,6 +8,7 @@ interface MessageBubbleProps {
   onChoiceSelect?: (choice: string) => void;
   isAnswered?: boolean;
   userInitial?: string;
+  onImageClick?: (imageUrl: string) => void;
 }
 
 // Function to format markdown and make links clickable
@@ -176,7 +177,7 @@ const extractMetric = (content: string, metricName: string): number => {
   return match ? parseInt(match[1]) : 0;
 };
 
-export function MessageBubble({ message, onChoiceSelect, isAnswered = false, userInitial = "U" }: MessageBubbleProps) {
+export function MessageBubble({ message, onChoiceSelect, isAnswered = false, userInitial = "U", onImageClick }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const timestamp = new Date(message.createdAt!).toLocaleTimeString('it-IT', {
     hour: '2-digit',
@@ -212,7 +213,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
               <img 
                 src={metadata.image} 
                 alt="Immagine caricata" 
-                className="w-full max-w-48 h-auto rounded-lg"
+                className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
                 style={{ 
                   maxHeight: '200px', 
                   minHeight: '120px',
@@ -220,6 +221,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   objectFit: 'cover',
                   display: 'block'
                 }}
+                onClick={() => onImageClick?.(metadata.image)}
                 onError={(e) => {
                   console.warn('Errore nel caricamento dell\'immagine:', e);
                 }}

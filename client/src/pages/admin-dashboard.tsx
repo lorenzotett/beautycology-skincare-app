@@ -40,6 +40,7 @@ export default function AdminDashboard() {
   const [customDateTo, setCustomDateTo] = useState("");
   const [selectedSession, setSelectedSession] = useState<SessionWithMessages | null>(null);
   const [showCustomPeriod, setShowCustomPeriod] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Check if user is already authenticated
@@ -52,13 +53,17 @@ export default function AdminDashboard() {
 
   // Lock body scroll when modal is open and handle ESC key
   useEffect(() => {
-    if (selectedSession) {
+    if (selectedSession || zoomedImage) {
       document.body.style.overflow = 'hidden';
       
       // Add ESC key listener
       const handleEscKey = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
-          setSelectedSession(null);
+          if (zoomedImage) {
+            setZoomedImage(null);
+          } else if (selectedSession) {
+            setSelectedSession(null);
+          }
         }
       };
       
@@ -76,7 +81,7 @@ export default function AdminDashboard() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [selectedSession]);
+  }, [selectedSession, zoomedImage]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -488,11 +493,37 @@ export default function AdminDashboard() {
                       <MessageBubble 
                         message={message}
                         userInitial={sessionDetails.userName?.charAt(0)?.toUpperCase() || 'U'}
+                        onImageClick={setZoomedImage}
                       />
                     </div>
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Image Zoom Modal */}
+        {zoomedImage && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-60 p-4"
+            onClick={() => setZoomedImage(null)}
+          >
+            <div className="relative max-w-[95vw] max-h-[95vh]">
+              <img 
+                src={zoomedImage} 
+                alt="Immagine ingrandita" 
+                className="max-w-full max-h-full object-contain rounded-lg"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setZoomedImage(null)}
+                className="absolute top-4 right-4 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         )}
