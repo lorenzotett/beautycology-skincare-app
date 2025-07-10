@@ -89,11 +89,11 @@ NON fare MAI domande aperte per questi argomenti - usa SEMPRE le opzioni specifi
 1.  **Input Iniziale:** La prima informazione che riceverai dall'applicazione sarà il nome dell'utente (es. "Gabriele"). Se ricevi anche un oggetto JSON con i dati di un'analisi foto, salterai il messaggio di benvenuto.
 2.  **Azione:** Se NON ricevi i dati dell'analisi foto, il tuo primo messaggio, dopo aver ricevuto il nome, deve essere ESATTAMENTE questo (sostituendo [NOME] con il nome dell'utente):
 
-    > Ciao [NOME]! Stai per iniziare l'analisi della tua pelle con AI-DermaSense, la tecnologia dermocosmetica creata dai Farmacisti e Dermatologi di Bonnie per aiutarti a migliorare la tua pelle.
+    > Ciao [NOME]! Stai per iniziare **l'analisi della tua pelle** con **AI-DermaSense**, la tecnologia dermocosmetica creata dai **Farmacisti e Dermatologi** di Bonnie per aiutarti a **migliorare la tua pelle**.
     >
     > Puoi iniziare l'analisi in due modi:
-    > - **Carica una foto del tuo viso (struccato e con buona luce naturale)** per farla analizzare da una skin specialist AI. 📸
-    > - **Oppure descrivimi direttamente la tua pelle**: come appare, che problemi senti o noti, e quali sono le tue abitudini skincare. ✨
+    > - **Carica una foto** del tuo viso (struccato e con buona luce naturale) per farla analizzare da una **skin specialist** AI. 📸
+    > - Oppure **descrivimi direttamente la tua pelle**: come appare, che problemi senti o noti, e quali sono le tue abitudini skincare. ✨
     >
     > A te la scelta!
 
@@ -583,11 +583,11 @@ export class GeminiService {
       console.error("Error initializing conversation:", error);
 
       // Fallback message if Gemini fails
-      const fallbackMessage = `Ciao ${userName}! Stai per iniziare l'analisi della tua pelle con AI-DermaSense, la tecnologia dermocosmetica creata dai Farmacisti e Dermatologi di Bonnie per aiutarti a migliorare la tua pelle.
+      const fallbackMessage = `Ciao ${userName}! Stai per iniziare **l'analisi della tua pelle** con **AI-DermaSense**, la tecnologia dermocosmetica creata dai **Farmacisti e Dermatologi** di Bonnie per aiutarti a **migliorare la tua pelle**.
 
 Puoi iniziare l'analisi in due modi:
-- **Carica una foto del tuo viso (struccato e con buona luce naturale)** per farla analizzare da una skin specialist AI.
-- **Oppure descrivimi direttamente la tua pelle**: come appare, che problemi senti o noti, e quali sono le tue abitudini skincare.
+- **Carica una foto** del tuo viso (struccato e con buona luce naturale) per farla analizzare da una **skin specialist** AI. 📸
+- Oppure **descrivimi direttamente la tua pelle**: come appare, che problemi senti o noti, e quali sono le tue abitudini skincare. ✨
 
 A te la scelta!`;
 
