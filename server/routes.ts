@@ -368,13 +368,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Export chat data as CSV
-  app.get("/api/admin/export-csv", async (req, res) => {
+  app.post("/api/admin/export-csv", async (req, res) => {
     try {
-      const sessions = await storage.getAllChatSessions();
+      const { sessionIds } = req.body;
+      
+      // Get all sessions first
+      const allSessions = await storage.getAllChatSessions();
       const allMessages = await storage.getAllChatMessages();
       
-      // Group messages by session
-      const messagesGroupedBySession = allMessages.reduce((acc, message) => {
+      // Filter sessions if specific IDs provided
+      const sessions = sessionIds && sessionIds.length > 0 
+        ? allSessions.filter(session => sessionIds.includes(session.sessionId))
+        : allSessions;
+      
+      // Get selected session IDs for filtering messages
+      const selectedSessionIds = sessions.map(s => s.sessionId);
+      
+      // Filter messages for selected sessions only
+      const filteredMessages = allMessages.filter(message => 
+        selectedSessionIds.includes(message.sessionId)
+      );
+      
+      // Group filtered messages by session
+      const messagesGroupedBySession = filteredMessages.reduce((acc, message) => {
         if (!acc[message.sessionId]) {
           acc[message.sessionId] = [];
         }

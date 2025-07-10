@@ -41,6 +41,8 @@ export default function AdminDashboard() {
   const [selectedSession, setSelectedSession] = useState<SessionWithMessages | null>(null);
   const [showCustomPeriod, setShowCustomPeriod] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   // Check if user is already authenticated
@@ -115,13 +117,30 @@ export default function AdminDashboard() {
   };
 
   const handleDownloadCSV = async () => {
+    if (selectedSessions.size === 0) {
+      toast({
+        title: "Nessuna chat selezionata",
+        description: "Seleziona almeno una chat per esportare",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       toast({
         title: "Generazione CSV",
-        description: "Preparazione del file CSV in corso...",
+        description: `Preparazione del CSV per ${selectedSessions.size} chat selezionate...`,
       });
 
-      const response = await fetch('/api/admin/export-csv');
+      const response = await fetch('/api/admin/export-csv', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionIds: Array.from(selectedSessions)
+        })
+      });
       
       if (!response.ok) {
         throw new Error('Failed to download CSV');
@@ -147,7 +166,7 @@ export default function AdminDashboard() {
 
       toast({
         title: "Download completato!",
-        description: `File ${filename} scaricato con successo`,
+        description: `File ${filename} scaricato con ${selectedSessions.size} chat`,
       });
     } catch (error) {
       console.error('Error downloading CSV:', error);
@@ -157,6 +176,31 @@ export default function AdminDashboard() {
         variant: "destructive",
       });
     }
+  };
+
+  const toggleSelectionMode = () => {
+    setIsSelectionMode(!isSelectionMode);
+    setSelectedSessions(new Set());
+  };
+
+  const toggleSessionSelection = (sessionId: string) => {
+    const newSelected = new Set(selectedSessions);
+    if (newSelected.has(sessionId)) {
+      newSelected.delete(sessionId);
+    } else {
+      newSelected.add(sessionId);
+    }
+    setSelectedSessions(newSelected);
+  };
+
+  const selectAllSessions = () => {
+    if (!filteredSessions) return;
+    const allSessionIds = filteredSessions.map(s => s.sessionId);
+    setSelectedSessions(new Set(allSessionIds));
+  };
+
+  const deselectAllSessions = () => {
+    setSelectedSessions(new Set());
   };
 
   const { data: stats } = useQuery({
@@ -360,13 +404,49 @@ export default function AdminDashboard() {
             <p className="text-gray-600">AI DermoSense Conversation Management</p>
           </div>
           <div className="flex items-center space-x-4">
-            <Button 
-              onClick={handleDownloadCSV}
-              className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white"
-            >
-              <Download className="h-4 w-4" />
-              <span>Download CSV</span>
-            </Button>
+            {!isSelectionMode ? (
+              <Button 
+                onClick={toggleSelectionMode}
+                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Download className="h-4 w-4" />
+                <span>Seleziona Chat</span>
+              </Button>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Button 
+                  onClick={selectAllSessions}
+                  size="sm"
+                  variant="outline"
+                  className="text-gray-700"
+                >
+                  Seleziona Tutte
+                </Button>
+                <Button 
+                  onClick={deselectAllSessions}
+                  size="sm"
+                  variant="outline"
+                  className="text-gray-700"
+                >
+                  Deseleziona Tutte
+                </Button>
+                <Button 
+                  onClick={handleDownloadCSV}
+                  className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white"
+                  disabled={selectedSessions.size === 0}
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download CSV ({selectedSessions.size})</span>
+                </Button>
+                <Button 
+                  onClick={toggleSelectionMode}
+                  variant="outline"
+                  className="text-gray-700"
+                >
+                  Annulla
+                </Button>
+              </div>
+            )}
             <div className="flex items-center space-x-2 text-gray-700">
               <User className="h-4 w-4" />
               <span className="text-sm">Admin</span>
@@ -599,6 +679,22 @@ export default function AdminDashboard() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
+                  {isSelectionMode && (
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <input
+                        type="checkbox"
+                        checked={filteredSessions.length > 0 && filteredSessions.every(s => selectedSessions.has(s.sessionId))}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            selectAllSessions();
+                          } else {
+                            deselectAllSessions();
+                          }
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                    </th>
+                  )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thread ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Fingerprint</th>
@@ -609,7 +705,17 @@ export default function AdminDashboard() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredSessions.map((session) => (
-                  <tr key={session.sessionId} className="hover:bg-gray-50">
+                  <tr key={session.sessionId} className={`hover:bg-gray-50 ${selectedSessions.has(session.sessionId) ? 'bg-blue-50' : ''}`}>
+                    {isSelectionMode && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={selectedSessions.has(session.sessionId)}
+                          onChange={() => toggleSessionSelection(session.sessionId)}
+                          className="rounded border-gray-300"
+                        />
+                      </td>
+                    )}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-medium text-gray-900">{session.userName}</div>
                     </td>
