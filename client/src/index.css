@@ -4,10 +4,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ottimizzazioni per modalità embed */
+/* Ottimizzazioni responsive */
 @media (max-width: 450px) {
   .chat-container {
     font-size: 14px;
+    padding: 8px !important;
   }
   
   .dermaSense-title {
@@ -22,6 +23,54 @@
   /* Ottimizza input per schermi piccoli */
   .timer-input, input[type="text"] {
     font-size: 14px;
+  }
+
+  /* Assicurati che il contenuto non venga tagliato su mobile */
+  .chat-container {
+    height: 100vh !important;
+    min-height: 100vh !important;
+    overflow: hidden;
+  }
+}
+
+/* Responsive breakpoints migliorati */
+@media (min-width: 768px) {
+  .chat-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chat-container {
+    max-width: 700px;
+  }
+}
+
+/* Prevent viewport issues on mobile */
+@media screen and (max-height: 600px) {
+  .chat-container {
+    height: 100vh !important;
+  }
+}
+
+/* Safari mobile viewport fix */
+@supports (-webkit-touch-callout: none) {
+  .chat-container {
+    height: -webkit-fill-available;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Additional mobile optimizations */
+@media (max-width: 640px) {
+  .chat-container {
+    padding: 0 !important;
+  }
+  
+  /* Ensure chat interface takes full width on small screens */
+  .max-w-sm {
+    max-width: calc(100vw - 1rem) !important;
   }
 }
 
