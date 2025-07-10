@@ -365,7 +365,7 @@ export function ChatInterface() {
 
     if (imageToSend) {
       const analysisMessages = [
-        "Sto analizzando la tua immagine...",
+        "Sto analizzando la tua foto...",
         "Analizzo i dettagli della tua pelle...",
         "Ancora un momento...",
         "Sto elaborando l'analisi AI...",
