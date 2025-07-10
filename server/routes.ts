@@ -607,6 +607,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ];
           generalScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length).toString();
         }
+        
+        // Derive insights from skin analysis
+        let derivedData: any = {};
+        if (skinAnalysis) {
+          // Acne type deduction
+          if (skinAnalysis.acne >= 60) {
+            derivedData.acne_dedotto = 'Acne severa';
+          } else if (skinAnalysis.acne >= 35) {
+            derivedData.acne_dedotto = 'Brufoli frequenti';
+          } else if (skinAnalysis.acne >= 15) {
+            derivedData.acne_dedotto = 'Brufoli occasionali';
+          } else {
+            derivedData.acne_dedotto = 'No acne';
+          }
+          
+          // Skin type deduction
+          if (skinAnalysis.oleosita >= 60) {
+            derivedData.tipo_pelle_dedotto = 'Grassa';
+          } else if (skinAnalysis.oleosita <= 30 && skinAnalysis.idratazione <= 45) {
+            derivedData.tipo_pelle_dedotto = 'Secca';
+          } else if (skinAnalysis.oleosita <= 30 && skinAnalysis.idratazione > 45) {
+            derivedData.tipo_pelle_dedotto = 'Normale';
+          } else if (skinAnalysis.oleosita > 30 && skinAnalysis.oleosita < 60 && skinAnalysis.pori_dilatati >= 40) {
+            derivedData.tipo_pelle_dedotto = 'Mista';
+          } else {
+            derivedData.tipo_pelle_dedotto = 'Normale';
+          }
+          
+          // Sensitivity deduction
+          if (skinAnalysis.rossori >= 35) {
+            derivedData.sensibile_dedotto = 'Sì';
+          } else {
+            derivedData.sensibile_dedotto = 'No';
+          }
+          
+          // Pori dilatati deduction
+          if (skinAnalysis.pori_dilatati >= 50) {
+            derivedData.pori_dilatati_dedotto = 'Molti';
+          } else if (skinAnalysis.pori_dilatati >= 30) {
+            derivedData.pori_dilatati_dedotto = 'Alcuni';
+          } else {
+            derivedData.pori_dilatati_dedotto = 'Pochi/Nessuno';
+          }
+          
+          // Punti neri deduction (based on pori dilatati)
+          if (skinAnalysis.pori_dilatati >= 50) {
+            derivedData.punti_neri_dedotto = 'Molti';
+          } else if (skinAnalysis.pori_dilatati >= 30) {
+            derivedData.punti_neri_dedotto = 'Alcuni';
+          } else {
+            derivedData.punti_neri_dedotto = 'Pochi/Nessuno';
+          }
+          
+          // Rughe deduction
+          if (skinAnalysis.rughe >= 50) {
+            derivedData.rughe_dedotto = 'Marcate';
+          } else if (skinAnalysis.rughe >= 20) {
+            derivedData.rughe_dedotto = 'Di espressione';
+          } else {
+            derivedData.rughe_dedotto = 'Nessuna/Minime';
+          }
+          
+          // Discromie deduction
+          if (skinAnalysis.pigmentazione >= 50) {
+            derivedData.discromie_dedotto = 'Macchie scure evidenti';
+          } else if (skinAnalysis.pigmentazione >= 25) {
+            derivedData.discromie_dedotto = 'Alcune macchie';
+          } else {
+            derivedData.discromie_dedotto = 'Nessuna/Minime';
+          }
+          
+          // Overexfoliation warning
+          if ((qaData.scrub_peeling === 'Sì regolarmente' || qaData.scrub_peeling?.toLowerCase().includes('sì')) && 
+              skinAnalysis.rossori >= 30) {
+            derivedData.sovraesfoliazione_avviso = 'Sì - Possibile sovraesfoliazione';
+          } else {
+            derivedData.sovraesfoliazione_avviso = 'No';
+          }
+          
+          // Detergente delicato (based on "pelle tira")
+          if (qaData.pelle_tira === 'Sempre' || qaData.pelle_tira === 'A volte') {
+            derivedData.detergente_delicato_necessario = 'Sì';
+          } else {
+            derivedData.detergente_delicato_necessario = 'No';
+          }
+          
+          // Ingredienti consigliati per acne
+          if (skinAnalysis.acne >= 60) {
+            derivedData.ingredienti_acne_consigliati = 'Bardana e Mirto';
+          } else if (skinAnalysis.acne >= 35) {
+            derivedData.ingredienti_acne_consigliati = 'Bardana';
+          } else if (skinAnalysis.acne >= 15) {
+            derivedData.ingredienti_acne_consigliati = 'Elicriso';
+          } else {
+            derivedData.ingredienti_acne_consigliati = 'Nessuno';
+          }
+          
+          // Ingredienti per discromie
+          if (skinAnalysis.pigmentazione >= 25) {
+            derivedData.ingredienti_macchie_consigliati = 'Liquirizia';
+          } else {
+            derivedData.ingredienti_macchie_consigliati = '';
+          }
+          
+          // Ingredienti per rossori
+          if (skinAnalysis.rossori >= 35 && qaData.rossori?.toLowerCase().includes('irritazione')) {
+            derivedData.ingredienti_rossori_consigliati = 'Centella';
+          } else {
+            derivedData.ingredienti_rossori_consigliati = '';
+          }
+        } else {
+          // For text-based conversations without photo analysis
+          if ((qaData.scrub_peeling === 'Sì regolarmente' || qaData.scrub_peeling?.toLowerCase().includes('sì')) && 
+              (qaData.rossori || qaData.preoccupazioni_specifiche?.toLowerCase().includes('rossori'))) {
+            derivedData.sovraesfoliazione_avviso = 'Sì - Possibile sovraesfoliazione';
+          }
+          
+          // Detergente delicato
+          if (qaData.pelle_tira === 'Sempre' || qaData.pelle_tira === 'A volte') {
+            derivedData.detergente_delicato_necessario = 'Sì';
+          } else {
+            derivedData.detergente_delicato_necessario = 'No';
+          }
+        }
 
         // Create vertical rows (field-value pairs) for this session
         const fieldValuePairs = [
@@ -645,6 +769,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ['Livello Stress', qaData.stress || ''],
           ['Altre Info Pelle', qaData.altre_info || ''],
           ['Routine Conferma', qaData.routine_conferma || ''],
+          
+          // Deduced data from skin analysis (if available)
+          ['Acne (Dedotto)', derivedData.acne_dedotto || ''],
+          ['Tipo Pelle (Dedotto)', derivedData.tipo_pelle_dedotto || ''],
+          ['Sensibile (Dedotto)', derivedData.sensibile_dedotto || ''],
+          ['Pori Dilatati (Dedotto)', derivedData.pori_dilatati_dedotto || ''],
+          ['Punti Neri (Dedotto)', derivedData.punti_neri_dedotto || ''],
+          ['Rughe (Dedotto)', derivedData.rughe_dedotto || ''],
+          ['Discromie (Dedotto)', derivedData.discromie_dedotto || ''],
+          ['Avviso Sovraesfoliazione', derivedData.sovraesfoliazione_avviso || ''],
+          ['Detergente Delicato Necessario', derivedData.detergente_delicato_necessario || ''],
+          ['Ingredienti Acne Consigliati', derivedData.ingredienti_acne_consigliati || ''],
+          ['Ingredienti Macchie Consigliati', derivedData.ingredienti_macchie_consigliati || ''],
+          ['Ingredienti Rossori Consigliati', derivedData.ingredienti_rossori_consigliati || ''],
           
           // Skin analysis scores (if available)
           ['Punteggio Generale', generalScore],
