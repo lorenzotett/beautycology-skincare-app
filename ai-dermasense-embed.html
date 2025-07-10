@@ -1,0 +1,517 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-DermaSense - Analisi della Pelle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .ai-dermasense-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #007381, #00a3b8);
+            color: white;
+            border-radius: 20px;
+            margin-bottom: 40px;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .hero-section p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .ai-dermasense-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 18px 36px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .ai-dermasense-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .ai-dermasense-button svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .features-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #007381, #00a3b8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #007381;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .ai-dermasense-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .ai-dermasense-modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 500px;
+            height: 85%;
+            max-height: 800px;
+            background: white;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .ai-dermasense-header {
+            background: linear-gradient(135deg, #007381, #00a3b8);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .ai-dermasense-logo {
+            height: 40px;
+            width: auto;
+        }
+
+        .ai-dermasense-title {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .ai-dermasense-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 5px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .ai-dermasense-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        #ai-dermasense-iframe {
+            flex: 1;
+            border: none;
+            width: 100%;
+        }
+
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007381;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .powered-by {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .powered-by p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .powered-by strong {
+            color: #007381;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2rem;
+            }
+            
+            .hero-section p {
+                font-size: 1rem;
+            }
+            
+            .ai-dermasense-button {
+                padding: 15px 25px;
+                font-size: 16px;
+            }
+            
+            .ai-dermasense-modal-content {
+                width: 95%;
+                height: 90%;
+                border-radius: 15px;
+            }
+            
+            .features-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ai-dermasense-container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1>AI-DermaSense</h1>
+            <p>Analisi avanzata della pelle con intelligenza artificiale</p>
+            <button id="ai-dermasense-trigger" class="ai-dermasense-button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <circle cx="15.5" cy="8.5" r="1.5"/>
+                    <path d="M12 17s-3-2-3-5h6c0 3-3 5-3 5z"/>
+                </svg>
+                Inizia Analisi Gratuita
+            </button>
+        </div>
+
+        <!-- Features Section -->
+        <div class="features-section">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/>
+                        <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"/>
+                    </svg>
+                </div>
+                <h3>Analisi Precisa</h3>
+                <p>Tecnologia AI avanzata per un'analisi dettagliata della tua pelle in tempo reale</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M2 12h20"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                </div>
+                <h3>Consigli Personalizzati</h3>
+                <p>Routine di bellezza su misura basate sui risultati della tua analisi</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4"/>
+                        <path d="M21 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1"/>
+                        <path d="M3 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1"/>
+                        <path d="M12 21c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1"/>
+                        <path d="M12 3c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1"/>
+                    </svg>
+                </div>
+                <h3>Sicuro e Privato</h3>
+                <p>I tuoi dati sono protetti e l'analisi avviene in modo completamente sicuro</p>
+            </div>
+        </div>
+
+        <!-- Powered By Section -->
+        <div class="powered-by">
+            <p>Powered by <strong>Bonnie Beauty</strong> - Tecnologia dermocosmetica avanzata</p>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="ai-dermasense-modal" class="ai-dermasense-modal">
+        <div class="ai-dermasense-modal-content">
+            <div class="ai-dermasense-header">
+                <div class="ai-dermasense-title">AI-DermaSense</div>
+                <button id="ai-dermasense-close" class="ai-dermasense-close">&times;</button>
+            </div>
+            <div class="loading-spinner" id="loading-spinner"></div>
+            <iframe 
+                id="ai-dermasense-iframe"
+                src=""
+                width="100%" 
+                height="100%" 
+                frameborder="0"
+                allow="camera; microphone"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+    <script>
+        // Configurazione
+        const CONFIG = {
+            // Sostituire con il vostro URL Replit deployato
+            iframeUrl: 'https://your-repl-name.your-username.replit.app?embed=true&theme=light',
+            
+            // Analytics (opzionale)
+            analytics: {
+                enabled: true,
+                gtag: typeof gtag !== 'undefined'
+            }
+        };
+
+        // Elementi DOM
+        const elements = {
+            trigger: document.getElementById('ai-dermasense-trigger'),
+            modal: document.getElementById('ai-dermasense-modal'),
+            closeBtn: document.getElementById('ai-dermasense-close'),
+            iframe: document.getElementById('ai-dermasense-iframe'),
+            spinner: document.getElementById('loading-spinner')
+        };
+
+        // Gestione Modal
+        function openModal() {
+            elements.modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            // Mostra loading spinner
+            elements.spinner.style.display = 'block';
+            
+            // Carica iframe
+            elements.iframe.src = CONFIG.iframeUrl;
+            
+            // Nasconde spinner quando iframe è caricato
+            elements.iframe.onload = function() {
+                elements.spinner.style.display = 'none';
+            };
+            
+            // Analytics tracking
+            if (CONFIG.analytics.enabled) {
+                trackEvent('ai_dermasense_open', {
+                    event_category: 'engagement',
+                    event_label: 'skin_analysis_start'
+                });
+            }
+        }
+
+        function closeModal() {
+            elements.modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            
+            // Reset iframe per performance
+            elements.iframe.src = '';
+            elements.spinner.style.display = 'block';
+            
+            // Analytics tracking
+            if (CONFIG.analytics.enabled) {
+                trackEvent('ai_dermasense_close', {
+                    event_category: 'engagement',
+                    event_label: 'skin_analysis_close'
+                });
+            }
+        }
+
+        // Event Listeners
+        elements.trigger.addEventListener('click', openModal);
+        elements.closeBtn.addEventListener('click', closeModal);
+
+        // Chiudi cliccando fuori dal contenuto
+        elements.modal.addEventListener('click', function(e) {
+            if (e.target === elements.modal) {
+                closeModal();
+            }
+        });
+
+        // Chiudi con tasto ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && elements.modal.style.display === 'flex') {
+                closeModal();
+            }
+        });
+
+        // Comunicazione con iframe
+        window.addEventListener('message', function(event) {
+            // Sostituire con il vostro dominio Replit
+            if (event.origin.includes('replit.app')) {
+                if (event.data.type === 'ai_dermasense_close') {
+                    closeModal();
+                }
+                if (event.data.type === 'ai_dermasense_loaded') {
+                    elements.spinner.style.display = 'none';
+                }
+            }
+        });
+
+        // Funzione per tracking analytics
+        function trackEvent(eventName, parameters = {}) {
+            if (CONFIG.analytics.gtag) {
+                gtag('event', eventName, parameters);
+            }
+            
+            // Google Analytics 4
+            if (typeof gtag !== 'undefined') {
+                gtag('event', eventName, parameters);
+            }
+            
+            // Facebook Pixel
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'CustomEvent', { event_name: eventName });
+            }
+            
+            // Console log per debug
+            console.log('AI-DermaSense Event:', eventName, parameters);
+        }
+
+        // Responsive handling
+        function handleResize() {
+            if (window.innerWidth < 768) {
+                elements.modal.style.padding = '10px';
+            } else {
+                elements.modal.style.padding = '20px';
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Chiamata iniziale
+
+        // Preload iframe per performance (opzionale)
+        function preloadIframe() {
+            const link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.href = CONFIG.iframeUrl;
+            document.head.appendChild(link);
+        }
+
+        // Preload dopo 3 secondi
+        setTimeout(preloadIframe, 3000);
+
+        console.log('AI-DermaSense Embed loaded successfully! 🚀');
+    </script>
+
+    <!-- Analytics Scripts (opzionale) -->
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=YOUR-GA-ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'YOUR-GA-ID');
+    </script>
+
+    <!-- Facebook Pixel (opzionale) -->
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', 'YOUR-PIXEL-ID');
+        fbq('track', 'PageView');
+    </script>
+</body>
+</html>
