@@ -556,60 +556,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return { qaData, skinAnalysis };
       };
 
-      // Generate enhanced CSV data
+      // Generate vertical CSV data (field-value pairs)
       const csvRows = [];
       
-      // Enhanced Headers with Q&A columns
-      csvRows.push([
-        'Session ID',
-        'User Name', 
-        'User ID',
-        'Session Created',
-        'Message Count',
-        'Has Image Upload',
-        'Has Skin Analysis',
-        
-        // Skin Analysis Scores
-        'Punteggio Generale',
-        'Rossori',
-        'Acne', 
-        'Rughe',
-        'Pigmentazione',
-        'Pori Dilatati',
-        'Oleosità',
-        'Danni Solari',
-        'Occhiaie',
-        'Idratazione',
-        'Elasticità',
-        'Texture Uniforme',
-        
-        // Q&A Data
-        'Scrub/Peeling',
-        'Pelle Tira',
-        'Età',
-        'Genere',
-        'Allergie',
-        'Fragranza',
-        'Crema Solare',
-        'Acqua al giorno',
-        'Ore di sonno',
-        'Alimentazione',
-        'Fumo',
-        'Livello Stress',
-        'Altre Info Pelle',
-        'Email',
-        'Pelle Sensibile',
-        'Punti Neri',
-        'Routine Confermata',
-        'Preoccupazioni Specifiche',
-        
-        // Additional Info
-        'First Message',
-        'Last Message',
-        'Duration (minutes)'
-      ]);
+      // Header for vertical format
+      csvRows.push(['Session ID', 'Campo', 'Valore']);
 
-      // Data rows - one row per session with extracted Q&A data
+      // Data rows - vertical format with field-value pairs
       for (const session of sessions) {
         const sessionMessages = messagesGroupedBySession[session.sessionId] || [];
         
@@ -650,54 +603,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
           generalScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length).toString();
         }
 
-        csvRows.push([
-          session.sessionId,
-          session.userName || '',
-          session.userId,
-          session.createdAt.toISOString(),
-          sessionMessages.length.toString(),
-          hasImageUpload.toString(),
-          hasSkinAnalysis.toString(),
+        // Create vertical rows (field-value pairs) for this session
+        const fieldValuePairs = [
+          ['Nome Utente', session.userName || ''],
+          ['User ID', session.userId],
+          ['Sessione Creata', session.createdAt.toISOString()],
+          ['Numero Messaggi', sessionMessages.length.toString()],
+          ['Ha Caricato Immagine', hasImageUpload ? 'Sì' : 'No'],
+          ['Ha Analisi Pelle', hasSkinAnalysis ? 'Sì' : 'No'],
           
-          // Skin Analysis Scores
-          generalScore,
-          skinAnalysis?.rossori?.toString() || '',
-          skinAnalysis?.acne?.toString() || '',
-          skinAnalysis?.rughe?.toString() || '',
-          skinAnalysis?.pigmentazione?.toString() || '',
-          skinAnalysis?.pori_dilatati?.toString() || '',
-          skinAnalysis?.oleosita?.toString() || '',
-          skinAnalysis?.danni_solari?.toString() || '',
-          skinAnalysis?.occhiaie?.toString() || '',
-          skinAnalysis?.idratazione?.toString() || '',
-          skinAnalysis?.elasticita?.toString() || '',
-          skinAnalysis?.texture_uniforme?.toString() || '',
+          // Basic demographics
+          ['Età', qaData.eta || ''],
+          ['Genere', qaData.genere || ''],
+          ['Email', qaData.email || ''],
           
-          // Q&A Data
-          qaData.scrub_peeling || '',
-          qaData.pelle_tira || '',
-          qaData.eta || '',
-          qaData.genere || '',
-          qaData.allergie || '',
-          qaData.fragranza || '',
-          qaData.crema_solare || '',
-          qaData.acqua || '',
-          qaData.sonno || '',
-          qaData.alimentazione || '',
-          qaData.fumo || '',
-          qaData.stress || '',
-          qaData.altre_info || '',
-          qaData.email || '',
-          qaData.pelle_sensibile || '',
-          qaData.punti_neri || '',
-          qaData.routine_conferma || '',
-          qaData.preoccupazioni_specifiche || '',
+          // Skin concerns
+          ['Preoccupazioni Specifiche', qaData.preoccupazioni_specifiche || ''],
+          ['Pelle Sensibile', qaData.pelle_sensibile || ''],
+          ['Punti Neri', qaData.punti_neri || ''],
+          ['Rossori', qaData.rossori || ''],
           
-          // Additional Info
-          firstMessage?.createdAt?.toISOString() || '',
-          lastMessage?.createdAt?.toISOString() || '',
-          durationMinutes.toString()
-        ]);
+          // Skincare habits
+          ['Scrub/Peeling', qaData.scrub_peeling || ''],
+          ['Pelle Tira', qaData.pelle_tira || ''],
+          ['Crema Solare', qaData.crema_solare || ''],
+          ['Allergie', qaData.allergie || ''],
+          ['Fragranza', qaData.fragranza || ''],
+          
+          // Lifestyle
+          ['Acqua al giorno', qaData.acqua || ''],
+          ['Ore di sonno', qaData.sonno || ''],
+          ['Alimentazione', qaData.alimentazione || ''],
+          ['Fumo', qaData.fumo || ''],
+          ['Livello Stress', qaData.stress || ''],
+          ['Altre Info Pelle', qaData.altre_info || ''],
+          
+          // Skin analysis scores (if available)
+          ['Punteggio Generale', generalScore],
+          ['Rossori (Analisi)', skinAnalysis?.rossori?.toString() || ''],
+          ['Acne (Analisi)', skinAnalysis?.acne?.toString() || ''],
+          ['Rughe (Analisi)', skinAnalysis?.rughe?.toString() || ''],
+          ['Pigmentazione (Analisi)', skinAnalysis?.pigmentazione?.toString() || ''],
+          ['Pori Dilatati (Analisi)', skinAnalysis?.pori_dilatati?.toString() || ''],
+          ['Oleosità (Analisi)', skinAnalysis?.oleosita?.toString() || ''],
+          ['Danni Solari (Analisi)', skinAnalysis?.danni_solari?.toString() || ''],
+          ['Occhiaie (Analisi)', skinAnalysis?.occhiaie?.toString() || ''],
+          ['Idratazione (Analisi)', skinAnalysis?.idratazione?.toString() || ''],
+          ['Elasticità (Analisi)', skinAnalysis?.elasticita?.toString() || ''],
+          ['Texture Uniforme (Analisi)', skinAnalysis?.texture_uniforme?.toString() || ''],
+          
+          // Timing info
+          ['Prima Messaggio', firstMessage?.createdAt?.toISOString() || ''],
+          ['Ultima Messaggio', lastMessage?.createdAt?.toISOString() || ''],
+          ['Durata (minuti)', durationMinutes.toString()]
+        ];
+
+        // Add each field-value pair as a row
+        for (const [field, value] of fieldValuePairs) {
+          if (value) { // Only add rows with values
+            csvRows.push([session.sessionId, field, value]);
+          }
+        }
+        
+        // Add a separator row between sessions
+        csvRows.push(['', '', '']);
       }
 
       // Convert to CSV string
