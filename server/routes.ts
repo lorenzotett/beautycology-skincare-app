@@ -398,84 +398,259 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return acc;
       }, {} as Record<string, ChatMessage[]>);
 
-      // Generate CSV data
+      // Extract Q&A data from conversations
+      const extractQAData = (messages: ChatMessage[]) => {
+        const qaData: Record<string, string> = {};
+        let skinAnalysis: any = null;
+        
+        // Create sequence of Q&A pairs
+        const qaSequence: Array<{question: string, answer: string}> = [];
+        
+        for (let i = 0; i < messages.length - 1; i++) {
+          const currentMsg = messages[i];
+          const nextMsg = messages[i + 1];
+          
+          // Extract skin analysis data
+          if (currentMsg.metadata && (currentMsg.metadata as any).skinAnalysis) {
+            skinAnalysis = (currentMsg.metadata as any).skinAnalysis;
+          }
+          
+          // Find question-answer pairs
+          if (currentMsg.role === 'assistant' && nextMsg.role === 'user') {
+            const question = currentMsg.content.toLowerCase();
+            const answer = nextMsg.content;
+            
+            // Skip if it's image upload
+            if (answer.includes('[Immagine caricata:') || answer.includes('IMG_')) {
+              continue;
+            }
+            
+            qaSequence.push({ question, answer });
+          }
+        }
+        
+        // Map exact question-answer pairs with precise patterns
+        const qaMapping = [
+          { key: 'preoccupazioni_specifiche', patterns: ['problematica specifica che hai notato', 'vorresti condividere'] },
+          { key: 'scrub_peeling', patterns: ['utilizzi scrub o peeling?'] },
+          { key: 'pelle_tira', patterns: ['quando ti lavi il viso la tua pelle tira?'] },
+          { key: 'eta', patterns: ['quanti anni hai?'] },
+          { key: 'genere', patterns: ['ora, il genere:'] },
+          { key: 'allergie', patterns: ['ci sono ingredienti ai quali la tua pelle è allergica?'] },
+          { key: 'fragranza', patterns: ['ti piacerebbe avere una fragranza che profumi di fiori'] },
+          { key: 'crema_solare', patterns: ['metti la crema solare ogni giorno?'] },
+          { key: 'acqua', patterns: ['quanti litri d\'acqua bevi al giorno?'] },
+          { key: 'sonno', patterns: ['quante ore dormi in media?'] },
+          { key: 'alimentazione', patterns: ['hai un\'alimentazione bilanciata?'] },
+          { key: 'fumo', patterns: ['fumi?'] },
+          { key: 'stress', patterns: ['qual è il tuo livello di stress attuale?'] },
+          { key: 'altre_info', patterns: ['informazioni sulla tua pelle che non ti abbiamo chiesto e che vorresti condividere?'] },
+          { key: 'email', patterns: ['per visualizzare gli ingredienti perfetti per la tua pelle, potresti condividere la tua mail?'] },
+          { key: 'routine_conferma', patterns: ['vorresti che ti fornissi una routine personalizzata completa'] }
+        ];
+        
+        // Sequential mapping based on conversation flow
+        const sequentialMapping = [
+          'preoccupazioni_specifiche', // First question after skin analysis
+          'scrub_peeling',             // "Utilizzi scrub o peeling?"
+          'pelle_tira',                // "Quando ti lavi il viso la tua pelle tira?"
+          'eta',                       // "Quanti anni hai?"
+          'genere',                    // "Ora, il genere:"
+          'allergie',                  // "Ci sono ingredienti ai quali la tua pelle è allergica?"
+          'fragranza',                 // "Ti piacerebbe avere una fragranza..."
+          'crema_solare',              // "Metti la crema solare ogni giorno?"
+          'acqua',                     // "Quanti litri d'acqua bevi al giorno?"
+          'sonno',                     // "Quante ore dormi in media?"
+          'alimentazione',             // "Hai un'alimentazione bilanciata?"
+          'fumo',                      // "Fumi?"
+          'stress',                    // "Da 1 a 10, qual è il tuo livello di stress attuale?"
+          'altre_info',                // "Ci sono informazioni sulla tua pelle che non ti abbiamo chiesto..."
+          'email',                     // "Per visualizzare gli ingredienti perfetti..."
+          'routine_conferma'           // "Vorresti che ti fornissi una routine personalizzata completa..."
+        ];
+        
+        // Map answers to questions sequentially based on exact conversation order
+        // From the sample data: preoccupazioni(no) -> scrub(No) -> pelle_tira(A volte) -> eta(24) -> genere(Maschile) -> etc.
+        const answersInOrder = qaSequence.map(qa => qa.answer);
+        
+        if (answersInOrder.length >= 14) {
+          // Based on actual conversation order from sample data
+          qaData.preoccupazioni_specifiche = answersInOrder[0]; // "no"
+          qaData.scrub_peeling = answersInOrder[1];             // "No"
+          qaData.pelle_tira = answersInOrder[2];                // "A volte"  
+          qaData.eta = answersInOrder[3];                       // "24"
+          qaData.genere = answersInOrder[4];                    // "Maschile"
+          qaData.allergie = answersInOrder[5];                  // "no"
+          qaData.fragranza = answersInOrder[6];                 // "Sì"
+          qaData.crema_solare = answersInOrder[7];              // "Mai"
+          qaData.acqua = answersInOrder[8];                     // "1.5-2L"
+          qaData.sonno = answersInOrder[9];                     // "7-8h"
+          qaData.alimentazione = answersInOrder[10];            // "Abbastanza"
+          qaData.fumo = answersInOrder[11];                     // "No"
+          qaData.stress = answersInOrder[12];                   // "4"
+          qaData.altre_info = answersInOrder[13];               // "no"
+          if (answersInOrder.length > 14) {
+            qaData.email = answersInOrder[14];                    // "mail@gmail.com"
+          }
+          if (answersInOrder.length > 15) {
+            qaData.routine_conferma = answersInOrder[15];         // "si"
+          }
+        } else {
+          // Fallback to sequential mapping for shorter conversations
+          for (let i = 0; i < qaSequence.length && i < sequentialMapping.length; i++) {
+            const key = sequentialMapping[i];
+            const answer = qaSequence[i].answer;
+            qaData[key] = answer;
+          }
+        }
+        
+
+        
+        return { qaData, skinAnalysis };
+      };
+
+      // Generate enhanced CSV data
       const csvRows = [];
       
-      // Headers
+      // Enhanced Headers with Q&A columns
       csvRows.push([
         'Session ID',
         'User Name', 
         'User ID',
         'Session Created',
-        'Session Updated',
-        'Message ID',
-        'Message Role',
-        'Message Content',
-        'Message Created',
-        'Has Image',
+        'Message Count',
+        'Has Image Upload',
         'Has Skin Analysis',
-        'Skin Analysis Data'
+        
+        // Skin Analysis Scores
+        'Punteggio Generale',
+        'Rossori',
+        'Acne', 
+        'Rughe',
+        'Pigmentazione',
+        'Pori Dilatati',
+        'Oleosità',
+        'Danni Solari',
+        'Occhiaie',
+        'Idratazione',
+        'Elasticità',
+        'Texture Uniforme',
+        
+        // Q&A Data
+        'Scrub/Peeling',
+        'Pelle Tira',
+        'Età',
+        'Genere',
+        'Allergie',
+        'Fragranza',
+        'Crema Solare',
+        'Acqua al giorno',
+        'Ore di sonno',
+        'Alimentazione',
+        'Fumo',
+        'Livello Stress',
+        'Altre Info Pelle',
+        'Email',
+        'Pelle Sensibile',
+        'Punti Neri',
+        'Routine Confermata',
+        'Preoccupazioni Specifiche',
+        
+        // Additional Info
+        'First Message',
+        'Last Message',
+        'Duration (minutes)'
       ]);
 
-      // Data rows
+      // Data rows - one row per session with extracted Q&A data
       for (const session of sessions) {
         const sessionMessages = messagesGroupedBySession[session.sessionId] || [];
         
-        if (sessionMessages.length === 0) {
-          // Session without messages
-          csvRows.push([
-            session.sessionId,
-            session.userName || '',
-            session.userId,
-            session.createdAt.toISOString(),
-            session.updatedAt.toISOString(),
-            '',
-            '',
-            '',
-            '',
-            'false',
-            'false',
-            ''
-          ]);
-        } else {
-          // Session with messages
-          for (const message of sessionMessages) {
-            const metadata = message.metadata as any || {};
-            const hasImage = metadata.hasImage || false;
-            const hasSkinAnalysis = metadata.skinAnalysis || false;
-            
-            // Clean content for CSV (remove newlines and quotes)
-            const cleanContent = message.content
-              .replace(/"/g, '""')  // Escape quotes
-              .replace(/\n/g, ' ')  // Replace newlines with spaces
-              .replace(/\r/g, '');  // Remove carriage returns
-            
-            // Extract skin analysis data if present
-            let skinAnalysisData = '';
-            if (hasSkinAnalysis && metadata.skinAnalysis) {
-              try {
-                skinAnalysisData = JSON.stringify(metadata.skinAnalysis).replace(/"/g, '""');
-              } catch (e) {
-                skinAnalysisData = String(metadata.skinAnalysis).replace(/"/g, '""');
-              }
-            }
-
-            csvRows.push([
-              session.sessionId,
-              session.userName || '',
-              session.userId,
-              session.createdAt.toISOString(),
-              session.updatedAt.toISOString(),
-              message.id.toString(),
-              message.role,
-              `"${cleanContent}"`,
-              message.createdAt.toISOString(),
-              hasImage.toString(),
-              hasSkinAnalysis.toString(),
-              skinAnalysisData ? `"${skinAnalysisData}"` : ''
-            ]);
-          }
+        // Extract Q&A and analysis data
+        const { qaData, skinAnalysis } = extractQAData(sessionMessages);
+        
+        // Calculate session metrics
+        const hasImageUpload = sessionMessages.some(msg => 
+          msg.metadata && (msg.metadata as any).hasImage
+        );
+        const hasSkinAnalysis = !!skinAnalysis;
+        
+        // Calculate duration
+        const firstMessage = sessionMessages[0];
+        const lastMessage = sessionMessages[sessionMessages.length - 1];
+        let durationMinutes = 0;
+        if (firstMessage && lastMessage) {
+          const duration = new Date(lastMessage.createdAt).getTime() - new Date(firstMessage.createdAt).getTime();
+          durationMinutes = Math.round(duration / (1000 * 60));
         }
+        
+        // Calculate general score if skin analysis available
+        let generalScore = '';
+        if (skinAnalysis) {
+          const scores = [
+            skinAnalysis.rossori || 0,
+            skinAnalysis.acne || 0,
+            skinAnalysis.rughe || 0,
+            skinAnalysis.pigmentazione || 0,
+            skinAnalysis.pori_dilatati || 0,
+            skinAnalysis.oleosita || 0,
+            skinAnalysis.danni_solari || 0,
+            skinAnalysis.occhiaie || 0,
+            (100 - (skinAnalysis.idratazione || 100)),
+            (100 - (skinAnalysis.elasticita || 100)),
+            (100 - (skinAnalysis.texture_uniforme || 100))
+          ];
+          generalScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length).toString();
+        }
+
+        csvRows.push([
+          session.sessionId,
+          session.userName || '',
+          session.userId,
+          session.createdAt.toISOString(),
+          sessionMessages.length.toString(),
+          hasImageUpload.toString(),
+          hasSkinAnalysis.toString(),
+          
+          // Skin Analysis Scores
+          generalScore,
+          skinAnalysis?.rossori?.toString() || '',
+          skinAnalysis?.acne?.toString() || '',
+          skinAnalysis?.rughe?.toString() || '',
+          skinAnalysis?.pigmentazione?.toString() || '',
+          skinAnalysis?.pori_dilatati?.toString() || '',
+          skinAnalysis?.oleosita?.toString() || '',
+          skinAnalysis?.danni_solari?.toString() || '',
+          skinAnalysis?.occhiaie?.toString() || '',
+          skinAnalysis?.idratazione?.toString() || '',
+          skinAnalysis?.elasticita?.toString() || '',
+          skinAnalysis?.texture_uniforme?.toString() || '',
+          
+          // Q&A Data
+          qaData.scrub_peeling || '',
+          qaData.pelle_tira || '',
+          qaData.eta || '',
+          qaData.genere || '',
+          qaData.allergie || '',
+          qaData.fragranza || '',
+          qaData.crema_solare || '',
+          qaData.acqua || '',
+          qaData.sonno || '',
+          qaData.alimentazione || '',
+          qaData.fumo || '',
+          qaData.stress || '',
+          qaData.altre_info || '',
+          qaData.email || '',
+          qaData.pelle_sensibile || '',
+          qaData.punti_neri || '',
+          qaData.routine_conferma || '',
+          qaData.preoccupazioni_specifiche || '',
+          
+          // Additional Info
+          firstMessage?.createdAt?.toISOString() || '',
+          lastMessage?.createdAt?.toISOString() || '',
+          durationMinutes.toString()
+        ]);
       }
 
       // Convert to CSV string

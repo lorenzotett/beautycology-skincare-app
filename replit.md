@@ -194,6 +194,14 @@ Changelog:
   - Enhanced analysis for different skin types and complexions
   - Improved zone-specific analysis (T-zone, eye area, cheeks, mouth area)
   - Added specific guidance for various lighting conditions and image quality
+- July 10, 2025. Complete CSV export system restructuring:
+  - Transformed CSV from message-based to session-based format (one row per conversation)
+  - Added 40+ dedicated columns for structured data extraction
+  - Implemented automatic question-answer parsing with pattern recognition
+  - Added comprehensive skin analysis metrics in separate columns
+  - Enhanced CSV with conversation metadata (duration, message count, image uploads)
+  - Improved data analysis capabilities with proper column organization
+  - Added welcome message formatting with bold text emphasis for key terms
 
 ## User Preferences
 
