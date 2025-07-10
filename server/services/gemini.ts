@@ -255,6 +255,7 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
 **ALLERGIE E PREFERENZE:**
 10. "Ci sono ingredienti ai quali la tua pelle è allergica?"
 11. "Ti piacerebbe avere una fragranza che profumi di fiori per la tua skincare?
+      (Se scegli di non metterla, l'odore naturale dei prodotti può essere sgradevole)
 
       A) Sì
       B) No"
@@ -296,6 +297,8 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
 - Alimentazione molto bilanciata: "Eccellente! Una buona alimentazione si riflette sulla pelle."
 - Stress alto (8-10): "Stress elevato può peggiorare molte condizioni cutanee."
 - Fumo sì: "Il fumo accelera l'invecchiamento cutaneo e riduce l'ossigenazione."
+- Fragranza floreale SÌ: "Perfetto, la fragranza floreale sarà un tocco piacevole per la tua routine."
+- Fragranza floreale NO: "Comprendo, però considera che senza fragranza i prodotti potrebbero avere un odore naturale poco gradevole."
 
 **REGOLA FEEDBACK:** Ogni risposta deve essere seguita da un commento specifico di 1-2 frasi che valuti la scelta e dia un consiglio rapido relativo alla cura della pelle.
 
