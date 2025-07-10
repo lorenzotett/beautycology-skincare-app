@@ -469,12 +469,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'routine_conferma'           // "Vorresti che ti fornissi una routine personalizzata completa..."
         ];
         
-        // Map answers to questions sequentially based on exact conversation order
-        // From the sample data: preoccupazioni(no) -> scrub(No) -> pelle_tira(A volte) -> eta(24) -> genere(Maschile) -> etc.
+        // Detect conversation type based on first user message
+        const firstUserMessage = messages.find(m => m.role === 'user')?.content || '';
+        const isImageBasedConversation = firstUserMessage.includes('[Immagine caricata:') || firstUserMessage.includes('IMG_');
+        const isTextBasedConversation = firstUserMessage.includes('pelle grassa') || firstUserMessage.includes('pelle sensibile') || (!isImageBasedConversation && firstUserMessage.length > 10);
+        
         const answersInOrder = qaSequence.map(qa => qa.answer);
         
-        if (answersInOrder.length >= 14) {
-          // Based on actual conversation order from sample data
+        if (isImageBasedConversation && answersInOrder.length >= 14) {
+          // Image-based conversation pattern (like Gabriele)
           qaData.preoccupazioni_specifiche = answersInOrder[0]; // "no"
           qaData.scrub_peeling = answersInOrder[1];             // "No"
           qaData.pelle_tira = answersInOrder[2];                // "A volte"  
@@ -489,14 +492,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
           qaData.fumo = answersInOrder[11];                     // "No"
           qaData.stress = answersInOrder[12];                   // "4"
           qaData.altre_info = answersInOrder[13];               // "no"
-          if (answersInOrder.length > 14) {
-            qaData.email = answersInOrder[14];                    // "mail@gmail.com"
+          if (answersInOrder.length > 14) qaData.email = answersInOrder[14];
+          if (answersInOrder.length > 15) qaData.routine_conferma = answersInOrder[15];
+        } else if (isTextBasedConversation && answersInOrder.length >= 10) {
+          // Text-based conversation pattern (like Sara)
+          // Exact sequence from Sara's conversation:
+          // 0:"Sì regolarmente" (scrub) -> 1:"Mai" (pelle_tira) -> 2:"Alcuni" (punti_neri) -> 3:"No" (pelle_sensibile) -> 4:"23" (eta) -> 5:"Femminile" (genere) -> 6:"No" (farmaci) -> 7:"No" (allergie) -> 8:"Sì" (fragranza) -> 9:"Sempre" (crema_solare) -> 10:"1-1.5L" (acqua) -> 11:"6-7h" (sonno) -> 12:"Abbastanza" (alimentazione) -> 13:"No" (fumo) -> 14:"6" (stress) -> 15:"Ho cicatrici..." (altre_info) -> 16:"email" -> 17:"Brufoli/Acne attivi" (rossori)
+          qaData.preoccupazioni_specifiche = firstUserMessage; // Initial skin description "Ho la pelle grassa a tendenza acneica"
+          // Fixed mapping based on CSV requirements
+          if (answersInOrder.length >= 17) {
+            qaData.scrub_peeling = answersInOrder[0];             // "Sì regolarmente"
+            qaData.pelle_tira = answersInOrder[1];                // "Mai"
+            qaData.punti_neri = answersInOrder[2];                // "Alcuni"
+            qaData.pelle_sensibile = answersInOrder[3];           // "No"
+            qaData.eta = answersInOrder[4];                       // "23"
+            qaData.genere = answersInOrder[5];                    // "Femminile"
+            // answersInOrder[6] is "No" (farmaci ormonali) - skip this
+            qaData.allergie = answersInOrder[7];                  // "No"
+            qaData.fragranza = answersInOrder[8];                 // "Sì"
+            qaData.crema_solare = answersInOrder[9];              // "Sempre"
+            qaData.acqua = answersInOrder[10];                    // "1-1.5L"
+            qaData.sonno = answersInOrder[11];                    // "6-7h"
+            qaData.alimentazione = answersInOrder[12];            // "Abbastanza"
+            qaData.fumo = answersInOrder[13];                     // "No"
+            qaData.stress = answersInOrder[14];                   // "6"
+            qaData.altre_info = answersInOrder[15];               // "Ho cicatrici da acne sul viso e macchie"
+            qaData.email = answersInOrder[16];                    // "Skibidiboppi@gmail.com"
           }
-          if (answersInOrder.length > 15) {
-            qaData.routine_conferma = answersInOrder[15];         // "si"
-          }
+
         } else {
-          // Fallback to sequential mapping for shorter conversations
+          // Fallback to pattern matching for incomplete conversations
           for (let i = 0; i < qaSequence.length && i < sequentialMapping.length; i++) {
             const key = sequentialMapping[i];
             const answer = qaSequence[i].answer;
