@@ -194,6 +194,12 @@ Changelog:
   - Enhanced analysis for different skin types and complexions
   - Improved zone-specific analysis (T-zone, eye area, cheeks, mouth area)
   - Added specific guidance for various lighting conditions and image quality
+- July 10, 2025. Responsive design overhaul:
+  - Mobile: Interfaccia compatta con max-width limitata
+  - Desktop: Interfaccia full-width che occupa tutto il viewport
+  - Eliminato scroll interno nell'iframe con position fixed
+  - Configurato overflow hidden per comportamento blocco unico
+  - Breakpoint responsive md: (768px) per passaggio mobile→desktop
 - July 10, 2025. Complete CSV export system restructuring:
   - Transformed CSV from message-based to session-based format (one row per conversation)
   - Added 40+ dedicated columns for structured data extraction

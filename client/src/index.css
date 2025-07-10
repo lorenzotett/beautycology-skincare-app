@@ -33,23 +33,12 @@
   }
 }
 
-/* Responsive breakpoints migliorati */
+/* Desktop: Full viewport width */
 @media (min-width: 768px) {
   .chat-container {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-}
-
-@media (min-width: 1024px) {
-  .chat-container {
-    max-width: 900px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .chat-container {
-    max-width: 1000px;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
   }
 }
 
@@ -106,32 +95,21 @@ body, html {
   position: relative;
 }
 
-/* FORCE UPDATE v2.0 - Force larger container on desktop - Override Tailwind defaults */
+/* Responsive Design - Mobile first approach */
 .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
-  max-width: 90vw !important; /* Force responsive width */
+  max-width: 90vw !important; /* Mobile: 90% of viewport */
 }
 
+/* Tablet and Desktop - Full width */
 @media (min-width: 768px) {
   .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
-    max-width: 32rem !important; /* 512px - Force larger on tablet */
+    max-width: calc(100vw - 2rem) !important; /* Desktop: Full viewport minus padding */
   }
-}
-
-@media (min-width: 1024px) {
-  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
-    max-width: 42rem !important; /* 672px - Force larger on laptop */
-  }
-}
-
-@media (min-width: 1280px) {
-  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
-    max-width: 50rem !important; /* 800px - Force larger on desktop */
-  }
-}
-
-@media (min-width: 1536px) {
-  .max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl {
-    max-width: 60rem !important; /* 960px - Force larger on large desktop */
+  
+  /* Remove centering on desktop to use full width */
+  .chat-container {
+    max-width: 100% !important;
+    margin: 0 !important;
   }
 }
 
