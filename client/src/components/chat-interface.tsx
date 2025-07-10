@@ -699,9 +699,9 @@ export function ChatInterface() {
             {/* Welcome Text */}
             <div className="space-y-4 text-gray-700">
               <p className="text-lg leading-relaxed">
-                Ciao! Sono <strong>Bonnie</strong>, la tua <strong>Skin Expert</strong> di fiducia. 
+                Ciao! Sono la tua <strong>Skin Expert</strong> di <strong>Bonnie</strong>. 
                 Possiamo analizzare insieme la tua pelle per trovare la formula 
-                skincare perfetta per migliorarla!
+                skincare perfetta per <strong>migliorarla</strong>!
               </p>
               <p className="text-base font-medium">
                 Per iniziare, scrivi qui sotto il tuo nome.
