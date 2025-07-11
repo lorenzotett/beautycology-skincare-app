@@ -1031,15 +1031,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (msg.metadata && (msg.metadata as any).hasImage && (msg.metadata as any).imagePath) {
           const imagePath = (msg.metadata as any).imagePath;
           const fileName = path.basename(imagePath);
-          const imageUrl = `/api/images/${fileName}`;
           
-          return {
-            ...msg,
-            metadata: {
-              ...msg.metadata,
-              image: imageUrl // Add image URL for MessageBubble component
-            }
-          };
+          // Check if file exists before adding URL
+          const fullPath = path.join(process.cwd(), 'uploads', fileName);
+          if (fs.existsSync(fullPath)) {
+            const imageUrl = `/api/images/${fileName}`;
+            
+            return {
+              ...msg,
+              metadata: {
+                ...msg.metadata,
+                image: imageUrl // Add image URL for MessageBubble component
+              }
+            };
+          } else {
+            // File doesn't exist, add placeholder
+            return {
+              ...msg,
+              metadata: {
+                ...msg.metadata,
+                image: null, // No image available
+                imageError: `File ${fileName} not found`,
+                imageOriginalName: (msg.metadata as any).imageOriginalName || 'Unknown'
+              }
+            };
+          }
         }
         return msg;
       });

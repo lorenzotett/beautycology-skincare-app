@@ -208,25 +208,36 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       <div className="flex justify-end">
         <div className="message-bubble bg-user-msg rounded-lg p-3 max-w-fit">
           {/* Show image preview if available */}
-          {metadata?.image && (
+          {metadata?.hasImage && (
             <div className="mb-2">
-              <img 
-                src={metadata.image} 
-                alt="Immagine caricata" 
-                className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                style={{ 
-                  maxHeight: '200px', 
-                  minHeight: '120px',
-                  width: '100%',
-                  objectFit: 'cover',
-                  display: 'block'
-                }}
-                onClick={() => onImageClick?.(metadata.image)}
-                onError={(e) => {
-                  console.warn('Errore nel caricamento dell\'immagine:', e);
-                }}
-              />
-
+              {metadata?.image ? (
+                <img 
+                  src={metadata.image} 
+                  alt="Immagine caricata" 
+                  className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                  style={{ 
+                    maxHeight: '200px', 
+                    minHeight: '120px',
+                    width: '100%',
+                    objectFit: 'cover',
+                    display: 'block'
+                  }}
+                  onClick={() => onImageClick?.(metadata.image)}
+                  onError={(e) => {
+                    console.warn('Errore nel caricamento dell\'immagine:', e);
+                  }}
+                />
+              ) : (
+                <div className="w-full max-w-48 h-32 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm">
+                  <div className="text-center">
+                    <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <div>Immagine non disponibile</div>
+                    {metadata?.imageOriginalName && (
+                      <div className="text-xs mt-1 opacity-70">{metadata.imageOriginalName}</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {/* Show message content if present */}
