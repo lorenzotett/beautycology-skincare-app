@@ -63,12 +63,13 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
   
-  // Ensure admin-dashboard route works in production
+  // Admin access routes
   app.get('/admin-dashboard', (req, res) => {
-    if (app.get("env") !== "development") {
-      const indexPath = path.join(process.cwd(), 'dist', 'public', 'index.html');
-      res.sendFile(indexPath);
-    }
+    res.redirect('/?admin=true');
+  });
+  
+  app.get('/admin', (req, res) => {
+    res.redirect('/?admin=true');
   });
 
   // ALWAYS serve the app on port 5000
