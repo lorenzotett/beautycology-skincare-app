@@ -1113,6 +1113,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Serve admin dashboard directly
+  app.get("/admin-dashboard", (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AI DermaSense</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #admin-frame {
+            width: 100%;
+            height: 100vh;
+            border: none;
+            display: block;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #f9fafb;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div>Loading Admin Dashboard...</div>
+    </div>
+    <iframe id="admin-frame" src="/?admin=true" style="display: none;"></iframe>
+    
+    <script>
+        const frame = document.getElementById('admin-frame');
+        const loading = document.getElementById('loading');
+        
+        frame.onload = function() {
+            loading.style.display = 'none';
+            frame.style.display = 'block';
+        };
+        
+        // Handle frame errors
+        frame.onerror = function() {
+            loading.innerHTML = '<div>Error loading dashboard. Please refresh the page.</div>';
+        };
+    </script>
+</body>
+</html>
+    `);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
