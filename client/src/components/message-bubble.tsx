@@ -206,7 +206,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   if (isUser) {
     return (
       <div className="flex justify-end">
-        <div className="message-bubble bg-user-msg rounded-lg p-3 max-w-xs lg:max-w-md">
+        <div className="message-bubble bg-user-msg rounded-lg p-3 max-w-fit">
           {/* Show image preview if available */}
           {metadata?.image && (
             <div className="mb-2">

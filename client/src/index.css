@@ -108,8 +108,18 @@ body, html {
   margin: 0 !important;
 }
 
-/* Override all Tailwind max-width classes on all devices */
-.max-w-xs, .max-w-sm, .max-w-md, .max-w-lg, .max-w-xl, .max-w-2xl, .max-w-3xl, .max-w-4xl, .max-w-5xl, .max-w-6xl, .max-w-7xl {
+/* Override all Tailwind max-width classes on all devices, except user messages */
+.max-w-xs:not(.bg-user-msg), 
+.max-w-sm:not(.bg-user-msg), 
+.max-w-md:not(.bg-user-msg), 
+.max-w-lg:not(.bg-user-msg), 
+.max-w-xl:not(.bg-user-msg), 
+.max-w-2xl:not(.bg-user-msg), 
+.max-w-3xl:not(.bg-user-msg), 
+.max-w-4xl:not(.bg-user-msg), 
+.max-w-5xl:not(.bg-user-msg), 
+.max-w-6xl:not(.bg-user-msg), 
+.max-w-7xl:not(.bg-user-msg) {
   max-width: 98vw !important;
   width: 98vw !important;
 }
@@ -256,6 +266,12 @@ body, html {
   .message-bubble {
     max-width: 85%;
     word-wrap: break-word;
+  }
+  
+  /* User messages should only be as wide as their content */
+  .bg-user-msg {
+    max-width: fit-content !important;
+    min-width: 80px;
   }
   
   .choice-button {
