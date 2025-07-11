@@ -351,8 +351,8 @@ body, html {
       -webkit-overflow-scrolling: touch !important;
     }
 
-    /* Ensure input area stays visible and at bottom */
-    .desktop-wide > div:last-child {
+    /* Only fix input position when in chat mode, not welcome screen */
+    .chat-mode .desktop-wide > div:last-child {
       flex-shrink: 0 !important;
       position: fixed !important;
       bottom: 0 !important;

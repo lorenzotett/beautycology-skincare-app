@@ -671,10 +671,10 @@ export function ChatInterface() {
     return (
       <div className="chat-container flex flex-col h-screen">
         {/* Welcome Screen */}
-        <div className="flex-1 flex items-center justify-center p-2 sm:p-2 md:p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-          <div className="desktop-wide w-full max-w-xs sm:max-w-sm space-y-4 md:space-y-6 text-center rounded-3xl p-6 md:p-8 shadow-xl border border-slate-200" style={{backgroundColor: '#E5F1F2'}}>
+        <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+          <div className="desktop-wide w-full max-w-xs sm:max-w-sm flex flex-col justify-center text-center rounded-3xl p-6 md:p-8 shadow-xl border border-slate-200 min-h-[600px]" style={{backgroundColor: '#E5F1F2'}}>
             {/* Logo Bonnie */}
-            <div className="space-y-2">
+            <div className="space-y-2 mb-6">
               <img 
                 src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
                 alt="Bonnie Logo" 
@@ -684,7 +684,7 @@ export function ChatInterface() {
             </div>
 
             {/* Hero Image */}
-            <div className="relative mx-auto w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-2xl overflow-hidden shadow-lg">
+            <div className="relative mx-auto w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 rounded-2xl overflow-hidden shadow-lg mb-6">
               <img 
                 src="/attached_assets/Mockup image_1751894588863.png" 
                 alt="Analizza la tua pelle" 
@@ -697,7 +697,7 @@ export function ChatInterface() {
             </div>
 
             {/* Welcome Text */}
-            <div className="space-y-3 text-gray-700 px-2">
+            <div className="space-y-3 text-gray-700 px-2 mb-6">
               <p className="text-sm sm:text-base md:text-lg leading-relaxed">
                 Ciao! Sono la tua <strong>Skin Expert</strong> di <strong>Bonnie</strong>. 
                 Possiamo analizzare insieme la tua pelle per trovare la formula 
@@ -708,8 +708,8 @@ export function ChatInterface() {
               </p>
             </div>
 
-            {/* Input Section - Exact match to screenshot */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-sm border border-gray-100">
+            {/* Input Section - Centered and properly styled */}
+            <div className="flex items-center gap-2 px-3 py-3 bg-white rounded-lg shadow-md border border-gray-200">
               <input
                 type="text"
                 placeholder="Il tuo nome"
@@ -754,7 +754,7 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="chat-container flex flex-col h-screen">
+    <div className="chat-container chat-mode flex flex-col h-screen">
       {/* Chat Area Container - Responsive design */}
       <div className="flex-1 flex items-center justify-center p-2 sm:p-2 md:p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
         <div className="desktop-wide w-full max-w-xs sm:max-w-sm rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "100vh", minHeight: "100vh", maxHeight: "100vh", backgroundColor: '#E5F1F2'}}>
