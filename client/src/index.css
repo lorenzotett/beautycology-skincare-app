@@ -49,6 +49,58 @@
   }
 }
 
+/* Real mobile device fixes */
+@media (max-width: 768px) {
+  /* Force full viewport on real mobile devices */
+  html, body {
+    height: 100vh !important;
+    height: 100dvh !important; /* Dynamic viewport height for modern browsers */
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #root {
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+  }
+
+  .chat-container {
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Ensure welcome screen covers entire viewport */
+  .chat-container:not(.chat-mode) {
+    background-color: #E5F1F2 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .chat-container:not(.chat-mode) > div {
+    background-color: #E5F1F2 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+  }
+}
+
 /* Safari mobile viewport fix */
 @supports (-webkit-touch-callout: none) {
   .chat-container {
@@ -57,6 +109,30 @@
   }
   
   @media (max-width: 768px) {
+    html, body {
+      height: -webkit-fill-available !important;
+      min-height: -webkit-fill-available !important;
+      max-height: -webkit-fill-available !important;
+    }
+
+    #root {
+      height: -webkit-fill-available !important;
+      min-height: -webkit-fill-available !important;
+      max-height: -webkit-fill-available !important;
+    }
+
+    .chat-container {
+      height: -webkit-fill-available !important;
+      min-height: -webkit-fill-available !important;
+      max-height: -webkit-fill-available !important;
+    }
+
+    .chat-container:not(.chat-mode) > div {
+      height: -webkit-fill-available !important;
+      min-height: -webkit-fill-available !important;
+      max-height: -webkit-fill-available !important;
+    }
+    
     .desktop-wide {
       height: -webkit-fill-available !important;
       min-height: -webkit-fill-available !important;
