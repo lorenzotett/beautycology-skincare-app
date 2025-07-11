@@ -671,8 +671,8 @@ export function ChatInterface() {
     return (
       <div className="chat-container flex flex-col h-screen" style={{backgroundColor: '#E5F1F2'}}>
         {/* Welcome Screen */}
-        <div className="flex-1 flex items-center justify-center min-h-screen" style={{backgroundColor: '#E5F1F2', height: '100vh', minHeight: '100vh'}}>
-          <div className="desktop-wide w-full max-w-xs sm:max-w-sm flex flex-col justify-center text-center rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl border border-slate-200 min-h-[600px]" style={{backgroundColor: '#E5F1F2'}}>
+        <div className="flex-1 flex items-center justify-center" style={{backgroundColor: '#E5F1F2', height: '100vh', minHeight: '100vh', padding: '0'}}>
+          <div className="desktop-wide w-full max-w-xs sm:max-w-sm flex flex-col justify-center text-center rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl border border-slate-200" style={{backgroundColor: '#E5F1F2', height: '100vh', minHeight: '100vh'}}
             {/* Logo Bonnie */}
             <div className="space-y-2 mb-6">
               <img 

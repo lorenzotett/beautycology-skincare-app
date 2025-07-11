@@ -338,11 +338,17 @@ body, html {
   .chat-container:not(.chat-mode) {
     background-color: #E5F1F2 !important;
     padding: 0 !important;
+    margin: 0 !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
   }
 
   .chat-container:not(.chat-mode) > div {
     background-color: #E5F1F2 !important;
     padding: 0 !important;
+    margin: 0 !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
   }
 
   .messages-area {
