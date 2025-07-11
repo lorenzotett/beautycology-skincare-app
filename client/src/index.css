@@ -153,32 +153,54 @@
   }
 }
 
-/* Prevent external scrolling in iframe - make everything fit in viewport */
+/* Ensure full screen coverage without gaps */
 body, html {
-  overflow: hidden;
+  margin: 0;
+  padding: 0;
   height: 100vh;
-  max-height: 100vh;
-  position: fixed;
-  width: 100%;
+  min-height: 100vh;
+  width: 100vw;
+  min-width: 100vw;
+  overflow: hidden;
   background-color: #E5F1F2;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 #root {
   height: 100vh;
-  max-height: 100vh;
+  min-height: 100vh;
+  width: 100vw;
+  min-width: 100vw;
   overflow: hidden;
+  background-color: #E5F1F2;
   position: fixed;
-  width: 100%;
   top: 0;
   left: 0;
-  background-color: #E5F1F2;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .chat-container {
   height: 100vh !important;
+  min-height: 100vh !important;
+  width: 100vw !important;
+  min-width: 100vw !important;
   max-height: 100vh !important;
   overflow: hidden !important;
-  position: relative;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: #E5F1F2 !important;
 }
 
 /* FULL WIDTH OVERRIDE - Force full width on all devices */
