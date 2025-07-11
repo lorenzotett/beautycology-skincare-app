@@ -757,7 +757,7 @@ export function ChatInterface() {
     <div className="chat-container flex flex-col h-screen">
       {/* Chat Area Container - Responsive design */}
       <div className="flex-1 flex items-center justify-center p-2 sm:p-2 md:p-4 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-        <div className="desktop-wide w-full max-w-xs sm:max-w-sm rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "calc(100vh - 1rem)", minHeight: "600px", maxHeight: "calc(100vh - 1rem)", backgroundColor: '#E5F1F2'}}>
+        <div className="desktop-wide w-full max-w-xs sm:max-w-sm rounded-3xl shadow-xl border border-slate-200 flex flex-col" style={{height: "100vh", minHeight: "100vh", maxHeight: "100vh", backgroundColor: '#E5F1F2'}}>
           {/* Header with Logo */}
           <div className="p-4 flex items-center justify-between">
             <img 
@@ -770,7 +770,7 @@ export function ChatInterface() {
             </h1>
           </div>
           {/* Messages Area */}
-          <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto" style={{maxHeight: "calc(100vh - 200px)"}}>
+          <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto" style={{maxHeight: "calc(100vh - 160px)", height: "calc(100vh - 160px)"}}>
             {messages.map((message) => (
               <MessageBubble
                 key={message.id}

@@ -52,8 +52,21 @@
 /* Safari mobile viewport fix */
 @supports (-webkit-touch-callout: none) {
   .chat-container {
-    height: -webkit-fill-available;
-    min-height: -webkit-fill-available;
+    height: -webkit-fill-available !important;
+    min-height: -webkit-fill-available !important;
+  }
+  
+  @media (max-width: 768px) {
+    .desktop-wide {
+      height: -webkit-fill-available !important;
+      min-height: -webkit-fill-available !important;
+      max-height: -webkit-fill-available !important;
+    }
+    
+    .messages-area {
+      max-height: calc(-webkit-fill-available - 140px) !important;
+      height: calc(-webkit-fill-available - 140px) !important;
+    }
   }
 }
 
@@ -310,12 +323,19 @@ body, html {
       margin: 0 !important;
       min-height: 100vh !important;
       max-height: 100vh !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
     }
 
     .chat-container {
       padding: 0 !important;
       height: 100vh !important;
       overflow: hidden !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
     }
 
     .chat-container > div {
@@ -323,19 +343,33 @@ body, html {
       height: 100vh !important;
     }
 
-    /* Fix messages area height on mobile */
+    /* Fix messages area height on mobile - account for header and input */
     .messages-area {
-      max-height: calc(100vh - 160px) !important;
+      max-height: calc(100vh - 140px) !important;
+      height: calc(100vh - 140px) !important;
       overflow-y: auto !important;
       -webkit-overflow-scrolling: touch !important;
     }
 
-    /* Ensure input area stays visible */
+    /* Ensure input area stays visible and at bottom */
     .desktop-wide > div:last-child {
       flex-shrink: 0 !important;
-      position: sticky !important;
+      position: fixed !important;
       bottom: 0 !important;
-      z-index: 10 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 100 !important;
+      background-color: #E5F1F2 !important;
+      width: 100% !important;
+    }
+
+    /* Fix header positioning */
+    .desktop-wide > div:first-child {
+      flex-shrink: 0 !important;
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 50 !important;
+      background-color: #E5F1F2 !important;
     }
   }
 }
