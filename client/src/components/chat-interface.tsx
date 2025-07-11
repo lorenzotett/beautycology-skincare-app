@@ -770,7 +770,7 @@ export function ChatInterface() {
             </h1>
           </div>
           {/* Messages Area */}
-          <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto overflow-x-hidden" style={{WebkitOverflowScrolling: "touch", paddingBottom: "60px"}}>
+          <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto overflow-x-hidden" style={{WebkitOverflowScrolling: "touch", paddingBottom: "75px"}}>
             {messages.map((message) => (
               <MessageBubble
                 key={message.id}
