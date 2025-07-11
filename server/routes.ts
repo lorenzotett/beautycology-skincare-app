@@ -164,6 +164,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Chat service not found" });
       }
 
+      // Create backup copy to prevent file loss
+      const backupPath = path.join(process.cwd(), 'uploads', 'backup', path.basename(imageFile.path));
+      try {
+        fs.copyFileSync(imageFile.path, backupPath);
+        console.log(`Backup created: ${backupPath}`);
+      } catch (error) {
+        console.warn(`Failed to create backup: ${error}`);
+      }
+
       // Store user message (include image info)
       const userContent = message ? `${message} [Immagine caricata: ${imageFile.originalname}]` : `[Immagine caricata: ${imageFile.originalname}]`;
       await storage.addChatMessage({
@@ -1000,14 +1009,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { imageName } = req.params;
       const imagePath = path.join(process.cwd(), 'uploads', imageName);
+      const backupPath = path.join(process.cwd(), 'uploads', 'backup', imageName);
       
-      // Check if file exists
-      if (!fs.existsSync(imagePath)) {
-        return res.status(404).json({ error: "Image not found" });
+      // Check if file exists in main directory first
+      if (fs.existsSync(imagePath)) {
+        return res.sendFile(imagePath);
       }
       
-      // Send the file
-      res.sendFile(imagePath);
+      // Check if file exists in backup directory
+      if (fs.existsSync(backupPath)) {
+        console.log(`Serving backup image: ${imageName}`);
+        return res.sendFile(backupPath);
+      }
+      
+      // File not found in either location
+      return res.status(404).json({ error: "Image not found" });
     } catch (error) {
       console.error("Error serving image:", error);
       res.status(500).json({ error: "Failed to serve image" });
@@ -1034,7 +1050,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Check if file exists before adding URL
           const fullPath = path.join(process.cwd(), 'uploads', fileName);
-          if (fs.existsSync(fullPath)) {
+          const backupPath = path.join(process.cwd(), 'uploads', 'backup', fileName);
+          
+          if (fs.existsSync(fullPath) || fs.existsSync(backupPath)) {
             const imageUrl = `/api/images/${fileName}`;
             
             return {

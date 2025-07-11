@@ -215,6 +215,15 @@ Changelog:
   - Resolved column shifting issues where data appeared in wrong columns
   - Added logic to skip initial skin description from answer sequence
   - All user responses now correctly mapped to appropriate CSV columns
+- July 11, 2025. Enhanced admin dashboard with analytics and management features:
+  - Added final button click tracking for cream access analytics
+  - Implemented individual chat session deletion with confirmation
+  - Updated database schema with finalButtonClicked and finalButtonClickedAt columns
+  - Added new statistics card showing cream access count
+  - Enhanced chat list with "Cream Access" badges for tracked sessions
+  - Improved image handling with fallback placeholders for missing files
+  - Restored /admin-dashboard endpoint accessibility for external access
+  - Fixed React Query import issues and optimized dashboard performance
 
 ## User Preferences
 
