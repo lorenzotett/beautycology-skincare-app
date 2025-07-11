@@ -261,10 +261,12 @@ body, html {
   /* Ensure welcome screen takes full viewport */
   .chat-container:not(.chat-mode) {
     background-color: #E5F1F2 !important;
+    padding: 0 !important;
   }
 
   .chat-container:not(.chat-mode) > div {
     background-color: #E5F1F2 !important;
+    padding: 0 !important;
   }
 
   .messages-area {
