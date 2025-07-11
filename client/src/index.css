@@ -359,8 +359,7 @@ body, html {
   }
 
   .messages-area {
-    height: calc(100vh - 120px);
-    max-height: calc(100vh - 120px);
+    flex: 1 !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     scrollbar-width: thin;
@@ -450,12 +449,11 @@ body, html {
 
     /* Fix messages area height on mobile - account for header and input */
     .messages-area {
-      max-height: calc(100vh - 140px) !important;
-      height: calc(100vh - 140px) !important;
+      flex: 1 !important;
       overflow-y: auto !important;
       overflow-x: hidden !important;
       -webkit-overflow-scrolling: touch !important;
-      flex: 1 !important;
+      min-height: 0 !important;
     }
 
     /* Only fix input position when in chat mode, not welcome screen */
