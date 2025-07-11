@@ -56,13 +56,18 @@ app.use((req, res, next) => {
 
   // Admin access routes MUST be defined BEFORE catch-all routes
   app.get('/admin-dashboard', (req, res) => {
-    const indexPath = path.join(process.cwd(), 'dist', 'public', 'index.html');
-    res.sendFile(indexPath);
+    if (app.get("env") === "development") {
+      // In development, redirect to main app with admin param
+      res.redirect('/?admin=true');
+    } else {
+      // In production, serve the dedicated admin HTML file
+      const adminPath = path.join(process.cwd(), 'dist', 'public', 'admin-dashboard.html');
+      res.sendFile(adminPath);
+    }
   });
   
   app.get('/admin', (req, res) => {
-    const indexPath = path.join(process.cwd(), 'dist', 'public', 'index.html');
-    res.sendFile(indexPath);
+    res.redirect('/admin-dashboard');
   });
 
   // importantly only setup vite in development and after
