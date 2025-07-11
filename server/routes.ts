@@ -1065,10 +1065,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add specific route for admin dashboard
-  app.get('/admin-dashboard', (req, res) => {
-    res.redirect('/admin-dashboard/');
-  });
+
 
   const httpServer = createServer(app);
   return httpServer;
