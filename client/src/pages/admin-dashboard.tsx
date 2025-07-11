@@ -395,9 +395,9 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
@@ -463,7 +463,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6">
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-white p-6 border border-gray-200">
@@ -780,6 +781,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </Card>
+        </div>
       </div>
     </div>
   );
