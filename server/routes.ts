@@ -1065,7 +1065,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
+  // Serve admin dashboard route for production deployments
+  app.get('/admin-dashboard', (req, res, next) => {
+    // Check if we're in production by looking for the dist folder
+    const distPath = path.join(process.cwd(), 'dist', 'public', 'index.html');
+    if (fs.existsSync(distPath)) {
+      res.sendFile(distPath);
+    } else {
+      // In development, pass to next middleware (Vite will handle it)
+      next();
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
