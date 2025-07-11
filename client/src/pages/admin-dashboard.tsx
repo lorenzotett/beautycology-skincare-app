@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatMessage, ChatSession } from "@shared/schema";
-import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3, Copy, X, Eye, ChevronDown, Download } from "lucide-react";
+import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3, Copy, X, Eye, ChevronDown, Download, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MessageBubble } from "@/components/message-bubble";
 
@@ -17,6 +17,7 @@ interface AdminStats {
   totalMessages: number;
   activeSessions: number;
   todaySessions: number;
+  finalButtonClicks: number;
   averageMessagesPerSession: number;
 }
 
@@ -201,6 +202,38 @@ export default function AdminDashboard() {
 
   const deselectAllSessions = () => {
     setSelectedSessions(new Set());
+  };
+
+  // Delete chat mutation
+  const deleteChatMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
+      const response = await apiRequest("DELETE", `/api/admin/sessions/${sessionId}`);
+      if (!response.ok) {
+        throw new Error("Failed to delete chat session");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      toast({
+        title: "Successo",
+        description: "Chat eliminata con successo",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Errore",
+        description: "Impossibile eliminare la chat",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteChat = (sessionId: string, userName: string) => {
+    if (window.confirm(`Sei sicuro di voler eliminare la chat di ${userName}? Questa azione non può essere annullata.`)) {
+      deleteChatMutation.mutate(sessionId);
+    }
   };
 
   const { data: stats } = useQuery({
@@ -466,7 +499,7 @@ export default function AdminDashboard() {
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <Card className="bg-white p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
@@ -487,6 +520,19 @@ export default function AdminDashboard() {
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <MessageSquare className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-white p-6 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Cream Access</p>
+                <p className="text-3xl font-bold text-gray-900">{stats?.finalButtonClicks || 0}</p>
+                <p className="text-xs text-gray-500">Final button clicks</p>
+              </div>
+              <div className="p-3 bg-pink-100 rounded-lg">
+                <Eye className="h-6 w-6 text-pink-600" />
               </div>
             </div>
           </Card>
@@ -758,15 +804,31 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-blue-600 border-blue-600 hover:bg-blue-50 flex items-center space-x-1"
-                        onClick={() => setSelectedSession(session)}
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span>View Chat</span>
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-blue-600 border-blue-600 hover:bg-blue-50 flex items-center space-x-1"
+                          onClick={() => setSelectedSession(session)}
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span>View</span>
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-red-600 border-red-600 hover:bg-red-50 flex items-center space-x-1"
+                          onClick={() => handleDeleteChat(session.sessionId, session.userName)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span>Delete</span>
+                        </Button>
+                        {session.finalButtonClicked && (
+                          <Badge className="bg-pink-100 text-pink-800 text-xs">
+                            Cream Access
+                          </Badge>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

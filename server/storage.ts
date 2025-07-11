@@ -21,11 +21,14 @@ export interface IStorage {
   createChatSession(session: InsertChatSession): Promise<ChatSession>;
   getChatSession(sessionId: string): Promise<ChatSession | undefined>;
   updateChatSession(sessionId: string, updates: Partial<ChatSession>): Promise<ChatSession | undefined>;
+  updateSessionFinalButtonClick(sessionId: string, clicked: boolean): Promise<void>;
+  deleteChatSession(sessionId: string): Promise<void>;
   
   // Chat message methods
   addChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
   getChatMessages(sessionId: string): Promise<ChatMessage[]>;
   getRecentChatMessages(sessionId: string, limit: number): Promise<ChatMessage[]>;
+  deleteChatMessages(sessionId: string): Promise<void>;
   
   // Admin methods
   getAllChatSessions(): Promise<ChatSession[]>;
@@ -91,6 +94,27 @@ export class MemStorage implements IStorage {
     const updatedSession = { ...session, ...updates, updatedAt: new Date() };
     this.chatSessions.set(sessionId, updatedSession);
     return updatedSession;
+  }
+
+  async updateSessionFinalButtonClick(sessionId: string, clicked: boolean): Promise<void> {
+    const session = this.chatSessions.get(sessionId);
+    if (session) {
+      const updatedSession = { 
+        ...session, 
+        finalButtonClicked: clicked, 
+        finalButtonClickedAt: clicked ? new Date() : null,
+        updatedAt: new Date() 
+      };
+      this.chatSessions.set(sessionId, updatedSession);
+    }
+  }
+
+  async deleteChatSession(sessionId: string): Promise<void> {
+    this.chatSessions.delete(sessionId);
+  }
+
+  async deleteChatMessages(sessionId: string): Promise<void> {
+    this.chatMessages.delete(sessionId);
   }
 
   async addChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
@@ -173,6 +197,29 @@ export class DatabaseStorage implements IStorage {
       .where(eq(chatSessions.sessionId, sessionId))
       .returning();
     return session || undefined;
+  }
+
+  async updateSessionFinalButtonClick(sessionId: string, clicked: boolean): Promise<void> {
+    await db
+      .update(chatSessions)
+      .set({ 
+        finalButtonClicked: clicked, 
+        finalButtonClickedAt: clicked ? new Date() : null,
+        updatedAt: new Date() 
+      })
+      .where(eq(chatSessions.sessionId, sessionId));
+  }
+
+  async deleteChatSession(sessionId: string): Promise<void> {
+    await db
+      .delete(chatSessions)
+      .where(eq(chatSessions.sessionId, sessionId));
+  }
+
+  async deleteChatMessages(sessionId: string): Promise<void> {
+    await db
+      .delete(chatMessages)
+      .where(eq(chatMessages.sessionId, sessionId));
   }
 
   async addChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {

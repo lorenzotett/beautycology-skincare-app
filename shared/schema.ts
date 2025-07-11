@@ -16,6 +16,8 @@ export const chatSessions = pgTable("chat_sessions", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   isActive: boolean("is_active").default(true),
+  finalButtonClicked: boolean("final_button_clicked").default(false),
+  finalButtonClickedAt: timestamp("final_button_clicked_at"),
 });
 
 export const chatMessages = pgTable("chat_messages", {

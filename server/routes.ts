@@ -935,11 +935,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? allMessages.length / allSessions.length 
         : 0;
       
+      // Count final button clicks
+      const finalButtonClicks = allSessions.filter(session => session.finalButtonClicked).length;
+      
       const stats = {
         totalSessions: allSessions.length,
         totalMessages: allMessages.length,
         activeSessions: activeSessions.length,
         todaySessions: todaySessions.length,
+        finalButtonClicks: finalButtonClicks,
         averageMessagesPerSession: Math.round(averageMessagesPerSession * 10) / 10
       };
       
@@ -1062,6 +1066,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting admin session details:", error);
       res.status(500).json({ error: "Failed to get session details" });
+    }
+  });
+
+  // Track final button click
+  app.post("/api/admin/track-final-button/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      await storage.updateSessionFinalButtonClick(sessionId, true);
+      
+      res.json({ success: true, message: "Final button click tracked" });
+    } catch (error) {
+      console.error("Error tracking final button click:", error);
+      res.status(500).json({ error: "Failed to track final button click" });
+    }
+  });
+
+  // Delete session and all its messages
+  app.delete("/api/admin/sessions/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      // Delete all messages for this session
+      await storage.deleteChatMessages(sessionId);
+      
+      // Delete the session itself
+      await storage.deleteChatSession(sessionId);
+      
+      res.json({ success: true, message: "Session and all messages deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting session:", error);
+      res.status(500).json({ error: "Failed to delete session" });
     }
   });
 
