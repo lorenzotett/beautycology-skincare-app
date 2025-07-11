@@ -85,18 +85,6 @@ const imageUpload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Serve admin dashboard route for production deployments - MUST BE FIRST
-  app.get('/admin-dashboard', (req, res, next) => {
-    // Check if we're in production by looking for the dist folder
-    const distPath = path.join(process.cwd(), 'dist', 'public', 'index.html');
-    if (fs.existsSync(distPath)) {
-      res.sendFile(distPath);
-    } else {
-      // In development, pass to next middleware (Vite will handle it)
-      next();
-    }
-  });
-
   // Serve static files from attached_assets directory
   app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
   // Start a new chat session
