@@ -6,8 +6,27 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Chat from "@/pages/chat";
 import AdminDashboard from "./pages/admin-dashboard";
 import NotFound from "@/pages/not-found";
+import { useEffect, useState } from "react";
 
 function Router() {
+  const [isAdminRoute, setIsAdminRoute] = useState(false);
+  
+  useEffect(() => {
+    // Check for admin parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const adminParam = urlParams.get('admin');
+    const pathIsAdmin = window.location.pathname === '/admin-dashboard';
+    
+    if (adminParam === 'true' || pathIsAdmin) {
+      setIsAdminRoute(true);
+    }
+  }, []);
+  
+  // If admin parameter is present, show admin dashboard
+  if (isAdminRoute) {
+    return <AdminDashboard />;
+  }
+  
   return (
     <Switch>
       <Route path="/" component={Chat} />
