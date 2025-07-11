@@ -365,7 +365,7 @@ body, html {
     scrollbar-width: thin;
     scrollbar-color: hsl(0, 0%, 29%) var(--dark-secondary);
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 20px !important;
+    padding-bottom: 60px !important;
   }
 
   .messages-area::-webkit-scrollbar {
@@ -455,7 +455,7 @@ body, html {
       overflow-x: hidden !important;
       -webkit-overflow-scrolling: touch !important;
       min-height: 0 !important;
-      padding-bottom: 20px !important;
+      padding-bottom: 60px !important;
     }
 
     /* Only fix input position when in chat mode, not welcome screen */
