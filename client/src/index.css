@@ -84,6 +84,7 @@ body, html {
   max-height: 100vh;
   position: fixed;
   width: 100%;
+  background-color: #E5F1F2;
 }
 
 #root {
@@ -94,6 +95,7 @@ body, html {
   width: 100%;
   top: 0;
   left: 0;
+  background-color: #E5F1F2;
 }
 
 .chat-container {
@@ -253,7 +255,16 @@ body, html {
   }
 
   .welcome-screen {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background-color: #E5F1F2;
+  }
+
+  /* Ensure welcome screen takes full viewport */
+  .chat-container:not(.chat-mode) {
+    background-color: #E5F1F2 !important;
+  }
+
+  .chat-container:not(.chat-mode) > div {
+    background-color: #E5F1F2 !important;
   }
 
   .messages-area {
