@@ -10,16 +10,16 @@
     font-size: 14px;
     padding: 8px !important;
   }
-  
+
   .dermaSense-title {
     font-size: 16px !important;
   }
-  
+
   /* Riduci padding su schermi molto piccoli */
   .message-bubble {
     padding: 8px !important;
   }
-  
+
   /* Ottimizza input per schermi piccoli */
   .timer-input, input[type="text"] {
     font-size: 14px;
@@ -197,96 +197,96 @@ body, html {
   .playfair-display {
     font-family: 'Playfair Display', serif !important;
   }
-  
+
   .bg-dark-primary {
     background-color: var(--dark-primary);
   }
-  
+
   .bg-dark-secondary {
     background-color: var(--dark-secondary);
   }
-  
+
   .bg-dark-accent {
     background-color: var(--dark-accent);
   }
-  
+
   .bg-assistant-msg {
     background-color: var(--assistant-msg);
   }
-  
+
   .bg-user-msg {
     background-color: var(--user-msg);
   }
-  
+
   .text-assistant-msg {
     color: var(--assistant-msg);
   }
-  
+
   .text-user-msg {
     color: var(--user-msg);
   }
-  
+
   .text-text-muted {
     color: var(--text-muted);
   }
-  
+
   .border-dark-accent {
     border-color: var(--dark-accent);
   }
-  
+
   .chat-container {
     height: 100vh;
     max-height: 100vh;
   }
-  
+
   .welcome-screen {
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   }
-  
+
   .messages-area {
     height: calc(100vh - 120px);
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: hsl(0, 0%, 29%) var(--dark-secondary);
   }
-  
+
   .messages-area::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   .messages-area::-webkit-scrollbar-track {
     background: var(--dark-secondary);
   }
-  
+
   .messages-area::-webkit-scrollbar-thumb {
     background: hsl(0, 0%, 29%);
     border-radius: 3px;
   }
-  
+
   .message-bubble {
     max-width: 85%;
     word-wrap: break-word;
   }
-  
+
   /* User messages should only be as wide as their content */
   .bg-user-msg {
     max-width: fit-content !important;
     min-width: 80px;
   }
-  
+
   .choice-button {
     transition: all 0.3s ease;
   }
-  
+
   .choice-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
   }
-  
+
   .choice-button:hover:not(:disabled) {
     background-color: var(--assistant-msg);
   }
-  
+
   @keyframes pulse-dot {
     0%, 80%, 100% { 
       opacity: 0.3; 
@@ -295,18 +295,47 @@ body, html {
       opacity: 1; 
     }
   }
-  
+
   .animate-pulse-dot {
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
-  
+
+  /* Mobile responsive styles */
   @media (max-width: 768px) {
-    .messages-area {
-      height: calc(100vh - 140px);
+    .desktop-wide {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 100vh !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+      min-height: 100vh !important;
+      max-height: 100vh !important;
     }
-    
-    .message-bubble {
-      max-width: 90%;
+
+    .chat-container {
+      padding: 0 !important;
+      height: 100vh !important;
+      overflow: hidden !important;
+    }
+
+    .chat-container > div {
+      padding: 0 !important;
+      height: 100vh !important;
+    }
+
+    /* Fix messages area height on mobile */
+    .messages-area {
+      max-height: calc(100vh - 160px) !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* Ensure input area stays visible */
+    .desktop-wide > div:last-child {
+      flex-shrink: 0 !important;
+      position: sticky !important;
+      bottom: 0 !important;
+      z-index: 10 !important;
     }
   }
 }
