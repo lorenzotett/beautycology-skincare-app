@@ -210,9 +210,9 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           {/* Show image preview if available */}
           {metadata?.hasImage && (
             <div className="mb-2">
-              {metadata?.image ? (
+              {(metadata?.image || metadata?.imageBase64) ? (
                 <img 
-                  src={metadata.image} 
+                  src={metadata?.imageBase64 || metadata?.image} 
                   alt="Immagine caricata" 
                   className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
                   style={{ 
@@ -222,7 +222,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                     objectFit: 'cover',
                     display: 'block'
                   }}
-                  onClick={() => onImageClick?.(metadata.image)}
+                  onClick={() => onImageClick?.(metadata?.imageBase64 || metadata?.image)}
                   onError={(e) => {
                     console.warn('Errore nel caricamento dell\'immagine:', e);
                   }}
@@ -245,7 +245,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
             <p className="text-sm leading-relaxed" style={{color: '#E5F1F2'}}>{message.content}</p>
           )}
           {/* Show "Immagine" as fallback if no content but has image */}
-          {!message.content && metadata?.image && (
+          {!message.content && (metadata?.image || metadata?.imageBase64) && (
             <p className="text-sm leading-relaxed italic" style={{color: '#E5F1F2'}}>Immagine</p>
           )}
         </div>
@@ -324,12 +324,12 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       {/* Image display */}
       {message.metadata?.hasImage && (
       <div className="mt-2">
-        {message.metadata?.image ? (
+        {(message.metadata?.image || message.metadata?.imageBase64) ? (
           <img 
-            src={message.metadata.image} 
+            src={message.metadata?.imageBase64 || message.metadata?.image} 
             alt="Immagine caricata" 
             className="max-w-48 rounded-lg border border-dark-accent cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => window.open(message.metadata.image, '_blank')}
+            onClick={() => window.open(message.metadata?.imageBase64 || message.metadata?.image, '_blank')}
             onError={(e) => {
               // Se l'immagine non carica, mostra un placeholder
               const target = e.currentTarget;
@@ -343,14 +343,14 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
         {/* Placeholder per file che non possono essere visualizzati */}
         <div 
           className="max-w-48 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
-          style={{ display: message.metadata?.image ? 'none' : 'flex' }}
+          style={{ display: (message.metadata?.image || message.metadata?.imageBase64) ? 'none' : 'flex' }}
         >
           <Upload size={24} className="text-text-muted mb-2" />
           <span className="text-xs text-text-muted text-center px-2">
-            {message.metadata?.imageName || "File caricato"}
+            {message.metadata?.imageName || message.metadata?.imageOriginalName || "File caricato"}
           </span>
           <span className="text-xs text-text-muted/60 mt-1">
-            (Anteprima non disponibile)
+            {message.metadata?.isPlaceholder ? "(Immagine ripristinata)" : "(Anteprima non disponibile)"}
           </span>
         </div>
       </div>
