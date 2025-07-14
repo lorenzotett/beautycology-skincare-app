@@ -186,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .toBuffer();
           
           // Save converted file for backup
-          await fs.writeFile(convertedPath, convertedBuffer);
+          await fs.promises.writeFile(convertedPath, convertedBuffer);
           
           processedImagePath = convertedPath;
           finalFileName = convertedFileName;
@@ -216,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .toBuffer();
             
             // Save to file for backup
-            await fs.writeFile(placeholderPath, placeholderBuffer);
+            await fs.promises.writeFile(placeholderPath, placeholderBuffer);
             
             processedImagePath = placeholderPath;
             finalFileName = placeholderFileName;
@@ -234,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // For JPG/PNG files, also convert to base64 for consistency in iframe
         try {
-          const imageBuffer = await fs.readFile(imageFile.path);
+          const imageBuffer = await fs.promises.readFile(imageFile.path);
           const mimeType = imageFile.mimetype || 'image/jpeg';
           imageUrl = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
           console.log(`✅ Converted ${imageFile.originalname} to base64 for iframe compatibility`);
