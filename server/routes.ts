@@ -270,6 +270,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: response,
         imageUrl: imageUrl // Return the image URL to the frontend
       });
+      
+      console.log(`📤 Responding with imageUrl: ${imageUrl}`);
     } catch (error) {
       console.error("Error sending message with image:", error);
       res.status(500).json({ error: "Failed to send message with image" });

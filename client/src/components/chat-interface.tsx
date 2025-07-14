@@ -454,11 +454,12 @@ export function ChatInterface() {
       // If we sent an image, update the user message with the correct image URL
       if (imageToSend && data.imageUrl) {
         console.log('🔄 Updating user message with server image URL:', data.imageUrl);
-        // Force re-render by creating new messages array
+        
+        // Update the message immediately with the server URL
         setMessages(prev => {
           const updatedMessages = prev.map(msg => {
             if (msg.id === userMessageId && msg.role === "user") {
-              return {
+              const updatedMsg = {
                 ...msg,
                 metadata: {
                   ...msg.metadata,
@@ -467,12 +468,18 @@ export function ChatInterface() {
                   imageOriginalName: imageToSend.name
                 }
               };
+              console.log('✅ Updated user message:', { id: msg.id, newUrl: data.imageUrl });
+              return updatedMsg;
             }
             return msg;
           });
-          console.log('✅ Updated user message metadata for ID:', userMessageId);
           return updatedMessages;
         });
+        
+        // Force a complete re-render by updating the message again
+        setTimeout(() => {
+          setMessages(prev => prev.map(msg => ({...msg})));
+        }, 100);
       }
 
       // Add assistant response
