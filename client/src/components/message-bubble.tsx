@@ -185,6 +185,14 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   });
 
   const metadata = message.metadata as any;
+  
+  // CRITICAL FIX: Ensure metadata.image exists
+  if (metadata?.hasImage && !metadata?.image && metadata?.imagePath) {
+    // Fallback: costruisci l'URL dall'imagePath se image non esiste
+    const fileName = metadata.imagePath.split('/').pop();
+    metadata.image = `/api/images/${fileName}`;
+    console.log('🔧 FIXED IMAGE URL:', metadata.image);
+  }
   const hasChoices = metadata?.hasChoices || false;
   const choices = metadata?.choices || [];
 
@@ -198,13 +206,9 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   
 
 
-  // Debug log only for image metadata when present
+  // Log only when fixing image URL
   if (metadata?.hasImage) {
-    console.log('🖼️ IMAGE MESSAGE:', {
-      messageId: message.id,
-      imageUrl: metadata.image,
-      fullUrl: `${window.location.origin}${metadata.image}`
-    });
+    console.log('📸 Image message:', { id: message.id, imageUrl: metadata.image });
   }
 
   if (isUser) {
