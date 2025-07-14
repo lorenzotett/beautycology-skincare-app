@@ -326,8 +326,15 @@ export function ChatInterface() {
           console.log('⚠️ HEIC conversion failed, using original file');
           setSelectedImage(file);
           
-          // Create a simple text placeholder for HEIC files that failed conversion
-          setImagePreview("data:image/svg+xml;base64," + btoa(`<svg width="200" height="150" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="150" fill="#f3f4f6"/><text x="100" y="75" text-anchor="middle" fill="#6b7280" font-size="14">📸 ${file.name}</text></svg>`));
+          // Create a simple placeholder for HEIC files that failed conversion
+          const placeholderSvg = `data:image/svg+xml,${encodeURIComponent(`
+            <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+              <rect width="200" height="150" fill="#f3f4f6"/>
+              <text x="100" y="75" text-anchor="middle" fill="#6b7280" font-size="14">📸 HEIC File</text>
+              <text x="100" y="95" text-anchor="middle" fill="#9ca3af" font-size="12">Converting...</text>
+            </svg>
+          `)}`;
+          setImagePreview(placeholderSvg);
         }
       } else {
         // For other formats, set the original file and create preview
