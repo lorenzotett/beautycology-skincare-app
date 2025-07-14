@@ -223,38 +223,52 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   key={`user-img-${message.id}-${metadata.image}`}
                   src={metadata.image} 
                   alt="Immagine caricata" 
-                  className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                  className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-green-500"
                   style={{ 
                     maxHeight: '200px', 
                     minHeight: '120px',
                     width: '100%',
                     objectFit: 'cover',
-                    display: 'block'
+                    display: 'block',
+                    backgroundColor: 'red', // Debug: make visible if loading
+                    minWidth: '100px'
                   }}
                   onClick={() => onImageClick?.(metadata.image)}
                   onError={(e) => {
-                    console.error('❌ IMMAGINE NON TROVATA:', (e.target as HTMLImageElement).src);
-                    // Sostituisci con placeholder quando l'immagine non esiste
                     const imgElement = e.target as HTMLImageElement;
+                    console.error('❌ IFRAME IMAGE LOAD ERROR:', {
+                      src: imgElement.src,
+                      error: e,
+                      naturalWidth: imgElement.naturalWidth,
+                      naturalHeight: imgElement.naturalHeight,
+                      complete: imgElement.complete,
+                      currentSrc: imgElement.currentSrc
+                    });
+                    
+                    // Sostituisci con placeholder quando l'immagine non esiste
                     imgElement.style.display = 'none';
                     const parent = imgElement.parentElement;
                     if (parent && !parent.querySelector('.image-error-placeholder')) {
                       const placeholder = document.createElement('div');
-                      placeholder.className = 'image-error-placeholder w-full max-w-48 h-32 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 text-sm';
+                      placeholder.className = 'image-error-placeholder w-full max-w-48 h-32 bg-red-500 rounded-lg flex items-center justify-center text-white text-sm';
                       placeholder.innerHTML = `
                         <div class="text-center">
-                          <svg class="h-8 w-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                          </svg>
-                          <div>📸 Immagine caricata</div>
-                          ${metadata?.imageOriginalName ? `<div class="text-xs mt-1 opacity-70">${metadata.imageOriginalName}</div>` : ''}
+                          <div>❌ IMAGE ERROR</div>
+                          <div class="text-xs mt-1">${imgElement.src}</div>
                         </div>
                       `;
                       parent.appendChild(placeholder);
                     }
                   }}
-                  onLoad={() => {
-                    console.log('✅ IMMAGINE CARICATA CORRETTAMENTE:', metadata.image);
+                  onLoad={(e) => {
+                    const imgElement = e.target as HTMLImageElement;
+                    console.log('✅ IFRAME IMAGE LOADED:', {
+                      src: metadata.image,
+                      messageId: message.id,
+                      dimensions: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`,
+                      visible: imgElement.offsetWidth > 0,
+                      computedStyle: window.getComputedStyle(imgElement).display
+                    });
                   }}
                 />
               ) : metadata?.image?.startsWith('data:image/svg+xml') ? (
