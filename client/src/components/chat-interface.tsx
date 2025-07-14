@@ -322,13 +322,23 @@ export function ChatInterface() {
           console.log('✅ HEIC converted successfully to:', convertedFile.name);
         } catch (error) {
           console.error('Error converting HEIC:', error);
-          // Show user-friendly error message
-          toast({
-            title: "Errore conversione HEIC",
-            description: "Impossibile convertire il file HEIC. Prova con un'immagine JPG o PNG.",
-            variant: "destructive",
-          });
-          return; // Don't set the image if conversion fails
+          // Fallback: use original HEIC file and let server handle it
+          console.log('⚠️ HEIC conversion failed, using original file');
+          setSelectedImage(file);
+          
+          // Create a placeholder preview for HEIC files
+          const placeholderSvg = `data:image/svg+xml,${encodeURIComponent(`
+            <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+              <rect width="200" height="150" fill="#f3f4f6"/>
+              <text x="100" y="75" text-anchor="middle" fill="#6b7280" font-family="Arial, sans-serif" font-size="14">
+                📸 Immagine HEIC
+              </text>
+              <text x="100" y="95" text-anchor="middle" fill="#9ca3af" font-family="Arial, sans-serif" font-size="12">
+                ${file.name}
+              </text>
+            </svg>
+          `)}`;
+          setImagePreview(placeholderSvg);
         }
       } else {
         // For other formats, set the original file and create preview

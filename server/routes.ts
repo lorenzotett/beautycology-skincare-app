@@ -167,18 +167,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Chat service not found" });
       }
 
+      // Handle HEIC files that might need conversion
+      let processedImagePath = imageFile.path;
+      let finalFileName = path.basename(imageFile.path);
+      
+      // Check if it's a HEIC file and try to convert with Sharp
+      const isHEIC = imageFile.originalname.toLowerCase().match(/\.(heic|heif)$/);
+      if (isHEIC) {
+        try {
+          const sharp = require('sharp');
+          const convertedFileName = imageFile.filename.replace(/\.(heic|heif)$/i, '.jpg');
+          const convertedPath = path.join(path.dirname(imageFile.path), convertedFileName);
+          
+          // Convert HEIC to JPEG using Sharp
+          await sharp(imageFile.path)
+            .jpeg({ quality: 85 })
+            .toFile(convertedPath);
+          
+          processedImagePath = convertedPath;
+          finalFileName = convertedFileName;
+          console.log(`✅ HEIC converted to JPEG: ${finalFileName}`);
+        } catch (error) {
+          console.warn(`⚠️ HEIC conversion failed, using original: ${error.message}`);
+          // Keep original file if conversion fails
+        }
+      }
+
       // Create backup copy to prevent file loss
-      const backupPath = path.join(process.cwd(), 'uploads', 'backup', path.basename(imageFile.path));
+      const backupPath = path.join(process.cwd(), 'uploads', 'backup', finalFileName);
       try {
-        fs.copyFileSync(imageFile.path, backupPath);
+        fs.copyFileSync(processedImagePath, backupPath);
         console.log(`Backup created: ${backupPath}`);
       } catch (error) {
         console.warn(`Failed to create backup: ${error}`);
       }
 
       // Generate proper image URL
-      const fileName = path.basename(imageFile.path);
-      const imageUrl = `/api/images/${fileName}`;
+      const imageUrl = `/api/images/${finalFileName}`;
       
       // Store user message (include image info)
       const userContent = message ? `${message} [Immagine caricata: ${imageFile.originalname}]` : `[Immagine caricata: ${imageFile.originalname}]`;
@@ -188,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: userContent,
         metadata: {
           hasImage: true,
-          imagePath: imageFile.path,
+          imagePath: processedImagePath, // Use processed image path
           imageOriginalName: imageFile.originalname,
           image: imageUrl // Add proper image URL
         },
@@ -196,7 +221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // First, analyze the skin with specialized service
       const skinAnalysis = new SkinAnalysisService();
-      const analysisResult = await skinAnalysis.analyzeImage(imageFile.path);
+      const analysisResult = await skinAnalysis.analyzeImage(processedImagePath); // Use processed image
 
       // Then send the analysis data to Gemini for conversation
       const analysisMessage = message ? 
