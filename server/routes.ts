@@ -1023,7 +1023,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // File not found in either location
-      return res.status(404).json({ error: "Image not found" });
+      console.error(`[express] MISSING IMAGE: ${imageName}`);
+      console.error(`[express] Searched in: ${imagePath} and ${backupPath}`);
+      
+      // Return a placeholder SVG instead of 404
+      const placeholderSVG = `
+        <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="300" fill="#fee2e2"/>
+          <text x="200" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#dc2626">
+            Immagine non disponibile
+          </text>
+          <text x="200" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#dc2626">
+            ${imageName}
+          </text>
+        </svg>
+      `;
+      
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+      return res.status(200).send(placeholderSVG);
     } catch (error) {
       console.error("Error serving image:", error);
       res.status(500).json({ error: "Failed to serve image" });

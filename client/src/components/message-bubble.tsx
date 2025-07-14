@@ -232,9 +232,25 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   }}
                   onClick={() => onImageClick?.(`${window.location.origin}${metadata.image}`)}
                   onError={(e) => {
-                    console.error('❌ ERRORE CARICAMENTO IMMAGINE:', e.target.src);
-                    console.error('❌ Metadata:', metadata);
-                    console.error('❌ Error event:', e);
+                    console.error('❌ IMMAGINE NON TROVATA:', e.target.src);
+                    // Sostituisci con placeholder quando l'immagine non esiste
+                    const imgElement = e.target as HTMLImageElement;
+                    imgElement.style.display = 'none';
+                    const parent = imgElement.parentElement;
+                    if (parent && !parent.querySelector('.image-error-placeholder')) {
+                      const placeholder = document.createElement('div');
+                      placeholder.className = 'image-error-placeholder w-full max-w-48 h-32 bg-red-100 rounded-lg flex items-center justify-center text-red-700 text-sm';
+                      placeholder.innerHTML = `
+                        <div class="text-center">
+                          <svg class="h-8 w-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                          </svg>
+                          <div>Immagine non più disponibile</div>
+                          ${metadata?.imageOriginalName ? `<div class="text-xs mt-1 opacity-70">${metadata.imageOriginalName}</div>` : ''}
+                        </div>
+                      `;
+                      parent.appendChild(placeholder);
+                    }
                   }}
                   onLoad={() => {
                     console.log('✅ IMMAGINE CARICATA CORRETTAMENTE:', metadata.image);
