@@ -284,16 +284,15 @@ export function ChatInterface() {
         return;
       }
 
-      setSelectedImage(file);
       setCurrentMessage(''); // Clear message when image is selected
 
-      // Check if it's a HEIC/HEIF file and convert for preview
+      // Check if it's a HEIC/HEIF file and convert for preview AND upload
       const isHEIC = fileExtension === '.heic' || fileExtension === '.heif' || 
                      file.type === 'image/heic' || file.type === 'image/heif';
 
       if (isHEIC) {
         try {
-          // Convert HEIC to JPEG for preview
+          // Convert HEIC to JPEG for both preview and upload
           const heic2any = await import('heic2any');
           const convertedBlob = await heic2any.default({
             blob: file,
@@ -302,19 +301,38 @@ export function ChatInterface() {
           });
 
           const blobArray = Array.isArray(convertedBlob) ? convertedBlob : [convertedBlob];
+          const jpegBlob = blobArray[0] as Blob;
+          
+          // Create a new File object from the converted blob with .jpg extension
+          const convertedFile = new File([jpegBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
+            type: 'image/jpeg',
+            lastModified: file.lastModified
+          });
+          
+          // Set the converted file as selected image
+          setSelectedImage(convertedFile);
+          
+          // Set preview
           const reader = new FileReader();
           reader.onload = (e) => {
             setImagePreview(e.target?.result as string);
           };
-          reader.readAsDataURL(blobArray[0]);
+          reader.readAsDataURL(jpegBlob);
+          
+          console.log('✅ HEIC converted successfully to:', convertedFile.name);
         } catch (error) {
           console.error('Error converting HEIC:', error);
-          // Use the original file as a blob URL for preview
-          const originalBlobUrl = URL.createObjectURL(file);
-          setImagePreview(originalBlobUrl);
+          // Show user-friendly error message
+          toast({
+            title: "Errore conversione HEIC",
+            description: "Impossibile convertire il file HEIC. Prova con un'immagine JPG o PNG.",
+            variant: "destructive",
+          });
+          return; // Don't set the image if conversion fails
         }
       } else {
-        // For other formats, use regular FileReader
+        // For other formats, set the original file and create preview
+        setSelectedImage(file);
         const reader = new FileReader();
         reader.onload = (e) => {
           setImagePreview(e.target?.result as string);
