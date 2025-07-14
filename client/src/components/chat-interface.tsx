@@ -341,14 +341,15 @@ export function ChatInterface() {
     const messageToSend = currentMessage.trim();
     const imageToSend = selectedImage;
 
-    // Add user message immediately to chat
+    // Add user message immediately to chat (with temporary blob URL for immediate preview)
+    const userMessageId = Date.now();
     const userMessage: ChatMessage = {
-      id: Date.now(),
+      id: userMessageId,
       sessionId: sessionId!,
       role: "user",
       content: messageToSend || (imageToSend ? "📷 Immagine caricata" : ""),
       metadata: imageToSend ? { 
-        image: imagePreview,
+        image: imagePreview, // Temporary blob URL for immediate preview
         hasImage: true,
         imageName: imageToSend.name 
       } : null,
@@ -424,20 +425,23 @@ export function ChatInterface() {
 
       // If we sent an image, update the user message with the correct image URL
       if (imageToSend && data.imageUrl) {
+        console.log('🔄 Updating user message with server image URL:', data.imageUrl);
         setMessages(prev => {
           const updatedMessages = [...prev];
-          const lastMessageIndex = updatedMessages.length - 1;
+          // Find the message by ID instead of assuming it's the last one
+          const messageIndex = updatedMessages.findIndex(msg => msg.id === userMessageId);
           
-          if (lastMessageIndex >= 0 && updatedMessages[lastMessageIndex].role === "user") {
-            updatedMessages[lastMessageIndex] = {
-              ...updatedMessages[lastMessageIndex],
+          if (messageIndex >= 0 && updatedMessages[messageIndex].role === "user") {
+            updatedMessages[messageIndex] = {
+              ...updatedMessages[messageIndex],
               metadata: {
-                ...updatedMessages[lastMessageIndex].metadata,
+                ...updatedMessages[messageIndex].metadata,
                 image: data.imageUrl, // Use the URL returned from the server
                 hasImage: true,
                 imageOriginalName: imageToSend.name
               }
             };
+            console.log('✅ Updated user message metadata:', updatedMessages[messageIndex].metadata);
           }
           
           return updatedMessages;
