@@ -202,6 +202,18 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   console.log('Message metadata:', metadata);
   console.log('Has choices:', hasChoices);
   console.log('Choices:', choices);
+  
+  // 🚨 CRITICAL DEBUG: Check image metadata
+  if (metadata?.hasImage) {
+    console.log('🖼️ MESSAGE WITH IMAGE DETECTED:', {
+      messageId: message.id,
+      hasImage: metadata.hasImage,
+      imagePath: metadata.imagePath,
+      imageUrl: metadata.image,
+      originalName: metadata.imageOriginalName,
+      willShowImage: !!metadata.image
+    });
+  }
 
   if (isUser) {
     return (
@@ -224,7 +236,12 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   }}
                   onClick={() => onImageClick?.(metadata.image)}
                   onError={(e) => {
-                    console.warn('Errore nel caricamento dell\'immagine:', e);
+                    console.error('❌ ERRORE CARICAMENTO IMMAGINE:', e.target.src);
+                    console.error('❌ Metadata:', metadata);
+                    console.error('❌ Error event:', e);
+                  }}
+                  onLoad={() => {
+                    console.log('✅ IMMAGINE CARICATA CORRETTAMENTE:', metadata.image);
                   }}
                 />
               ) : (
