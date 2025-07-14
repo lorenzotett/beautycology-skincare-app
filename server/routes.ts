@@ -87,6 +87,9 @@ const imageUpload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from attached_assets directory
   app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
+  
+  // Serve uploaded images directly as static files (backup route)
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   // Start a new chat session
   app.post("/api/chat/start", async (req, res) => {
     try {
