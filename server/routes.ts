@@ -1174,6 +1174,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Auto-fix missing images endpoint (can be called automatically)
+  app.post("/api/admin/auto-fix-images", async (req, res) => {
+    try {
+      // Find all images without base64 that are newer than 24 hours
+      const allMessages = await storage.getAllChatMessages();
+      const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
+      
+      const recentImagesWithoutBase64 = allMessages.filter(msg => 
+        msg.metadata && 
+        (msg.metadata as any).hasImage &&
+        !(msg.metadata as any).imageBase64 &&
+        new Date(msg.createdAt!) > cutoffTime
+      );
+      
+      let fixed = 0;
+      for (const message of recentImagesWithoutBase64) {
+        const svgContent = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+          <rect width="200" height="200" fill="#f0f0f0" stroke="#ddd" stroke-width="2"/>
+          <circle cx="100" cy="100" r="40" fill="#007381"/>
+          <text x="100" y="95" text-anchor="middle" fill="white" font-family="Arial" font-size="11" font-weight="bold">Immagine</text>
+          <text x="100" y="110" text-anchor="middle" fill="white" font-family="Arial" font-size="11" font-weight="bold">Non Disponibile</text>
+          <text x="100" y="140" text-anchor="middle" fill="#666" font-family="Arial" font-size="8">${(message.metadata as any).imageOriginalName || 'IMG'}</text>
+        </svg>`;
+        const placeholderBase64 = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`;
+        
+        const updatedMetadata = {
+          ...message.metadata,
+          imageBase64: placeholderBase64,
+          isPlaceholder: true
+        };
+        
+        await storage.updateChatMessage(message.id, { metadata: updatedMetadata });
+        fixed++;
+        console.log(`Auto-fixed missing image for message ${message.id}`);
+      }
+      
+      res.json({ 
+        success: true, 
+        fixedImages: fixed,
+        totalRecentImages: recentImagesWithoutBase64.length
+      });
+    } catch (error) {
+      console.error("Error auto-fixing missing images:", error);
+      res.status(500).json({ error: "Failed to auto-fix missing images" });
+    }
+  });
+
   // Fix specific missing images
   app.post("/api/admin/fix-missing-images", async (req, res) => {
     try {

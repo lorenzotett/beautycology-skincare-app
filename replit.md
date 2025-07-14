@@ -224,6 +224,19 @@ Changelog:
   - Improved image handling with fallback placeholders for missing files
   - Restored /admin-dashboard endpoint accessibility for external access
   - Fixed React Query import issues and optimized dashboard performance
+- July 14, 2025. Resolved cross-platform image display issues for Shopify embedded app:
+  - Fixed message-bubble component to prioritize imageBase64 over image URL paths
+  - Implemented automatic placeholder generation for missing/deleted images
+  - Added auto-fix endpoint that runs every 5 minutes to convert missing images to base64 placeholders
+  - Enhanced image upload system to always save both file and base64 versions for redundancy
+  - Solved visibility issues where images uploaded through embedded iframe were not appearing in admin dashboard
+  - Created SVG placeholder system for permanent image persistence despite Replit file system limitations
+  - All new images automatically converted to base64 during upload to prevent future loss
+  - Added auto-fix endpoint that runs every 5 minutes to convert missing images to base64 placeholders
+  - Enhanced image upload system to always save both file and base64 versions for redundancy
+  - Solved visibility issues where images uploaded through embedded iframe were not appearing in admin dashboard
+  - Created SVG placeholder system for permanent image persistence despite Replit file system limitations
+  - All new images automatically converted to base64 during upload to prevent future loss
 
 ## User Preferences
 
