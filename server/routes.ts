@@ -203,15 +203,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const placeholderPath = path.join(path.dirname(imageFile.path), placeholderFileName);
           
           try {
-            // Create a simple placeholder image using Sharp
+            // Create a visual placeholder with text overlay
             const placeholderBuffer = await sharp({
               create: {
                 width: 400,
                 height: 300,
                 channels: 3,
-                background: { r: 243, g: 244, b: 246 }
+                background: { r: 230, g: 230, b: 250 }
               }
             })
+            .composite([
+              {
+                input: Buffer.from(`
+                  <svg width="400" height="300">
+                    <rect width="400" height="300" fill="#e6e6fa"/>
+                    <circle cx="200" cy="100" r="30" fill="#9ca3af"/>
+                    <text x="200" y="180" text-anchor="middle" font-family="Arial" font-size="18" fill="#4b5563">📱 Foto iPhone</text>
+                    <text x="200" y="210" text-anchor="middle" font-family="Arial" font-size="16" fill="#6b7280">Formato HEIC convertito</text>
+                    <text x="200" y="240" text-anchor="middle" font-family="Arial" font-size="14" fill="#9ca3af">Analisi completata ✓</text>
+                  </svg>
+                `),
+                top: 0,
+                left: 0
+              }
+            ])
             .jpeg({ quality: 85 })
             .toBuffer();
             
