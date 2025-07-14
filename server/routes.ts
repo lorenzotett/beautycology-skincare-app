@@ -176,6 +176,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn(`Failed to create backup: ${error}`);
       }
 
+      // Generate proper image URL
+      const fileName = path.basename(imageFile.path);
+      const imageUrl = `/api/images/${fileName}`;
+      
       // Store user message (include image info)
       const userContent = message ? `${message} [Immagine caricata: ${imageFile.originalname}]` : `[Immagine caricata: ${imageFile.originalname}]`;
       await storage.addChatMessage({
@@ -185,7 +189,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: {
           hasImage: true,
           imagePath: imageFile.path,
-          imageOriginalName: imageFile.originalname
+          imageOriginalName: imageFile.originalname,
+          image: imageUrl // Add proper image URL
         },
       });
 
@@ -214,6 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         message: response,
+        imageUrl: imageUrl // Return the image URL to the frontend
       });
     } catch (error) {
       console.error("Error sending message with image:", error);
@@ -285,9 +291,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const messages = await storage.getChatMessages(sessionId);
       
+      // Process messages to add proper image URLs
+      const processedMessages = messages.map(msg => {
+        if (msg.metadata && (msg.metadata as any).hasImage && (msg.metadata as any).imagePath) {
+          const imagePath = (msg.metadata as any).imagePath;
+          const fileName = path.basename(imagePath);
+          const imageUrl = `/api/images/${fileName}`;
+          
+          return {
+            ...msg,
+            metadata: {
+              ...msg.metadata,
+              image: imageUrl // Add proper image URL
+            }
+          };
+        }
+        return msg;
+      });
+      
       res.json({
         session,
-        messages,
+        messages: processedMessages,
       });
     } catch (error) {
       console.error("Error getting chat history:", error);

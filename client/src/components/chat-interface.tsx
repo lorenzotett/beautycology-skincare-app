@@ -24,6 +24,7 @@ interface ChatStartResponse {
 
 interface ChatMessageResponse {
   message: ChatResponse;
+  imageUrl?: string; // Add the imageUrl property
 }
 
 export function ChatInterface() {
@@ -420,6 +421,28 @@ export function ChatInterface() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json() as ChatMessageResponse;
+
+      // If we sent an image, update the user message with the correct image URL
+      if (imageToSend && data.imageUrl) {
+        setMessages(prev => {
+          const updatedMessages = [...prev];
+          const lastMessageIndex = updatedMessages.length - 1;
+          
+          if (lastMessageIndex >= 0 && updatedMessages[lastMessageIndex].role === "user") {
+            updatedMessages[lastMessageIndex] = {
+              ...updatedMessages[lastMessageIndex],
+              metadata: {
+                ...updatedMessages[lastMessageIndex].metadata,
+                image: data.imageUrl, // Use the URL returned from the server
+                hasImage: true,
+                imageOriginalName: imageToSend.name
+              }
+            };
+          }
+          
+          return updatedMessages;
+        });
+      }
 
       // Add assistant response
       const assistantMessage: ChatMessage = {
