@@ -218,66 +218,58 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           {/* Show image preview if available */}
           {metadata?.hasImage && (
             <div className="mb-2">
-              {metadata?.image && !metadata.image.startsWith('data:image/svg+xml') ? (
-                <img 
-                  key={`user-img-${message.id}-${metadata.image}`}
-                  src={metadata.image} 
-                  alt="Immagine caricata" 
-                  className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-green-500"
-                  style={{ 
-                    maxHeight: '200px', 
-                    minHeight: '120px',
-                    width: '100%',
-                    objectFit: 'cover',
-                    display: 'block',
-                    backgroundColor: 'red', // Debug: make visible if loading
-                    minWidth: '100px'
-                  }}
-                  onClick={() => onImageClick?.(metadata.image)}
-                  onError={(e) => {
-                    const imgElement = e.target as HTMLImageElement;
-                    console.error('❌ IFRAME IMAGE LOAD ERROR:', {
-                      src: imgElement.src,
-                      error: e,
-                      naturalWidth: imgElement.naturalWidth,
-                      naturalHeight: imgElement.naturalHeight,
-                      complete: imgElement.complete,
-                      currentSrc: imgElement.currentSrc
-                    });
-                    
-                    // Sostituisci con placeholder quando l'immagine non esiste
-                    imgElement.style.display = 'none';
-                    const parent = imgElement.parentElement;
-                    if (parent && !parent.querySelector('.image-error-placeholder')) {
-                      const placeholder = document.createElement('div');
-                      placeholder.className = 'image-error-placeholder w-full max-w-48 h-32 bg-red-500 rounded-lg flex items-center justify-center text-white text-sm';
-                      placeholder.innerHTML = `
-                        <div class="text-center">
-                          <div>❌ IMAGE ERROR</div>
-                          <div class="text-xs mt-1">${imgElement.src}</div>
-                        </div>
-                      `;
-                      parent.appendChild(placeholder);
-                    }
-                  }}
-                  onLoad={(e) => {
-                    const imgElement = e.target as HTMLImageElement;
-                    console.log('✅ IFRAME IMAGE LOADED:', {
-                      src: metadata.image,
-                      messageId: message.id,
-                      dimensions: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`,
-                      visible: imgElement.offsetWidth > 0,
-                      computedStyle: window.getComputedStyle(imgElement).display
-                    });
-                  }}
-                />
-              ) : metadata?.image?.startsWith('data:image/svg+xml') ? (
-                // Show SVG placeholder for HEIC files
-                <div 
-                  key={`svg-${message.id}`}
-                  dangerouslySetInnerHTML={{ __html: decodeURIComponent(metadata.image.replace('data:image/svg+xml,', '')) }}
-                  className="inline-block"
-                />
+              {metadata?.image ? (
+                metadata.image.startsWith('data:image/svg+xml') ? (
+                  // SVG placeholder for HEIC files that are being processed
+                  <div 
+                    key={`svg-${message.id}-${metadata.forceUpdate || ''}`}
+                    dangerouslySetInnerHTML={{ __html: decodeURIComponent(metadata.image.replace('data:image/svg+xml,', '')) }}
+                    className="inline-block"
+                  />
+                ) : (
+                  // Real image from server
+                  <img 
+                    key={`user-img-${message.id}-${metadata.forceUpdate || ''}-${metadata.image}`}
+                    src={metadata.image} 
+                    alt="Immagine caricata" 
+                    className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                    style={{ 
+                      maxHeight: '200px', 
+                      minHeight: '120px',
+                      width: '100%',
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                    onClick={() => onImageClick?.(metadata.image)}
+                    onError={(e) => {
+                      const imgElement = e.target as HTMLImageElement;
+                      console.error('❌ IMAGE LOAD ERROR:', imgElement.src);
+                      
+                      // Show error placeholder
+                      imgElement.style.display = 'none';
+                      const parent = imgElement.parentElement;
+                      if (parent && !parent.querySelector('.image-error-placeholder')) {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'image-error-placeholder w-full max-w-48 h-32 bg-gray-200 rounded-lg flex items-center justify-center text-gray-600 text-sm';
+                        placeholder.innerHTML = `
+                          <div class="text-center">
+                            <div>📸 Immagine non disponibile</div>
+                            <div class="text-xs mt-1 opacity-70">${metadata?.imageOriginalName || 'File'}</div>
+                          </div>
+                        `;
+                        parent.appendChild(placeholder);
+                      }
+                    }}
+                    onLoad={(e) => {
+                      const imgElement = e.target as HTMLImageElement;
+                      console.log('✅ IMAGE LOADED:', {
+                        src: metadata.image,
+                        messageId: message.id,
+                        dimensions: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`
+                      });
+                    }}
+                  />
+                )
               ) : (
                 <div className="w-full max-w-48 h-32 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm">
                   <div className="text-center">

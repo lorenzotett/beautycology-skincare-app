@@ -455,31 +455,26 @@ export function ChatInterface() {
       if (imageToSend && data.imageUrl) {
         console.log('🔄 Updating user message with server image URL:', data.imageUrl);
         
-        // Update the message immediately with the server URL
+        // Force immediate update with server URL - completely replace the message
         setMessages(prev => {
           const updatedMessages = prev.map(msg => {
             if (msg.id === userMessageId && msg.role === "user") {
-              const updatedMsg = {
+              return {
                 ...msg,
                 metadata: {
                   ...msg.metadata,
                   image: data.imageUrl, // Use the URL returned from the server
                   hasImage: true,
-                  imageOriginalName: imageToSend.name
+                  imageOriginalName: imageToSend.name,
+                  forceUpdate: Date.now() // Force re-render
                 }
               };
-              console.log('✅ Updated user message:', { id: msg.id, newUrl: data.imageUrl });
-              return updatedMsg;
             }
             return msg;
           });
+          console.log('✅ Force updated message with server URL:', data.imageUrl);
           return updatedMessages;
         });
-        
-        // Force a complete re-render by updating the state
-        setTimeout(() => {
-          setMessages(prev => [...prev]);
-        }, 200);
       }
 
       // Add assistant response
