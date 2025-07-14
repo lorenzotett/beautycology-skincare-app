@@ -198,23 +198,13 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   
 
 
-  // Debug log to check if choices are properly passed
-  console.log('Message metadata:', metadata);
-  console.log('Has choices:', hasChoices);
-  console.log('Choices:', choices);
-  
-  // 🚨 CRITICAL DEBUG: Check image metadata
+  // Debug log only for image metadata when present
   if (metadata?.hasImage) {
-    console.log('🖼️ MESSAGE WITH IMAGE DETECTED:', {
+    console.log('🖼️ IMAGE MESSAGE:', {
       messageId: message.id,
-      hasImage: metadata.hasImage,
-      imagePath: metadata.imagePath,
       imageUrl: metadata.image,
-      originalName: metadata.imageOriginalName,
-      willShowImage: !!metadata.image
+      fullUrl: `${window.location.origin}${metadata.image}`
     });
-    // Forza un alert per essere sicuri di vedere il log
-    alert(`IMMAGINE TROVATA! ID: ${message.id}, URL: ${metadata.image}`);
   }
 
   if (isUser) {
@@ -226,7 +216,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
             <div className="mb-2">
               {metadata?.image ? (
                 <img 
-                  src={metadata.image} 
+                  src={`${window.location.origin}${metadata.image}`} 
                   alt="Immagine caricata" 
                   className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
                   style={{ 
@@ -236,7 +226,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                     objectFit: 'cover',
                     display: 'block'
                   }}
-                  onClick={() => onImageClick?.(metadata.image)}
+                  onClick={() => onImageClick?.(`${window.location.origin}${metadata.image}`)}
                   onError={(e) => {
                     console.error('❌ ERRORE CARICAMENTO IMMAGINE:', e.target.src);
                     console.error('❌ Metadata:', metadata);
