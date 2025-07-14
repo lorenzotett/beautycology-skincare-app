@@ -1174,6 +1174,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fix specific missing images
+  app.post("/api/admin/fix-missing-images", async (req, res) => {
+    try {
+      const { messageIds } = req.body;
+      const idsToFix = messageIds || [4348, 4353];
+      
+      let fixed = 0;
+      for (const messageId of idsToFix) {
+        const messages = await storage.getAllChatMessages();
+        const message = messages.find(m => m.id === messageId);
+        
+        if (message && message.metadata && (message.metadata as any).hasImage) {
+          // Create placeholder SVG for missing images
+          const svgContent = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="200" height="200" fill="#f0f0f0" stroke="#ddd" stroke-width="2"/>
+            <circle cx="100" cy="100" r="40" fill="#007381"/>
+            <text x="100" y="95" text-anchor="middle" fill="white" font-family="Arial" font-size="11" font-weight="bold">Immagine</text>
+            <text x="100" y="110" text-anchor="middle" fill="white" font-family="Arial" font-size="11" font-weight="bold">Ripristinata</text>
+            <text x="100" y="140" text-anchor="middle" fill="#666" font-family="Arial" font-size="8">${(message.metadata as any).imageOriginalName || 'IMG'}</text>
+          </svg>`;
+          const placeholderBase64 = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`;
+          
+          const updatedMetadata = {
+            ...message.metadata,
+            imageBase64: placeholderBase64,
+            isPlaceholder: true
+          };
+          
+          await storage.updateChatMessage(messageId, { metadata: updatedMetadata });
+          fixed++;
+          console.log(`Fixed missing image for message ${messageId}`);
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        fixedImages: fixed,
+        processedIds: idsToFix
+      });
+    } catch (error) {
+      console.error("Error fixing missing images:", error);
+      res.status(500).json({ error: "Failed to fix missing images" });
+    }
+  });
+
   // Admin endpoint to convert existing images to base64
   app.post("/api/admin/convert-images", async (req, res) => {
     try {
