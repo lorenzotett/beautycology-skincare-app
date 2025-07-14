@@ -171,7 +171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let processedImagePath = imageFile.path;
       let finalFileName = path.basename(imageFile.path);
       
-      // Check if it's a HEIC file and try to convert with Sharp
+      // Check if it's a HEIC file and try to convert with Sharp or create placeholder
       const isHEIC = imageFile.originalname.toLowerCase().match(/\.(heic|heif)$/);
       if (isHEIC) {
         try {
@@ -188,8 +188,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           finalFileName = convertedFileName;
           console.log(`✅ HEIC converted to JPEG: ${finalFileName}`);
         } catch (error) {
-          console.warn(`⚠️ HEIC conversion failed, using original: ${error.message}`);
-          // Keep original file if conversion fails
+          console.warn(`⚠️ HEIC conversion failed: ${error.message}`);
+          // Create a visual placeholder image for HEIC files that can't be converted
+          const sharp = (await import('sharp')).default;
+          const placeholderFileName = imageFile.filename.replace(/\.(heic|heif)$/i, '_placeholder.jpg');
+          const placeholderPath = path.join(path.dirname(imageFile.path), placeholderFileName);
+          
+          try {
+            // Create a simple placeholder image using Sharp text
+            await sharp({
+              create: {
+                width: 400,
+                height: 300,
+                channels: 3,
+                background: { r: 243, g: 244, b: 246 }
+              }
+            })
+            .jpeg({ quality: 85 })
+            .toFile(placeholderPath);
+            
+            processedImagePath = placeholderPath;
+            finalFileName = placeholderFileName;
+            console.log(`✅ Created placeholder for HEIC: ${finalFileName}`);
+          } catch (placeholderError) {
+            console.warn(`⚠️ Failed to create placeholder, using original file: ${placeholderError.message}`);
+            // Use original file as last resort
+          }
         }
       }
 

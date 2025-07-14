@@ -454,24 +454,23 @@ export function ChatInterface() {
       // If we sent an image, update the user message with the correct image URL
       if (imageToSend && data.imageUrl) {
         console.log('🔄 Updating user message with server image URL:', data.imageUrl);
+        // Force re-render by creating new messages array
         setMessages(prev => {
-          const updatedMessages = [...prev];
-          // Find the message by ID instead of assuming it's the last one
-          const messageIndex = updatedMessages.findIndex(msg => msg.id === userMessageId);
-          
-          if (messageIndex >= 0 && updatedMessages[messageIndex].role === "user") {
-            updatedMessages[messageIndex] = {
-              ...updatedMessages[messageIndex],
-              metadata: {
-                ...updatedMessages[messageIndex].metadata,
-                image: data.imageUrl, // Use the URL returned from the server
-                hasImage: true,
-                imageOriginalName: imageToSend.name
-              }
-            };
-            console.log('✅ Updated user message metadata:', updatedMessages[messageIndex].metadata);
-          }
-          
+          const updatedMessages = prev.map(msg => {
+            if (msg.id === userMessageId && msg.role === "user") {
+              return {
+                ...msg,
+                metadata: {
+                  ...msg.metadata,
+                  image: data.imageUrl, // Use the URL returned from the server
+                  hasImage: true,
+                  imageOriginalName: imageToSend.name
+                }
+              };
+            }
+            return msg;
+          });
+          console.log('✅ Updated user message metadata for ID:', userMessageId);
           return updatedMessages;
         });
       }
