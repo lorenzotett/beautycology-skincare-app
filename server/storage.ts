@@ -28,6 +28,7 @@ export interface IStorage {
   addChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
   getChatMessages(sessionId: string): Promise<ChatMessage[]>;
   getRecentChatMessages(sessionId: string, limit: number): Promise<ChatMessage[]>;
+  updateChatMessage(messageId: number, updates: Partial<ChatMessage>): Promise<ChatMessage | undefined>;
   deleteChatMessages(sessionId: string): Promise<void>;
   
   // Admin methods
@@ -142,6 +143,20 @@ export class MemStorage implements IStorage {
     return messages.slice(-limit);
   }
 
+  async updateChatMessage(messageId: number, updates: Partial<ChatMessage>): Promise<ChatMessage | undefined> {
+    // Find message across all sessions
+    for (const [sessionId, messages] of this.chatMessages.entries()) {
+      const messageIndex = messages.findIndex(msg => msg.id === messageId);
+      if (messageIndex !== -1) {
+        const updatedMessage = { ...messages[messageIndex], ...updates };
+        messages[messageIndex] = updatedMessage;
+        this.chatMessages.set(sessionId, messages);
+        return updatedMessage;
+      }
+    }
+    return undefined;
+  }
+
   async getAllChatSessions(): Promise<ChatSession[]> {
     return Array.from(this.chatSessions.values());
   }
@@ -248,6 +263,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(chatMessages.sessionId, sessionId))
       .orderBy(desc(chatMessages.createdAt))
       .limit(limit);
+  }
+
+  async updateChatMessage(messageId: number, updates: Partial<ChatMessage>): Promise<ChatMessage | undefined> {
+    const [message] = await db
+      .update(chatMessages)
+      .set(updates)
+      .where(eq(chatMessages.id, messageId))
+      .returning();
+    return message || undefined;
   }
 
   async getAllChatSessions(): Promise<ChatSession[]> {

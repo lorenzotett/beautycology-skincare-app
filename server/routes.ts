@@ -173,6 +173,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn(`Failed to create backup: ${error}`);
       }
 
+      // Convert image to base64 for permanent storage
+      let imageBase64 = null;
+      try {
+        const imageBuffer = fs.readFileSync(imageFile.path);
+        const mimeType = imageFile.mimetype || 'image/jpeg';
+        imageBase64 = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+        console.log(`Image converted to base64, size: ${Math.round(imageBase64.length / 1024)}KB`);
+      } catch (error) {
+        console.warn(`Failed to convert image to base64: ${error}`);
+      }
+
       // Store user message (include image info)
       const userContent = message ? `${message} [Immagine caricata: ${imageFile.originalname}]` : `[Immagine caricata: ${imageFile.originalname}]`;
       await storage.addChatMessage({
@@ -182,7 +193,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: {
           hasImage: true,
           imagePath: imageFile.path,
-          imageOriginalName: imageFile.originalname
+          imageOriginalName: imageFile.originalname,
+          imageBase64: imageBase64 // Store base64 version for persistence
         },
       });
 
@@ -1070,8 +1082,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 image: imageUrl // Add absolute image URL for MessageBubble component
               }
             };
+          } else if ((msg.metadata as any).imageBase64) {
+            // File doesn't exist but we have base64, use it directly
+            return {
+              ...msg,
+              metadata: {
+                ...msg.metadata,
+                image: (msg.metadata as any).imageBase64 // Use stored base64 image
+              }
+            };
           } else {
-            // File doesn't exist, add placeholder
+            // No file and no base64, add placeholder
             return {
               ...msg,
               metadata: {
@@ -1153,7 +1174,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
+  // Admin endpoint to convert existing images to base64
+  app.post("/api/admin/convert-images", async (req, res) => {
+    try {
+      const messages = await storage.getAllChatMessages();
+      const imageMessages = messages.filter(msg => 
+        msg.metadata && 
+        (msg.metadata as any).hasImage && 
+        !(msg.metadata as any).imageBase64
+      );
+      
+      let converted = 0;
+      for (const message of imageMessages) {
+        const imagePath = (message.metadata as any).imagePath;
+        if (imagePath) {
+          const fileName = path.basename(imagePath);
+          const fullPath = path.join(process.cwd(), 'uploads', fileName);
+          const backupPath = path.join(process.cwd(), 'uploads', 'backup', fileName);
+          
+          let imageBuffer = null;
+          if (fs.existsSync(fullPath)) {
+            imageBuffer = fs.readFileSync(fullPath);
+          } else if (fs.existsSync(backupPath)) {
+            imageBuffer = fs.readFileSync(backupPath);
+          }
+          
+          if (imageBuffer) {
+            try {
+              const mimeType = 'image/jpeg'; // Default
+              const imageBase64 = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+              
+              // Update message with base64
+              const updatedMetadata = {
+                ...message.metadata,
+                imageBase64: imageBase64
+              };
+              
+              await storage.updateChatMessage(message.id, { metadata: updatedMetadata });
+              converted++;
+              console.log(`Converted image for message ${message.id}`);
+            } catch (error) {
+              console.warn(`Failed to convert image for message ${message.id}: ${error}`);
+            }
+          }
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        totalImageMessages: imageMessages.length,
+        convertedImages: converted 
+      });
+    } catch (error) {
+      console.error("Error converting images:", error);
+      res.status(500).json({ error: "Failed to convert images" });
+    }
+  });
 
   // Serve admin dashboard directly
   app.get("/admin-dashboard", (req, res) => {
