@@ -240,6 +240,10 @@ Changelog:
   - Enhanced placeholder system for HEIC files that cannot be converted
   - Images now display correctly in: input preview, chat messages, admin dashboard
   - Improved error handling with user-friendly fallback placeholders
+  - RESOLUTION IN PROGRESS: Implementing Option 1 - Complete Base64 system
+  - Converting ALL images (HEIC, JPG, PNG) to base64 data URLs for bulletproof iframe compatibility
+  - Eliminates cross-origin restrictions and URL update timing issues
+  - System will work consistently across all embedded environments
 
 ## User Preferences
 

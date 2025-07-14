@@ -219,57 +219,49 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           {metadata?.hasImage && (
             <div className="mb-2">
               {metadata?.image ? (
-                metadata.image.startsWith('data:image/svg+xml') ? (
-                  // SVG placeholder for HEIC files that are being processed
-                  <div 
-                    key={`svg-${message.id}-${metadata.forceUpdate || ''}`}
-                    dangerouslySetInnerHTML={{ __html: decodeURIComponent(metadata.image.replace('data:image/svg+xml,', '')) }}
-                    className="inline-block"
-                  />
-                ) : (
-                  // Real image from server
-                  <img 
-                    key={`user-img-${message.id}-${metadata.forceUpdate || ''}-${metadata.image}`}
-                    src={metadata.image} 
-                    alt="Immagine caricata" 
-                    className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                    style={{ 
-                      maxHeight: '200px', 
-                      minHeight: '120px',
-                      width: '100%',
-                      objectFit: 'cover',
-                      display: 'block'
-                    }}
-                    onClick={() => onImageClick?.(metadata.image)}
-                    onError={(e) => {
-                      const imgElement = e.target as HTMLImageElement;
-                      console.error('❌ IMAGE LOAD ERROR:', imgElement.src);
-                      
-                      // Show error placeholder
-                      imgElement.style.display = 'none';
-                      const parent = imgElement.parentElement;
-                      if (parent && !parent.querySelector('.image-error-placeholder')) {
-                        const placeholder = document.createElement('div');
-                        placeholder.className = 'image-error-placeholder w-full max-w-48 h-32 bg-gray-200 rounded-lg flex items-center justify-center text-gray-600 text-sm';
-                        placeholder.innerHTML = `
-                          <div class="text-center">
-                            <div>📸 Immagine non disponibile</div>
-                            <div class="text-xs mt-1 opacity-70">${metadata?.imageOriginalName || 'File'}</div>
-                          </div>
-                        `;
-                        parent.appendChild(placeholder);
-                      }
-                    }}
-                    onLoad={(e) => {
-                      const imgElement = e.target as HTMLImageElement;
-                      console.log('✅ IMAGE LOADED:', {
-                        src: metadata.image,
-                        messageId: message.id,
-                        dimensions: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`
-                      });
-                    }}
-                  />
-                )
+                // All images come as base64 or server URLs from backend
+                <img 
+                  key={`user-img-${message.id}-${metadata.forceUpdate || ''}`}
+                  src={metadata.image} 
+                  alt="Immagine caricata" 
+                  className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                  style={{ 
+                    maxHeight: '200px', 
+                    minHeight: '120px',
+                    width: '100%',
+                    objectFit: 'cover',
+                    display: 'block'
+                  }}
+                  onClick={() => onImageClick?.(metadata.image)}
+                  onError={(e) => {
+                    const imgElement = e.target as HTMLImageElement;
+                    console.error('❌ IMAGE LOAD ERROR:', imgElement.src);
+                    
+                    // Show error placeholder
+                    imgElement.style.display = 'none';
+                    const parent = imgElement.parentElement;
+                    if (parent && !parent.querySelector('.image-error-placeholder')) {
+                      const placeholder = document.createElement('div');
+                      placeholder.className = 'image-error-placeholder w-full max-w-48 h-32 bg-gray-200 rounded-lg flex items-center justify-center text-gray-600 text-sm';
+                      placeholder.innerHTML = `
+                        <div class="text-center">
+                          <div>📸 Immagine non disponibile</div>
+                          <div class="text-xs mt-1 opacity-70">${metadata?.imageOriginalName || 'File'}</div>
+                        </div>
+                      `;
+                      parent.appendChild(placeholder);
+                    }
+                  }}
+                  onLoad={(e) => {
+                    const imgElement = e.target as HTMLImageElement;
+                    console.log('✅ BASE64 IMAGE LOADED:', {
+                      messageId: message.id,
+                      dimensions: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`,
+                      isBase64: metadata.image.startsWith('data:'),
+                      size: metadata.image.length
+                    });
+                  }}
+                />
               ) : (
                 <div className="w-full max-w-48 h-32 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm">
                   <div className="text-center">

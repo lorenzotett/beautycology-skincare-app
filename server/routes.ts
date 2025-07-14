@@ -167,9 +167,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Chat service not found" });
       }
 
-      // Handle HEIC files that might need conversion
+      // Handle all images with base64 conversion for iframe compatibility
       let processedImagePath = imageFile.path;
       let finalFileName = path.basename(imageFile.path);
+      let imageUrl: string;
       
       // Check if it's a HEIC file and try to convert with Sharp or create placeholder
       const isHEIC = imageFile.originalname.toLowerCase().match(/\.(heic|heif)$/);
@@ -179,14 +180,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const convertedFileName = imageFile.filename.replace(/\.(heic|heif)$/i, '.jpg');
           const convertedPath = path.join(path.dirname(imageFile.path), convertedFileName);
           
-          // Convert HEIC to JPEG using Sharp
-          await sharp(imageFile.path)
+          // Try to convert HEIC to JPEG using Sharp
+          const convertedBuffer = await sharp(imageFile.path)
             .jpeg({ quality: 85 })
-            .toFile(convertedPath);
+            .toBuffer();
+          
+          // Save converted file for backup
+          await fs.writeFile(convertedPath, convertedBuffer);
           
           processedImagePath = convertedPath;
           finalFileName = convertedFileName;
-          console.log(`✅ HEIC converted to JPEG: ${finalFileName}`);
+          
+          // Convert to base64 for iframe compatibility
+          imageUrl = `data:image/jpeg;base64,${convertedBuffer.toString('base64')}`;
+          
+          console.log(`✅ HEIC converted to base64 JPEG: ${finalFileName}`);
         } catch (error) {
           console.warn(`⚠️ HEIC conversion failed: ${error.message}`);
           // Create a visual placeholder image for HEIC files that can't be converted
@@ -195,8 +203,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const placeholderPath = path.join(path.dirname(imageFile.path), placeholderFileName);
           
           try {
-            // Create a simple placeholder image using Sharp text
-            await sharp({
+            // Create a simple placeholder image using Sharp
+            const placeholderBuffer = await sharp({
               create: {
                 width: 400,
                 height: 300,
@@ -205,15 +213,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             })
             .jpeg({ quality: 85 })
-            .toFile(placeholderPath);
+            .toBuffer();
+            
+            // Save to file for backup
+            await fs.writeFile(placeholderPath, placeholderBuffer);
             
             processedImagePath = placeholderPath;
             finalFileName = placeholderFileName;
-            console.log(`✅ Created placeholder for HEIC: ${finalFileName}`);
+            
+            // Convert placeholder to base64 for iframe compatibility
+            imageUrl = `data:image/jpeg;base64,${placeholderBuffer.toString('base64')}`;
+            
+            console.log(`✅ Created base64 placeholder for HEIC: ${finalFileName}`);
           } catch (placeholderError) {
-            console.warn(`⚠️ Failed to create placeholder, using original file: ${placeholderError.message}`);
-            // Use original file as last resort
+            console.warn(`⚠️ Failed to create placeholder: ${placeholderError.message}`);
+            // Use fallback server URL as last resort
+            imageUrl = `/api/images/${finalFileName}`;
           }
+        }
+      } else {
+        // For JPG/PNG files, also convert to base64 for consistency in iframe
+        try {
+          const imageBuffer = await fs.readFile(imageFile.path);
+          const mimeType = imageFile.mimetype || 'image/jpeg';
+          imageUrl = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+          console.log(`✅ Converted ${imageFile.originalname} to base64 for iframe compatibility`);
+        } catch (error) {
+          console.warn(`⚠️ Failed to convert to base64: ${error.message}`);
+          // Fallback to server URL
+          imageUrl = `/api/images/${finalFileName}`;
         }
       }
 
@@ -226,8 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn(`Failed to create backup: ${error}`);
       }
 
-      // Generate proper image URL
-      const imageUrl = `/api/images/${finalFileName}`;
+      // imageUrl is now set above (base64 or server URL)
       
       // Store user message (include image info)
       const userContent = message ? `${message} [Immagine caricata: ${imageFile.originalname}]` : `[Immagine caricata: ${imageFile.originalname}]`;
