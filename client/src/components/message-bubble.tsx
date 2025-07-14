@@ -213,6 +213,8 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       originalName: metadata.imageOriginalName,
       willShowImage: !!metadata.image
     });
+    // Forza un alert per essere sicuri di vedere il log
+    alert(`IMMAGINE TROVATA! ID: ${message.id}, URL: ${metadata.image}`);
   }
 
   if (isUser) {
