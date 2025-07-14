@@ -476,10 +476,10 @@ export function ChatInterface() {
           return updatedMessages;
         });
         
-        // Force a complete re-render by updating the message again
+        // Force a complete re-render by updating the state
         setTimeout(() => {
-          setMessages(prev => prev.map(msg => ({...msg})));
-        }, 100);
+          setMessages(prev => [...prev]);
+        }, 200);
       }
 
       // Add assistant response

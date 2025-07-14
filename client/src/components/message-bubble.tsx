@@ -218,8 +218,9 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           {/* Show image preview if available */}
           {metadata?.hasImage && (
             <div className="mb-2">
-              {metadata?.image ? (
+              {metadata?.image && !metadata.image.startsWith('data:image/svg+xml') ? (
                 <img 
+                  key={`user-img-${message.id}-${metadata.image}`}
                   src={metadata.image} 
                   alt="Immagine caricata" 
                   className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
@@ -255,6 +256,13 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   onLoad={() => {
                     console.log('✅ IMMAGINE CARICATA CORRETTAMENTE:', metadata.image);
                   }}
+                />
+              ) : metadata?.image?.startsWith('data:image/svg+xml') ? (
+                // Show SVG placeholder for HEIC files
+                <div 
+                  key={`svg-${message.id}`}
+                  dangerouslySetInnerHTML={{ __html: decodeURIComponent(metadata.image.replace('data:image/svg+xml,', '')) }}
+                  className="inline-block"
                 />
               ) : (
                 <div className="w-full max-w-48 h-32 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm">
