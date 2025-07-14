@@ -232,6 +232,14 @@ Changelog:
   - Verified image URLs are correctly added to message metadata
   - System now serves images from both main and backup directories (200 OK)
   - Added visual indicators for conversations containing images in dashboard table
+- July 14, 2025. Complete HEIC image support and iframe compatibility:
+  - Fixed image display issues when app is embedded in iframe (blob URL → server URL)
+  - JPG/PNG images now work perfectly with proper server URL conversion
+  - Added dual-layer HEIC processing: frontend heic2any + backend Sharp conversion
+  - Fixed ES6 import for Sharp to resolve "require is not defined" error
+  - Enhanced placeholder system for HEIC files that cannot be converted
+  - Images now display correctly in: input preview, chat messages, admin dashboard
+  - Improved error handling with user-friendly fallback placeholders
 
 ## User Preferences
 

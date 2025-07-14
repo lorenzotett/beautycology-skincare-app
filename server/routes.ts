@@ -175,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isHEIC = imageFile.originalname.toLowerCase().match(/\.(heic|heif)$/);
       if (isHEIC) {
         try {
-          const sharp = require('sharp');
+          const sharp = (await import('sharp')).default;
           const convertedFileName = imageFile.filename.replace(/\.(heic|heif)$/i, '.jpg');
           const convertedPath = path.join(path.dirname(imageFile.path), convertedFileName);
           
