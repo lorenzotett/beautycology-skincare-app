@@ -1011,6 +1011,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const imagePath = path.join(process.cwd(), 'uploads', imageName);
       const backupPath = path.join(process.cwd(), 'uploads', 'backup', imageName);
       
+      // Set CORS headers for cross-domain access from iframe
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET');
+      res.header('Access-Control-Allow-Headers', 'Content-Type');
+      
       // Check if file exists in main directory first
       if (fs.existsSync(imagePath)) {
         return res.sendFile(imagePath);
@@ -1053,13 +1058,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const backupPath = path.join(process.cwd(), 'uploads', 'backup', fileName);
           
           if (fs.existsSync(fullPath) || fs.existsSync(backupPath)) {
-            const imageUrl = `/api/images/${fileName}`;
+            // Generate absolute URL for admin dashboard to work across domains
+            const protocol = req.secure ? 'https' : 'http';
+            const host = req.get('host');
+            const imageUrl = `${protocol}://${host}/api/images/${fileName}`;
             
             return {
               ...msg,
               metadata: {
                 ...msg.metadata,
-                image: imageUrl // Add image URL for MessageBubble component
+                image: imageUrl // Add absolute image URL for MessageBubble component
               }
             };
           } else {
