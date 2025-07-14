@@ -87,9 +87,6 @@ const imageUpload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from attached_assets directory
   app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
-  
-  // Serve uploaded images directly as static files (backup route)
-  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   // Start a new chat session
   app.post("/api/chat/start", async (req, res) => {
     try {
@@ -167,105 +164,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Chat service not found" });
       }
 
-      // Handle all images with base64 conversion for iframe compatibility
-      let processedImagePath = imageFile.path;
-      let finalFileName = path.basename(imageFile.path);
-      let imageUrl: string;
-      
-      // Smart image handling - detect if request comes from iframe or direct access
-      const isIframe = req.headers['x-frame-options'] !== 'DENY';
-      const useBase64 = true; // Always use base64 for best compatibility
-      
-      // Check if it's a HEIC file and convert it
-      const isHEIC = imageFile.originalname.toLowerCase().match(/\.(heic|heif)$/);
-      
-      if (isHEIC) {
-        try {
-          const sharp = (await import('sharp')).default;
-          console.log(`📱 Processing HEIC file: ${imageFile.originalname}`);
-          
-          // First, try to read HEIC metadata to check if it's valid
-          const metadata = await sharp(imageFile.path).metadata();
-          console.log(`📊 HEIC metadata:`, { width: metadata.width, height: metadata.height, format: metadata.format });
-          
-          // Since Sharp can't read HEIC directly, we'll create a nice fallback
-          // In a real scenario, you'd use a HEIC decoder library
-          const convertedFileName = imageFile.filename.replace(/\.(heic|heif)$/i, '_converted.jpg');
-          const convertedPath = path.join(path.dirname(imageFile.path), convertedFileName);
-          
-          // Create a fallback that indicates HEIC was received
-          const fallbackBuffer = await sharp({
-            create: {
-              width: 800,
-              height: 600,
-              channels: 3,
-              background: { r: 245, g: 245, b: 250 }
-            }
-          })
-          .composite([
-            {
-              input: Buffer.from(`
-                <svg width="800" height="600">
-                  <rect width="800" height="600" fill="#f5f5fa"/>
-                  <text x="400" y="280" text-anchor="middle" font-family="Arial" font-size="24" fill="#374151">📱 Foto iPhone HEIC</text>
-                  <text x="400" y="320" text-anchor="middle" font-family="Arial" font-size="18" fill="#6b7280">${imageFile.originalname}</text>
-                  <text x="400" y="350" text-anchor="middle" font-family="Arial" font-size="16" fill="#9ca3af">Analisi in corso...</text>
-                </svg>
-              `),
-              top: 0,
-              left: 0
-            }
-          ])
-          .jpeg({ quality: 90 })
-          .toBuffer();
-          
-          // Save the fallback
-          await fs.promises.writeFile(convertedPath, fallbackBuffer);
-          processedImagePath = convertedPath;
-          finalFileName = convertedFileName;
-          
-          if (useBase64) {
-            imageUrl = `data:image/jpeg;base64,${fallbackBuffer.toString('base64')}`;
-          } else {
-            imageUrl = `/api/images/${convertedFileName}`;
-          }
-          
-          console.log(`✅ HEIC processed as fallback: ${convertedFileName}`);
-        } catch (error) {
-          console.error(`❌ HEIC processing failed completely: ${error.message}`);
-          // Use original file URL as last resort
-          imageUrl = `/api/images/${imageFile.filename}`;
-        }
-      } else {
-        // For JPG/PNG files - handle normally
-        console.log(`🖼️ Processing regular image: ${imageFile.originalname}`);
-        
-        if (useBase64) {
-          try {
-            const imageBuffer = await fs.promises.readFile(imageFile.path);
-            const mimeType = imageFile.mimetype || 'image/jpeg';
-            imageUrl = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
-            console.log(`✅ Converted to base64: ${imageFile.originalname} (${imageBuffer.length} bytes)`);
-          } catch (error) {
-            console.error(`❌ Base64 conversion failed: ${error.message}`);
-            imageUrl = `/api/images/${finalFileName}`;
-          }
-        } else {
-          imageUrl = `/api/images/${finalFileName}`;
-        }
-      }
-
       // Create backup copy to prevent file loss
-      const backupPath = path.join(process.cwd(), 'uploads', 'backup', finalFileName);
+      const backupPath = path.join(process.cwd(), 'uploads', 'backup', path.basename(imageFile.path));
       try {
-        fs.copyFileSync(processedImagePath, backupPath);
+        fs.copyFileSync(imageFile.path, backupPath);
         console.log(`Backup created: ${backupPath}`);
       } catch (error) {
         console.warn(`Failed to create backup: ${error}`);
       }
 
-      // imageUrl is now set above (base64 or server URL)
-      
       // Store user message (include image info)
       const userContent = message ? `${message} [Immagine caricata: ${imageFile.originalname}]` : `[Immagine caricata: ${imageFile.originalname}]`;
       await storage.addChatMessage({
@@ -274,15 +181,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: userContent,
         metadata: {
           hasImage: true,
-          imagePath: processedImagePath, // Use processed image path
-          imageOriginalName: imageFile.originalname,
-          image: imageUrl // Add proper image URL
+          imagePath: imageFile.path,
+          imageOriginalName: imageFile.originalname
         },
       });
 
       // First, analyze the skin with specialized service
       const skinAnalysis = new SkinAnalysisService();
-      const analysisResult = await skinAnalysis.analyzeImage(processedImagePath); // Use processed image
+      const analysisResult = await skinAnalysis.analyzeImage(imageFile.path);
 
       // Then send the analysis data to Gemini for conversation
       const analysisMessage = message ? 
@@ -305,10 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         message: response,
-        imageUrl: imageUrl // Return the image URL to the frontend
       });
-      
-      console.log(`📤 Responding with imageUrl: ${imageUrl}`);
     } catch (error) {
       console.error("Error sending message with image:", error);
       res.status(500).json({ error: "Failed to send message with image" });
@@ -379,27 +282,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const messages = await storage.getChatMessages(sessionId);
       
-      // Process messages to add proper image URLs
-      const processedMessages = messages.map(msg => {
-        if (msg.metadata && (msg.metadata as any).hasImage && (msg.metadata as any).imagePath) {
-          const imagePath = (msg.metadata as any).imagePath;
-          const fileName = path.basename(imagePath);
-          const imageUrl = `/api/images/${fileName}`;
-          
-          return {
-            ...msg,
-            metadata: {
-              ...msg.metadata,
-              image: imageUrl // Add proper image URL
-            }
-          };
-        }
-        return msg;
-      });
-      
       res.json({
         session,
-        messages: processedMessages,
+        messages,
       });
     } catch (error) {
       console.error("Error getting chat history:", error);
@@ -1138,25 +1023,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // File not found in either location
-      console.error(`[express] MISSING IMAGE: ${imageName}`);
-      console.error(`[express] Searched in: ${imagePath} and ${backupPath}`);
-      
-      // Return a placeholder SVG instead of 404
-      const placeholderSVG = `
-        <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
-          <rect width="400" height="300" fill="#fee2e2"/>
-          <text x="200" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#dc2626">
-            Immagine non disponibile
-          </text>
-          <text x="200" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#dc2626">
-            ${imageName}
-          </text>
-        </svg>
-      `;
-      
-      res.setHeader('Content-Type', 'image/svg+xml');
-      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
-      return res.status(200).send(placeholderSVG);
+      return res.status(404).json({ error: "Image not found" });
     } catch (error) {
       console.error("Error serving image:", error);
       res.status(500).json({ error: "Failed to serve image" });

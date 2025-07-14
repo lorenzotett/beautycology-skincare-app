@@ -24,7 +24,6 @@ interface ChatStartResponse {
 
 interface ChatMessageResponse {
   message: ChatResponse;
-  imageUrl?: string; // Add the imageUrl property
 }
 
 export function ChatInterface() {
@@ -284,15 +283,16 @@ export function ChatInterface() {
         return;
       }
 
+      setSelectedImage(file);
       setCurrentMessage(''); // Clear message when image is selected
 
-      // Check if it's a HEIC/HEIF file and convert for preview AND upload
+      // Check if it's a HEIC/HEIF file and convert for preview
       const isHEIC = fileExtension === '.heic' || fileExtension === '.heif' || 
                      file.type === 'image/heic' || file.type === 'image/heif';
 
       if (isHEIC) {
         try {
-          // Convert HEIC to JPEG for both preview and upload
+          // Convert HEIC to JPEG for preview
           const heic2any = await import('heic2any');
           const convertedBlob = await heic2any.default({
             blob: file,
@@ -301,44 +301,19 @@ export function ChatInterface() {
           });
 
           const blobArray = Array.isArray(convertedBlob) ? convertedBlob : [convertedBlob];
-          const jpegBlob = blobArray[0] as Blob;
-          
-          // Create a new File object from the converted blob with .jpg extension
-          const convertedFile = new File([jpegBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
-            type: 'image/jpeg',
-            lastModified: file.lastModified
-          });
-          
-          // Set the converted file as selected image
-          setSelectedImage(convertedFile);
-          
-          // Set preview
           const reader = new FileReader();
           reader.onload = (e) => {
             setImagePreview(e.target?.result as string);
           };
-          reader.readAsDataURL(jpegBlob);
-          
-          console.log('✅ HEIC converted successfully to:', convertedFile.name);
+          reader.readAsDataURL(blobArray[0]);
         } catch (error) {
           console.error('Error converting HEIC:', error);
-          // Fallback: use original HEIC file and let server handle it
-          console.log('⚠️ HEIC conversion failed, using original file');
-          setSelectedImage(file);
-          
-          // Create a simple placeholder for HEIC files that failed conversion
-          const placeholderSvg = `data:image/svg+xml,${encodeURIComponent(`
-            <svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
-              <rect width="200" height="150" fill="#f3f4f6"/>
-              <text x="100" y="75" text-anchor="middle" fill="#6b7280" font-size="14">📸 HEIC File</text>
-              <text x="100" y="95" text-anchor="middle" fill="#9ca3af" font-size="12">Converting...</text>
-            </svg>
-          `)}`;
-          setImagePreview(placeholderSvg);
+          // Use the original file as a blob URL for preview
+          const originalBlobUrl = URL.createObjectURL(file);
+          setImagePreview(originalBlobUrl);
         }
       } else {
-        // For other formats, set the original file and create preview
-        setSelectedImage(file);
+        // For other formats, use regular FileReader
         const reader = new FileReader();
         reader.onload = (e) => {
           setImagePreview(e.target?.result as string);
@@ -365,15 +340,14 @@ export function ChatInterface() {
     const messageToSend = currentMessage.trim();
     const imageToSend = selectedImage;
 
-    // Add user message immediately to chat (with temporary blob URL for immediate preview)
-    const userMessageId = Date.now();
+    // Add user message immediately to chat
     const userMessage: ChatMessage = {
-      id: userMessageId,
+      id: Date.now(),
       sessionId: sessionId!,
       role: "user",
       content: messageToSend || (imageToSend ? "📷 Immagine caricata" : ""),
       metadata: imageToSend ? { 
-        image: imagePreview, // Temporary blob URL for immediate preview
+        image: imagePreview,
         hasImage: true,
         imageName: imageToSend.name 
       } : null,
@@ -446,32 +420,6 @@ export function ChatInterface() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json() as ChatMessageResponse;
-
-      // If we sent an image, update the user message with the correct image URL
-      if (imageToSend && data.imageUrl) {
-        console.log('🔄 Updating user message with server image URL:', data.imageUrl);
-        
-        // Force immediate update with server URL - completely replace the message
-        setMessages(prev => {
-          const updatedMessages = prev.map(msg => {
-            if (msg.id === userMessageId && msg.role === "user") {
-              return {
-                ...msg,
-                metadata: {
-                  ...msg.metadata,
-                  image: data.imageUrl, // Use the URL returned from the server
-                  hasImage: true,
-                  imageOriginalName: imageToSend.name,
-                  forceUpdate: Date.now() // Force re-render
-                }
-              };
-            }
-            return msg;
-          });
-          console.log('✅ Force updated message with server URL:', data.imageUrl);
-          return updatedMessages;
-        });
-      }
 
       // Add assistant response
       const assistantMessage: ChatMessage = {

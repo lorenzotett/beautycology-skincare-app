@@ -185,14 +185,6 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   });
 
   const metadata = message.metadata as any;
-  
-  // CRITICAL FIX: Ensure metadata.image exists
-  if (metadata?.hasImage && !metadata?.image && metadata?.imagePath) {
-    // Fallback: costruisci l'URL dall'imagePath se image non esiste
-    const fileName = metadata.imagePath.split('/').pop();
-    metadata.image = `/api/images/${fileName}`;
-    console.log('🔧 FIXED IMAGE URL:', metadata.image);
-  }
   const hasChoices = metadata?.hasChoices || false;
   const choices = metadata?.choices || [];
 
@@ -206,10 +198,10 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   
 
 
-  // Log only when fixing image URL
-  if (metadata?.hasImage) {
-    console.log('📸 Image message:', { id: message.id, imageUrl: metadata.image });
-  }
+  // Debug log to check if choices are properly passed
+  console.log('Message metadata:', metadata);
+  console.log('Has choices:', hasChoices);
+  console.log('Choices:', choices);
 
   if (isUser) {
     return (
@@ -219,9 +211,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           {metadata?.hasImage && (
             <div className="mb-2">
               {metadata?.image ? (
-                // All images come as base64 or server URLs from backend
                 <img 
-                  key={`user-img-${message.id}-${metadata.forceUpdate || ''}`}
                   src={metadata.image} 
                   alt="Immagine caricata" 
                   className="w-full max-w-48 h-auto rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
@@ -234,32 +224,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   }}
                   onClick={() => onImageClick?.(metadata.image)}
                   onError={(e) => {
-                    const imgElement = e.target as HTMLImageElement;
-                    console.error('❌ IMAGE LOAD ERROR:', imgElement.src);
-                    
-                    // Show error placeholder
-                    imgElement.style.display = 'none';
-                    const parent = imgElement.parentElement;
-                    if (parent && !parent.querySelector('.image-error-placeholder')) {
-                      const placeholder = document.createElement('div');
-                      placeholder.className = 'image-error-placeholder w-full max-w-48 h-32 bg-gray-200 rounded-lg flex items-center justify-center text-gray-600 text-sm';
-                      placeholder.innerHTML = `
-                        <div class="text-center">
-                          <div>📸 Immagine non disponibile</div>
-                          <div class="text-xs mt-1 opacity-70">${metadata?.imageOriginalName || 'File'}</div>
-                        </div>
-                      `;
-                      parent.appendChild(placeholder);
-                    }
-                  }}
-                  onLoad={(e) => {
-                    const imgElement = e.target as HTMLImageElement;
-                    console.log('✅ BASE64 IMAGE LOADED:', {
-                      messageId: message.id,
-                      dimensions: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`,
-                      isBase64: metadata.image.startsWith('data:'),
-                      size: metadata.image.length
-                    });
+                    console.warn('Errore nel caricamento dell\'immagine:', e);
                   }}
                 />
               ) : (
@@ -357,14 +322,14 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
         </div>
       )}
       {/* Image display */}
-      {metadata?.hasImage && (
+      {message.metadata?.hasImage && (
       <div className="mt-2">
-        {metadata?.image ? (
+        {message.metadata?.image ? (
           <img 
-            src={metadata.image} 
+            src={message.metadata.image} 
             alt="Immagine caricata" 
             className="max-w-48 rounded-lg border border-dark-accent cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => window.open(metadata.image, '_blank')}
+            onClick={() => window.open(message.metadata.image, '_blank')}
             onError={(e) => {
               // Se l'immagine non carica, mostra un placeholder
               const target = e.currentTarget;
@@ -378,11 +343,11 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
         {/* Placeholder per file che non possono essere visualizzati */}
         <div 
           className="max-w-48 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
-          style={{ display: metadata?.image ? 'none' : 'flex' }}
+          style={{ display: message.metadata?.image ? 'none' : 'flex' }}
         >
           <Upload size={24} className="text-text-muted mb-2" />
           <span className="text-xs text-text-muted text-center px-2">
-            {metadata?.imageName || "File caricato"}
+            {message.metadata?.imageName || "File caricato"}
           </span>
           <span className="text-xs text-text-muted/60 mt-1">
             (Anteprima non disponibile)

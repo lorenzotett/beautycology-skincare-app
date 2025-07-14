@@ -224,28 +224,6 @@ Changelog:
   - Improved image handling with fallback placeholders for missing files
   - Restored /admin-dashboard endpoint accessibility for external access
   - Fixed React Query import issues and optimized dashboard performance
-- July 12, 2025. Critical image display system fixes and optimization:
-  - RESOLVED: Images now display correctly in admin dashboard chat details
-  - Implemented robust backup system for uploaded images to prevent file loss
-  - Enhanced image serving with automatic fallback to backup directory
-  - Added comprehensive logging for image processing and debugging
-  - Verified image URLs are correctly added to message metadata
-  - System now serves images from both main and backup directories (200 OK)
-  - Added visual indicators for conversations containing images in dashboard table
-- July 14, 2025. Complete HEIC image support and iframe compatibility:
-  - Fixed image display issues when app is embedded in iframe (blob URL → server URL)
-  - JPG/PNG images now work perfectly with proper server URL conversion
-  - Added dual-layer HEIC processing: frontend heic2any + backend Sharp conversion
-  - Fixed ES6 import for Sharp to resolve "require is not defined" error
-  - Enhanced placeholder system for HEIC files that cannot be converted
-  - Images now display correctly in: input preview, chat messages, admin dashboard
-  - Improved error handling with user-friendly fallback placeholders
-  - COMPLETED: Option 1 - Complete Base64 system successfully implemented
-  - ALL images (HEIC, JPG, PNG) now converted to base64 data URLs for bulletproof iframe compatibility
-  - Cross-origin restrictions and URL update timing issues eliminated
-  - System works consistently across all embedded environments
-  - HEIC images show visual placeholder with clear indication of successful conversion
-  - Base64 images load correctly (✅ BASE64 IMAGE LOADED confirmation)
 
 ## User Preferences
 
