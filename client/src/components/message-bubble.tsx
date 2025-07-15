@@ -322,32 +322,125 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       {contentWithButtons.linkButtons.length > 0 && (
         <div className="mt-4 space-y-2">
           {contentWithButtons.linkButtons.map((linkButton, index) => (
-            <button
-              key={index}
-              onClick={async () => {
-                console.log('Final button clicked for session:', message.sessionId);
-                // Track the final button click
-                await trackFinalButtonClick(message.sessionId);
-                // Then open the link
-                window.open(linkButton.url, '_blank');
-              }}
-              className="w-full p-3 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer"
-              style={{
-                backgroundColor: '#007381',
-                color: '#E5F1F2',
-                border: '2px solid #007381'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#005a62';
-                e.currentTarget.style.borderColor = '#005a62';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#007381';
-                e.currentTarget.style.borderColor = '#007381';
-              }}
-            >
-              🌟 {linkButton.text}
-            </button>
+            <div key={index} className="relative">
+              {/* Hidden fallback link for maximum compatibility */}
+              <a
+                href={linkButton.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute inset-0 z-10 opacity-0"
+                tabIndex={-1}
+                onClick={async (e) => {
+                  console.log('Fallback link clicked for session:', message.sessionId);
+                  try {
+                    await trackFinalButtonClick(message.sessionId);
+                  } catch (error) {
+                    console.warn('Failed to track button click via fallback:', error);
+                  }
+                }}
+              >
+                {linkButton.text}
+              </a>
+              
+              {/* Main button */}
+              <button
+                onClick={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  console.log('Final button clicked for session:', message.sessionId);
+                  
+                  try {
+                    // Track the final button click
+                    await trackFinalButtonClick(message.sessionId);
+                  } catch (error) {
+                    console.warn('Failed to track button click:', error);
+                  }
+                  
+                  // Mobile-friendly link opening with multiple fallback methods
+                  const openLink = () => {
+                    // Method 1: Try window.open (works on most devices)
+                    try {
+                      const newWindow = window.open(linkButton.url, '_blank', 'noopener,noreferrer');
+                      if (newWindow) {
+                        newWindow.focus();
+                        return true;
+                      }
+                    } catch (error) {
+                      console.warn('window.open failed:', error);
+                    }
+                    
+                    // Method 2: Create temporary link and click it (mobile Safari fallback)
+                    try {
+                      const tempLink = document.createElement('a');
+                      tempLink.href = linkButton.url;
+                      tempLink.target = '_blank';
+                      tempLink.rel = 'noopener noreferrer';
+                      tempLink.style.display = 'none';
+                      document.body.appendChild(tempLink);
+                      tempLink.click();
+                      document.body.removeChild(tempLink);
+                      return true;
+                    } catch (error) {
+                      console.warn('Temporary link failed:', error);
+                    }
+                    
+                    // Method 3: Trigger the hidden link click (iOS compatibility)
+                    try {
+                      const hiddenLink = e.currentTarget?.parentElement?.querySelector('a');
+                      if (hiddenLink) {
+                        hiddenLink.click();
+                        return true;
+                      }
+                    } catch (error) {
+                      console.warn('Hidden link trigger failed:', error);
+                    }
+                    
+                    // Method 4: Direct location assignment (last resort)
+                    try {
+                      window.location.href = linkButton.url;
+                      return true;
+                    } catch (error) {
+                      console.error('All link opening methods failed:', error);
+                    }
+                    
+                    return false;
+                  };
+                  
+                  // Add slight delay to ensure tracking completes
+                  setTimeout(openLink, 100);
+                }}
+                className="w-full p-4 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer touch-manipulation relative z-20"
+                style={{
+                  backgroundColor: '#007381',
+                  color: '#E5F1F2',
+                  border: '2px solid #007381',
+                  minHeight: '48px', // Ensure minimum touch target size for mobile
+                  touchAction: 'manipulation', // Prevent zoom on double-tap
+                  WebkitTapHighlightColor: 'transparent', // Remove iOS tap highlight
+                  userSelect: 'none' // Prevent text selection
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#005a62';
+                  e.currentTarget.style.borderColor = '#005a62';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#007381';
+                  e.currentTarget.style.borderColor = '#007381';
+                }}
+                // Additional mobile touch events
+                onTouchStart={(e) => {
+                  e.currentTarget.style.backgroundColor = '#005a62';
+                  e.currentTarget.style.borderColor = '#005a62';
+                }}
+                onTouchEnd={(e) => {
+                  e.currentTarget.style.backgroundColor = '#007381';
+                  e.currentTarget.style.borderColor = '#007381';
+                }}
+              >
+                🌟 {linkButton.text}
+              </button>
+            </div>
           ))}
         </div>
       )}
