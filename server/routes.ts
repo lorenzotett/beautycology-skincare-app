@@ -80,6 +80,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(process.cwd(), 'admin-batch-upload.html'));
   });
 
+  // Serve iframe redirect page for Shopify integration
+  app.get('/iframe', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'iframe-redirect.html'));
+  });
+
   // Auto-fix missing images endpoint - NEW VERSION WITH REAL IMAGE RECOVERY
   app.post("/api/admin/auto-fix-images", async (req, res) => {
     try {

@@ -43,9 +43,31 @@ export function ChatInterface() {
   const { toast } = useToast();
   const [isListening, setIsListening] = useState(false);
   const recognition = useRef<SpeechRecognition | null>(null);
+  const [isFromIframe, setIsFromIframe] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+
+  // Check for iframe session parameters on load
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const iframeUserName = urlParams.get('userName');
+    const source = urlParams.get('source');
+    const fingerprint = urlParams.get('fingerprint');
+    
+    if (iframeUserName && source === 'shopify_iframe') {
+      console.log('🔗 Session from Shopify iframe detected:', { userName: iframeUserName, fingerprint });
+      setUserName(iframeUserName);
+      setUserInitial(iframeUserName.charAt(0).toUpperCase());
+      setIsFromIframe(true);
+      
+      // Auto-start the session
+      startChatSession(iframeUserName, fingerprint);
+      
+      // Clean URL to remove parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   // Email validation function
   const validateEmail = (email: string): { isValid: boolean; errorMessage?: string } => {
@@ -173,33 +195,37 @@ export function ChatInterface() {
     },
   });
 
-  const handleStartChat = () => {
-    if (!userName.trim()) return;
-
+  // Helper function for starting chat (can be called from iframe params or manual)
+  const startChatSession = (name: string, fingerprint?: string | null) => {
     // Show chat interface immediately
     setHasStarted(true);
     setIsTyping(true);
     setTypingMessage("AI-DermaSense sta scrivendo");
-    setUserInitial(userName.charAt(0).toUpperCase());
+    setUserInitial(name.charAt(0).toUpperCase());
 
     // Add user's name as first message immediately
     const userNameMessage: ChatMessage = {
       id: Date.now(),
       sessionId: "temp", // Will be updated when session is created
       role: "user",
-      content: userName.trim(),
+      content: name.trim(),
       metadata: null,
       createdAt: new Date(),
     };
 
     setMessages([userNameMessage]);
 
-    startChatMutation.mutate(userName);
+    startChatMutation.mutate({ userName: name, fingerprint });
+  };
+
+  const handleStartChat = () => {
+    if (!userName.trim()) return;
+    startChatSession(userName);
   };
 
   const startChatMutation = useMutation({
-    mutationFn: async (name: string) => {
-      const response = await apiRequest("POST", "/api/chat/start", { userName: name });
+    mutationFn: async (params: { userName: string; fingerprint?: string | null }) => {
+      const response = await apiRequest("POST", "/api/chat/start", params);
       return response.json() as Promise<ChatStartResponse>;
     },
     onSuccess: (data) => {
@@ -765,9 +791,16 @@ export function ChatInterface() {
               alt="Bonnie Logo" 
               className="w-8 h-8 object-cover"
             />
-            <h1 className="dermaSense-title font-bold" style={{color: '#007381', fontSize: '14px'}}>
-              AI-DermaSense
-            </h1>
+            <div className="flex items-center gap-2">
+              {isFromIframe && (
+                <div className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full border border-green-200">
+                  🔗 Shopify
+                </div>
+              )}
+              <h1 className="dermaSense-title font-bold" style={{color: '#007381', fontSize: '14px'}}>
+                AI-DermaSense
+              </h1>
+            </div>
           </div>
           {/* Messages Area */}
           <div className="messages-area flex-1 p-4 space-y-4 overflow-y-auto overflow-x-hidden" style={{WebkitOverflowScrolling: "touch", paddingBottom: "75px"}}>

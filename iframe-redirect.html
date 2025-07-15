@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-DermaSense - Avvia Consulenza</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #007381 0%, #005a63 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ffffff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tagline {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #ffffff, #f5f5f5);
+            color: #007381;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(45deg, #f5f5f5, #e0e0e0);
+        }
+        
+        .btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .features {
+            margin-top: 30px;
+            text-align: left;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+        
+        .feature-icon {
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+        
+        .privacy-note {
+            margin-top: 25px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            font-style: italic;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .tagline {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">AI-DermaSense</div>
+        <div class="tagline">Analisi AI della Pelle Personalizzata</div>
+        
+        <form id="startForm">
+            <div class="form-group">
+                <label for="userName">Il tuo nome:</label>
+                <input 
+                    type="text" 
+                    id="userName" 
+                    name="userName" 
+                    placeholder="Inserisci il tuo nome"
+                    required
+                    autocomplete="given-name"
+                />
+            </div>
+            
+            <button type="submit" class="btn" id="startBtn">
+                Avvia Consulenza Completa
+            </button>
+        </form>
+        
+        <div class="features">
+            <div class="feature-item">
+                <span class="feature-icon">🔬</span>
+                <span>Analisi AI avanzata della pelle</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">📷</span>
+                <span>Caricamento foto ad alta risoluzione</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">💡</span>
+                <span>Consigli personalizzati e routine</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">🛡️</span>
+                <span>Consulenza professionale e sicura</span>
+            </div>
+        </div>
+        
+        <div class="privacy-note">
+            Cliccando su "Avvia Consulenza" si aprirà una nuova finestra sicura per la tua analisi completa della pelle.
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('startForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userName = document.getElementById('userName').value.trim();
+            const startBtn = document.getElementById('startBtn');
+            
+            if (!userName) {
+                alert('Per favore inserisci il tuo nome');
+                return;
+            }
+            
+            // Disable button and show loading
+            startBtn.disabled = true;
+            startBtn.textContent = 'Apertura consulenza...';
+            
+            // Generate session parameters
+            const sessionParams = {
+                userName: userName,
+                source: 'shopify_iframe',
+                timestamp: Date.now(),
+                fingerprint: generateFingerprint()
+            };
+            
+            // Create URL for full app with session parameters
+            const baseUrl = window.location.origin;
+            const fullAppUrl = `${baseUrl}/?${new URLSearchParams(sessionParams).toString()}`;
+            
+            // Open full app in new window
+            const newWindow = window.open(
+                fullAppUrl, 
+                'ai_dermasense_consultation',
+                'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no'
+            );
+            
+            if (newWindow) {
+                // Success - window opened
+                startBtn.textContent = '✅ Consulenza Aperta';
+                startBtn.style.background = 'linear-gradient(45deg, #4caf50, #45a049)';
+                startBtn.style.color = 'white';
+                
+                // Show success message in iframe
+                setTimeout(() => {
+                    document.querySelector('.container').innerHTML = `
+                        <div class="logo">AI-DermaSense</div>
+                        <div style="margin-top: 30px;">
+                            <div style="font-size: 3rem; margin-bottom: 20px;">✅</div>
+                            <h2 style="margin-bottom: 15px;">Consulenza Avviata!</h2>
+                            <p style="opacity: 0.9; line-height: 1.6;">
+                                La tua sessione di analisi della pelle è ora attiva nella nuova finestra. 
+                                <br><br>
+                                Puoi chiudere questa scheda e continuare nella finestra di consulenza.
+                            </p>
+                        </div>
+                    `;
+                }, 2000);
+                
+                // Optional: Close iframe after delay
+                setTimeout(() => {
+                    if (window.parent !== window) {
+                        // We're in an iframe, send message to parent
+                        window.parent.postMessage({
+                            type: 'consultation_started',
+                            userName: userName,
+                            consultationUrl: fullAppUrl
+                        }, '*');
+                    }
+                }, 3000);
+                
+            } else {
+                // Popup blocked
+                alert('Il popup è stato bloccato dal browser. Per favore abilita i popup per questo sito e riprova.');
+                startBtn.disabled = false;
+                startBtn.textContent = 'Avvia Consulenza Completa';
+            }
+        });
+        
+        // Generate simple fingerprint for session tracking
+        function generateFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('Browser fingerprint', 2, 2);
+            
+            return btoa(
+                navigator.userAgent + 
+                navigator.language + 
+                screen.width + 'x' + screen.height +
+                new Date().getTimezoneOffset() +
+                canvas.toDataURL()
+            ).substring(0, 16);
+        }
+        
+        // Auto-focus name input
+        document.getElementById('userName').focus();
+        
+        // Enter key support
+        document.getElementById('userName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('startForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>
