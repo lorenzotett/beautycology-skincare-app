@@ -178,6 +178,20 @@ const extractMetric = (content: string, metricName: string): number => {
 };
 
 export function MessageBubble({ message, onChoiceSelect, isAnswered = false, userInitial = "U", onImageClick }: MessageBubbleProps) {
+  // Function to track final button click
+  const trackFinalButtonClick = async (sessionId: string) => {
+    try {
+      await fetch(`/api/chat/${sessionId}/final-button-clicked`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('Final button click tracked successfully');
+    } catch (error) {
+      console.error('Error tracking final button click:', error);
+    }
+  };
   const isUser = message.role === "user";
   const timestamp = new Date(message.createdAt!).toLocaleTimeString('it-IT', {
     hour: '2-digit',
@@ -300,7 +314,12 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           {contentWithButtons.linkButtons.map((linkButton, index) => (
             <button
               key={index}
-              onClick={() => window.open(linkButton.url, '_blank')}
+              onClick={async () => {
+                // Track the final button click
+                await trackFinalButtonClick(message.sessionId);
+                // Then open the link
+                window.open(linkButton.url, '_blank');
+              }}
               className="w-full p-3 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer"
               style={{
                 backgroundColor: '#007381',
