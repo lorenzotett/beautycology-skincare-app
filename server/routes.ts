@@ -80,7 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(process.cwd(), 'admin-batch-upload.html'));
   });
 
-  // Auto-fix missing images endpoint
+  // Auto-fix missing images endpoint - NEW VERSION WITH REAL IMAGE RECOVERY
   app.post("/api/admin/auto-fix-images", async (req, res) => {
     try {
       const allMessages = await storage.getAllChatMessages();
@@ -94,20 +94,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       let fixed = 0;
+      let realImageRecovered = 0;
+      
       for (const message of recentImagesWithoutBase64) {
-        const svgContent = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-          <rect width="200" height="200" fill="#f0f0f0" stroke="#ddd" stroke-width="2"/>
-          <circle cx="100" cy="100" r="40" fill="#007381"/>
-          <text x="100" y="95" text-anchor="middle" fill="white" font-family="Arial" font-size="11" font-weight="bold">Immagine</text>
-          <text x="100" y="110" text-anchor="middle" fill="white" font-family="Arial" font-size="11" font-weight="bold">Non Disponibile</text>
-          <text x="100" y="140" text-anchor="middle" fill="#666" font-family="Arial" font-size="8">${(message.metadata as any).imageOriginalName || 'IMG'}</text>
-        </svg>`;
-        const placeholderBase64 = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`;
+        const metadata = message.metadata as any;
+        let imageBase64 = null;
+        
+        // Try to recover the real image first
+        if (metadata.imagePath && fs.existsSync(metadata.imagePath)) {
+          try {
+            const imageBuffer = fs.readFileSync(metadata.imagePath);
+            const mimeType = metadata.imageMimeType || 'image/jpeg';
+            imageBase64 = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+            realImageRecovered++;
+            console.log(`✅ RECOVERED real image for message ${message.id}: ${metadata.imageOriginalName}`);
+          } catch (error) {
+            console.warn(`Failed to recover real image for message ${message.id}: ${error}`);
+          }
+        }
+        
+        // If real image recovery failed, create SVG placeholder
+        if (!imageBase64) {
+          const svgContent = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="200" height="200" fill="#f0f0f0" stroke="#ddd" stroke-width="2"/>
+            <circle cx="100" cy="100" r="40" fill="#007381"/>
+            <text x="100" y="95" text-anchor="middle" fill="white" font-family="Arial" font-size="11" font-weight="bold">Immagine</text>
+            <text x="100" y="110" text-anchor="middle" fill="white" font-family="Arial" font-size="11" font-weight="bold">Non Disponibile</text>
+            <text x="100" y="140" text-anchor="middle" fill="#666" font-family="Arial" font-size="8">${metadata.imageOriginalName || 'IMG'}</text>
+          </svg>`;
+          imageBase64 = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`;
+        }
         
         const updatedMetadata = {
           ...message.metadata,
-          imageBase64: placeholderBase64,
-          isPlaceholder: true
+          imageBase64: imageBase64,
+          isPlaceholder: realImageRecovered === 0 // Only mark as placeholder if no real image was recovered
         };
         
         await storage.updateChatMessage(message.id, { metadata: updatedMetadata });
@@ -118,6 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true, 
         fixedImages: fixed,
+        realImagesRecovered: realImageRecovered,
         totalRecentImages: recentImagesWithoutBase64.length
       });
     } catch (error) {
@@ -262,18 +284,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Chat service not found" });
       }
 
-      // Convert image to base64 for permanent storage
+      // CRITICAL: Always convert image to base64 for permanent storage
       let imageBase64 = null;
       try {
         const imageBuffer = fs.readFileSync(imageFile.path);
         const mimeType = imageFile.mimetype || 'image/jpeg';
         imageBase64 = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
-        console.log(`Image converted to base64, size: ${Math.round(imageBase64.length / 1024)}KB`);
+        console.log(`✅ Image converted to base64 successfully, size: ${Math.round(imageBase64.length / 1024)}KB`);
       } catch (error) {
-        console.warn(`Failed to convert image to base64: ${error}`);
+        console.error(`❌ CRITICAL ERROR: Failed to convert image to base64: ${error}`);
+        // If base64 conversion fails, we still save the message but mark it as failed
+        imageBase64 = null;
       }
 
       const userContent = message ? `${message} [Immagine caricata: ${imageFile.originalname}]` : `[Immagine caricata: ${imageFile.originalname}]`;
+      
+      // CRITICAL: Always save imageBase64 in metadata
       await storage.addChatMessage({
         sessionId,
         role: "user",
@@ -282,9 +308,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hasImage: true,
           imagePath: imageFile.path,
           imageOriginalName: imageFile.originalname,
-          imageBase64: imageBase64
+          imageBase64: imageBase64, // This is the key fix
+          imageSize: imageFile.size,
+          imageMimeType: imageFile.mimetype,
+          isBase64Available: imageBase64 !== null
         },
       });
+
+      console.log(`✅ Message saved with imageBase64: ${imageBase64 ? 'YES' : 'NO'}`);
 
       const skinAnalysis = new SkinAnalysisService();
       const analysisResult = await skinAnalysis.analyzeImage(imageFile.path);
