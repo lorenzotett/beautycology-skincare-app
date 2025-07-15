@@ -94,8 +94,9 @@ app.use((req, res, next) => {
         let fullConversation = '';
         let skinAnalysisFound = false;
 
-        // Process each message
-        for (const message of messages) {
+        // Process each message to build conversation and extract data
+        for (let i = 0; i < messages.length; i++) {
+          const message = messages[i];
           fullConversation += `[${message.role.toUpperCase()}]: ${message.content}\n\n`;
 
           // Extract skin analysis data
@@ -128,7 +129,65 @@ app.use((req, res, next) => {
             skinAnalysisFound = true;
           }
 
-          // Extract answers from user messages and AI analysis
+          // Extract user responses based on patterns
+          if (message.role === 'user') {
+            const userResponse = message.content.trim();
+            
+            // Check previous assistant message for question context
+            if (i > 0 && messages[i - 1].role === 'assistant') {
+              const prevQuestion = messages[i - 1].content.toLowerCase();
+              
+              // Direct mapping based on known question patterns
+              if (prevQuestion.includes('fragranza') && prevQuestion.includes('fiori')) {
+                extractedData['Fragranza OK'] = userResponse === 'Sì' ? 'Sì' : 'No';
+              }
+              
+              if (prevQuestion.includes('crema solare') && prevQuestion.includes('ogni giorno')) {
+                extractedData['Protezione Solare'] = userResponse;
+              }
+              
+              if (prevQuestion.includes('litri') && prevQuestion.includes('acqua')) {
+                extractedData['Acqua Giornaliera'] = userResponse;
+              }
+              
+              if (prevQuestion.includes('ore') && prevQuestion.includes('dormi')) {
+                extractedData['Ore Sonno'] = userResponse;
+              }
+              
+              if (prevQuestion.includes('stress') && prevQuestion.includes('da 1 a 10')) {
+                // Map numeric stress to category
+                const stressNum = parseInt(userResponse);
+                if (stressNum >= 1 && stressNum <= 3) extractedData['Stress Level'] = 'Poco';
+                else if (stressNum >= 4 && stressNum <= 6) extractedData['Stress Level'] = 'Poco';
+                else if (stressNum >= 7 && stressNum <= 8) extractedData['Stress Level'] = 'Abbastanza';
+                else if (stressNum >= 9 && stressNum <= 10) extractedData['Stress Level'] = 'Molto';
+              }
+              
+              if (prevQuestion.includes('fumi?')) {
+                extractedData['Fumo'] = userResponse;
+              }
+              
+              if (prevQuestion.includes('alimentazione bilanciata')) {
+                extractedData['Dieta Equilibrata'] = userResponse;
+              }
+              
+              if (prevQuestion.includes('ingredienti') && prevQuestion.includes('allergica')) {
+                extractedData['Allergie'] = userResponse === 'no' ? 'Nessuna' : userResponse;
+              }
+              
+              // Age extraction
+              if (prevQuestion.includes('anni') && prevQuestion.includes('hai')) {
+                extractedData['Età'] = userResponse;
+              }
+              
+              // Gender extraction
+              if (prevQuestion.includes('genere')) {
+                extractedData['Sesso'] = userResponse;
+              }
+            }
+          }
+
+          // Extract other data patterns
           const content = message.content.toLowerCase();
           
           // Age extraction
@@ -145,214 +204,10 @@ app.use((req, res, next) => {
             extractedData['Sesso'] = 'Maschile';
           }
 
-          // Skin type extraction
-          if (content.includes('pelle grassa')) {
-            extractedData['Tipo Pelle Dichiarato'] = 'Grassa';
-          } else if (content.includes('pelle secca')) {
-            extractedData['Tipo Pelle Dichiarato'] = 'Secca';
-          } else if (content.includes('pelle mista')) {
-            extractedData['Tipo Pelle Dichiarato'] = 'Mista';
-          } else if (content.includes('pelle normale')) {
-            extractedData['Tipo Pelle Dichiarato'] = 'Normale';
-          } else if (content.includes('pelle sensibile')) {
-            extractedData['Tipo Pelle Dichiarato'] = 'Sensibile';
-          }
-
-          // Yes/No questions extraction
-          if (content.includes('trucco') || content.includes('makeup')) {
-            if (content.includes('sì regolarmente') || content.includes('sempre')) {
-              extractedData['Usa Trucco'] = 'Sì regolarmente';
-            } else if (content.includes('occasionalmente') || content.includes('a volte')) {
-              extractedData['Usa Trucco'] = 'Occasionalmente';
-            } else if (content.includes('no') || content.includes('mai')) {
-              extractedData['Usa Trucco'] = 'No';
-            }
-          }
-
-          if (content.includes('strucco') || content.includes('strucca')) {
-            if (content.includes('sempre')) {
-              extractedData['Strucca Sempre'] = 'Sempre';
-            } else if (content.includes('a volte')) {
-              extractedData['Strucca Sempre'] = 'A volte';
-            } else if (content.includes('mai')) {
-              extractedData['Strucca Sempre'] = 'Mai';
-            }
-          }
-
-          if (content.includes('fragranza') || content.includes('profumo')) {
-            if (content.includes('sì') && !content.includes('no')) {
-              extractedData['Fragranza OK'] = 'Sì';
-            } else if (content.includes('no')) {
-              extractedData['Fragranza OK'] = 'No';
-            }
-          }
-
-          if (content.includes('protezione solare') || content.includes('spf')) {
-            if (content.includes('sempre')) {
-              extractedData['Protezione Solare'] = 'Sempre';
-            } else if (content.includes('solo d\'estate')) {
-              extractedData['Protezione Solare'] = 'Solo d\'estate';
-            } else if (content.includes('solo quando esco')) {
-              extractedData['Protezione Solare'] = 'Solo quando esco';
-            } else if (content.includes('raramente')) {
-              extractedData['Protezione Solare'] = 'Raramente';
-            } else if (content.includes('mai')) {
-              extractedData['Protezione Solare'] = 'Mai';
-            }
-          }
-
-          // Water intake
-          if (content.includes('litri') || content.includes('acqua')) {
-            if (content.includes('meno di 1l')) {
-              extractedData['Acqua Giornaliera'] = 'Meno di 1L';
-            } else if (content.includes('1-1.5l') || content.includes('1.5l')) {
-              extractedData['Acqua Giornaliera'] = '1-1.5L';
-            } else if (content.includes('1.5-2l') || content.includes('2l')) {
-              extractedData['Acqua Giornaliera'] = '1.5-2L';
-            } else if (content.includes('più di 2l')) {
-              extractedData['Acqua Giornaliera'] = 'Più di 2L';
-            }
-          }
-
-          // Sleep hours
-          if (content.includes('ore') && content.includes('sonno')) {
-            if (content.includes('meno di 6h')) {
-              extractedData['Ore Sonno'] = 'Meno di 6h';
-            } else if (content.includes('6-7h')) {
-              extractedData['Ore Sonno'] = '6-7h';
-            } else if (content.includes('7-8h')) {
-              extractedData['Ore Sonno'] = '7-8h';
-            } else if (content.includes('più di 8h')) {
-              extractedData['Ore Sonno'] = 'Più di 8h';
-            }
-          }
-
-          // Stress level
-          if (content.includes('stress')) {
-            if (content.includes('molto')) {
-              extractedData['Stress Level'] = 'Molto';
-            } else if (content.includes('abbastanza')) {
-              extractedData['Stress Level'] = 'Abbastanza';
-            } else if (content.includes('poco')) {
-              extractedData['Stress Level'] = 'Poco';
-            } else if (content.includes('per niente')) {
-              extractedData['Stress Level'] = 'Per niente';
-            }
-          }
-
-          // Smoking
-          if (content.includes('fumo') || content.includes('fumi')) {
-            if (content.includes('sì regolarmente')) {
-              extractedData['Fumo'] = 'Sì regolarmente';
-            } else if (content.includes('occasionalmente')) {
-              extractedData['Fumo'] = 'Occasionalmente';
-            } else if (content.includes('no')) {
-              extractedData['Fumo'] = 'No';
-            }
-          }
-
           // Extract email
           const emailMatch = message.content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
           if (emailMatch && !extractedData['Email']) {
             extractedData['Email'] = emailMatch[1];
-          }
-
-          // Extract zone/location
-          if (content.includes('nord') && content.includes('italia')) {
-            extractedData['Zona Geografica'] = 'Nord Italia';
-          } else if (content.includes('centro') && content.includes('italia')) {
-            extractedData['Zona Geografica'] = 'Centro Italia';
-          } else if (content.includes('sud') && content.includes('italia')) {
-            extractedData['Zona Geografica'] = 'Sud Italia';
-          }
-
-          // Extract diet
-          if (content.includes('dieta') || content.includes('alimentazione')) {
-            if (content.includes('equilibrata') || content.includes('varia')) {
-              extractedData['Dieta Equilibrata'] = 'Sì';
-            } else if (content.includes('non equilibrata') || content.includes('poco varia')) {
-              extractedData['Dieta Equilibrata'] = 'No';
-            }
-          }
-
-          // Extract physical activity
-          if (content.includes('attività fisica') || content.includes('sport')) {
-            if (content.includes('regolarmente') || content.includes('3-4 volte')) {
-              extractedData['Attività Fisica'] = 'Regolarmente';
-            } else if (content.includes('occasionalmente') || content.includes('1-2 volte')) {
-              extractedData['Attività Fisica'] = 'Occasionalmente';
-            } else if (content.includes('raramente') || content.includes('poco')) {
-              extractedData['Attività Fisica'] = 'Raramente';
-            } else if (content.includes('mai') || content.includes('sedentaria')) {
-              extractedData['Attività Fisica'] = 'Mai';
-            }
-          }
-
-          // Extract allergies
-          if (content.includes('allergie') || content.includes('allergico')) {
-            if (content.includes('nessuna allergia') || content.includes('no allergie')) {
-              extractedData['Allergie'] = 'Nessuna';
-            } else if (content.includes('sì') && content.includes('allergie')) {
-              // Look for specific allergens in the message
-              const allergens = [];
-              if (content.includes('nichel')) allergens.push('Nichel');
-              if (content.includes('profumo')) allergens.push('Profumo');
-              if (content.includes('parabeni')) allergens.push('Parabeni');
-              if (content.includes('lattice')) allergens.push('Lattice');
-              if (allergens.length > 0) {
-                extractedData['Allergie'] = allergens.join(', ');
-              } else {
-                extractedData['Allergie'] = 'Sì (non specificate)';
-              }
-            }
-          }
-
-          // Extract current products
-          if ((content.includes('prodotti') && content.includes('uso')) || 
-              (content.includes('routine') && content.includes('attuale'))) {
-            // Store any product mentions
-            if (!extractedData['Prodotti Attuali'] && message.role === 'user') {
-              const productMatch = message.content.match(/uso[:\s]+(.*?)(?:\.|$)/i);
-              if (productMatch) {
-                extractedData['Prodotti Attuali'] = productMatch[1].trim();
-              }
-            }
-          }
-
-          // Extract main skin problems
-          if ((content.includes('problemi') || content.includes('preoccupazioni')) && 
-              message.role === 'user' && !extractedData['Problemi Principali']) {
-            const nextSentence = message.content.split('.')[0];
-            if (nextSentence.length < 200) {
-              extractedData['Problemi Principali'] = nextSentence.trim();
-            }
-          }
-
-          // Extract desired routine
-          if (content.includes('routine') && content.includes('preferisci')) {
-            if (content.includes('semplice') || content.includes('minimale')) {
-              extractedData['Routine Desiderata'] = 'Semplice';
-            } else if (content.includes('completa') || content.includes('dettagliata')) {
-              extractedData['Routine Desiderata'] = 'Completa';
-            }
-          }
-
-          // Extract medications
-          if (content.includes('farmaci') || content.includes('medicinali')) {
-            if (content.includes('no') || content.includes('nessuno')) {
-              extractedData['Farmaci'] = 'Nessuno';
-            } else if (content.includes('sì') && message.role === 'user') {
-              extractedData['Farmaci'] = 'Sì';
-            }
-          }
-
-          // Extract medical conditions
-          if (content.includes('condizioni mediche') || content.includes('patologie')) {
-            if (content.includes('no') || content.includes('nessuna')) {
-              extractedData['Condizioni Mediche'] = 'Nessuna';
-            } else if (content.includes('sì') && message.role === 'user') {
-              extractedData['Condizioni Mediche'] = 'Sì';
-            }
           }
         }
 
