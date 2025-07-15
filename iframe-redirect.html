@@ -216,14 +216,10 @@
             startBtn.disabled = true;
             startBtn.textContent = 'Apertura consulenza...';
             
-            // Check if we're being accessed directly or in an iframe/embedded context
-            const isInIframe = window.self !== window.top;
-            const isTestMode = window.location.search.includes('test=true') || !isInIframe;
-            
             // Generate session parameters
             const sessionParams = {
                 userName: userName,
-                source: isTestMode ? 'direct_test' : 'shopify_iframe',
+                source: 'homepage',
                 timestamp: Date.now(),
                 fingerprint: generateFingerprint()
             };
@@ -232,107 +228,77 @@
             const baseUrl = window.location.origin;
             const fullAppUrl = `${baseUrl}/?${new URLSearchParams(sessionParams).toString()}`;
             
-            // If in test mode (not in iframe), redirect directly instead of opening popup
-            if (isTestMode) {
-                window.location.href = fullAppUrl;
-                return;
-            }
+            // Always open in new tab for better UX (works as homepage)
+            startBtn.textContent = 'Apertura nuova scheda...';
             
-            // Try to open popup window
-            const newWindow = window.open(
-                fullAppUrl, 
-                'ai_dermasense_consultation',
-                'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no'
-            );
+            // Open in new tab/window
+            const newWindow = window.open(fullAppUrl, '_blank');
             
-            // Wait a moment to check if popup was blocked
-            setTimeout(() => {
-                if (newWindow && !newWindow.closed && newWindow.location) {
-                    // Success - popup opened
-                    startBtn.textContent = '✅ Consulenza Aperta';
-                    startBtn.style.background = 'linear-gradient(45deg, #4caf50, #45a049)';
-                    startBtn.style.color = 'white';
-                    
-                    // Show success message
-                    setTimeout(() => {
-                        document.querySelector('.container').innerHTML = `
-                            <div class="logo">AI-DermaSense</div>
-                            <div style="margin-top: 30px;">
-                                <div style="font-size: 3rem; margin-bottom: 20px;">✅</div>
-                                <h2 style="margin-bottom: 15px;">Consulenza Avviata!</h2>
-                                <p style="opacity: 0.9; line-height: 1.6;">
-                                    La tua sessione di analisi della pelle è ora attiva nella nuova finestra. 
-                                    <br><br>
-                                    Puoi chiudere questa scheda e continuare nella finestra di consulenza.
-                                </p>
-                            </div>
-                        `;
-                    }, 1500);
-                    
-                } else {
-                    // Popup was blocked or failed - provide fallback options
-                    startBtn.textContent = 'Popup Bloccato - Vedi Opzioni';
-                    startBtn.style.background = 'linear-gradient(45deg, #ff9800, #f57c00)';
-                    startBtn.disabled = true;
-                    
+            if (newWindow) {
+                // Success - new tab opened
+                startBtn.textContent = '✅ Chat Avviata';
+                startBtn.style.background = 'linear-gradient(45deg, #4caf50, #45a049)';
+                startBtn.style.color = 'white';
+                
+                // Show success message
+                setTimeout(() => {
                     document.querySelector('.container').innerHTML = `
                         <div class="logo">AI-DermaSense</div>
                         <div style="margin-top: 30px;">
-                            <div style="font-size: 3rem; margin-bottom: 20px;">🚫</div>
-                            <h2 style="margin-bottom: 15px; color: #ff9800;">Popup Bloccato</h2>
-                            <p style="opacity: 0.9; line-height: 1.6; margin-bottom: 25px;">
-                                Il tuo browser ha bloccato l'apertura della finestra di consulenza. 
-                                Scegli una delle opzioni qui sotto:
+                            <div style="font-size: 3rem; margin-bottom: 20px;">✅</div>
+                            <h2 style="margin-bottom: 15px;">Chat Avviata!</h2>
+                            <p style="opacity: 0.9; line-height: 1.6;">
+                                La tua chat con AI-DermaSense è ora aperta nella nuova scheda. 
+                                <br><br>
+                                Puoi continuare la consulenza lì e chiudere questa pagina.
                             </p>
-                            
-                            <div style="text-align: left; margin-bottom: 25px;">
-                                <div style="background: rgba(255, 255, 255, 0.2); padding: 20px; border-radius: 12px; margin-bottom: 15px;">
-                                    <h3 style="margin-bottom: 10px; color: white;">📖 Opzione 1: Abilita Popup</h3>
-                                    <p style="font-size: 0.9rem; opacity: 0.9; line-height: 1.4;">
-                                        1. Clicca sull'icona del lucchetto/popup nella barra degli indirizzi<br>
-                                        2. Seleziona "Consenti popup per questo sito"<br>
-                                        3. Ricarica la pagina e riprova
-                                    </p>
-                                </div>
-                                
-                                <div style="background: rgba(255, 255, 255, 0.2); padding: 20px; border-radius: 12px;">
-                                    <h3 style="margin-bottom: 10px; color: white;">🔗 Opzione 2: Link Diretto</h3>
-                                    <p style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 15px; line-height: 1.4;">
-                                        Apri manualmente la consulenza in una nuova scheda:
-                                    </p>
-                                    <a href="${fullAppUrl}" target="_blank" 
-                                       style="display: inline-block; background: linear-gradient(45deg, #ffffff, #f5f5f5); 
-                                              color: #007381; padding: 12px 24px; border-radius: 8px; 
-                                              text-decoration: none; font-weight: 600; 
-                                              box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s ease;"
-                                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.2)';"
-                                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';">
-                                        🚀 Apri Consulenza Completa
-                                    </a>
-                                </div>
-                            </div>
-                            
-                            <button onclick="location.reload()" 
-                                    style="background: linear-gradient(45deg, #6c757d, #5a6268); color: white; 
-                                           border: none; padding: 12px 24px; border-radius: 8px; 
-                                           cursor: pointer; font-weight: 600; margin-top: 15px;">
-                                🔄 Riprova
+                            <button onclick="window.close()" 
+                                    style="margin-top: 20px; background: linear-gradient(45deg, #6c757d, #5a6268); 
+                                           color: white; border: none; padding: 12px 24px; border-radius: 8px; 
+                                           cursor: pointer; font-weight: 600;">
+                                Chiudi questa scheda
                             </button>
                         </div>
                     `;
-                }
+                }, 1500);
                 
-                if (newWindow && newWindow.closed === false) {
-                    // Send message to parent if in iframe
-                    if (window.parent !== window) {
-                        window.parent.postMessage({
-                            type: 'consultation_started',
-                            userName: userName,
-                            consultationUrl: fullAppUrl
-                        }, '*');
-                    }
-                }
-            }, 1000);
+            } else {
+                // New tab blocked
+                startBtn.textContent = 'Popup Bloccato - Clicca il link';
+                startBtn.style.background = 'linear-gradient(45deg, #ff9800, #f57c00)';
+                startBtn.disabled = true;
+                
+                document.querySelector('.container').innerHTML = `
+                    <div class="logo">AI-DermaSense</div>
+                    <div style="margin-top: 30px;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">🚫</div>
+                        <h2 style="margin-bottom: 15px; color: #ff9800;">Nuova scheda bloccata</h2>
+                        <p style="opacity: 0.9; line-height: 1.6; margin-bottom: 25px;">
+                            Il browser ha bloccato l'apertura della nuova scheda. 
+                            Clicca il link qui sotto per aprire la chat:
+                        </p>
+                        
+                        <a href="${fullAppUrl}" target="_blank" 
+                           style="display: inline-block; background: linear-gradient(45deg, #ffffff, #f5f5f5); 
+                                  color: #007381; padding: 15px 30px; border-radius: 10px; 
+                                  text-decoration: none; font-weight: 600; font-size: 1.1rem;
+                                  box-shadow: 0 4px 15px rgba(0,0,0,0.15); transition: all 0.3s ease;"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.2)';"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)';">
+                            🚀 Apri Chat AI-DermaSense
+                        </a>
+                        
+                        <br><br>
+                        <button onclick="location.reload()" 
+                                style="background: linear-gradient(45deg, #6c757d, #5a6268); color: white; 
+                                       border: none; padding: 12px 24px; border-radius: 8px; 
+                                       cursor: pointer; font-weight: 600; margin-top: 15px;">
+                            🔄 Riprova
+                        </button>
+                    </div>
+                `;
+            }
+
         });
         
         // Generate simple fingerprint for session tracking
