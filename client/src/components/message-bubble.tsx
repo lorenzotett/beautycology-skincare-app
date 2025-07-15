@@ -181,15 +181,25 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   // Function to track final button click
   const trackFinalButtonClick = async (sessionId: string) => {
     try {
-      await fetch(`/api/chat/${sessionId}/final-button-clicked`, {
+      console.log('Tracking final button click for session:', sessionId);
+      
+      const response = await fetch(`/api/chat/${sessionId}/final-button-clicked`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         }
       });
-      console.log('Final button click tracked successfully');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('Final button click tracked successfully:', result);
     } catch (error) {
       console.error('Error tracking final button click:', error);
+      // Optional: Show user feedback about tracking failure
+      // alert('Tracking error - please contact support if this persists');
     }
   };
   const isUser = message.role === "user";
