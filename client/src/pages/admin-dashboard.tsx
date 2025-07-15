@@ -905,9 +905,9 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <p className="text-sm text-gray-700">
-                    Mostrando <span className="font-medium">{startIndex + 1}</span> a{' '}
-                    <span className="font-medium">{Math.min(endIndex, filteredSessions.length)}</span> di{' '}
-                    <span className="font-medium">{filteredSessions.length}</span> conversazioni
+                    Mostrando <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> a{' '}
+                    <span className="font-medium">{Math.min(currentPage * itemsPerPage, pagination?.totalItems || 0)}</span> di{' '}
+                    <span className="font-medium">{pagination?.totalItems || 0}</span> conversazioni
                   </p>
                 </div>
                 
