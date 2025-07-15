@@ -48,21 +48,24 @@ export function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  // Check for iframe session parameters on load
+  // Check for session parameters on load (iframe or new tab)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const iframeUserName = urlParams.get('userName');
+    const sessionUserName = urlParams.get('userName');
     const source = urlParams.get('source');
     const fingerprint = urlParams.get('fingerprint');
     
-    if (iframeUserName && source === 'shopify_iframe') {
-      console.log('🔗 Session from Shopify iframe detected:', { userName: iframeUserName, fingerprint });
-      setUserName(iframeUserName);
-      setUserInitial(iframeUserName.charAt(0).toUpperCase());
-      setIsFromIframe(true);
+    if (sessionUserName && (source === 'shopify_iframe' || source === 'homepage_new_tab')) {
+      console.log('🔗 Auto-starting session from:', { source, userName: sessionUserName, fingerprint });
+      setUserName(sessionUserName);
+      setUserInitial(sessionUserName.charAt(0).toUpperCase());
+      
+      if (source === 'shopify_iframe') {
+        setIsFromIframe(true);
+      }
       
       // Auto-start the session
-      startChatSession(iframeUserName, fingerprint);
+      startChatSession(sessionUserName, fingerprint);
       
       // Clean URL to remove parameters
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -220,7 +223,39 @@ export function ChatInterface() {
 
   const handleStartChat = () => {
     if (!userName.trim()) return;
-    startChatSession(userName);
+    
+    // Instead of starting chat in current window, open new tab
+    const sessionParams = {
+      userName: userName.trim(),
+      source: 'homepage_new_tab',
+      timestamp: Date.now(),
+      fingerprint: generateFingerprint()
+    };
+    
+    // Create URL for new tab with session parameters
+    const chatUrl = `${window.location.origin}/?${new URLSearchParams(sessionParams).toString()}`;
+    
+    // Open chat in new tab
+    const newWindow = window.open(chatUrl, '_blank');
+    
+    if (newWindow) {
+      // Success - show confirmation in current window
+      toast({
+        title: "Chat avviata",
+        description: "La chat è stata aperta in una nuova scheda",
+      });
+    } else {
+      // Fallback - popup blocked, redirect current window
+      window.location.href = chatUrl;
+    }
+  };
+  
+  // Generate simple fingerprint for session tracking
+  const generateFingerprint = () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx?.fillText('fingerprint', 2, 2);
+    return canvas.toDataURL().slice(-50);
   };
 
   const startChatMutation = useMutation({
