@@ -315,6 +315,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
             <button
               key={index}
               onClick={async () => {
+                console.log('Final button clicked for session:', message.sessionId);
                 // Track the final button click
                 await trackFinalButtonClick(message.sessionId);
                 // Then open the link
