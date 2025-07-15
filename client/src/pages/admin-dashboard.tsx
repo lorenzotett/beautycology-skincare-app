@@ -285,14 +285,25 @@ export default function AdminDashboard() {
   const sessions = sessionsData?.sessions || [];
   const pagination = sessionsData?.pagination;
 
-  const { data: sessionDetails } = useQuery({
+  const { data: sessionDetails, isLoading: isLoadingDetails, error: detailsError } = useQuery({
     queryKey: ["admin-session-details", selectedSession?.sessionId],
     queryFn: async () => {
       if (!selectedSession) return null;
+      console.log('Loading session details for:', selectedSession.sessionId);
       const response = await apiRequest("GET", `/api/admin/sessions/${selectedSession.sessionId}`);
-      return response.json() as Promise<SessionWithMessages>;
+      const data = await response.json() as SessionWithMessages;
+      console.log('Session details loaded:', data);
+      return data;
     },
     enabled: !!selectedSession,
+  });
+
+  // Debug log for modal rendering
+  console.log('Modal render check:', {
+    selectedSession: !!selectedSession,
+    sessionDetails: !!sessionDetails,
+    isLoadingDetails,
+    detailsError
   });
 
   // Use sessions directly from API (already filtered and paginated)
