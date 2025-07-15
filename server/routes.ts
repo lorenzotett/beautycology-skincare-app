@@ -449,6 +449,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Session not found" });
       }
 
+      // Validate that the chat is complete before allowing tracking
+      const messages = await storage.getChatMessages(sessionId);
+      
+      // Check if chat has enough messages (minimum 5 for a complete consultation)
+      if (messages.length < 5) {
+        console.log(`Chat ${sessionId} has only ${messages.length} messages - not complete enough for cream access`);
+        return res.status(400).json({ error: "Chat not complete enough for cream access" });
+      }
+
+      // Check if the last message contains a link button with "crema personalizzata"
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role !== 'assistant' || !lastMessage.content.includes('crema personalizzata')) {
+        console.log(`Chat ${sessionId} last message doesn't contain cream link - not a complete consultation`);
+        return res.status(400).json({ error: "Chat not complete - no final cream link found" });
+      }
+
+      console.log(`Valid cream access for session ${sessionId} - ${messages.length} messages, last message contains cream link`);
+
       await storage.updateChatSession(sessionId, {
         finalButtonClicked: true,
         finalButtonClickedAt: new Date()
