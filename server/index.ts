@@ -55,9 +55,7 @@ app.use((req, res, next) => {
   });
 
   // Admin access routes MUST be defined BEFORE catch-all routes
-  app.get('/admin-dashboard', (req, res) => {
-    res.redirect('/?admin=true');
-  });
+  // Remove redirect, let frontend handle /admin-dashboard routing
   
   app.get('/admin', (req, res) => {
     res.redirect('/admin-dashboard');
