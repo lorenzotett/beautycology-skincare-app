@@ -15,6 +15,19 @@ export default function Chat() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [autoStartUserName, setAutoStartUserName] = useState<string | null>(null);
+
+  // Check for URL parameters to auto-start chat
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userName = urlParams.get('userName');
+    const source = urlParams.get('source');
+    
+    if (userName && source === 'homepage') {
+      setAutoStartUserName(userName);
+      setIsTyping(true);
+    }
+  }, []);
 
   const startChatMutation = useMutation({
     mutationFn: async (userName: string) => {
@@ -51,6 +64,13 @@ export default function Chat() {
       setIsTyping(false);
     },
   });
+
+  // Auto-start chat when user name is available from URL
+  useEffect(() => {
+    if (autoStartUserName && !sessionId) {
+      startChatMutation.mutate(autoStartUserName);
+    }
+  }, [autoStartUserName, sessionId]);
 
   return (
     <div className="min-h-screen bg-dark-primary">
