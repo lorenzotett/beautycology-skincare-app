@@ -70,6 +70,18 @@ app.use((req, res, next) => {
     res.redirect('/admin-dashboard');
   });
 
+  // Direct admin access route with visual loading
+  app.get('/admin-direct', (req, res) => {
+    const adminDirectPath = path.join(process.cwd(), 'admin-direct.html');
+    res.sendFile(adminDirectPath);
+  });
+
+  // Simple dashboard access route
+  app.get('/dashboard', (req, res) => {
+    const dashboardPath = path.join(process.cwd(), 'dashboard.html');
+    res.sendFile(dashboardPath);
+  });
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes

@@ -244,6 +244,16 @@ Changelog:
   - Maintained identical UI/UX - only modified the submission behavior
   - Added fallback for popup-blocked browsers to redirect current window
   - Works consistently for both direct homepage access and iframe embedding
+- July 15, 2025. Implemented pagination system and 24/7 dashboard access:
+  - Added pagination to admin dashboard (25 conversations per page) to improve performance
+  - Implemented smart pagination controls with "Previous/Next" and page numbers
+  - Added "Select Page" vs "Select All" functionality for better UX
+  - Created direct dashboard access URLs for 24/7 availability once deployed:
+    - /dashboard (main URL with professional loading page)
+    - /admin-direct (minimal loading page)
+    - /?admin=true (direct parameter access)
+  - Fixed slow dashboard loading by limiting conversations per page
+  - Enhanced selection system to work with pagination
 
 ## User Preferences
 
