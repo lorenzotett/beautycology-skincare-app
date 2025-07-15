@@ -239,6 +239,11 @@ Changelog:
   - Added visual indicator for sessions originating from Shopify iframe
   - Solved image persistence issues by moving image uploads to unrestricted popup window
   - System now supports both direct access and Shopify iframe integration seamlessly
+- July 15, 2025. Modified homepage behavior for new tab opening:
+  - Changed user name input flow to open chat in new tab instead of same window
+  - Maintained identical UI/UX - only modified the submission behavior
+  - Added fallback for popup-blocked browsers to redirect current window
+  - Works consistently for both direct homepage access and iframe embedding
 
 ## User Preferences
 
