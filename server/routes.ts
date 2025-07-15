@@ -284,17 +284,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Chat service not found" });
       }
 
-      // CRITICAL: Always convert image to base64 for permanent storage
+      // CRITICAL: Immediate base64 conversion before any other operations
       let imageBase64 = null;
       try {
+        // Read file immediately while it still exists
         const imageBuffer = fs.readFileSync(imageFile.path);
         const mimeType = imageFile.mimetype || 'image/jpeg';
         imageBase64 = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
-        console.log(`✅ Image converted to base64 successfully, size: ${Math.round(imageBase64.length / 1024)}KB`);
+        console.log(`✅ Image converted to base64 IMMEDIATELY, size: ${Math.round(imageBase64.length / 1024)}KB`);
+        console.log(`✅ File exists at conversion: ${fs.existsSync(imageFile.path)}`);
+        
+        // Verify base64 is valid image data (not SVG placeholder)
+        if (imageBase64.includes('data:image/svg')) {
+          console.error(`❌ WARNING: Base64 contains SVG, not real image`);
+        }
       } catch (error) {
         console.error(`❌ CRITICAL ERROR: Failed to convert image to base64: ${error}`);
-        // If base64 conversion fails, we still save the message but mark it as failed
-        imageBase64 = null;
+        console.error(`❌ File path: ${imageFile.path}`);
+        console.error(`❌ File exists: ${fs.existsSync(imageFile.path)}`);
+        
+        // Create informative placeholder that shows the problem
+        const svgContent = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+          <rect width="200" height="200" fill="#ffebee" stroke="#f44336" stroke-width="2"/>
+          <circle cx="100" cy="100" r="40" fill="#f44336"/>
+          <text x="100" y="90" text-anchor="middle" fill="white" font-family="Arial" font-size="9" font-weight="bold">ERRORE</text>
+          <text x="100" y="105" text-anchor="middle" fill="white" font-family="Arial" font-size="9" font-weight="bold">IFRAME</text>
+          <text x="100" y="120" text-anchor="middle" fill="white" font-family="Arial" font-size="9" font-weight="bold">REPLIT</text>
+          <text x="100" y="140" text-anchor="middle" fill="#666" font-family="Arial" font-size="7">${imageFile.originalname}</text>
+          <text x="100" y="155" text-anchor="middle" fill="#666" font-family="Arial" font-size="6">File cancellato dal sistema</text>
+        </svg>`;
+        imageBase64 = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`;
       }
 
       const userContent = message ? `${message} [Immagine caricata: ${imageFile.originalname}]` : `[Immagine caricata: ${imageFile.originalname}]`;
