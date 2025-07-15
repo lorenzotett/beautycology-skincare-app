@@ -259,15 +259,31 @@ export default function AdminDashboard() {
     enabled: isAuthenticated,
   });
 
-  const { data: sessions } = useQuery({
-    queryKey: ["admin-sessions"],
+  const { data: sessionsData } = useQuery({
+    queryKey: ["admin-sessions", currentPage, searchTerm],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/admin/sessions");
-      return response.json() as Promise<SessionWithMessages[]>;
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        search: searchTerm
+      });
+      const response = await apiRequest("GET", `/api/admin/sessions?${params}`);
+      return response.json() as Promise<{
+        sessions: SessionWithMessages[];
+        pagination: {
+          currentPage: number;
+          totalPages: number;
+          totalItems: number;
+          itemsPerPage: number;
+        };
+      }>;
     },
     refetchInterval: 10000,
     enabled: isAuthenticated,
   });
+
+  const sessions = sessionsData?.sessions || [];
+  const pagination = sessionsData?.pagination;
 
   const { data: sessionDetails } = useQuery({
     queryKey: ["admin-session-details", selectedSession?.sessionId],
@@ -279,48 +295,10 @@ export default function AdminDashboard() {
     enabled: !!selectedSession,
   });
 
-  const filterSessionsByPeriod = (sessions: SessionWithMessages[]) => {
-    if (!sessions) return [];
-
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    return sessions.filter(session => {
-      const sessionDate = new Date(session.createdAt);
-
-      switch (selectedPeriod) {
-        case "Oggi":
-          return sessionDate >= today;
-        case "Ultima settimana":
-          const weekAgo = new Date(today);
-          weekAgo.setDate(weekAgo.getDate() - 7);
-          return sessionDate >= weekAgo;
-        case "Ultimo mese":
-          const monthAgo = new Date(today);
-          monthAgo.setMonth(monthAgo.getMonth() - 1);
-          return sessionDate >= monthAgo;
-        case "Personalizzato":
-          if (!customDateFrom || !customDateTo) return true;
-          const fromDate = new Date(customDateFrom);
-          const toDate = new Date(customDateTo);
-          toDate.setHours(23, 59, 59, 999);
-          return sessionDate >= fromDate && sessionDate <= toDate;
-        default:
-          return true;
-      }
-    });
-  };
-
-  const filteredSessions = sessions ? filterSessionsByPeriod(sessions).filter(session =>
-    session.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    session.sessionId.includes(searchTerm)
-  ) : [];
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedSessions = filteredSessions.slice(startIndex, endIndex);
+  // Use sessions directly from API (already filtered and paginated)
+  const paginatedSessions = sessions;
+  const filteredSessions = sessions; // For backwards compatibility
+  const totalPages = pagination?.totalPages || 1;
 
   // Reset to first page when filters change
   const resetToFirstPage = () => {

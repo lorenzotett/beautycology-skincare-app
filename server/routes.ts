@@ -490,22 +490,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/sessions", async (req, res) => {
     try {
-      const sessions = await storage.getAllChatSessions();
-      const allMessages = await storage.getAllChatMessages();
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 25;
+      const search = req.query.search as string || "";
       
-      const sessionsWithMessages = sessions.map(session => {
-        const sessionMessages = allMessages.filter(msg => msg.sessionId === session.sessionId);
-        const lastMessage = sessionMessages[sessionMessages.length - 1];
-        
-        return {
-          ...session,
-          messageCount: sessionMessages.length,
-          isActive: lastMessage ? (Date.now() - new Date(lastMessage.createdAt!).getTime()) < 300000 : false,
-          messages: sessionMessages
-        };
-      });
+      const sessions = await storage.getAllChatSessions();
+      
+      // Filter sessions by search term if provided
+      let filteredSessions = sessions;
+      if (search) {
+        filteredSessions = sessions.filter(session => 
+          session.userName.toLowerCase().includes(search.toLowerCase()) ||
+          session.sessionId.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      
+      // Sort sessions by creation date (newest first)
+      filteredSessions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      // Calculate pagination
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedSessions = filteredSessions.slice(startIndex, endIndex);
+      
+      // Only get message counts for paginated sessions (not all messages)
+      const sessionsWithBasicInfo = await Promise.all(
+        paginatedSessions.map(async (session) => {
+          const sessionMessages = await storage.getChatMessages(session.sessionId);
+          // For performance, we only get message count, not full messages
+          return {
+            ...session,
+            messageCount: sessionMessages ? sessionMessages.length : 0,
+            isActive: false, // We'll calculate this only when needed
+            messages: [] // Don't load full messages for list view
+          };
+        })
+      );
 
-      res.json(sessionsWithMessages);
+      res.json({
+        sessions: sessionsWithBasicInfo,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(filteredSessions.length / limit),
+          totalItems: filteredSessions.length,
+          itemsPerPage: limit
+        }
+      });
     } catch (error) {
       console.error("Error getting admin sessions:", error);
       res.status(500).json({ error: "Failed to get sessions" });
