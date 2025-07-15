@@ -281,6 +281,8 @@ Changelog:
   - UTF-8 BOM encoding for Excel compatibility
   - Bypassed Vite middleware interference by placing endpoint before middleware setup
   - Export accessible via admin dashboard's "Seleziona Chat" → "Scarica CSV" workflow
+  - Updated to VERTICAL format: Campo/Valore columns instead of horizontal layout
+  - Each session displays as separate vertical section with clear session headers
 
 ## User Preferences
 

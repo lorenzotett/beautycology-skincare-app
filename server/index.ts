@@ -56,14 +56,14 @@ app.use((req, res, next) => {
       const { storage } = await import("./storage");
       const rows: any[] = [];
       
-      // Define all possible columns for the CSV
-      const columns = [
+      // Define all possible fields for vertical CSV format
+      const fields = [
         'Session ID', 'User Name', 'Created At', 'Message Count', 'Cream Access',
-        // Skin Analysis columns
+        // Skin Analysis fields
         'Punteggio Generale', 'Rossori', 'Acne', 'Rughe', 'Pigmentazione', 
         'Pori Dilatati', 'Oleosità', 'Danni Solari', 'Occhiaie', 
         'Idratazione', 'Elasticità', 'Texture Uniforme',
-        // User data columns  
+        // User data fields  
         'Età', 'Sesso', 'Tipo Pelle Dichiarato', 'Zona Geografica',
         // Questions and answers
         'Usa Trucco', 'Strucca Sempre', 'Prodotti Attuali', 'Problemi Principali',
@@ -423,20 +423,35 @@ app.use((req, res, next) => {
 
         extractedData['Conversazione Completa'] = fullConversation.trim();
 
-        // Add row with all columns (empty string for missing data)
-        const row = columns.map(col => extractedData[col] || '');
-        rows.push(row);
+        // Store the extracted data for this session
+        rows.push(extractedData);
       }
 
-      // Generate CSV content
-      let csvContent = columns.map(col => `"${col}"`).join(',') + '\n';
+      // Generate VERTICAL CSV content
+      let csvContent = '';
       
-      for (const row of rows) {
-        csvContent += row.map(cell => {
+      // Add header row
+      csvContent += '"Campo","Valore"\n';
+      
+      // For each session, create vertical format
+      for (let i = 0; i < rows.length; i++) {
+        const sessionData = rows[i];
+        
+        // Add session separator if multiple sessions
+        if (i > 0) {
+          csvContent += '"",""\n'; // Empty row separator
+        }
+        
+        // Add session header
+        csvContent += `"=== SESSIONE ${i + 1} ===",""\n`;
+        
+        // Add each field as a separate row
+        for (const field of fields) {
+          const value = sessionData[field] || '';
           // Escape quotes and wrap in quotes
-          const escaped = String(cell).replace(/"/g, '""');
-          return `"${escaped}"`;
-        }).join(',') + '\n';
+          const escapedValue = String(value).replace(/"/g, '""');
+          csvContent += `"${field}","${escapedValue}"\n`;
+        }
       }
 
       // Send CSV file
