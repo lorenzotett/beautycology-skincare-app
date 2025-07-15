@@ -56,14 +56,7 @@ app.use((req, res, next) => {
 
   // Admin access routes MUST be defined BEFORE catch-all routes
   app.get('/admin-dashboard', (req, res) => {
-    if (app.get("env") === "development") {
-      // In development, redirect to main app with admin param
-      res.redirect('/?admin=true');
-    } else {
-      // In production, serve the dedicated admin HTML file
-      const adminPath = path.join(process.cwd(), 'dist', 'public', 'admin-dashboard.html');
-      res.sendFile(adminPath);
-    }
+    res.redirect('/?admin=true');
   });
   
   app.get('/admin', (req, res) => {
@@ -72,14 +65,165 @@ app.use((req, res, next) => {
 
   // Direct admin access route with visual loading
   app.get('/admin-direct', (req, res) => {
-    const adminDirectPath = path.join(process.cwd(), 'admin-direct.html');
-    res.sendFile(adminDirectPath);
+    res.send(`<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AI DermaSense</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #64748b;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading">
+        <div class="logo">AI-DermaSense</div>
+        <div class="spinner"></div>
+        <div class="subtitle">Caricamento Dashboard Admin...</div>
+    </div>
+    <script>
+        window.location.href = '/?admin=true';
+    </script>
+</body>
+</html>`);
   });
 
   // Simple dashboard access route
   app.get('/dashboard', (req, res) => {
-    const dashboardPath = path.join(process.cwd(), 'dashboard.html');
-    res.sendFile(dashboardPath);
+    res.send(`<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - AI DermaSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f4f6;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .url-info {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+        .url-info h4 {
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .url-info code {
+            background: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🔐 AI-DermaSense</div>
+        <div class="subtitle">Dashboard Amministrativa</div>
+        <div class="spinner"></div>
+        <div class="status">Caricamento in corso...</div>
+        
+        <div class="url-info">
+            <h4>📌 URL per accesso diretto:</h4>
+            <code>https://bonnie-beauty.replit.app/dashboard</code>
+        </div>
+    </div>
+    <script>
+        setTimeout(() => {
+            window.location.href = '/?admin=true';
+        }, 2000);
+    </script>
+</body>
+</html>`);
   });
 
   // importantly only setup vite in development and after

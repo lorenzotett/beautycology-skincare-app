@@ -29,9 +29,10 @@ https://bonnie-beauty.replit.app/?admin=true
 
 ## 🔧 Come Funziona
 
-1. **Pagina di Caricamento**: Gli URL `/dashboard` e `/admin-direct` mostrano una pagina di caricamento professionale
-2. **Reindirizzamento Automatico**: Dopo 2 secondi, la pagina reindirizza a `/?admin=true`
+1. **Server-side HTML**: Gli URL `/dashboard` e `/admin-direct` restituiscono HTML direttamente dal server (no file statici)
+2. **Reindirizzamento Automatico**: `/dashboard` aspetta 2 secondi, `/admin-direct` reindirizza immediatamente a `/?admin=true`
 3. **Caricamento Dashboard**: Il frontend React riconosce il parametro `admin=true` e carica la dashboard
+4. **Compatibilità Produzione**: Funziona sia in development che in produzione senza bisogno di file statici
 
 ## 🚀 Deployment
 
