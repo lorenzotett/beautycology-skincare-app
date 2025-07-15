@@ -44,6 +44,8 @@ export default function AdminDashboard() {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(25);
   const { toast } = useToast();
 
   // Check if user is already authenticated
@@ -53,6 +55,11 @@ export default function AdminDashboard() {
       setIsAuthenticated(true);
     }
   }, []);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedPeriod, customDateFrom, customDateTo]);
 
   // Lock body scroll when modal is open and handle ESC key
   useEffect(() => {
@@ -195,6 +202,12 @@ export default function AdminDashboard() {
   };
 
   const selectAllSessions = () => {
+    if (!paginatedSessions) return;
+    const pageSessionIds = paginatedSessions.map(s => s.sessionId);
+    setSelectedSessions(new Set([...selectedSessions, ...pageSessionIds]));
+  };
+
+  const selectAllFiltered = () => {
     if (!filteredSessions) return;
     const allSessionIds = filteredSessions.map(s => s.sessionId);
     setSelectedSessions(new Set(allSessionIds));
@@ -302,6 +315,60 @@ export default function AdminDashboard() {
     session.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     session.sessionId.includes(searchTerm)
   ) : [];
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedSessions = filteredSessions.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  const resetToFirstPage = () => {
+    setCurrentPage(1);
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Generate pagination buttons
+  const getPaginationButtons = () => {
+    const buttons = [];
+    const maxButtons = 5;
+    
+    if (totalPages <= maxButtons) {
+      // Show all pages
+      for (let i = 1; i <= totalPages; i++) {
+        buttons.push(i);
+      }
+    } else {
+      // Show first, last, and pages around current
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          buttons.push(i);
+        }
+        buttons.push('...');
+        buttons.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        buttons.push(1);
+        buttons.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          buttons.push(i);
+        }
+      } else {
+        buttons.push(1);
+        buttons.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          buttons.push(i);
+        }
+        buttons.push('...');
+        buttons.push(totalPages);
+      }
+    }
+    
+    return buttons;
+  };
 
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('it-IT', {
@@ -453,7 +520,15 @@ export default function AdminDashboard() {
                   variant="outline"
                   className="text-gray-700"
                 >
-                  Seleziona Tutte
+                  Seleziona Pagina
+                </Button>
+                <Button 
+                  onClick={selectAllFiltered}
+                  size="sm"
+                  variant="outline"
+                  className="text-gray-700"
+                >
+                  Seleziona Tutte ({filteredSessions.length})
                 </Button>
                 <Button 
                   onClick={deselectAllSessions}
@@ -730,12 +805,15 @@ export default function AdminDashboard() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       <input
                         type="checkbox"
-                        checked={filteredSessions.length > 0 && filteredSessions.every(s => selectedSessions.has(s.sessionId))}
+                        checked={paginatedSessions.length > 0 && paginatedSessions.every(s => selectedSessions.has(s.sessionId))}
                         onChange={(e) => {
                           if (e.target.checked) {
                             selectAllSessions();
                           } else {
-                            deselectAllSessions();
+                            // Deselect only current page sessions
+                            const newSelected = new Set(selectedSessions);
+                            paginatedSessions.forEach(s => newSelected.delete(s.sessionId));
+                            setSelectedSessions(newSelected);
                           }
                         }}
                         className="rounded border-gray-300"
@@ -751,7 +829,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredSessions.map((session) => (
+                {paginatedSessions.map((session) => (
                   <tr key={session.sessionId} className={`hover:bg-gray-50 ${selectedSessions.has(session.sessionId) ? 'bg-blue-50' : ''}`}>
                     {isSelectionMode && (
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -840,6 +918,60 @@ export default function AdminDashboard() {
             <div className="p-8 text-center text-gray-500">
               <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Nessuna conversazione trovata</p>
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {filteredSessions.length > 0 && totalPages > 1 && (
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <p className="text-sm text-gray-700">
+                    Mostrando <span className="font-medium">{startIndex + 1}</span> a{' '}
+                    <span className="font-medium">{Math.min(endIndex, filteredSessions.length)}</span> di{' '}
+                    <span className="font-medium">{filteredSessions.length}</span> conversazioni
+                  </p>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="text-gray-500 border-gray-300 hover:bg-gray-100"
+                  >
+                    Precedente
+                  </Button>
+                  
+                  {getPaginationButtons().map((page, index) => (
+                    <Button
+                      key={index}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => typeof page === 'number' && handlePageChange(page)}
+                      disabled={page === '...'}
+                      className={`min-w-[2.5rem] ${
+                        currentPage === page 
+                          ? 'bg-blue-600 text-white border-blue-600' 
+                          : 'text-gray-500 border-gray-300 hover:bg-gray-100'
+                      }`}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="text-gray-500 border-gray-300 hover:bg-gray-100"
+                  >
+                    Successivo
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </Card>
