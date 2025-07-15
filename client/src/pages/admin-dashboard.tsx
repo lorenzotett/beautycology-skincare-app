@@ -865,7 +865,10 @@ export default function AdminDashboard() {
                           variant="outline" 
                           size="sm" 
                           className="text-blue-600 border-blue-600 hover:bg-blue-50 flex items-center space-x-1"
-                          onClick={() => setSelectedSession(session)}
+                          onClick={() => {
+                            console.log('View clicked for session:', session.sessionId);
+                            setSelectedSession(session);
+                          }}
                         >
                           <Eye className="h-4 w-4" />
                           <span>View</span>
