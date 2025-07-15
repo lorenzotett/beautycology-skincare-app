@@ -254,6 +254,8 @@ Changelog:
     - /?admin=true (direct parameter access)
   - Fixed slow dashboard loading by limiting conversations per page
   - Enhanced selection system to work with pagination
+  - **SOLUZIONE FINALE**: URL diretto funzionante 24/7: https://bonnie-beauty.replit.app/?admin=true
+  - Creati 3 file HTML statici di backup per accesso alternativo alla dashboard
 
 ## User Preferences
 
