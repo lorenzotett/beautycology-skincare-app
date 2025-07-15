@@ -271,6 +271,16 @@ Changelog:
   - System tested and verified: tracks all legitimate final button clicks, including verification tests
   - Enhanced logging: detailed decision tracking for troubleshooting and accuracy verification
   - Production-ready: precision tracking ensures accurate conversion analytics
+- July 15, 2025. Implemented advanced CSV export system with intelligent data extraction:
+  - Created comprehensive export with 40+ columns for detailed analysis
+  - Intelligent pattern recognition extracts all questions and answers from conversations
+  - Automatic extraction of skin analysis values in dedicated columns
+  - Deduced data capture: AI-inferred information marked as "(dedotto)"
+  - Multi-pattern extraction for user responses across various question formats
+  - Full conversation transcript included for reference
+  - UTF-8 BOM encoding for Excel compatibility
+  - Bypassed Vite middleware interference by placing endpoint before middleware setup
+  - Export accessible via admin dashboard's "Seleziona Chat" → "Scarica CSV" workflow
 
 ## User Preferences
 

@@ -44,6 +44,419 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Add CSV export endpoint BEFORE Vite setup to ensure it's not intercepted
+  app.post("/api/admin/export-csv", async (req, res) => {
+    try {
+      const { sessionIds } = req.body;
+      
+      if (!sessionIds || sessionIds.length === 0) {
+        return res.status(400).json({ error: "No sessions selected" });
+      }
+
+      const { storage } = await import("./storage");
+      const rows: any[] = [];
+      
+      // Define all possible columns for the CSV
+      const columns = [
+        'Session ID', 'User Name', 'Created At', 'Message Count', 'Cream Access',
+        // Skin Analysis columns
+        'Punteggio Generale', 'Rossori', 'Acne', 'Rughe', 'Pigmentazione', 
+        'Pori Dilatati', 'Oleosità', 'Danni Solari', 'Occhiaie', 
+        'Idratazione', 'Elasticità', 'Texture Uniforme',
+        // User data columns  
+        'Età', 'Sesso', 'Tipo Pelle Dichiarato', 'Zona Geografica',
+        // Questions and answers
+        'Usa Trucco', 'Strucca Sempre', 'Prodotti Attuali', 'Problemi Principali',
+        'Allergie', 'Fragranza OK', 'Protezione Solare', 'Acqua Giornaliera',
+        'Ore Sonno', 'Stress Level', 'Fumo', 'Dieta Equilibrata', 'Attività Fisica',
+        'Farmaci', 'Condizioni Mediche', 'Routine Desiderata', 'Email',
+        // Full conversation
+        'Conversazione Completa'
+      ];
+
+      // Process each selected session
+      for (const sessionId of sessionIds) {
+        const session = await storage.getChatSession(sessionId);
+        if (!session) continue;
+
+        const messages = await storage.getChatMessages(sessionId);
+        if (!messages) continue;
+
+        // Extract data from messages
+        const extractedData: any = {
+          'Session ID': sessionId,
+          'User Name': session.userName,
+          'Created At': new Date(session.createdAt).toLocaleString('it-IT'),
+          'Message Count': messages.length,
+          'Cream Access': session.finalButtonClicked ? 'Sì' : 'No'
+        };
+
+        let fullConversation = '';
+        let skinAnalysisFound = false;
+
+        // Process each message
+        for (const message of messages) {
+          fullConversation += `[${message.role.toUpperCase()}]: ${message.content}\n\n`;
+
+          // Extract skin analysis data
+          if (message.metadata?.skinAnalysis && !skinAnalysisFound) {
+            const analysis = message.metadata.skinAnalysis;
+            extractedData['Rossori'] = analysis.rossori || '';
+            extractedData['Acne'] = analysis.acne || '';
+            extractedData['Rughe'] = analysis.rughe || '';
+            extractedData['Pigmentazione'] = analysis.pigmentazione || '';
+            extractedData['Pori Dilatati'] = analysis.pori_dilatati || '';
+            extractedData['Oleosità'] = analysis.oleosita || '';
+            extractedData['Danni Solari'] = analysis.danni_solari || '';
+            extractedData['Occhiaie'] = analysis.occhiaie || '';
+            extractedData['Idratazione'] = analysis.idratazione || '';
+            extractedData['Elasticità'] = analysis.elasticita || '';
+            extractedData['Texture Uniforme'] = analysis.texture_uniforme || '';
+            
+            // Calculate overall score
+            const values = [
+              analysis.rossori, analysis.acne, analysis.rughe, 
+              analysis.pigmentazione, analysis.pori_dilatati, analysis.oleosita,
+              analysis.danni_solari, analysis.occhiaie
+            ].filter(v => v !== undefined);
+            
+            if (values.length > 0) {
+              const sum = values.reduce((a, b) => a + b, 0);
+              extractedData['Punteggio Generale'] = Math.round(sum / values.length);
+            }
+            
+            skinAnalysisFound = true;
+          }
+
+          // Extract answers from user messages and AI analysis
+          const content = message.content.toLowerCase();
+          
+          // Age extraction
+          const ageMatch = message.content.match(/(\d{2})\s*anni/i) || 
+                          message.content.match(/ho\s*(\d{2})/i);
+          if (ageMatch && !extractedData['Età']) {
+            extractedData['Età'] = ageMatch[1];
+          }
+
+          // Gender extraction
+          if (content.includes('femminile') || content.includes('donna')) {
+            extractedData['Sesso'] = 'Femminile';
+          } else if (content.includes('maschile') || content.includes('uomo')) {
+            extractedData['Sesso'] = 'Maschile';
+          }
+
+          // Skin type extraction
+          if (content.includes('pelle grassa')) {
+            extractedData['Tipo Pelle Dichiarato'] = 'Grassa';
+          } else if (content.includes('pelle secca')) {
+            extractedData['Tipo Pelle Dichiarato'] = 'Secca';
+          } else if (content.includes('pelle mista')) {
+            extractedData['Tipo Pelle Dichiarato'] = 'Mista';
+          } else if (content.includes('pelle normale')) {
+            extractedData['Tipo Pelle Dichiarato'] = 'Normale';
+          } else if (content.includes('pelle sensibile')) {
+            extractedData['Tipo Pelle Dichiarato'] = 'Sensibile';
+          }
+
+          // Yes/No questions extraction
+          if (content.includes('trucco') || content.includes('makeup')) {
+            if (content.includes('sì regolarmente') || content.includes('sempre')) {
+              extractedData['Usa Trucco'] = 'Sì regolarmente';
+            } else if (content.includes('occasionalmente') || content.includes('a volte')) {
+              extractedData['Usa Trucco'] = 'Occasionalmente';
+            } else if (content.includes('no') || content.includes('mai')) {
+              extractedData['Usa Trucco'] = 'No';
+            }
+          }
+
+          if (content.includes('strucco') || content.includes('strucca')) {
+            if (content.includes('sempre')) {
+              extractedData['Strucca Sempre'] = 'Sempre';
+            } else if (content.includes('a volte')) {
+              extractedData['Strucca Sempre'] = 'A volte';
+            } else if (content.includes('mai')) {
+              extractedData['Strucca Sempre'] = 'Mai';
+            }
+          }
+
+          if (content.includes('fragranza') || content.includes('profumo')) {
+            if (content.includes('sì') && !content.includes('no')) {
+              extractedData['Fragranza OK'] = 'Sì';
+            } else if (content.includes('no')) {
+              extractedData['Fragranza OK'] = 'No';
+            }
+          }
+
+          if (content.includes('protezione solare') || content.includes('spf')) {
+            if (content.includes('sempre')) {
+              extractedData['Protezione Solare'] = 'Sempre';
+            } else if (content.includes('solo d\'estate')) {
+              extractedData['Protezione Solare'] = 'Solo d\'estate';
+            } else if (content.includes('solo quando esco')) {
+              extractedData['Protezione Solare'] = 'Solo quando esco';
+            } else if (content.includes('raramente')) {
+              extractedData['Protezione Solare'] = 'Raramente';
+            } else if (content.includes('mai')) {
+              extractedData['Protezione Solare'] = 'Mai';
+            }
+          }
+
+          // Water intake
+          if (content.includes('litri') || content.includes('acqua')) {
+            if (content.includes('meno di 1l')) {
+              extractedData['Acqua Giornaliera'] = 'Meno di 1L';
+            } else if (content.includes('1-1.5l') || content.includes('1.5l')) {
+              extractedData['Acqua Giornaliera'] = '1-1.5L';
+            } else if (content.includes('1.5-2l') || content.includes('2l')) {
+              extractedData['Acqua Giornaliera'] = '1.5-2L';
+            } else if (content.includes('più di 2l')) {
+              extractedData['Acqua Giornaliera'] = 'Più di 2L';
+            }
+          }
+
+          // Sleep hours
+          if (content.includes('ore') && content.includes('sonno')) {
+            if (content.includes('meno di 6h')) {
+              extractedData['Ore Sonno'] = 'Meno di 6h';
+            } else if (content.includes('6-7h')) {
+              extractedData['Ore Sonno'] = '6-7h';
+            } else if (content.includes('7-8h')) {
+              extractedData['Ore Sonno'] = '7-8h';
+            } else if (content.includes('più di 8h')) {
+              extractedData['Ore Sonno'] = 'Più di 8h';
+            }
+          }
+
+          // Stress level
+          if (content.includes('stress')) {
+            if (content.includes('molto')) {
+              extractedData['Stress Level'] = 'Molto';
+            } else if (content.includes('abbastanza')) {
+              extractedData['Stress Level'] = 'Abbastanza';
+            } else if (content.includes('poco')) {
+              extractedData['Stress Level'] = 'Poco';
+            } else if (content.includes('per niente')) {
+              extractedData['Stress Level'] = 'Per niente';
+            }
+          }
+
+          // Smoking
+          if (content.includes('fumo') || content.includes('fumi')) {
+            if (content.includes('sì regolarmente')) {
+              extractedData['Fumo'] = 'Sì regolarmente';
+            } else if (content.includes('occasionalmente')) {
+              extractedData['Fumo'] = 'Occasionalmente';
+            } else if (content.includes('no')) {
+              extractedData['Fumo'] = 'No';
+            }
+          }
+
+          // Extract email
+          const emailMatch = message.content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+          if (emailMatch && !extractedData['Email']) {
+            extractedData['Email'] = emailMatch[1];
+          }
+
+          // Extract zone/location
+          if (content.includes('nord') && content.includes('italia')) {
+            extractedData['Zona Geografica'] = 'Nord Italia';
+          } else if (content.includes('centro') && content.includes('italia')) {
+            extractedData['Zona Geografica'] = 'Centro Italia';
+          } else if (content.includes('sud') && content.includes('italia')) {
+            extractedData['Zona Geografica'] = 'Sud Italia';
+          }
+
+          // Extract diet
+          if (content.includes('dieta') || content.includes('alimentazione')) {
+            if (content.includes('equilibrata') || content.includes('varia')) {
+              extractedData['Dieta Equilibrata'] = 'Sì';
+            } else if (content.includes('non equilibrata') || content.includes('poco varia')) {
+              extractedData['Dieta Equilibrata'] = 'No';
+            }
+          }
+
+          // Extract physical activity
+          if (content.includes('attività fisica') || content.includes('sport')) {
+            if (content.includes('regolarmente') || content.includes('3-4 volte')) {
+              extractedData['Attività Fisica'] = 'Regolarmente';
+            } else if (content.includes('occasionalmente') || content.includes('1-2 volte')) {
+              extractedData['Attività Fisica'] = 'Occasionalmente';
+            } else if (content.includes('raramente') || content.includes('poco')) {
+              extractedData['Attività Fisica'] = 'Raramente';
+            } else if (content.includes('mai') || content.includes('sedentaria')) {
+              extractedData['Attività Fisica'] = 'Mai';
+            }
+          }
+
+          // Extract allergies
+          if (content.includes('allergie') || content.includes('allergico')) {
+            if (content.includes('nessuna allergia') || content.includes('no allergie')) {
+              extractedData['Allergie'] = 'Nessuna';
+            } else if (content.includes('sì') && content.includes('allergie')) {
+              // Look for specific allergens in the message
+              const allergens = [];
+              if (content.includes('nichel')) allergens.push('Nichel');
+              if (content.includes('profumo')) allergens.push('Profumo');
+              if (content.includes('parabeni')) allergens.push('Parabeni');
+              if (content.includes('lattice')) allergens.push('Lattice');
+              if (allergens.length > 0) {
+                extractedData['Allergie'] = allergens.join(', ');
+              } else {
+                extractedData['Allergie'] = 'Sì (non specificate)';
+              }
+            }
+          }
+
+          // Extract current products
+          if ((content.includes('prodotti') && content.includes('uso')) || 
+              (content.includes('routine') && content.includes('attuale'))) {
+            // Store any product mentions
+            if (!extractedData['Prodotti Attuali'] && message.role === 'user') {
+              const productMatch = message.content.match(/uso[:\s]+(.*?)(?:\.|$)/i);
+              if (productMatch) {
+                extractedData['Prodotti Attuali'] = productMatch[1].trim();
+              }
+            }
+          }
+
+          // Extract main skin problems
+          if ((content.includes('problemi') || content.includes('preoccupazioni')) && 
+              message.role === 'user' && !extractedData['Problemi Principali']) {
+            const nextSentence = message.content.split('.')[0];
+            if (nextSentence.length < 200) {
+              extractedData['Problemi Principali'] = nextSentence.trim();
+            }
+          }
+
+          // Extract desired routine
+          if (content.includes('routine') && content.includes('preferisci')) {
+            if (content.includes('semplice') || content.includes('minimale')) {
+              extractedData['Routine Desiderata'] = 'Semplice';
+            } else if (content.includes('completa') || content.includes('dettagliata')) {
+              extractedData['Routine Desiderata'] = 'Completa';
+            }
+          }
+
+          // Extract medications
+          if (content.includes('farmaci') || content.includes('medicinali')) {
+            if (content.includes('no') || content.includes('nessuno')) {
+              extractedData['Farmaci'] = 'Nessuno';
+            } else if (content.includes('sì') && message.role === 'user') {
+              extractedData['Farmaci'] = 'Sì';
+            }
+          }
+
+          // Extract medical conditions
+          if (content.includes('condizioni mediche') || content.includes('patologie')) {
+            if (content.includes('no') || content.includes('nessuna')) {
+              extractedData['Condizioni Mediche'] = 'Nessuna';
+            } else if (content.includes('sì') && message.role === 'user') {
+              extractedData['Condizioni Mediche'] = 'Sì';
+            }
+          }
+        }
+
+        // Additional intelligent extraction from AI responses
+        for (const message of messages) {
+          if (message.role === 'assistant') {
+            const content = message.content;
+            
+            // Extract deduced information from AI analysis
+            if (content.includes('deduco che') || content.includes('noto che') || 
+                content.includes('vedo che') || content.includes('analizzando')) {
+              
+              // Extract deduced age if mentioned
+              if (!extractedData['Età'] && content.includes('anni')) {
+                const ageMatch = content.match(/(\d{2})\s*anni/);
+                if (ageMatch) {
+                  extractedData['Età'] = ageMatch[1] + ' (dedotto)';
+                }
+              }
+
+              // Extract deduced skin type
+              if (!extractedData['Tipo Pelle Dichiarato'] && content.includes('pelle')) {
+                if (content.includes('pelle grassa')) {
+                  extractedData['Tipo Pelle Dichiarato'] = 'Grassa (dedotto)';
+                } else if (content.includes('pelle secca')) {
+                  extractedData['Tipo Pelle Dichiarato'] = 'Secca (dedotto)';
+                } else if (content.includes('pelle mista')) {
+                  extractedData['Tipo Pelle Dichiarato'] = 'Mista (dedotto)';
+                }
+              }
+            }
+
+            // Extract skin analysis results if present in a table format
+            if (content.includes('| Parametro') && content.includes('| Valore')) {
+              const lines = content.split('\n');
+              for (const line of lines) {
+                if (line.includes('|') && !line.includes('Parametro')) {
+                  const parts = line.split('|').map(p => p.trim());
+                  if (parts.length >= 3) {
+                    const param = parts[1];
+                    const value = parts[2];
+                    
+                    // Map parameters to column names
+                    const paramMap: { [key: string]: string } = {
+                      'Rossori': 'Rossori',
+                      'Acne': 'Acne',
+                      'Rughe': 'Rughe',
+                      'Pigmentazione': 'Pigmentazione',
+                      'Pori dilatati': 'Pori Dilatati',
+                      'Oleosità': 'Oleosità',
+                      'Danni solari': 'Danni Solari',
+                      'Occhiaie': 'Occhiaie',
+                      'Idratazione': 'Idratazione',
+                      'Elasticità': 'Elasticità',
+                      'Texture uniforme': 'Texture Uniforme',
+                      'Punteggio generale': 'Punteggio Generale'
+                    };
+                    
+                    if (paramMap[param] && value && value !== '-') {
+                      extractedData[paramMap[param]] = value;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        extractedData['Conversazione Completa'] = fullConversation.trim();
+
+        // Add row with all columns (empty string for missing data)
+        const row = columns.map(col => extractedData[col] || '');
+        rows.push(row);
+      }
+
+      // Generate CSV content
+      let csvContent = columns.map(col => `"${col}"`).join(',') + '\n';
+      
+      for (const row of rows) {
+        csvContent += row.map(cell => {
+          // Escape quotes and wrap in quotes
+          const escaped = String(cell).replace(/"/g, '""');
+          return `"${escaped}"`;
+        }).join(',') + '\n';
+      }
+
+      // Send CSV file
+      const filename = `ai-dermasense-export-${new Date().toISOString().split('T')[0]}.csv`;
+      
+      // Ensure CSV response before Vite can intercept
+      res.writeHead(200, {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': Buffer.byteLength('\ufeff' + csvContent)
+      });
+      
+      res.end('\ufeff' + csvContent);
+      
+    } catch (error) {
+      console.error("Error generating CSV:", error);
+      res.status(500).json({ error: "Failed to generate CSV" });
+    }
+  });
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

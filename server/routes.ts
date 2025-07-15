@@ -599,6 +599,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+
   const server = createServer(app);
   return server;
 }
