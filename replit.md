@@ -265,8 +265,8 @@ Changelog:
   - Fixed admin dashboard loading issues with proper pagination controls
   - Enhanced "Cream Access" counter to accurately track final button clicks
   - All dashboard functionality now works smoothly with instant loading
-- July 15, 2025. Implemented ultra-precise cream access tracking validation:
-  - Added robust validation: only chats with 5+ messages and final "crema personalizzata" link count as cream access
+- July 15, 2025. Implemented ultra-precise skincare access tracking validation:
+  - Added robust validation: only chats with 5+ messages and final "skincare personalizzata" or "crema personalizzata" link count as skincare access
   - Eliminated false positives: incomplete chats (1-3 messages) are correctly rejected with 400 error
   - System tested and verified: tracks all legitimate final button clicks, including verification tests
   - Enhanced logging: detailed decision tracking for troubleshooting and accuracy verification
@@ -283,6 +283,11 @@ Changelog:
   - Export accessible via admin dashboard's "Seleziona Chat" → "Scarica CSV" workflow
   - Updated to VERTICAL format: Campo/Valore columns instead of horizontal layout
   - Each session displays as separate vertical section with clear session headers
+- July 16, 2025. Updated skincare button text and link:
+  - Changed button text from "crema personalizzata" to "skincare personalizzata" 
+  - Updated link from https://tinyurl.com/formulabonnie to https://tinyurl.com/bonnie-beauty
+  - Updated backend tracking to recognize both "skincare" and "crema" terminology
+  - Maintained full mobile compatibility with multiple fallback methods
 
 ## User Preferences
 

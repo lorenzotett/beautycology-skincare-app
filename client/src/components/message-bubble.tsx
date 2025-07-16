@@ -104,7 +104,7 @@ const parseContentWithLinkButtons = (content: string) => {
   while ((match = linkButtonRegex.exec(content)) !== null) {
     linkButtons.push({
       url: match[1],
-      text: 'Accedi alla tua crema personalizzata'
+      text: 'Accedi alla tua skincare personalizzata'
     });
     cleanContent = cleanContent.replace(match[0], '');
   }
@@ -112,11 +112,11 @@ const parseContentWithLinkButtons = (content: string) => {
   // Also look for the fallback pattern [Accedi ai Prodotti Bonnie]
   if (linkButtons.length === 0 && content.includes('[Accedi ai Prodotti Bonnie]')) {
     linkButtons.push({
-      url: 'https://tinyurl.com/formulabonnie',
-      text: 'Accedi alla tua crema personalizzata'
+      url: 'https://tinyurl.com/bonnie-beauty',
+      text: 'Accedi alla tua skincare personalizzata'
     });
     // Replace the entire sentence with the new format
-    cleanContent = cleanContent.replace(/Per ricevere la routine via email e accedere ai prodotti consigliati: \[Accedi ai Prodotti Bonnie\]/g, 'Puoi accedere tramite questo pulsante alla tua crema personalizzata:');
+    cleanContent = cleanContent.replace(/Per ricevere la routine via email e accedere ai prodotti consigliati: \[Accedi ai Prodotti Bonnie\]/g, 'Puoi accedere tramite questo pulsante alla tua skincare personalizzata:');
   }
 
   return {

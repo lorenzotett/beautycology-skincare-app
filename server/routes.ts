@@ -458,14 +458,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Chat not complete enough for cream access" });
       }
 
-      // Check if the last message contains a link button with "crema personalizzata"
+      // Check if the last message contains a link button with "skincare personalizzata" or "crema personalizzata" 
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role !== 'assistant' || !lastMessage.content.includes('crema personalizzata')) {
-        console.log(`Chat ${sessionId} last message doesn't contain cream link - not a complete consultation`);
-        return res.status(400).json({ error: "Chat not complete - no final cream link found" });
+      if (lastMessage.role !== 'assistant' || 
+          (!lastMessage.content.includes('skincare personalizzata') && !lastMessage.content.includes('crema personalizzata'))) {
+        console.log(`Chat ${sessionId} last message doesn't contain skincare/cream link - not a complete consultation`);
+        return res.status(400).json({ error: "Chat not complete - no final skincare link found" });
       }
 
-      console.log(`Valid cream access for session ${sessionId} - ${messages.length} messages, last message contains cream link`);
+      console.log(`Valid skincare access for session ${sessionId} - ${messages.length} messages, last message contains skincare link`);
 
       await storage.updateChatSession(sessionId, {
         finalButtonClicked: true,
