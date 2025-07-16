@@ -292,6 +292,10 @@ Changelog:
   - Changed typing indicator text from "AI-DermaSense sta scrivendo" to "Sta scrivendo"
   - Updated all occurrences in chat-interface.tsx and typing-indicator.tsx
   - Simplified user experience with shorter, cleaner messaging
+- July 16, 2025. Removed AI-DermaSense branding from chat header:
+  - Removed "AI-DermaSense" title text from top right of chat interface
+  - Kept only Bonnie logo on the left and Shopify indicator when applicable
+  - Cleaner header design with minimal branding
 
 ## User Preferences
 

@@ -831,9 +831,6 @@ export function ChatInterface() {
                   🔗 Shopify
                 </div>
               )}
-              <h1 className="dermaSense-title font-bold" style={{color: '#007381', fontSize: '14px'}}>
-                AI-DermaSense
-              </h1>
             </div>
           </div>
           {/* Messages Area */}
