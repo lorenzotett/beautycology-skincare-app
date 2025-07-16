@@ -288,6 +288,10 @@ Changelog:
   - Updated link from https://tinyurl.com/formulabonnie to https://tinyurl.com/bonnie-beauty
   - Updated backend tracking to recognize both "skincare" and "crema" terminology
   - Maintained full mobile compatibility with multiple fallback methods
+- July 16, 2025. Simplified typing indicator message:
+  - Changed typing indicator text from "AI-DermaSense sta scrivendo" to "Sta scrivendo"
+  - Updated all occurrences in chat-interface.tsx and typing-indicator.tsx
+  - Simplified user experience with shorter, cleaner messaging
 
 ## User Preferences
 

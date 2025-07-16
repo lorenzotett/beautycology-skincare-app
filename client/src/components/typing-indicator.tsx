@@ -2,7 +2,7 @@ interface TypingIndicatorProps {
   message?: string;
 }
 
-export function TypingIndicator({ message = "AI-DermaSense sta scrivendo" }: TypingIndicatorProps) {
+export function TypingIndicator({ message = "Sta scrivendo" }: TypingIndicatorProps) {
   return (
     <div className="bg-assistant-msg rounded-lg p-3 inline-block w-fit max-w-[80%]">
       <div className="flex items-center gap-2">

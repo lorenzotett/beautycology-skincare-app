@@ -32,7 +32,7 @@ export function ChatInterface() {
   const [currentMessage, setCurrentMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [typingMessage, setTypingMessage] = useState("AI-DermaSense sta scrivendo");
+  const [typingMessage, setTypingMessage] = useState("Sta scrivendo");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
@@ -203,7 +203,7 @@ export function ChatInterface() {
     // Show chat interface immediately
     setHasStarted(true);
     setIsTyping(true);
-    setTypingMessage("AI-DermaSense sta scrivendo");
+    setTypingMessage("Sta scrivendo");
     setUserInitial(name.charAt(0).toUpperCase());
 
     // Add user's name as first message immediately
@@ -444,7 +444,7 @@ export function ChatInterface() {
         setTypingMessage(analysisMessages[messageIndex]);
       }, 3000); // Change message every 3 seconds
     } else {
-      setTypingMessage("AI-DermaSense sta scrivendo");
+      setTypingMessage("Sta scrivendo");
     }
 
     try {
@@ -501,7 +501,7 @@ export function ChatInterface() {
 
       setMessages(prev => [...prev, assistantMessage]);
       setIsTyping(false);
-      setTypingMessage("AI-DermaSense sta scrivendo"); // Reset to default message
+      setTypingMessage("Sta scrivendo"); // Reset to default message
 
       // Clear rotation interval if it exists
       if (messageRotation) {
@@ -509,7 +509,7 @@ export function ChatInterface() {
       }
     } catch (error) {
       setIsTyping(false);
-      setTypingMessage("AI-DermaSense sta scrivendo"); // Reset to default message
+      setTypingMessage("Sta scrivendo"); // Reset to default message
 
       // Clear rotation interval if it exists
       if (messageRotation) {
