@@ -63,7 +63,7 @@ export class GoogleSheetsService {
         conversationText += `[${time}] ${role}: ${message.content}\n`;
       });
 
-      // Prepare structured data for Google Sheets with extracted values
+      // Prepare structured data for Google Sheets with extracted values from custom AI model
       const values = [[
         timestamp, // A
         sessionId, // B
@@ -75,23 +75,27 @@ export class GoogleSheetsService {
         extractedData.problemiPelle || '', // H
         extractedData.punteggioPelle || '', // I
         extractedData.routine || '', // J
-        extractedData.prodotti || '', // K
-        extractedData.allergie || '', // L
-        extractedData.profumo || '', // M
-        extractedData.sonno || '', // N
-        extractedData.stress || '', // O
-        extractedData.alimentazione || '', // P
-        extractedData.fumo || '', // Q
-        extractedData.idratazione || '', // R - Water intake
-        extractedData.protezioneSolare || '', // S
-        messages.length, // T
-        conversationText // U
+        extractedData.allergie || '', // K
+        extractedData.profumo || '', // L
+        extractedData.sonno || '', // M
+        extractedData.stress || '', // N
+        extractedData.alimentazione || '', // O
+        extractedData.fumo || '', // P
+        extractedData.idratazione || '', // Q
+        extractedData.protezioneSolare || '', // R
+        extractedData.utilizzaScrub || '', // S
+        extractedData.faseCompletata || '', // T
+        extractedData.accessoProdotti || '', // U
+        extractedData.qualitaDati || '', // V
+        extractedData.noteAggiuntive || '', // W
+        messages.length, // X
+        conversationText // Y
       ]];
 
       // Append to Google Sheets
       const response = await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A:U', // Updated range for optimized columns
+        range: 'Foglio1!A:Y', // Updated range for custom AI model columns
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         requestBody: {
@@ -518,12 +522,13 @@ export class GoogleSheetsService {
       });
 
       if (!response.data.values || response.data.values.length === 0) {
-        // Add comprehensive headers
+        // Add comprehensive headers with new AI model fields
         const headers = [[
           'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
-          'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Prodotti Usati',
-          'Allergie', 'Profumo', 'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo',
-          'Idratazione', 'Protezione Solare', 'Num. Messaggi', 'Conversazione Completa'
+          'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
+          'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo', 'Idratazione', 'Protezione Solare',
+          'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
+          'Note Aggiuntive', 'Num. Messaggi', 'Conversazione Completa'
         ]];
         
         await this.sheets.spreadsheets.values.update({
