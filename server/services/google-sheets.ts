@@ -103,7 +103,7 @@ export class GoogleSheetsService {
         }
       });
 
-      console.log(`Successfully appended conversation ${sessionId} to Google Sheets`);
+      console.log(`✅ Successfully appended conversation ${sessionId} to Google Sheets`);
       return true;
     } catch (error) {
       console.error('Google Sheets integration error:', error);
