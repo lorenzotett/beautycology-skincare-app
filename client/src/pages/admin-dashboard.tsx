@@ -930,6 +930,7 @@ export default function AdminDashboard() {
                       />
                     </th>
                   )}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thread ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Fingerprint</th>
@@ -951,6 +952,11 @@ export default function AdminDashboard() {
                         />
                       </td>
                     )}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                        #{session.id}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-medium text-gray-900">{session.userName}</div>
                       {session.userEmail && (
