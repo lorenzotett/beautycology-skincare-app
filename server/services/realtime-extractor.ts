@@ -109,28 +109,36 @@ export class RealtimeDataExtractor {
               punteggio_pelle: 'Non specificato'
             };
 
-          // Sync to Google Sheets
-          const sheetsSuccess = await this.googleSheets.appendConversation(
-            session.sessionId,
-            session.userId,
-            this.extractEmailFromMessages(messages),
-            messages,
-            extractedData
-          );
+          // Try to sync to Google Sheets (non-blocking for progression)
+          let sheetsSuccess = false;
+          try {
+            sheetsSuccess = await this.googleSheets.appendConversation(
+              session.sessionId,
+              session.userId,
+              this.extractEmailFromMessages(messages),
+              messages,
+              extractedData
+            );
+          } catch (error) {
+            console.warn(`Google Sheets sync failed for session ${session.id}:`, error.message);
+          }
 
-          // Sync to Klaviyo if email found
+          // Try to sync to Klaviyo if email found (non-blocking for progression)
           const email = this.extractEmailFromMessages(messages);
           if (email) {
-            await this.klaviyo.addProfileToList(email, session.userId, extractedData);
+            try {
+              await this.klaviyo.addProfileToList(email, session.userId, extractedData);
+            } catch (error) {
+              console.warn(`Klaviyo sync failed for session ${session.id}:`, error.message);
+            }
           }
 
-          if (sheetsSuccess) {
-            newSessions.push(session.userId);
-            processed++;
-            console.log(`✅ AI extracted and synced data for ${session.userId}`);
-          }
+          // Always count as processed if AI extraction succeeded, regardless of sync failures
+          newSessions.push(session.userId);
+          processed++;
+          console.log(`✅ AI extracted data for ${session.userId} (Sheets: ${sheetsSuccess ? 'OK' : 'FAILED'}, Klaviyo: ${email ? 'ATTEMPTED' : 'SKIPPED'})`);
 
-          // Update last processed ID
+          // Always update last processed ID to avoid getting stuck on failed syncs
           this.lastProcessedSessionId = Math.max(this.lastProcessedSessionId, session.id || 0);
           
         } catch (error) {
