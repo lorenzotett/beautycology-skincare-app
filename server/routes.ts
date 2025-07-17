@@ -981,25 +981,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Extract last 5 chats endpoint
   app.post("/api/admin/extract-last-five", async (req, res) => {
     try {
-      // Get all sessions sorted by creation date (newest first)
+      // Get all sessions sorted exactly like the dashboard (newest first, no email filter)
       const allSessions = await storage.getAllChatSessions();
       const lastFiveSessions = allSessions
-        .filter(session => session.userEmail) // Only sessions with email
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 5);
 
-      console.log(`🎯 Extracting last 5 chats:`, lastFiveSessions.map(s => `#${s.id} (${s.userName})`));
+      console.log(`🎯 Extracting last 5 chats (same order as dashboard):`, lastFiveSessions.map(s => `#${s.id} (${s.userName})`));
+      
+      // Filter only those with email for actual processing
+      const sessionsWithEmail = lastFiveSessions.filter(session => session.userEmail);
+      console.log(`📧 Sessions with email for processing:`, sessionsWithEmail.map(s => `#${s.id} (${s.userName})`));
 
       // Return immediate response
       res.json({
         success: true,
-        message: `Started processing ${lastFiveSessions.length} conversations`,
-        totalProcessed: lastFiveSessions.length,
-        extracted: lastFiveSessions.length
+        message: `Started processing ${sessionsWithEmail.length} conversations with email from last 5`,
+        totalProcessed: sessionsWithEmail.length,
+        extracted: sessionsWithEmail.length,
+        lastFiveChats: lastFiveSessions.map(s => s.userName),
+        processableChats: sessionsWithEmail.map(s => s.userName)
       });
 
-      // Process in background
-      processLastFiveAsync(lastFiveSessions);
+      // Process in background (only sessions with email)
+      processLastFiveAsync(sessionsWithEmail);
 
     } catch (error) {
       console.error("Error extracting last 5 chats:", error);
