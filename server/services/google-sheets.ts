@@ -27,17 +27,22 @@ export class GoogleSheetsService {
     aiExtractedData?: any
   ): Promise<boolean> {
     try {
-      // Check if session already exists in sheet to avoid duplicates
+      // Check if session already exists in sheet to update rather than duplicate
       const existingData = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
         range: 'Foglio1!B:B' // Session ID column
       });
 
+      let isUpdate = false;
+      let updateRowIndex = -1;
+      
       if (existingData.data.values) {
         const sessionIds = existingData.data.values.flat();
-        if (sessionIds.includes(sessionId)) {
-          console.log(`Session ${sessionId} already exists in Google Sheets, skipping duplicate`);
-          return true; // Return true as it's already synced
+        const existingIndex = sessionIds.findIndex(id => id === sessionId);
+        if (existingIndex >= 0) {
+          isUpdate = true;
+          updateRowIndex = existingIndex + 1; // +1 because sheets are 1-indexed
+          console.log(`🔄 Session ${sessionId} exists at row ${updateRowIndex}, updating with fresh AI data`);
         }
       }
       // Format conversation data
@@ -94,18 +99,32 @@ export class GoogleSheetsService {
         conversationText // Y
       ]];
 
-      // Append to Google Sheets
-      const response = await this.sheets.spreadsheets.values.append({
-        spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A:Y', // Updated range for custom AI model columns
-        valueInputOption: 'USER_ENTERED',
-        insertDataOption: 'INSERT_ROWS',
-        requestBody: {
-          values: values
-        }
-      });
-
-      console.log(`✅ Successfully appended conversation ${sessionId} to Google Sheets`);
+      if (isUpdate && updateRowIndex > 0) {
+        // Update existing row with fresh AI data
+        const updateRange = `Foglio1!A${updateRowIndex}:Y${updateRowIndex}`;
+        const response = await this.sheets.spreadsheets.values.update({
+          spreadsheetId: this.spreadsheetId,
+          range: updateRange,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: values
+          }
+        });
+        console.log(`✅ Successfully updated conversation ${sessionId} at row ${updateRowIndex} with fresh AI data`);
+      } else {
+        // Append new conversation to Google Sheets
+        const response = await this.sheets.spreadsheets.values.append({
+          spreadsheetId: this.spreadsheetId,
+          range: 'Foglio1!A:Y', // Updated range for custom AI model columns
+          valueInputOption: 'USER_ENTERED',
+          insertDataOption: 'INSERT_ROWS',
+          requestBody: {
+            values: values
+          }
+        });
+        console.log(`✅ Successfully appended new conversation ${sessionId} to Google Sheets`);
+      }
+      
       return true;
     } catch (error) {
       console.error('Google Sheets integration error:', error);

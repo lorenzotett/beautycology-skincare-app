@@ -121,6 +121,17 @@ Età: "ho 25 anni", "25enne", "sono del '99"
 Genere: "sono una ragazza", "uomo di", "donna"
 Routine: "uso solo acqua", "crema la sera", "niente trucco"
 Problemi: "ho sempre brufoli", "pelle che tira", "macchie rosse"
+Idratazione: "Meno di 1L", "1-1.5L", "1.5-2L", "Più di 2L" - cerca le scelte multiple per l'acqua
+Sonno: "Meno di 6h", "6-7h", "7-8h", "Più di 8h" - cerca le scelte multiple per il sonno
+Protezione solare: "Sempre", "Solo d'estate", "Solo quando esco", "Raramente", "Mai"
+Fumo: "Sì regolarmente", "Occasionalmente", "No"
+Stress: "Molto", "Abbastanza", "Poco", "Per niente"
+
+ATTENZIONE SPECIALE per campi multiple choice:
+- Cerca nelle conversazioni le risposte esatte alle scelte multiple offerte
+- Per idratazione_quotidiana: estrai il valore esatto tra le opzioni fornite
+- Per protezione_solare: estrai il valore esatto tra le opzioni fornite  
+- Non approssimare - usa il valore letterale selezionato dall'utente
 
 Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantenendo alta precisione e completezza.`
       });
@@ -180,7 +191,7 @@ Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantene
 
   // Convert extracted data to Google Sheets format
   convertToSheetsFormat(extractedData: ExtractedData): any {
-    return {
+    const result = {
       eta: extractedData.informazioni_base.eta || 'Non specificato',
       sesso: extractedData.informazioni_base.sesso || 'Non specificato',
       tipoPelle: extractedData.analisi_pelle.tipo_pelle || 'Non specificato',
@@ -201,5 +212,6 @@ Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantene
       faseCompletata: extractedData.analisi_conversazione.fase_completata || 'Non specificato',
       accessoProdotti: extractedData.analisi_conversazione.accesso_prodotti || 'Non specificato'
     };
+    return result;
   }
 }
