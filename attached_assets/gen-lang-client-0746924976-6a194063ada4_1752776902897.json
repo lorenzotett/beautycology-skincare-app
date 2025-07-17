@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "gen-lang-client-0746924976",
+  "private_key_id": "6a194063ada4dfd4de3ee9ebcf07a22ccf7d4c8d",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC5urxUDwb+jOKY\ntCFHm039dpUGX8nV97GdKfFdGQze+IUKpqxZ7MZwKyII8Bsby0yVee+DJKa/kpvi\nGL0dI0jdDaX6kF7azghZjxlBQ8Wa8roBKo0ezyxzedgT9lPlOt4AXOxUBcrgxl1P\n+8eYkzqEQs4kYoiy0UvrLIcgw3NYybp3giNpIyloxbUT9KdrMbh+DcnahftV2Hzl\ne1T12lc14/MgAyf0Ok7S0TwRwdsu3x/9o2CFEsB6D5kO29hxkolHGAa3vTs3b9sO\nmxHuLoEt14MgKQsMJTOOkbCDpkZPw+0uvk7N4t+vg5qnYbDEba4vP19tM3MlKN0M\nUHj2HfgVAgMBAAECggEASRYkNRniwTm0k63SqMiDJLpMw4DfPp1lnfia2+1XJMj8\nJahYC10C67H1hznhGQtj3DBrIZrDKYDqacsdZEF101MjHRpB0W2hWIjYwdeHA8X/\njyTs+pJBJkHs11IoSnzjTpZCg3/yCYjVwHtOXIqXTOOzFhtWOrPk4asYk7qGAgpX\nuR2C60ZMNGG+J8xBurnmdrTcEQ4KCtkPsp4h80MUDIyLzl56WcyyR8XCnxSCZq5h\n4026XjLtKhvno924fGOz5JtuyReuKnzy+yImCgm04eNlgoRFBYr6E2PM815g1rKC\nhO7cq5ioFpz+o73ObrjX187SCMyNm45BmJptEsnSswKBgQDv9e8kNjpBOXKmbvcF\nGCDqKwASzbpqGFLZI6QQk8YruRO09owFv3vCpA8D/kLG4L68A8RYEsCruWpYjZ1v\nM572imNro+7aSDJTdsYAFevTl9EqxgxvbbQa2Ti8/VLLnIaW8zm2OfejzSFEvjpr\nETFBEFLXBEKZXZEIO9yvA5ng+wKBgQDGJNQR4LN/XnN8nXPS7MWFdnQLedO4lIq2\nMF/XKaQqdXoP7NJJY2I0kQfjrrYNdX4G1rDDhweGOikLPc3s3JIHBfM2oXKx2pZK\n/GRCD5z+zIYJMuOouAR5cZNLxRGAKLOdOPpacXNk6G76vkV4048bypOh635ZZh2y\n6Bti8AzeLwKBgE0D1+79YJESiROVxb5i0h2WE331fYETsXNzlvKjGxVpX0PTZXlq\nzaPY1+DmODRwaYcahmfmDOSQq+sj+IV6QejK3cHsaXqxdUWId2ALqRbOQRnDWrZg\ntU9wrF8rxukGocPM6Jbt3+c4rRbNHx7B89b4ED5mZaGngCbuX5PkSf0FAoGARtmg\nYwwf4ulZDjQW2FMFheWHNRtI03V57A98Fam0I+KB1PPvdYJt+THqykUMn99lQvi9\nmAzOafad+oENAycTqCM+hkhQhLwOhZ2eE+kVUB69xshFk2zJXMt5ydwbl+H158AZ\n9QEgK/LYzBwBJ2UuhNd41qsoMLtM304TjNsdHs0CgYEApINFtu3T2JQkOoJ+eeaF\nqBriOj9lpTLpnIHT4ukY3H5krR/xBZHbDCQPD2/DzGBWma9WEb1W4vPdhZ6pmOO5\nVXD2e6WLml9KQQynjTEf6m4BO3GxlK4/Vygpi+ofAJghAafvg9PppgJFP1I0vXaE\nR64l5n8vgZQOVrAzI1Z0Cg0=\n-----END PRIVATE KEY-----\n",
+  "client_email": "ai-dermasense@gen-lang-client-0746924976.iam.gserviceaccount.com",
+  "client_id": "116912889920612675592",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/ai-dermasense%40gen-lang-client-0746924976.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

@@ -8,6 +8,9 @@ import { KlaviyoService } from "./services/klaviyo";
 import { GoogleSheetsService } from "./services/google-sheets";
 import { ChatDataExtractor } from "./services/chat-data-extractor";
 import { AdvancedAIExtractor } from "./services/advanced-ai-extractor";
+// Load environment variables before importing integration config
+import { config } from "dotenv";
+config();
 import { loadIntegrationConfig } from "./config/integrations";
 import { z } from "zod";
 import multer from "multer";
