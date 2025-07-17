@@ -65,19 +65,19 @@ setInterval(async () => {
   } catch (error) {
     console.warn('Failed to auto-sync integrations:', error);
   }
-}, 60 * 1000);
-
-// Real-time AI data extraction monitoring every 30 seconds
-setInterval(async () => {
-  try {
-    const result = await realtimeExtractor.checkForNewChats();
-    if (result.processed > 0) {
-      console.log(`🤖 AI extracted data from ${result.processed} new conversations: ${result.newSessions.join(', ')}`);
-    }
-  } catch (error) {
-    console.warn('Failed to check for new chats:', error);
-  }
 }, 30 * 1000);
+
+// Real-time AI data extraction monitoring every 30 seconds (DISABLED - using auto-sync instead)
+// setInterval(async () => {
+//   try {
+//     const result = await realtimeExtractor.checkForNewChats();
+//     if (result.processed > 0) {
+//       console.log(`🤖 AI extracted data from ${result.processed} new conversations: ${result.newSessions.join(', ')}`);
+//     }
+//   } catch (error) {
+//     console.warn('Failed to check for new chats:', error);
+//   }
+// }, 30 * 1000);
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({

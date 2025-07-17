@@ -16,9 +16,9 @@ export class RealtimeDataExtractor {
     this.chatExtractor = new ChatDataExtractor();
     this.advancedAIExtractor = new AdvancedAIExtractor();
     
-    // Initialize Google Sheets with credentials
-    const googleCredentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS || '{}');
-    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+    // Initialize Google Sheets with credentials (use same as auto-sync)
+    const googleCredentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON || '{}');
+    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
     this.googleSheets = new GoogleSheetsService(googleCredentials, spreadsheetId || '');
     
     // Initialize Klaviyo
