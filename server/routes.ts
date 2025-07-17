@@ -1163,6 +1163,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fix Google Sheets headers endpoint
+  app.post("/api/admin/fix-sheets-headers", async (req, res) => {
+    try {
+      if (!process.env.GOOGLE_CREDENTIALS_JSON || !process.env.GOOGLE_SPREADSHEET_ID) {
+        return res.status(400).json({ error: "Google Sheets not configured" });
+      }
+
+      const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+      const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
+      
+      // Manually update headers to correct range A1:Y1
+      const headers = [[
+        'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
+        'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
+        'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo', 'Idratazione', 'Protezione Solare',
+        'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
+        'Note Aggiuntive', 'Num. Messaggi', 'Conversazione Completa'
+      ]];
+      
+      await sheets.sheets.spreadsheets.values.update({
+        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+        range: 'Foglio1!A1:Y1',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: headers
+        }
+      });
+
+      console.log('Google Sheets headers fixed - now aligned with data columns A-Y');
+      
+      res.json({ 
+        success: true, 
+        message: "Headers corretti e allineati alle colonne dati A-Y" 
+      });
+    } catch (error) {
+      console.error("Error fixing Google Sheets headers:", error);
+      res.status(500).json({ error: "Failed to fix headers" });
+    }
+  });
+
   const server = createServer(app);
   return server;
 }

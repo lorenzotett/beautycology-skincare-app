@@ -518,11 +518,11 @@ export class GoogleSheetsService {
       // Check if headers exist, if not add them
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A1:U1'
+        range: 'Foglio1!A1:Y1'
       });
 
       if (!response.data.values || response.data.values.length === 0) {
-        // Add comprehensive headers with new AI model fields
+        // Add comprehensive headers with new AI model fields (must match data columns A-Y)
         const headers = [[
           'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
           'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
@@ -533,7 +533,7 @@ export class GoogleSheetsService {
         
         await this.sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
-          range: 'Foglio1!A1:U1',
+          range: 'Foglio1!A1:Y1',
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: headers
