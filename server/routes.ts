@@ -678,6 +678,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test Google Sheets connection
+  app.post('/api/admin/test-google-sheets', async (req, res) => {
+    try {
+      if (!process.env.GOOGLE_SHEETS_CREDENTIALS || !process.env.GOOGLE_SHEETS_ID) {
+        return res.status(400).json({ error: 'Google Sheets credentials not configured' });
+      }
+
+      console.log('Testing Google Sheets connection...');
+      const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
+      console.log('Service account email:', credentials.client_email);
+      console.log('Sheet ID:', process.env.GOOGLE_SHEETS_ID);
+      
+      const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
+      console.log('GoogleSheetsService created');
+      
+      // Test basic access to spreadsheet
+      const spreadsheetInfo = await sheets.sheets.spreadsheets.get({
+        spreadsheetId: process.env.GOOGLE_SHEETS_ID
+      });
+      console.log('Spreadsheet title:', spreadsheetInfo.data.properties?.title);
+      console.log('Available sheets:', spreadsheetInfo.data.sheets?.map(s => s.properties?.title));
+      
+      // Get the first sheet name
+      const firstSheetName = spreadsheetInfo.data.sheets?.[0]?.properties?.title || 'Sheet1';
+      console.log('Using sheet name:', firstSheetName);
+      
+      // Test if we can read the sheet
+      const readTest = await sheets.sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SHEETS_ID,
+        range: `${firstSheetName}!A1:A1`
+      });
+      console.log('Read test successful');
+      
+      res.json({ 
+        success: true, 
+        serviceAccount: credentials.client_email,
+        sheetId: process.env.GOOGLE_SHEETS_ID,
+        spreadsheetTitle: spreadsheetInfo.data.properties?.title,
+        availableSheets: spreadsheetInfo.data.sheets?.map(s => s.properties?.title),
+        firstSheetName: firstSheetName
+      });
+      
+    } catch (error) {
+      console.error('Google Sheets test error:', error);
+      res.status(500).json({ 
+        error: error.message,
+        details: error.response?.data || 'No additional details',
+        serviceAccount: process.env.GOOGLE_SHEETS_CREDENTIALS ? 'Configured' : 'Not configured'
+      });
+    }
+  });
+
   // Auto-sync integrations endpoint
   app.post("/api/admin/auto-sync-integrations", async (req, res) => {
     try {
@@ -709,20 +761,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Sync with Google Sheets if not already synced
           if (!session.googleSheetsSynced && process.env.GOOGLE_SHEETS_CREDENTIALS && process.env.GOOGLE_SHEETS_ID) {
             try {
+              console.log(`Attempting to sync session ${session.sessionId} to Google Sheets...`);
               const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
+              console.log('Credentials parsed successfully');
+              
               const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
+              console.log('GoogleSheetsService created');
               
               // Initialize sheet if needed
-              await sheets.initializeSheet();
+              const initResult = await sheets.initializeSheet();
+              console.log('Sheet initialization result:', initResult);
               
               // Get all messages for the session
               const allMessages = await storage.getChatMessages(session.sessionId);
+              console.log(`Retrieved ${allMessages.length} messages for session`);
               
               // Get skin analysis from messages
               let skinAnalysis = null;
               const assistantMsg = allMessages.find(m => m.role === 'assistant' && (m.metadata as any)?.skinAnalysis);
               if (assistantMsg) {
                 skinAnalysis = (assistantMsg.metadata as any).skinAnalysis;
+                console.log('Found skin analysis data');
               }
 
               const success = await sheets.appendConversation(
@@ -733,12 +792,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 skinAnalysis
               );
               
+              console.log('Append conversation result:', success);
+              
               if (success) {
                 await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
                 console.log(`Synced ${session.userName} conversation to Google Sheets`);
               }
             } catch (err) {
               console.error('Google Sheets sync error:', err);
+              console.error('Error stack:', err.stack);
             }
           }
 

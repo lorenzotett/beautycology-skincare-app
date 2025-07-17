@@ -81,7 +81,7 @@ export class GoogleSheetsService {
       // Append to Google Sheets
       const response = await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: 'Sheet1!A:G', // Adjust range as needed
+        range: 'Foglio1!A:G', // Using correct Italian sheet name
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         requestBody: {
@@ -93,6 +93,12 @@ export class GoogleSheetsService {
       return true;
     } catch (error) {
       console.error('Google Sheets integration error:', error);
+      console.error('Spreadsheet ID:', this.spreadsheetId);
+      console.error('Error details:', error.message);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
       return false;
     }
   }
@@ -102,7 +108,7 @@ export class GoogleSheetsService {
       // Check if headers exist, if not add them
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'Sheet1!A1:G1'
+        range: 'Foglio1!A1:G1'
       });
 
       if (!response.data.values || response.data.values.length === 0) {
@@ -111,7 +117,7 @@ export class GoogleSheetsService {
         
         await this.sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
-          range: 'Sheet1!A1:G1',
+          range: 'Foglio1!A1:G1',
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: headers
@@ -124,6 +130,12 @@ export class GoogleSheetsService {
       return true;
     } catch (error) {
       console.error('Failed to initialize Google Sheets:', error);
+      console.error('Spreadsheet ID:', this.spreadsheetId);
+      console.error('Error details:', error.message);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
       return false;
     }
   }

@@ -1,7 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
+import { config } from "dotenv";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
+
+// Load environment variables from .env file
+config();
 
 const app = express();
 app.use(express.json());
