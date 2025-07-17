@@ -68,20 +68,21 @@ export class GoogleSheetsService {
         extractedData.stress || '', // O
         extractedData.alimentazione || '', // P
         extractedData.fumo || '', // Q
-        extractedData.protezioneSolare || '', // R
-        extractedData.problemiSpecifici || '', // S
-        extractedData.ingredientiDesiderati || '', // T
-        extractedData.budgetMensile || '', // U
-        extractedData.frequenzaAcquisto || '', // V
-        extractedData.motivazione || '', // W
-        messages.length, // X
-        conversationText // Y
+        extractedData.idratazione || '', // R - Water intake
+        extractedData.protezioneSolare || '', // S
+        extractedData.problemiSpecifici || '', // T
+        extractedData.ingredientiDesiderati || '', // U
+        extractedData.budgetMensile || '', // V
+        extractedData.frequenzaAcquisto || '', // W
+        extractedData.motivazione || '', // X
+        messages.length, // Y
+        conversationText // Z
       ]];
 
       // Append to Google Sheets
       const response = await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A:Y', // Extended range for all columns
+        range: 'Foglio1!A:Z', // Extended range for all columns
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         requestBody: {
@@ -117,63 +118,180 @@ export class GoogleSheetsService {
       }
     }
 
-    // Extract from user messages
-    const userMessages = messages.filter(m => m.role === 'user').map(m => m.content.toLowerCase());
-    const allContent = userMessages.join(' ');
-
-    // Age extraction
-    const ageMatch = allContent.match(/(?:ho|età|anni?)\s*(\d{2})\s*(?:anni?)?/);
-    if (ageMatch) data.eta = ageMatch[1];
-
-    // Gender extraction
-    if (allContent.includes('donna') || allContent.includes('femmina')) data.sesso = 'Donna';
-    if (allContent.includes('uomo') || allContent.includes('maschio')) data.sesso = 'Uomo';
-
-    // Skin type patterns
-    const skinTypes = {
-      'grassa': 'Grassa',
-      'secca': 'Secca', 
-      'mista': 'Mista',
-      'normale': 'Normale',
-      'sensibile': 'Sensibile'
-    };
+    // Comprehensive question-answer extraction
+    this.extractAllQuestionAnswers(messages, data);
     
-    for (const [key, value] of Object.entries(skinTypes)) {
-      if (allContent.includes(key)) {
-        data.tipoPelle = value;
-        break;
-      }
-    }
-
-    // Extract answers for specific questions
-    this.extractAnswersFromMessages(messages, data);
+    // Log extracted data summary
+    const extractedFields = Object.keys(data).filter(key => data[key] && data[key] !== '').length;
+    console.log(`Extracted ${extractedFields} data fields from conversation`);
     
     return data;
   }
 
-  private extractAnswersFromMessages(messages: ChatMessage[], data: any): void {
-    const patterns = [
-      { key: 'routine', questions: ['routine', 'prodotti usi', 'cosa usi'] },
-      { key: 'allergie', questions: ['allergi', 'intolleranz'] },
-      { key: 'profumo', questions: ['profumo', 'fragranza'] },
-      { key: 'sonno', questions: ['ore dormi', 'sonno'] },
-      { key: 'stress', questions: ['stress', 'stressata'] },
-      { key: 'alimentazione', questions: ['alimentazione', 'mangi', 'dieta'] },
-      { key: 'fumo', questions: ['fumi', 'fumo', 'sigarett'] },
-      { key: 'protezioneSolare', questions: ['protezione solare', 'crema solare', 'spf'] }
+  private extractAllQuestionAnswers(messages: ChatMessage[], data: any): void {
+    // Define comprehensive patterns for all questions - ordered by specificity
+    const questionPatterns = [
+      // Basic info - most specific first
+      { key: 'eta', patterns: ['quanti anni hai', 'anni hai'] },
+      { key: 'sesso', patterns: ['genere?', 'sesso', 'uomo o donna', 'maschio o femmina'] },
+      
+      // Specific questions from the conversation - very specific patterns
+      { key: 'utilizzaScrub', patterns: ['utilizzi scrub o peeling', 'scrub o peeling'] },
+      { key: 'pelleTira', patterns: ['quando ti lavi il viso la tua pelle tira', 'pelle tira'] },
+      { key: 'causaRossori', patterns: ['rossori sulla tua pelle. secondo te derivano principalmente da'] },
+      { key: 'tipoPelle', patterns: ['come definiresti la tua pelle', 'definisci la tua pelle'] },
+      
+      // Allergies and preferences - specific wording
+      { key: 'allergie', patterns: ['ingredienti ai quali la tua pelle è allergica', 'allergie particolari'] },
+      { key: 'profumo', patterns: ['ti piacerebbe avere una fragranza che profumi di fiori', 'fragranza che profumi'] },
+      
+      // Lifestyle questions - exact phrases  
+      { key: 'protezioneSolare', patterns: ['metti la crema solare ogni giorno'] },
+      { key: 'idratazione', patterns: ['quanti litri d\'acqua bevi al giorno'] }, 
+      { key: 'sonno', patterns: ['quante ore dormi in media'] },
+      { key: 'alimentazione', patterns: ['hai un\'alimentazione bilanciata'] },
+      { key: 'fumo', patterns: ['fumi?'] },
+      { key: 'stress', patterns: ['da 1 a 10, qual è il tuo livello di stress attuale', 'livello di stress'] },
+      { key: 'email', patterns: ['per visualizzare gli ingredienti perfetti per la tua pelle, potresti condividere la tua mail'] },
+      
+      // Routine and products  
+      { key: 'routine', patterns: ['routine attuale', 'prodotti usi attualmente'] },
+      { key: 'prodotti', patterns: ['quali prodotti utilizzati'] },
+      
+      // Preferences and goals  
+      { key: 'problemiSpecifici', patterns: ['problema principale che vorresti risolvere'] },
+      { key: 'ingredientiDesiderati', patterns: ['ingredienti particolari che ti piacerebbe trovare'] },
+      { key: 'budgetMensile', patterns: ['budget mensile per la skincare'] },
+      { key: 'frequenzaAcquisto', patterns: ['frequenza di acquisto preferita'] },
+      { key: 'motivazione', patterns: ['cosa ti ha spinto a cercare una routine personalizzata'] }
     ];
 
+    // Extract basic info from any user message
+    const allUserContent = messages.filter(m => m.role === 'user').map(m => m.content).join(' ').toLowerCase();
+    
+    // Age extraction with multiple patterns
+    const agePatterns = [
+      /(?:ho|età|anni?)\s*(\d{1,2})\s*(?:anni?)?/g,
+      /(\d{1,2})\s*anni/g,
+      /età[:\s]*(\d{1,2})/g
+    ];
+    
+    for (const pattern of agePatterns) {
+      const match = allUserContent.match(pattern);
+      if (match) {
+        const ageMatch = match[0].match(/(\d{1,2})/);
+        if (ageMatch) {
+          data.eta = ageMatch[1];
+          break;
+        }
+      }
+    }
+
+    // Gender extraction
+    if (allUserContent.includes('donna') || allUserContent.includes('femmina') || allUserContent.includes('ragazza')) {
+      data.sesso = 'Donna';
+    } else if (allUserContent.includes('uomo') || allUserContent.includes('maschio') || allUserContent.includes('ragazzo')) {
+      data.sesso = 'Uomo';
+    }
+
+    // Create ordered question-answer mapping
+    const questionAnswerPairs: Array<{question: string, answer: string, index: number}> = [];
+    
     for (let i = 0; i < messages.length - 1; i++) {
-      const currentMsg = messages[i];
-      const nextMsg = messages[i + 1];
+      const assistantMsg = messages[i];
+      const userResponse = messages[i + 1];
       
-      if (currentMsg.role === 'assistant' && nextMsg.role === 'user') {
-        const question = currentMsg.content.toLowerCase();
-        const answer = nextMsg.content;
+      if (assistantMsg.role === 'assistant' && userResponse.role === 'user') {
+        const question = assistantMsg.content.toLowerCase();
+        const answer = userResponse.content.trim();
         
-        for (const pattern of patterns) {
-          if (pattern.questions.some(q => question.includes(q))) {
-            data[pattern.key] = answer;
+        // Skip empty answers and image uploads
+        if (!answer || answer.length < 2 || answer.includes('[Immagine caricata:')) continue;
+        
+        questionAnswerPairs.push({ question, answer, index: i });
+      }
+    }
+    
+    console.log(`Found ${questionAnswerPairs.length} question-answer pairs to process`);
+    
+    // Process pairs in order, being careful about specificity
+    for (const pair of questionAnswerPairs) {
+      let matched = false;
+      
+      // Try to find the most specific pattern match
+      for (const pattern of questionPatterns) {
+        for (const patternText of pattern.patterns) {
+          if (pair.question.includes(patternText)) {
+            // Avoid overwriting with less specific data
+            if (!data[pattern.key] || pair.answer.length > (data[pattern.key]?.length || 0)) {
+              data[pattern.key] = pair.answer;
+              console.log(`Q${pair.index}: "${patternText}" -> ${pattern.key} = "${pair.answer}"`);
+              matched = true;
+              break;
+            }
+          }
+        }
+        if (matched) break;
+      }
+      
+      // Log unmatched pairs for pattern improvement (only in development)
+      if (!matched && process.env.NODE_ENV === 'development') {
+        console.log(`UNMATCHED Q${pair.index}: "${pair.question.substring(0, 80)}..." -> "${pair.answer}"`);
+      }
+    }
+    
+    // Fill in any missing basic info from user messages
+    this.extractMissingBasicInfo(messages, data);
+  }
+
+  private handleSpecialQuestions(question: string, answer: string, data: any): void {
+    const lowerAnswer = answer.toLowerCase();
+    
+    // Handle skin type questions
+    if (question.includes('tipo di pelle') || question.includes('che tipo di pelle')) {
+      const skinTypes = ['grassa', 'secca', 'mista', 'normale', 'sensibile'];
+      for (const type of skinTypes) {
+        if (lowerAnswer.includes(type)) {
+          data.tipoPelle = type.charAt(0).toUpperCase() + type.slice(1);
+          break;
+        }
+      }
+    }
+    
+    // Handle yes/no questions with proper formatting
+    if (question.includes('fumi') || question.includes('sigarette')) {
+      if (lowerAnswer.includes('sì') || lowerAnswer.includes('si') || lowerAnswer.includes('yes')) {
+        data.fumo = answer;
+      } else if (lowerAnswer.includes('no') || lowerAnswer.includes('non')) {
+        data.fumo = answer;
+      }
+    }
+    
+    // Handle stress levels
+    if (question.includes('stress')) {
+      if (lowerAnswer.includes('alto') || lowerAnswer.includes('molto') || lowerAnswer.includes('parecchio')) {
+        data.stress = answer;
+      } else if (lowerAnswer.includes('basso') || lowerAnswer.includes('poco') || lowerAnswer.includes('normale')) {
+        data.stress = answer;
+      } else {
+        data.stress = answer;
+      }
+    }
+  }
+
+  private extractMissingBasicInfo(messages: ChatMessage[], data: any): void {
+    // Extract any missing info from user messages using broader patterns
+    const userMessages = messages.filter(m => m.role === 'user');
+    
+    for (const message of userMessages) {
+      const content = message.content.toLowerCase();
+      
+      // Try to extract anything that looks like useful data
+      if (!data.tipoPelle) {
+        const skinTypes = ['grassa', 'secca', 'mista', 'normale', 'sensibile'];
+        for (const type of skinTypes) {
+          if (content.includes(type)) {
+            data.tipoPelle = type.charAt(0).toUpperCase() + type.slice(1);
             break;
           }
         }
@@ -186,7 +304,7 @@ export class GoogleSheetsService {
       // Check if headers exist, if not add them
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A1:Y1'
+        range: 'Foglio1!A1:Z1'
       });
 
       if (!response.data.values || response.data.values.length === 0) {
@@ -195,14 +313,14 @@ export class GoogleSheetsService {
           'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
           'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Prodotti Usati',
           'Allergie', 'Profumo', 'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo',
-          'Protezione Solare', 'Problemi Specifici', 'Ingredienti Desiderati',
+          'Idratazione', 'Protezione Solare', 'Problemi Specifici', 'Ingredienti Desiderati',
           'Budget Mensile', 'Frequenza Acquisto', 'Motivazione', 'Num. Messaggi',
           'Conversazione Completa'
         ]];
         
         await this.sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
-          range: 'Foglio1!A1:Y1',
+          range: 'Foglio1!A1:Z1',
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: headers
