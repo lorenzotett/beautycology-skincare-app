@@ -61,7 +61,26 @@ export class RealtimeDataExtractor {
           if (!messages) continue;
 
           // Check if this session has enough messages to be worth processing
-          if (messages.length < 3) continue;
+          if (messages.length < 3) {
+            // Update last processed ID even for short conversations to avoid reprocessing
+            this.lastProcessedSessionId = Math.max(this.lastProcessedSessionId, session.id || 0);
+            continue;
+          }
+
+          // Check if conversation is complete (has email or final consultation)
+          const hasEmail = this.extractEmailFromMessages(messages);
+          const hasConsultation = messages.some(msg => 
+            msg.content.includes('necessità e consigli specifici') || 
+            msg.content.includes('routine personalizzata') ||
+            msg.content.includes('skincare personalizzata')
+          );
+          
+          // Skip incomplete conversations unless they have substantial content
+          if (!hasEmail && !hasConsultation && messages.length < 5) {
+            console.log(`⏭️ Skipping incomplete conversation for ${session.userId} (${messages.length} messages, no email/consultation)`);
+            this.lastProcessedSessionId = Math.max(this.lastProcessedSessionId, session.id || 0);
+            continue;
+          }
 
           // Extract data using Advanced AI
           console.log(`🤖 Advanced AI extracting data for new session: ${session.userId} (ID: ${session.id})`);

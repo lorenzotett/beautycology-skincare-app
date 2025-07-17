@@ -969,6 +969,11 @@ export default function AdminDashboard() {
                         {session.googleSheetsSynced && (
                           <Badge className="bg-green-100 text-green-800 text-xs">Sheets ✓</Badge>
                         )}
+                        {!session.googleSheetsSynced && !session.klaviyoSynced && (
+                          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-xs">
+                            Incompleta
+                          </Badge>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
