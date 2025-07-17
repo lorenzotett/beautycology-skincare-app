@@ -67,17 +67,17 @@ setInterval(async () => {
   }
 }, 30 * 1000);
 
-// Real-time AI data extraction monitoring every 30 seconds (DISABLED - using auto-sync instead)
-// setInterval(async () => {
-//   try {
-//     const result = await realtimeExtractor.checkForNewChats();
-//     if (result.processed > 0) {
-//       console.log(`🤖 AI extracted data from ${result.processed} new conversations: ${result.newSessions.join(', ')}`);
-//     }
-//   } catch (error) {
-//     console.warn('Failed to check for new chats:', error);
-//   }
-// }, 30 * 1000);
+// Real-time AI data extraction monitoring every 2 minutes 
+setInterval(async () => {
+  try {
+    const result = await realtimeExtractor.checkForNewChats();
+    if (result.processed > 0) {
+      console.log(`🤖 AI extracted data from ${result.processed} new conversations: ${result.newSessions.join(', ')}`);
+    }
+  } catch (error) {
+    console.warn('Failed to check for new chats:', error);
+  }
+}, 2 * 60 * 1000); // Every 2 minutes to avoid overloading
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
