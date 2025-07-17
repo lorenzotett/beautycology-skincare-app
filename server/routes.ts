@@ -1173,29 +1173,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
       const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
       
-      // Manually update headers to correct range A1:Y1
+      // Manually update headers to COMPLETE range A1:BY1 (77 columns)
       const headers = [[
-        'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
-        'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
-        'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo', 'Idratazione', 'Protezione Solare',
-        'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
-        'Note Aggiuntive', 'Num. Messaggi', 'Conversazione Completa'
+        'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Nome Estratto', 'Città', 'Professione',
+        'Tipo Pelle', 'Punteggio Generale', 'Problemi Principali', 'Oleosità Score', 'Acne Score', 'Rossori Score',
+        'Texture Score', 'Pori Score', 'Pigmentazione Score', 'Sensibilità Pelle', 'Zone Problematiche', 'Condizioni Attuali',
+        'Protezione Solare', 'Idratazione', 'Ore Sonno', 'Alimentazione', 'Fumo', 'Stress Level', 'Scrub',
+        'Attività Fisica', 'Esposizione Sole', 'Ambiente Lavoro', 'Qualità Aria', 'Clima Città',
+        'Allergie', 'Profumo Fiori', 'Routine Attuale', 'Prodotti Preferiti', 'Marchi Usati', 'Budget Spesa',
+        'Frequenza Acquisto', 'Ingredienti Evitare', 'Texture Preferite', 'Acne Tipo', 'Acne Frequenza',
+        'Rossori Causa', 'Secchezza Zone', 'Macchie Tipo', 'Rughe Zone', 'Cicatrici', 'Problemi Stagionali',
+        'Routine Mattina', 'Routine Sera', 'Prodotti Detergenti', 'Prodotti Idratanti', 'Prodotti Trattamento',
+        'Frequenza Maschere', 'Uso Sieri', 'Strumenti Bellezza', 'Farmaci Assunti', 'Trattamenti Dermatologici',
+        'Allergie Note', 'Problemi Ormonali', 'Gravidanza/Allattamento', 'Storia Familiare', 'Risultati Desiderati',
+        'Priorità Trattamento', 'Tempo Disponibile', 'Aspettative Realistiche', 'Motivazioni Principali',
+        'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 'Note Aggiuntive', 'Livello Dettaglio',
+        'Soddisfazione Consulenza', 'Num. Messaggi', 'Conversazione Completa'
       ]];
       
       await sheets.sheets.spreadsheets.values.update({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
-        range: 'Foglio1!A1:Y1',
+        range: 'Foglio1!A1:BY1',
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: headers
         }
       });
 
-      console.log('Google Sheets headers fixed - now aligned with data columns A-Y');
+      console.log('Google Sheets headers fixed - now aligned with data columns A-BY (77 complete columns)');
       
       res.json({ 
         success: true, 
-        message: "Headers corretti e allineati alle colonne dati A-Y" 
+        message: "Headers corretti e allineati alle colonne dati A-BY (77 colonne complete)" 
       });
     } catch (error) {
       console.error("Error fixing Google Sheets headers:", error);

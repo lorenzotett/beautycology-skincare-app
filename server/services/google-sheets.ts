@@ -63,39 +63,91 @@ export class GoogleSheetsService {
         conversationText += `[${time}] ${role}: ${message.content}\n`;
       });
 
-      // Prepare structured data for Google Sheets with extracted values from custom AI model
+      // Prepare COMPLETE structured data for Google Sheets with ALL extracted values
       const values = [[
-        timestamp, // A
-        sessionId, // B
-        userName, // C
-        userEmail || '', // D
-        extractedData.eta || '', // E
-        extractedData.sesso || '', // F
-        extractedData.tipoPelle || '', // G
-        extractedData.problemiPelle || '', // H
-        extractedData.punteggioPelle || '', // I
-        extractedData.routine || '', // J
-        extractedData.allergie || '', // K
-        extractedData.profumo || '', // L
-        extractedData.sonno || '', // M
-        extractedData.stress || '', // N
-        extractedData.alimentazione || '', // O
-        extractedData.fumo || '', // P
-        extractedData.idratazione || '', // Q
-        extractedData.protezioneSolare || '', // R
-        extractedData.utilizzaScrub || '', // S
-        extractedData.faseCompletata || '', // T
-        extractedData.accessoProdotti || '', // U
-        extractedData.qualitaDati || '', // V
-        extractedData.noteAggiuntive || '', // W
-        messages.length, // X
-        conversationText // Y
+        timestamp, // A - Data/Ora
+        sessionId, // B - Session ID
+        userName, // C - Nome
+        userEmail || '', // D - Email
+        extractedData.eta || '', // E - Età
+        extractedData.sesso || '', // F - Sesso
+        extractedData.nome || '', // G - Nome Estratto
+        extractedData.cittaResidenza || '', // H - Città
+        extractedData.professione || '', // I - Professione
+        extractedData.tipoPelle || '', // J - Tipo Pelle
+        extractedData.punteggioPelle || '', // K - Punteggio Generale
+        extractedData.problemiPelle || '', // L - Problemi Principali
+        extractedData.oleositaScore || '', // M - Oleosità Score
+        extractedData.acneScore || '', // N - Acne Score
+        extractedData.rossoriScore || '', // O - Rossori Score
+        extractedData.textureScore || '', // P - Texture Score
+        extractedData.poriScore || '', // Q - Pori Score
+        extractedData.pigmentazioneScore || '', // R - Pigmentazione Score
+        extractedData.sensibilitaPelle || '', // S - Sensibilità Pelle
+        extractedData.zoneProblematiche || '', // T - Zone Problematiche
+        extractedData.condizioniAttuali || '', // U - Condizioni Attuali
+        extractedData.protezioneSolare || '', // V - Protezione Solare
+        extractedData.idratazione || '', // W - Idratazione
+        extractedData.sonno || '', // X - Ore Sonno
+        extractedData.alimentazione || '', // Y - Alimentazione
+        extractedData.fumo || '', // Z - Fumo
+        extractedData.stress || '', // AA - Stress Level
+        extractedData.scrub || '', // AB - Scrub
+        extractedData.attivitaFisica || '', // AC - Attività Fisica
+        extractedData.esposizioneSole || '', // AD - Esposizione Sole
+        extractedData.ambienteLavoro || '', // AE - Ambiente Lavoro
+        extractedData.qualitaAria || '', // AF - Qualità Aria
+        extractedData.climaCitta || '', // AG - Clima Città
+        extractedData.allergie || '', // AH - Allergie
+        extractedData.profumo || '', // AI - Profumo Fiori
+        extractedData.routine || '', // AJ - Routine Attuale
+        extractedData.prodottiPreferiti || '', // AK - Prodotti Preferiti
+        extractedData.marchiUsati || '', // AL - Marchi Usati
+        extractedData.budgetSpesa || '', // AM - Budget Spesa
+        extractedData.frequenzaAcquisto || '', // AN - Frequenza Acquisto
+        extractedData.ingredientiEvitare || '', // AO - Ingredienti Evitare
+        extractedData.texturePreferite || '', // AP - Texture Preferite
+        extractedData.acneTipo || '', // AQ - Acne Tipo
+        extractedData.acneFrequenza || '', // AR - Acne Frequenza
+        extractedData.rossoriCausa || '', // AS - Rossori Causa
+        extractedData.secchezzaZone || '', // AT - Secchezza Zone
+        extractedData.macchieTipo || '', // AU - Macchie Tipo
+        extractedData.rugheZone || '', // AV - Rughe Zone
+        extractedData.cicatrici || '', // AW - Cicatrici
+        extractedData.problemiStagionali || '', // AX - Problemi Stagionali
+        extractedData.routineMattina || '', // AY - Routine Mattina
+        extractedData.routineSera || '', // AZ - Routine Sera
+        extractedData.prodottiDetergenti || '', // BA - Prodotti Detergenti
+        extractedData.prodottiIdratanti || '', // BB - Prodotti Idratanti
+        extractedData.prodottiTrattamento || '', // BC - Prodotti Trattamento
+        extractedData.frequenzaMaschere || '', // BD - Frequenza Maschere
+        extractedData.usoSieri || '', // BE - Uso Sieri
+        extractedData.strumentiBellezza || '', // BF - Strumenti Bellezza
+        extractedData.farmaciAssunti || '', // BG - Farmaci Assunti
+        extractedData.trattamentiDermatologici || '', // BH - Trattamenti Dermatologici
+        extractedData.allergieNote || '', // BI - Allergie Note
+        extractedData.problemiOrmonali || '', // BJ - Problemi Ormonali
+        extractedData.gravidanzaAllattamento || '', // BK - Gravidanza/Allattamento
+        extractedData.storiaFamiliare || '', // BL - Storia Familiare
+        extractedData.risultatiDesiderati || '', // BM - Risultati Desiderati
+        extractedData.prioritaTrattamento || '', // BN - Priorità Trattamento
+        extractedData.tempoDisponibile || '', // BO - Tempo Disponibile
+        extractedData.aspettativeRealistiche || '', // BP - Aspettative Realistiche
+        extractedData.motivazioniPrincipali || '', // BQ - Motivazioni Principali
+        extractedData.faseCompletata || '', // BR - Fase Completata
+        extractedData.accessoProdotti || '', // BS - Accesso Prodotti
+        extractedData.qualitaDati || '', // BT - Qualità Dati
+        extractedData.noteAggiuntive || '', // BU - Note Aggiuntive
+        extractedData.livelloDettaglio || '', // BV - Livello Dettaglio
+        extractedData.soddisfazioneConsulenza || '', // BW - Soddisfazione Consulenza
+        messages.length, // BX - Numero Messaggi
+        conversationText // BY - Conversazione Completa
       ]];
 
-      // Append to Google Sheets
+      // Append to Google Sheets - COMPLETE RANGE A:BY (77 columns)
       const response = await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A:Y', // Updated range for custom AI model columns
+        range: 'Foglio1!A:BY', // Extended range for ultra-complete data extraction
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         requestBody: {
@@ -515,25 +567,34 @@ export class GoogleSheetsService {
 
   async initializeSheet(): Promise<boolean> {
     try {
-      // Check if headers exist, if not add them
+      // Check if headers exist, if not add them - COMPLETE HEADERS A1:BY1
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A1:Y1'
+        range: 'Foglio1!A1:BY1'
       });
 
       if (!response.data.values || response.data.values.length === 0) {
-        // Add comprehensive headers with new AI model fields (must match data columns A-Y)
+        // Add ULTRA-COMPREHENSIVE headers (77 columns A-BY)
         const headers = [[
-          'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
-          'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
-          'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo', 'Idratazione', 'Protezione Solare',
-          'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
-          'Note Aggiuntive', 'Num. Messaggi', 'Conversazione Completa'
+          'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Nome Estratto', 'Città', 'Professione',
+          'Tipo Pelle', 'Punteggio Generale', 'Problemi Principali', 'Oleosità Score', 'Acne Score', 'Rossori Score',
+          'Texture Score', 'Pori Score', 'Pigmentazione Score', 'Sensibilità Pelle', 'Zone Problematiche', 'Condizioni Attuali',
+          'Protezione Solare', 'Idratazione', 'Ore Sonno', 'Alimentazione', 'Fumo', 'Stress Level', 'Scrub',
+          'Attività Fisica', 'Esposizione Sole', 'Ambiente Lavoro', 'Qualità Aria', 'Clima Città',
+          'Allergie', 'Profumo Fiori', 'Routine Attuale', 'Prodotti Preferiti', 'Marchi Usati', 'Budget Spesa',
+          'Frequenza Acquisto', 'Ingredienti Evitare', 'Texture Preferite', 'Acne Tipo', 'Acne Frequenza',
+          'Rossori Causa', 'Secchezza Zone', 'Macchie Tipo', 'Rughe Zone', 'Cicatrici', 'Problemi Stagionali',
+          'Routine Mattina', 'Routine Sera', 'Prodotti Detergenti', 'Prodotti Idratanti', 'Prodotti Trattamento',
+          'Frequenza Maschere', 'Uso Sieri', 'Strumenti Bellezza', 'Farmaci Assunti', 'Trattamenti Dermatologici',
+          'Allergie Note', 'Problemi Ormonali', 'Gravidanza/Allattamento', 'Storia Familiare', 'Risultati Desiderati',
+          'Priorità Trattamento', 'Tempo Disponibile', 'Aspettative Realistiche', 'Motivazioni Principali',
+          'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 'Note Aggiuntive', 'Livello Dettaglio',
+          'Soddisfazione Consulenza', 'Num. Messaggi', 'Conversazione Completa'
         ]];
         
         await this.sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
-          range: 'Foglio1!A1:Y1',
+          range: 'Foglio1!A1:BY1',
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: headers
