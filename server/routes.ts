@@ -836,7 +836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (sessionsToSync.length > 0) {
         console.log(`🔍 Found ${unsynced.length} unsynced sessions, processing latest ${sessionsToSync.length}:`, 
-          sessionsToSync.map(s => `#${s.id}`));
+          sessionsToSync.map(s => `#${s.id} (${s.userName})`));
       }
 
       for (const session of sessionsToSync) {

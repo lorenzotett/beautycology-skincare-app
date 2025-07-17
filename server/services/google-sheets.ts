@@ -53,6 +53,8 @@ export class GoogleSheetsService {
       // Use the AI-extracted data passed from the calling function
       const extractedData = aiExtractedData || {};
       
+
+      
       // Build full conversation text
       let conversationText = `=== CONVERSAZIONE ${sessionId} ===\n`;
       conversationText += `Data: ${timestamp}\nNome: ${userName}\nEmail: ${userEmail || 'Non fornita'}\n\n`;
