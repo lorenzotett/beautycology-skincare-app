@@ -1,0 +1,116 @@
+# To run this code you need to install the following dependencies:
+# pip install google-genai
+
+import base64
+import os
+from google import genai
+from google.genai import types
+
+
+def generate():
+    client = genai.Client(
+        api_key=os.environ.get("GEMINI_API_KEY"),
+    )
+
+    model = "gemini-2.5-flash"
+    contents = [
+        types.Content(
+            role="user",
+            parts=[
+                types.Part.from_text(text="""INSERT_INPUT_HERE"""),
+            ],
+        ),
+    ]
+    generate_content_config = types.GenerateContentConfig(
+        thinking_config = types.ThinkingConfig(
+            thinking_budget=0,
+        ),
+        response_mime_type="text/plain",
+        system_instruction=[
+            types.Part.from_text(text="""Sei un assistente AI specializzato nell'analisi e categorizzazione di conversazioni di consulenza dermatologica per l'estrazione di dati strutturati.
+Il tuo compito è analizzare le conversazioni tra utenti e un AI skin expert, estraendo e organizzando le informazioni in modo intelligente per l'inserimento in Google Sheets.
+### INPUT:
+Riceverai un array di messaggi di conversazione nel formato:
+[
+{\"role\": \"user/assistant\", \"content\": \"testo del messaggio\"},
+...
+]
+
+### OUTPUT RICHIESTO:
+Restituisci un JSON con i seguenti campi:
+```json
+{
+  \"informazioni_base\": {
+    \"eta\": \"età estratta o dedotta\",
+    \"sesso\": \"Uomo/Donna\",
+    \"email\": \"email se fornita\"
+  },
+  \"analisi_pelle\": {
+    \"tipo_pelle\": \"Grassa/Secca/Mista/Normale/Sensibile\",
+    \"punteggio_generale\": \"0-100\",
+    \"problemi_principali\": [\"acne\", \"rossori\", \"secchezza\", \"etc\"],
+    \"oleosita_score\": \"0-100\",
+    \"acne_score\": \"0-100\",
+    \"rossori_score\": \"0-100\"
+  },
+  \"abitudini_lifestyle\": {
+    \"protezione_solare\": \"Sì/No/Occasionalmente\",
+    \"idratazione_quotidiana\": \"litri acqua al giorno\",
+    \"ore_sonno\": \"ore medie\",
+    \"alimentazione\": \"Bilanciata/Non bilanciata\",
+    \"fumo\": \"Sì/No\",
+    \"stress_level\": \"Basso/Medio/Alto\",
+    \"utilizzo_scrub\": \"Sì/No/Occasionalmente\"
+  },
+  \"preferenze_prodotti\": {
+    \"allergie\": \"lista ingredienti o 'Nessuna'\",
+    \"profumo_fiori\": \"Sì/No\",
+    \"routine_attuale\": \"descrizione routine esistente\"
+  },
+  \"analisi_conversazione\": {
+    \"fase_completata\": \"consultazione_completa/parziale/solo_analisi\",
+    \"accesso_prodotti\": \"Sì/No\",
+    \"qualita_dati\": \"Alta/Media/Bassa\",
+    \"note_aggiuntive\": \"osservazioni rilevanti\"
+  }
+}
+REGOLE DI ESTRAZIONE:
+Priorità di estrazione:
+
+Dati espliciti dichiarati dall'utente (priorità massima)
+Informazioni dedotte dall'AI durante l'analisi
+Inferenze logiche basate sul contesto
+Gestione dati mancanti:
+
+Se un dato non è presente, usa null
+Se è parzialmente presente, estrai quello disponibile
+Marca come \"(dedotto)\" le informazioni inferite
+Analisi intelligente:
+
+Riconosci pattern nelle risposte anche se non seguono l'ordine standard
+Estrai informazioni anche da descrizioni libere
+Identifica contraddizioni e privilegi l'informazione più recente
+Categorizzazione skin type:
+
+Se oleosità > 70 O acne > 60: \"Grassa\"
+Se rossori > 50: \"Sensibile\"
+Se oleosità < 30: \"Secca\"
+Altrimenti: \"Mista\"
+ESEMPI DI PATTERN DA RICONOSCERE:
+Età: \"ho 25 anni\", \"25enne\", \"sono del '99\"
+Genere: \"sono una ragazza\", \"uomo di\", \"donna\"
+Routine: \"uso solo acqua\", \"crema la sera\", \"niente trucco\"
+Problemi: \"ho sempre brufoli\", \"pelle che tira\", \"macchie rosse\"
+Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantenendo alta precisione e completezza."""),
+        ],
+    )
+
+    for chunk in client.models.generate_content_stream(
+        model=model,
+        contents=contents,
+        config=generate_content_config,
+    ):
+        print(chunk.text, end="")
+
+if __name__ == "__main__":
+    generate()
