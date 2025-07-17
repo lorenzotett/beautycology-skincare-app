@@ -730,6 +730,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reset Google Sheets headers endpoint
+  app.post('/api/admin/reset-google-sheets', async (req, res) => {
+    try {
+      if (!process.env.GOOGLE_SHEETS_CREDENTIALS || !process.env.GOOGLE_SHEETS_ID) {
+        return res.status(400).json({ error: 'Google Sheets credentials not configured' });
+      }
+
+      const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
+      const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
+      
+      // Clear existing data and add new headers
+      await sheets.sheets.spreadsheets.values.clear({
+        spreadsheetId: process.env.GOOGLE_SHEETS_ID,
+        range: 'Foglio1!A:Z'
+      });
+      
+      // Force header reinitialization
+      const initResult = await sheets.initializeSheet();
+      
+      res.json({ 
+        success: true, 
+        message: 'Google Sheets reset and reinitialized with new structure',
+        initResult
+      });
+      
+    } catch (error) {
+      console.error('Google Sheets reset error:', error);
+      res.status(500).json({ 
+        error: error.message
+      });
+    }
+  });
+
   // Auto-sync integrations endpoint
   app.post("/api/admin/auto-sync-integrations", async (req, res) => {
     try {

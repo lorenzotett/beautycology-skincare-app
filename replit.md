@@ -296,6 +296,14 @@ Changelog:
   - Removed "AI-DermaSense" title text from top right of chat interface
   - Kept only Bonnie logo on the left and Shopify indicator when applicable
   - Cleaner header design with minimal branding
+- July 17, 2025. Enhanced Google Sheets integration with comprehensive data extraction:
+  - Implemented intelligent data extraction from conversations into 25 structured columns
+  - Added automatic parsing of user responses (age, gender, skin type, routine, lifestyle factors)
+  - Enhanced headers with comprehensive Italian labels for cream production workflow
+  - Fixed sheet naming from "Sheet1" to "Foglio1" for Italian Google Sheets compatibility
+  - Added reset endpoint for Google Sheets structure updates
+  - Synchronized conversations now include extracted structured data plus full transcript
+  - Each row represents one complete user consultation with all relevant data points
 
 ## User Preferences
 
