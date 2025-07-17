@@ -13,11 +13,14 @@ export const chatSessions = pgTable("chat_sessions", {
   userId: text("user_id").notNull(),
   sessionId: text("session_id").notNull().unique(),
   userName: text("user_name").notNull(),
+  userEmail: text("user_email"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   isActive: boolean("is_active").default(true),
   finalButtonClicked: boolean("final_button_clicked").default(false),
   finalButtonClickedAt: timestamp("final_button_clicked_at"),
+  klaviyoSynced: boolean("klaviyo_synced").default(false),
+  googleSheetsSynced: boolean("google_sheets_synced").default(false),
 });
 
 export const chatMessages = pgTable("chat_messages", {

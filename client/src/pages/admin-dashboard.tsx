@@ -832,6 +832,17 @@ export default function AdminDashboard() {
                     )}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-medium text-gray-900">{session.userName}</div>
+                      {session.userEmail && (
+                        <div className="text-xs text-gray-500 mt-1">{session.userEmail}</div>
+                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        {session.klaviyoSynced && (
+                          <Badge className="bg-purple-100 text-purple-800 text-xs">Klaviyo ✓</Badge>
+                        )}
+                        {session.googleSheetsSynced && (
+                          <Badge className="bg-green-100 text-green-800 text-xs">Sheets ✓</Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div 

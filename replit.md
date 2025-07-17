@@ -300,3 +300,16 @@ Changelog:
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Integration Requirements
+
+### Klaviyo Integration (Lead Recovery)
+- Automatically capture name and email from each conversation
+- Add profiles to specified Klaviyo list for lead generation
+- Non-blocking sync when email is detected in conversation
+
+### Google Sheets Integration (Cream Production)
+- Copy all conversations to Google Sheets for cream production workflow
+- Include full conversation transcript with timestamps
+- Track session metadata (name, email, skin score, message count)
+- Auto-sync completed conversations every 10 minutes

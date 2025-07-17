@@ -4,6 +4,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { GeminiService } from "./services/gemini";
 import { SkinAnalysisService } from "./services/skin-analysis";
+import { KlaviyoService } from "./services/klaviyo";
+import { GoogleSheetsService } from "./services/google-sheets";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -41,6 +43,25 @@ setInterval(async () => {
     console.warn('Failed to auto-fix images during cleanup:', error);
   }
 }, 5 * 60 * 1000);
+
+// Auto-sync conversations to Klaviyo and Google Sheets every 10 minutes
+setInterval(async () => {
+  try {
+    const response = await fetch('http://localhost:5000/api/admin/auto-sync-integrations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      if (result.synced > 0) {
+        console.log(`Auto-synced ${result.synced} conversations to integrations`);
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to auto-sync integrations:', error);
+  }
+}, 10 * 60 * 1000);
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
@@ -396,6 +417,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: null,
       });
 
+      // Check if message contains email and update session
+      const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
+      const emailMatch = message.match(emailRegex);
+      if (emailMatch && session) {
+        const userEmail = emailMatch[1];
+        
+        // Update session with email
+        await storage.updateChatSession(sessionId, {
+          userEmail: userEmail
+        });
+
+        // Sync with Klaviyo (non-blocking)
+        if (process.env.KLAVIYO_API_KEY && process.env.KLAVIYO_LIST_ID) {
+          const klaviyo = new KlaviyoService(process.env.KLAVIYO_API_KEY, process.env.KLAVIYO_LIST_ID);
+          klaviyo.addProfileToList(userEmail, session.userName, {
+            sessionId: sessionId,
+            createdAt: session.createdAt
+          }).then(success => {
+            if (success) {
+              storage.updateChatSession(sessionId, { klaviyoSynced: true });
+            }
+          }).catch(err => console.error('Klaviyo sync error:', err));
+        }
+
+        // Sync conversation to Google Sheets (non-blocking)
+        if (process.env.GOOGLE_SHEETS_CREDENTIALS && process.env.GOOGLE_SHEETS_ID) {
+          try {
+            const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
+            const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
+            
+            // Get all messages for the session
+            const allMessages = await storage.getChatMessages(sessionId);
+            
+            // Get skin analysis from first assistant message
+            let skinAnalysis = null;
+            const firstAssistantMsg = allMessages.find(m => m.role === 'assistant' && (m.metadata as any)?.skinAnalysis);
+            if (firstAssistantMsg) {
+              skinAnalysis = (firstAssistantMsg.metadata as any).skinAnalysis;
+            }
+
+            sheets.appendConversation(
+              sessionId,
+              session.userName,
+              userEmail,
+              allMessages,
+              skinAnalysis
+            ).then(success => {
+              if (success) {
+                storage.updateChatSession(sessionId, { googleSheetsSynced: true });
+              }
+            }).catch(err => console.error('Google Sheets sync error:', err));
+          } catch (err) {
+            console.error('Failed to parse Google Sheets credentials:', err);
+          }
+        }
+      }
+
       const response = await geminiService.sendMessage(message);
 
       await storage.addChatMessage({
@@ -600,7 +678,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Auto-sync integrations endpoint
+  app.post("/api/admin/auto-sync-integrations", async (req, res) => {
+    try {
+      const allSessions = await storage.getAllChatSessions();
+      let synced = 0;
+      
+      // Filter sessions that have email but haven't been synced
+      const sessionsToSync = allSessions.filter(session => 
+        session.userEmail && 
+        (!session.klaviyoSynced || !session.googleSheetsSynced)
+      );
 
+      for (const session of sessionsToSync) {
+        try {
+          // Sync with Klaviyo if not already synced
+          if (!session.klaviyoSynced && process.env.KLAVIYO_API_KEY && process.env.KLAVIYO_LIST_ID) {
+            const klaviyo = new KlaviyoService(process.env.KLAVIYO_API_KEY, process.env.KLAVIYO_LIST_ID);
+            const success = await klaviyo.addProfileToList(session.userEmail!, session.userName, {
+              sessionId: session.sessionId,
+              createdAt: session.createdAt
+            });
+            
+            if (success) {
+              await storage.updateChatSession(session.sessionId, { klaviyoSynced: true });
+              console.log(`Synced ${session.userName} (${session.userEmail}) to Klaviyo`);
+            }
+          }
+
+          // Sync with Google Sheets if not already synced
+          if (!session.googleSheetsSynced && process.env.GOOGLE_SHEETS_CREDENTIALS && process.env.GOOGLE_SHEETS_ID) {
+            try {
+              const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
+              const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
+              
+              // Initialize sheet if needed
+              await sheets.initializeSheet();
+              
+              // Get all messages for the session
+              const allMessages = await storage.getChatMessages(session.sessionId);
+              
+              // Get skin analysis from messages
+              let skinAnalysis = null;
+              const assistantMsg = allMessages.find(m => m.role === 'assistant' && (m.metadata as any)?.skinAnalysis);
+              if (assistantMsg) {
+                skinAnalysis = (assistantMsg.metadata as any).skinAnalysis;
+              }
+
+              const success = await sheets.appendConversation(
+                session.sessionId,
+                session.userName,
+                session.userEmail!,
+                allMessages,
+                skinAnalysis
+              );
+              
+              if (success) {
+                await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
+                console.log(`Synced ${session.userName} conversation to Google Sheets`);
+              }
+            } catch (err) {
+              console.error('Google Sheets sync error:', err);
+            }
+          }
+
+          synced++;
+        } catch (error) {
+          console.error(`Failed to sync session ${session.sessionId}:`, error);
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        synced: synced,
+        totalToSync: sessionsToSync.length
+      });
+    } catch (error) {
+      console.error("Error in auto-sync integrations:", error);
+      res.status(500).json({ error: "Failed to sync integrations" });
+    }
+  });
+
+  // Manual sync endpoint for admin dashboard
+  app.post("/api/admin/sessions/:sessionId/sync", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const session = await storage.getChatSession(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      if (!session.userEmail) {
+        return res.status(400).json({ error: "Session has no email address" });
+      }
+
+      const results = {
+        klaviyo: false,
+        googleSheets: false
+      };
+
+      // Sync with Klaviyo
+      if (process.env.KLAVIYO_API_KEY && process.env.KLAVIYO_LIST_ID) {
+        const klaviyo = new KlaviyoService(process.env.KLAVIYO_API_KEY, process.env.KLAVIYO_LIST_ID);
+        results.klaviyo = await klaviyo.addProfileToList(session.userEmail, session.userName, {
+          sessionId: session.sessionId,
+          createdAt: session.createdAt
+        });
+        
+        if (results.klaviyo) {
+          await storage.updateChatSession(sessionId, { klaviyoSynced: true });
+        }
+      }
+
+      // Sync with Google Sheets
+      if (process.env.GOOGLE_SHEETS_CREDENTIALS && process.env.GOOGLE_SHEETS_ID) {
+        try {
+          const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
+          const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
+          
+          await sheets.initializeSheet();
+          
+          const allMessages = await storage.getChatMessages(sessionId);
+          
+          let skinAnalysis = null;
+          const assistantMsg = allMessages.find(m => m.role === 'assistant' && (m.metadata as any)?.skinAnalysis);
+          if (assistantMsg) {
+            skinAnalysis = (assistantMsg.metadata as any).skinAnalysis;
+          }
+
+          results.googleSheets = await sheets.appendConversation(
+            sessionId,
+            session.userName,
+            session.userEmail,
+            allMessages,
+            skinAnalysis
+          );
+          
+          if (results.googleSheets) {
+            await storage.updateChatSession(sessionId, { googleSheetsSynced: true });
+          }
+        } catch (err) {
+          console.error('Google Sheets sync error:', err);
+        }
+      }
+
+      res.json({
+        success: true,
+        results
+      });
+    } catch (error) {
+      console.error("Error syncing session:", error);
+      res.status(500).json({ error: "Failed to sync session" });
+    }
+  });
 
   const server = createServer(app);
   return server;
