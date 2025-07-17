@@ -314,8 +314,8 @@ Changelog:
   - **Google Sheets integration fully operational**: AI extraction successfully syncing to Google Sheets with precise data
   - Fixed credential configuration with proper GOOGLE_CREDENTIALS_JSON and GOOGLE_SPREADSHEET_ID environment variables
   - Confirmed successful data synchronization with accurate extraction of age, gender, skin type, and problems
-  - **Updated all AI services to use Gemini 2.5 Flash**: Advanced AI extractor, skin analysis, and chat services now use Flash model as requested
-  - Optimized API costs while maintaining extraction quality and accuracy
+  - **Optimized AI model usage**: Skin analysis uses Gemini 2.5 Pro for maximum image analysis accuracy, all other services use Gemini 2.5 Flash for cost optimization
+  - Balanced approach: critical image analysis maintains high accuracy while chat and data extraction services reduce API costs
 
 ## User Preferences
 
