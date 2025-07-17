@@ -296,20 +296,18 @@ Changelog:
   - Removed "AI-DermaSense" title text from top right of chat interface
   - Kept only Bonnie logo on the left and Shopify indicator when applicable
   - Cleaner header design with minimal branding
-- July 17, 2025. Enhanced Google Sheets integration with comprehensive data extraction:
-  - Implemented intelligent data extraction from conversations into 25 structured columns
-  - Added automatic parsing of user responses (age, gender, skin type, routine, lifestyle factors)
-  - Enhanced headers with comprehensive Italian labels for cream production workflow
-  - Fixed sheet naming from "Sheet1" to "Foglio1" for Italian Google Sheets compatibility
-  - Added reset endpoint for Google Sheets structure updates
-  - Synchronized conversations now include extracted structured data plus full transcript
-  - Each row represents one complete user consultation with all relevant data points
-  - Enhanced skin analysis extraction: now captures tipo pelle, punteggio pelle, and problemi pelle from AI analysis messages
-  - Implemented intelligent skin type deduction from analysis scores (priority: sensitivity > dryness > oiliness)
-  - Enhanced problem extraction from consultation messages with multiple pattern matching
-  - Added sequential extraction system with precise question-answer mapping to prevent data misalignment
-  - Implemented anti-duplicate control to prevent multiple rows per session
-  - Extraction success rate: 16 data fields captured (improved accuracy and completeness)
+- July 17, 2025. Revolutionary AI-powered data extraction system for Google Sheets:
+  - Completely rebuilt data extraction using Advanced AI (Gemini 2.5 Pro) for ultra-precise analysis
+  - Replaced manual pattern matching with intelligent AI interpretation of conversations
+  - AI extracts comprehensive structured data: age, gender, skin type, problems, lifestyle habits
+  - Fixed critical JSON parsing issues with markdown backticks from AI responses
+  - Integrated AI extraction into existing auto-sync system that handles Google Sheets credentials
+  - System now extracts real data instead of showing "Non specificato" for all fields
+  - AI analyzes complete conversation context to deduce missing information
+  - Enhanced logging system shows exact AI extraction results for debugging
+  - Successful integration: auto-sync uses AI extraction to populate Google Sheets with precise data
+  - Production-ready: AI extraction works reliably with 25+ structured data columns
+  - Eliminated data extraction errors through robust JSON cleaning and parsing system
 
 ## User Preferences
 

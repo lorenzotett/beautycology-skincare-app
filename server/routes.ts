@@ -8,6 +8,7 @@ import { KlaviyoService } from "./services/klaviyo";
 import { GoogleSheetsService } from "./services/google-sheets";
 import { ChatDataExtractor } from "./services/chat-data-extractor";
 import { RealtimeDataExtractor } from "./services/realtime-extractor";
+import { AdvancedAIExtractor } from "./services/advanced-ai-extractor";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -832,12 +833,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.log('Found skin analysis data');
               }
 
+              // Use AI extraction for better data
+              console.log('🤖 Using Advanced AI extraction for better data...');
+              const advancedAI = new AdvancedAIExtractor();
+              const aiExtractedData = await advancedAI.extractConversationData(allMessages);
+              const extractedData = aiExtractedData ? 
+                advancedAI.convertToSheetsFormat(aiExtractedData) : 
+                null;
+              
+              console.log('🔍 AI extracted data preview:', {
+                eta: extractedData?.eta,
+                sesso: extractedData?.sesso,
+                tipoPelle: extractedData?.tipoPelle,
+                problemi: extractedData?.problemiPelle
+              });
+
               const success = await sheets.appendConversation(
                 session.sessionId,
                 session.userName,
                 session.userEmail!,
                 allMessages,
-                skinAnalysis
+                extractedData
               );
               
               console.log('Append conversation result:', success);
@@ -1002,12 +1018,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             skinAnalysis = (assistantMsg.metadata as any).skinAnalysis;
           }
 
+          // Use AI extraction for better data
+          const advancedAI = new AdvancedAIExtractor();
+          const aiExtractedData = await advancedAI.extractConversationData(allMessages);
+          const extractedData = aiExtractedData ? 
+            advancedAI.convertToSheetsFormat(aiExtractedData) : 
+            null;
+
           results.googleSheets = await sheets.appendConversation(
             sessionId,
             session.userName,
             session.userEmail,
             allMessages,
-            skinAnalysis
+            extractedData
           );
           
           if (results.googleSheets) {

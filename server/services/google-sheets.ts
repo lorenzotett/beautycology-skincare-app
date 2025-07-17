@@ -24,7 +24,7 @@ export class GoogleSheetsService {
     userName: string,
     userEmail: string | null,
     messages: ChatMessage[],
-    skinAnalysis?: any
+    aiExtractedData?: any
   ): Promise<boolean> {
     try {
       // Check if session already exists in sheet to avoid duplicates
@@ -50,8 +50,8 @@ export class GoogleSheetsService {
         minute: '2-digit'
       });
 
-      // Extract structured data from conversation
-      const extractedData = await this.extractConversationData(messages, skinAnalysis);
+      // Use the AI-extracted data passed from the calling function
+      const extractedData = aiExtractedData || {};
       
       // Build full conversation text
       let conversationText = `=== CONVERSAZIONE ${sessionId} ===\n`;
