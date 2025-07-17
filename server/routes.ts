@@ -7,8 +7,8 @@ import { SkinAnalysisService } from "./services/skin-analysis";
 import { KlaviyoService } from "./services/klaviyo";
 import { GoogleSheetsService } from "./services/google-sheets";
 import { ChatDataExtractor } from "./services/chat-data-extractor";
-import { RealtimeDataExtractor } from "./services/realtime-extractor";
 import { AdvancedAIExtractor } from "./services/advanced-ai-extractor";
+import { loadIntegrationConfig } from "./config/integrations";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -17,7 +17,8 @@ import fs from "fs";
 // Service management
 const MAX_SESSIONS_IN_MEMORY = 1000;
 const geminiServices = new Map<string, GeminiService>();
-const realtimeExtractor = new RealtimeDataExtractor();
+// Load integration configuration
+const integrationConfig = loadIntegrationConfig();
 
 // Auto-cleanup sessions
 setInterval(() => {
@@ -67,17 +68,51 @@ setInterval(async () => {
   }
 }, 30 * 1000);
 
-// Real-time AI data extraction monitoring every 2 minutes 
+// Enhanced AI data extraction monitoring every 2 minutes
 setInterval(async () => {
   try {
-    const result = await realtimeExtractor.checkForNewChats();
-    if (result.processed > 0) {
-      console.log(`🤖 AI extracted data from ${result.processed} new conversations: ${result.newSessions.join(', ')}`);
+    // Get all unsynced sessions
+    const allSessions = await storage.getAllChatSessions();
+    const unsyncedSessions = allSessions.filter(session => 
+      !session.googleSheetsSynced && session.userEmail
+    ).slice(0, 5);
+    
+    if (unsyncedSessions.length > 0) {
+      console.log(`🔍 Found ${unsyncedSessions.length} unsynced sessions with emails: ${unsyncedSessions.map(s => `#${s.id}`).join(', ')}`);
+      
+      // Process each session with AI extraction
+      let processed = 0;
+      for (const session of unsyncedSessions) {
+        try {
+          const messages = await storage.getChatMessages(session.sessionId);
+          if (messages && messages.length >= 3) {
+            // Use Advanced AI Extractor for data extraction
+            const advancedAI = new AdvancedAIExtractor();
+            const aiExtractedData = await advancedAI.extractConversationData(messages);
+            const extractedData = aiExtractedData ? 
+              advancedAI.convertToSheetsFormat(aiExtractedData) : null;
+            
+            if (extractedData) {
+              console.log(`🤖 AI extracted data for session ${session.sessionId}`);
+              processed++;
+              
+              // Update session to mark as processed
+              await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to process session ${session.sessionId}:`, error.message);
+        }
+      }
+      
+      if (processed > 0) {
+        console.log(`✅ AI processed ${processed} conversations successfully`);
+      }
     }
   } catch (error) {
     console.warn('Failed to check for new chats:', error);
   }
-}, 2 * 60 * 1000); // Every 2 minutes to avoid overloading
+}, 2 * 60 * 1000); // Every 2 minutes
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
@@ -796,14 +831,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 5);
       
-      console.log(`🔍 Found ${unsynced.length} unsynced sessions, processing latest ${sessionsToSync.length}:`, 
-        sessionsToSync.map(s => `#${s.id}`));
+      if (sessionsToSync.length > 0) {
+        console.log(`🔍 Found ${unsynced.length} unsynced sessions, processing latest ${sessionsToSync.length}:`, 
+          sessionsToSync.map(s => `#${s.id}`));
+      }
 
       for (const session of sessionsToSync) {
         try {
-          // Sync with Klaviyo if not already synced
-          if (!session.klaviyoSynced && process.env.KLAVIYO_API_KEY && process.env.KLAVIYO_LIST_ID) {
-            const klaviyo = new KlaviyoService(process.env.KLAVIYO_API_KEY, process.env.KLAVIYO_LIST_ID);
+          // Sync with Klaviyo if not already synced and credentials are available
+          if (!session.klaviyoSynced && integrationConfig.klaviyo.enabled) {
+            const klaviyo = new KlaviyoService(integrationConfig.klaviyo.apiKey!, integrationConfig.klaviyo.listId!);
             const success = await klaviyo.addProfileToList(session.userEmail!, session.userName, {
               sessionId: session.sessionId,
               createdAt: session.createdAt
@@ -811,35 +848,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             if (success) {
               await storage.updateChatSession(session.sessionId, { klaviyoSynced: true });
-              console.log(`Synced ${session.userName} (${session.userEmail}) to Klaviyo`);
+              console.log(`✅ Synced ${session.userName} (${session.userEmail}) to Klaviyo`);
             }
           }
 
-          // Sync with Google Sheets if not already synced
-          if (!session.googleSheetsSynced && process.env.GOOGLE_SHEETS_CREDENTIALS && process.env.GOOGLE_SHEETS_ID) {
+          // Sync with Google Sheets if not already synced and credentials are available
+          if (!session.googleSheetsSynced && integrationConfig.googleSheets.enabled) {
             try {
-              console.log(`Attempting to sync session ${session.sessionId} to Google Sheets...`);
-              const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
-              console.log('Credentials parsed successfully');
+              console.log(`🔄 Attempting to sync session ${session.sessionId} to Google Sheets...`);
               
-              const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
-              console.log('GoogleSheetsService created');
-              
-              // Initialize sheet if needed
-              const initResult = await sheets.initializeSheet();
-              console.log('Sheet initialization result:', initResult);
+              const sheets = new GoogleSheetsService(integrationConfig.googleSheets.credentials, integrationConfig.googleSheets.spreadsheetId!);
               
               // Get all messages for the session
               const allMessages = await storage.getChatMessages(session.sessionId);
-              console.log(`Retrieved ${allMessages.length} messages for session`);
-              
-              // Get skin analysis from messages
-              let skinAnalysis = null;
-              const assistantMsg = allMessages.find(m => m.role === 'assistant' && (m.metadata as any)?.skinAnalysis);
-              if (assistantMsg) {
-                skinAnalysis = (assistantMsg.metadata as any).skinAnalysis;
-                console.log('Found skin analysis data');
-              }
+              console.log(`📨 Retrieved ${allMessages.length} messages for session`);
 
               // Use AI extraction for better data
               console.log('🤖 Using Advanced AI extraction for better data...');
@@ -849,12 +871,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 advancedAI.convertToSheetsFormat(aiExtractedData) : 
                 null;
               
-              console.log('🔍 AI extracted data preview:', {
-                eta: extractedData?.eta,
-                sesso: extractedData?.sesso,
-                tipoPelle: extractedData?.tipoPelle,
-                problemi: extractedData?.problemiPelle
-              });
+              if (extractedData) {
+                console.log('📊 AI extracted data preview:', {
+                  eta: extractedData.eta,
+                  sesso: extractedData.sesso,
+                  tipoPelle: extractedData.tipoPelle,
+                  problemi: extractedData.problemiPelle?.slice(0, 2) // Only show first 2 problems
+                });
+              }
 
               const success = await sheets.appendConversation(
                 session.sessionId,
@@ -864,15 +888,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 extractedData
               );
               
-              console.log('Append conversation result:', success);
-              
               if (success) {
                 await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
-                console.log(`Synced ${session.userName} conversation to Google Sheets`);
+                console.log(`✅ Synced ${session.userName} conversation to Google Sheets`);
               }
             } catch (err) {
-              console.error('Google Sheets sync error:', err);
-              console.error('Error stack:', err.stack);
+              console.error(`❌ Google Sheets sync failed for session ${session.sessionId}:`, err);
             }
           }
 
@@ -938,7 +959,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Real-time AI extraction status endpoint
   app.get("/api/admin/realtime-extraction/status", async (req, res) => {
     try {
-      const status = realtimeExtractor.getCurrentStatus();
+      const allSessions = await storage.getAllChatSessions();
+      const unsynced = allSessions.filter(session => 
+        session.userEmail && !session.googleSheetsSynced
+      );
+      
+      const status = {
+        unsyncedSessions: unsynced.length,
+        totalSessions: allSessions.length,
+        googleSheetsEnabled: integrationConfig.googleSheets.enabled,
+        klaviyoEnabled: integrationConfig.klaviyo.enabled
+      };
       res.json({
         success: true,
         ...status,
@@ -957,20 +988,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (sessionId) {
         // Extract specific session
-        const success = await realtimeExtractor.processSession(parseInt(sessionId));
-        res.json({
-          success,
-          message: success ? `AI extraction completed for session ${sessionId}` : `Failed to extract session ${sessionId}`
+        // Trigger auto-sync for specific session
+        const response = await fetch('http://localhost:5000/api/admin/auto-sync-integrations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
         });
+        
+        if (response.ok) {
+          const result = await response.json();
+          res.json({
+            success: true,
+            message: `Auto-sync triggered for session ${sessionId}`
+          });
+        } else {
+          res.status(500).json({ error: "Failed to trigger auto-sync" });
+        }
       } else {
-        // Check for new chats
-        const result = await realtimeExtractor.checkForNewChats();
-        res.json({
-          success: true,
-          processed: result.processed,
-          newSessions: result.newSessions,
-          message: `AI extracted data from ${result.processed} conversations`
+        // Trigger general auto-sync
+        const response = await fetch('http://localhost:5000/api/admin/auto-sync-integrations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
         });
+        
+        if (response.ok) {
+          const result = await response.json();
+          res.json({
+            success: true,
+            synced: result.synced,
+            message: `Auto-sync completed: ${result.synced} conversations processed`
+          });
+        } else {
+          res.status(500).json({ error: "Failed to trigger auto-sync" });
+        }
       }
     } catch (error) {
       console.error("Error triggering AI extraction:", error);

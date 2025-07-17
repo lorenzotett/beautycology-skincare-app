@@ -71,6 +71,29 @@ This is a full-stack web application that provides AI-powered skin care consulta
 - **drizzle-kit**: Database schema management
 - **@replit/vite-plugin-***: Replit-specific development tools
 
+## Recent Changes
+
+### July 17, 2025 - Integration System Optimization
+- **Fixed synchronization issues**: Resolved inconsistent environment variable naming between services
+- **Removed problematic service**: Eliminated broken `realtime-extractor` service that was causing conflicts
+- **Centralized configuration**: Created unified `server/config/integrations.ts` for credential management
+- **Improved error handling**: System now clearly indicates when integrations are disabled due to missing credentials
+- **Enhanced logging**: Added clear status messages with emoji indicators for better monitoring
+- **Optimized auto-sync**: Restructured to use consistent environment variables and fail gracefully
+
+### Integration Status Management
+The system now uses a unified configuration approach:
+- **Google Sheets**: Uses `GOOGLE_SHEETS_CREDENTIALS` and `GOOGLE_SHEETS_ID` environment variables
+- **Klaviyo**: Uses `KLAVIYO_API_KEY` and `KLAVIYO_LIST_ID` environment variables
+- **Status indicators**: Clear startup messages show integration availability
+- **Auto-sync optimization**: Processes only when credentials are available
+
+### System Architecture Updates
+- **Removed**: `server/services/realtime-extractor.ts` (caused conflicts and errors)
+- **Added**: `server/config/integrations.ts` (centralized credential management)
+- **Modified**: `server/routes.ts` (unified auto-sync system)
+- **Enhanced**: Error handling and status reporting across all integration endpoints
+
 ## Deployment Strategy
 
 ### Build Process

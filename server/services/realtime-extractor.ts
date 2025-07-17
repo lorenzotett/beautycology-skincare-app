@@ -17,14 +17,32 @@ export class RealtimeDataExtractor {
     this.advancedAIExtractor = new AdvancedAIExtractor();
     
     // Initialize Google Sheets with credentials (use same as auto-sync)
-    const googleCredentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON || '{}');
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    this.googleSheets = new GoogleSheetsService(googleCredentials, spreadsheetId || '');
+    try {
+      const googleCredentials = process.env.GOOGLE_SHEETS_CREDENTIALS ? 
+        JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS) : null;
+      const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
+      
+      if (googleCredentials && spreadsheetId) {
+        this.googleSheets = new GoogleSheetsService(googleCredentials, spreadsheetId);
+        console.log('✅ Google Sheets service initialized successfully');
+      } else {
+        console.log('⚠️ Google Sheets credentials not configured, skipping initialization');
+      }
+    } catch (error) {
+      console.error('❌ Failed to initialize Google Sheets service:', error);
+    }
     
     // Initialize Klaviyo
     const klaviyoApiKey = process.env.KLAVIYO_API_KEY || '';
     const klaviyoListId = process.env.KLAVIYO_LIST_ID || '';
-    this.klaviyo = new KlaviyoService(klaviyoApiKey, klaviyoListId);
+    
+    if (klaviyoApiKey && klaviyoListId) {
+      this.klaviyo = new KlaviyoService(klaviyoApiKey, klaviyoListId);
+      console.log('✅ Klaviyo service initialized successfully');
+    } else {
+      console.log('⚠️ Klaviyo credentials not configured, skipping initialization');
+    }
+    
     this.initializeLastProcessedId();
   }
 
@@ -111,26 +129,32 @@ export class RealtimeDataExtractor {
 
           // Try to sync to Google Sheets (non-blocking for progression)
           let sheetsSuccess = false;
-          try {
-            sheetsSuccess = await this.googleSheets.appendConversation(
-              session.sessionId,
-              session.userId,
-              this.extractEmailFromMessages(messages),
-              messages,
-              extractedData
-            );
-          } catch (error) {
-            console.warn(`Google Sheets sync failed for session ${session.id}:`, error.message);
+          if (this.googleSheets) {
+            try {
+              sheetsSuccess = await this.googleSheets.appendConversation(
+                session.sessionId,
+                session.userId,
+                this.extractEmailFromMessages(messages),
+                messages,
+                extractedData
+              );
+            } catch (error) {
+              console.warn(`Google Sheets sync failed for session ${session.id}:`, error.message);
+            }
+          } else {
+            console.log(`⚠️ Google Sheets not configured, skipping sync for session ${session.id}`);
           }
 
           // Try to sync to Klaviyo if email found (non-blocking for progression)
           const email = this.extractEmailFromMessages(messages);
-          if (email) {
+          if (email && this.klaviyo) {
             try {
               await this.klaviyo.addProfileToList(email, session.userId, extractedData);
             } catch (error) {
               console.warn(`Klaviyo sync failed for session ${session.id}:`, error.message);
             }
+          } else if (email) {
+            console.log(`⚠️ Klaviyo not configured, skipping sync for session ${session.id}`);
           }
 
           // Always count as processed if AI extraction succeeded, regardless of sync failures
