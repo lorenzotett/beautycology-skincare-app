@@ -83,19 +83,14 @@ export class GoogleSheetsService {
         extractedData.fumo || '', // Q
         extractedData.idratazione || '', // R - Water intake
         extractedData.protezioneSolare || '', // S
-        extractedData.problemiSpecifici || '', // T
-        extractedData.ingredientiDesiderati || '', // U
-        extractedData.budgetMensile || '', // V
-        extractedData.frequenzaAcquisto || '', // W
-        extractedData.motivazione || '', // X
-        messages.length, // Y
-        conversationText // Z
+        messages.length, // T
+        conversationText // U
       ]];
 
       // Append to Google Sheets
       const response = await this.sheets.spreadsheets.values.append({
         spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A:Z', // Extended range for all columns
+        range: 'Foglio1!A:U', // Updated range for optimized columns
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         requestBody: {
@@ -175,14 +170,7 @@ export class GoogleSheetsService {
       
       // Routine and products  
       { key: 'routine', patterns: ['routine attuale', 'prodotti usi attualmente'] },
-      { key: 'prodotti', patterns: ['quali prodotti utilizzati'] },
-      
-      // Preferences and goals  
-      { key: 'problemiSpecifici', patterns: ['problema principale che vorresti risolvere'] },
-      { key: 'ingredientiDesiderati', patterns: ['ingredienti particolari che ti piacerebbe trovare'] },
-      { key: 'budgetMensile', patterns: ['budget mensile per la skincare'] },
-      { key: 'frequenzaAcquisto', patterns: ['frequenza di acquisto preferita'] },
-      { key: 'motivazione', patterns: ['cosa ti ha spinto a cercare una routine personalizzata'] }
+      { key: 'prodotti', patterns: ['quali prodotti utilizzati'] }
     ];
 
     // Extract basic info from any user message
@@ -492,7 +480,7 @@ export class GoogleSheetsService {
       // Check if headers exist, if not add them
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A1:Z1'
+        range: 'Foglio1!A1:U1'
       });
 
       if (!response.data.values || response.data.values.length === 0) {
@@ -501,14 +489,12 @@ export class GoogleSheetsService {
           'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
           'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Prodotti Usati',
           'Allergie', 'Profumo', 'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo',
-          'Idratazione', 'Protezione Solare', 'Problemi Specifici', 'Ingredienti Desiderati',
-          'Budget Mensile', 'Frequenza Acquisto', 'Motivazione', 'Num. Messaggi',
-          'Conversazione Completa'
+          'Idratazione', 'Protezione Solare', 'Num. Messaggi', 'Conversazione Completa'
         ]];
         
         await this.sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
-          range: 'Foglio1!A1:Z1',
+          range: 'Foglio1!A1:U1',
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: headers
