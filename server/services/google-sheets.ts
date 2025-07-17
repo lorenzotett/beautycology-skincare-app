@@ -26,6 +26,19 @@ export class GoogleSheetsService {
     skinAnalysis?: any
   ): Promise<boolean> {
     try {
+      // Check if session already exists in sheet to avoid duplicates
+      const existingData = await this.sheets.spreadsheets.values.get({
+        spreadsheetId: this.spreadsheetId,
+        range: 'Foglio1!B:B' // Session ID column
+      });
+
+      if (existingData.data.values) {
+        const sessionIds = existingData.data.values.flat();
+        if (sessionIds.includes(sessionId)) {
+          console.log(`Session ${sessionId} already exists in Google Sheets, skipping duplicate`);
+          return true; // Return true as it's already synced
+        }
+      }
       // Format conversation data
       const timestamp = new Date().toLocaleString('it-IT', {
         timeZone: 'Europe/Rome',
