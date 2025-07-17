@@ -131,6 +131,9 @@ export class GoogleSheetsService {
       }
     }
 
+    // Extract skin analysis data from AI messages
+    this.extractSkinAnalysisFromMessages(messages, data);
+
     // Comprehensive question-answer extraction
     this.extractAllQuestionAnswers(messages, data);
     
@@ -288,6 +291,80 @@ export class GoogleSheetsService {
         data.stress = answer;
       } else {
         data.stress = answer;
+      }
+    }
+  }
+
+  private extractSkinAnalysisFromMessages(messages: ChatMessage[], data: any): void {
+    // Find AI messages that contain skin analysis results
+    const aiMessages = messages.filter(m => m.role === 'assistant');
+    
+    for (const message of aiMessages) {
+      const content = message.content.toLowerCase();
+      
+      // Extract skin type from analysis results
+      if (!data.tipoPelle && content.includes('tipo di pelle')) {
+        const skinTypes = ['grassa', 'secca', 'mista', 'normale', 'sensibile', 'combinata'];
+        for (const type of skinTypes) {
+          if (content.includes(type)) {
+            data.tipoPelle = type.charAt(0).toUpperCase() + type.slice(1);
+            console.log(`Extracted skin type: ${data.tipoPelle}`);
+            break;
+          }
+        }
+      }
+      
+      // Extract skin score from analysis - look for level patterns
+      if (!data.punteggioPelle) {
+        const scoreMatch = content.match(/livello:\s*(\d+)\/100/i) || 
+                          content.match(/punteggio[^\d]*(\d+)/i) ||
+                          content.match(/score[^\d]*(\d+)/i) ||
+                          content.match(/(\d+)\/100/) ||
+                          content.match(/(\d+)\s*punti/);
+        if (scoreMatch) {
+          data.punteggioPelle = scoreMatch[1];
+          console.log(`Extracted skin score: ${data.punteggioPelle}`);
+        }
+      }
+      
+      // Extract skin problems from analysis - look for specific level patterns
+      if (!data.problemiPelle && (content.includes('necessità') || content.includes('livello:'))) {
+        // Look for problem-level patterns like "Rossori (Livello: 65/100)"
+        const problemMatches = content.match(/[•]\s*\*\*([^(]+)\s*\(livello:\s*(\d+)\/100\)/gi);
+        
+        if (problemMatches) {
+          const problems = problemMatches.map(match => {
+            const parts = match.match(/[•]\s*\*\*([^(]+)\s*\(livello:\s*(\d+)\/100\)/i);
+            if (parts) {
+              return `${parts[1].trim()}: ${parts[2]}/100`;
+            }
+            return null;
+          }).filter(Boolean);
+          
+          if (problems.length > 0) {
+            data.problemiPelle = problems.join(', ');
+            console.log(`Extracted skin problems: ${data.problemiPelle}`);
+          }
+        } else {
+          // Fallback to simple pattern matching
+          const problemPatterns = [
+            /rossori?/i, /acne/i, /punti neri/i, /pori dilatati/i, 
+            /rughe?/i, /secchezza/i, /oleosità/i, /disidratazione/i,
+            /macchie/i, /discromie/i, /sensibilità/i, /texture irregolare/i
+          ];
+          
+          const foundProblems = [];
+          for (const pattern of problemPatterns) {
+            if (pattern.test(content)) {
+              foundProblems.push(pattern.source.replace(/[\\?]/g, ''));
+            }
+          }
+          
+          if (foundProblems.length > 0) {
+            data.problemiPelle = foundProblems.join(', ');
+            console.log(`Extracted skin problems (fallback): ${data.problemiPelle}`);
+          }
+        }
       }
     }
   }

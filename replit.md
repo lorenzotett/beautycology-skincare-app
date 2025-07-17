@@ -304,6 +304,9 @@ Changelog:
   - Added reset endpoint for Google Sheets structure updates
   - Synchronized conversations now include extracted structured data plus full transcript
   - Each row represents one complete user consultation with all relevant data points
+  - Enhanced skin analysis extraction: now captures tipo pelle, punteggio pelle, and problemi pelle from AI analysis messages
+  - Implemented anti-duplicate control to prevent multiple rows per session
+  - Extraction success rate: 14/15 question-answer pairs (93% accuracy)
 
 ## User Preferences
 
