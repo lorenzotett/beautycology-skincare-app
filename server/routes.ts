@@ -44,7 +44,7 @@ setInterval(async () => {
   }
 }, 5 * 60 * 1000);
 
-// Auto-sync conversations to Klaviyo and Google Sheets every 10 minutes
+// Auto-sync conversations to Klaviyo and Google Sheets every 1 minute
 setInterval(async () => {
   try {
     const response = await fetch('http://localhost:5000/api/admin/auto-sync-integrations', {
@@ -61,7 +61,7 @@ setInterval(async () => {
   } catch (error) {
     console.warn('Failed to auto-sync integrations:', error);
   }
-}, 10 * 60 * 1000);
+}, 60 * 1000);
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
