@@ -6,6 +6,7 @@ import { GeminiService } from "./services/gemini";
 import { SkinAnalysisService } from "./services/skin-analysis";
 import { KlaviyoService } from "./services/klaviyo";
 import { GoogleSheetsService } from "./services/google-sheets";
+import { ChatDataExtractor } from "./services/chat-data-extractor";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -851,6 +852,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error in auto-sync integrations:", error);
       res.status(500).json({ error: "Failed to sync integrations" });
+    }
+  });
+
+  // Test AI data extraction endpoint
+  app.post("/api/admin/test-ai-extraction", async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({ error: "Session ID required" });
+      }
+
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      const messages = await storage.getChatMessages(sessionId);
+      
+      // Trova skin analysis se presente
+      let skinAnalysis = null;
+      const assistantMsg = messages.find(m => m.role === 'assistant' && (m.metadata as any)?.skinAnalysis);
+      if (assistantMsg) {
+        skinAnalysis = (assistantMsg.metadata as any).skinAnalysis;
+      }
+
+      // Testa estrazione AI
+      const extractor = new ChatDataExtractor();
+      const result = await extractor.extractStructuredData(messages, skinAnalysis);
+
+      res.json({
+        success: true,
+        sessionId,
+        userName: session.userName,
+        userEmail: session.userEmail,
+        extractedData: result,
+        messagesCount: messages.length,
+        hasSkinAnalysis: !!skinAnalysis
+      });
+    } catch (error) {
+      console.error("Error testing AI extraction:", error);
+      res.status(500).json({ error: "Failed to test AI extraction" });
     }
   });
 

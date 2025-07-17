@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import type { ChatMessage } from '../../shared/schema';
+import { ChatDataExtractor } from './chat-data-extractor';
 
 export class GoogleSheetsService {
   private sheets: any;
@@ -50,7 +51,7 @@ export class GoogleSheetsService {
       });
 
       // Extract structured data from conversation
-      const extractedData = this.extractConversationData(messages, skinAnalysis);
+      const extractedData = await this.extractConversationData(messages, skinAnalysis);
       
       // Build full conversation text
       let conversationText = `=== CONVERSAZIONE ${sessionId} ===\n`;
@@ -112,7 +113,40 @@ export class GoogleSheetsService {
     }
   }
 
-  private extractConversationData(messages: ChatMessage[], skinAnalysis?: any): any {
+  private async extractConversationData(messages: ChatMessage[], skinAnalysis?: any): Promise<any> {
+    try {
+      // Usa il nuovo estrattore AI
+      const extractor = new ChatDataExtractor();
+      const aiExtractedData = await extractor.extractStructuredData(messages, skinAnalysis);
+      
+      // Aggiungi dati da skin analysis se disponibili
+      if (skinAnalysis) {
+        if (skinAnalysis.generalScore && aiExtractedData.punteggioPelle === 'Non specificato') {
+          aiExtractedData.punteggioPelle = skinAnalysis.generalScore.toString();
+        }
+        
+        if (skinAnalysis.scores && aiExtractedData.problemiPelle === 'Non specificato') {
+          aiExtractedData.problemiPelle = Object.entries(skinAnalysis.scores)
+            .filter(([key, value]) => value && value !== 'N/A')
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(', ');
+        }
+      }
+      
+      // Conta campi estratti (escludendo 'Non specificato')
+      const extractedFields = Object.keys(aiExtractedData)
+        .filter(key => aiExtractedData[key] && aiExtractedData[key] !== 'Non specificato').length;
+      
+      console.log(`🤖 AI ha estratto ${extractedFields} campi dati dalla conversazione`);
+      
+      return aiExtractedData;
+    } catch (error) {
+      console.error('❌ Errore nell\'estrazione AI, uso fallback:', error);
+      return this.extractConversationDataFallback(messages, skinAnalysis);
+    }
+  }
+
+  private extractConversationDataFallback(messages: ChatMessage[], skinAnalysis?: any): any {
     const data: any = {};
     
     // Extract from skin analysis
@@ -137,7 +171,7 @@ export class GoogleSheetsService {
     
     // Log extracted data summary
     const extractedFields = Object.keys(data).filter(key => data[key] && data[key] !== '').length;
-    console.log(`Extracted ${extractedFields} data fields from conversation`);
+    console.log(`📊 Fallback ha estratto ${extractedFields} campi dati dalla conversazione`);
     
     return data;
   }
