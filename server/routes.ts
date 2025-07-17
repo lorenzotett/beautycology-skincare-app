@@ -52,70 +52,33 @@ setInterval(async () => {
   }
 }, 5 * 60 * 1000);
 
-// Auto-sync conversations to Klaviyo and Google Sheets every 1 minute
+// Backup sync every 5 minutes (only for sessions that failed real-time sync)
 setInterval(async () => {
   try {
-    const response = await fetch('http://localhost:5000/api/admin/auto-sync-integrations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-    if (response.ok) {
-      const result = await response.json();
-      if (result.synced > 0) {
-        console.log(`Auto-synced ${result.synced} conversations to integrations`);
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to auto-sync integrations:', error);
-  }
-}, 30 * 1000);
-
-// Enhanced AI data extraction monitoring every 2 minutes
-setInterval(async () => {
-  try {
-    // Get all unsynced sessions
     const allSessions = await storage.getAllChatSessions();
-    const unsyncedSessions = allSessions.filter(session => 
+    const failedSyncSessions = allSessions.filter(session => 
       !session.googleSheetsSynced && session.userEmail
-    ).slice(0, 5);
+    ).slice(0, 3); // Process only 3 at a time for backup
     
-    if (unsyncedSessions.length > 0) {
-      console.log(`🔍 Found ${unsyncedSessions.length} unsynced sessions with emails: ${unsyncedSessions.map(s => `#${s.id}`).join(', ')}`);
+    if (failedSyncSessions.length > 0) {
+      console.log(`🔄 Backup sync: Found ${failedSyncSessions.length} failed real-time sync sessions`);
       
-      // Process each session with AI extraction
-      let processed = 0;
-      for (const session of unsyncedSessions) {
-        try {
-          const messages = await storage.getChatMessages(session.sessionId);
-          if (messages && messages.length >= 3) {
-            // Use Advanced AI Extractor for data extraction
-            const advancedAI = new AdvancedAIExtractor();
-            const aiExtractedData = await advancedAI.extractConversationData(messages);
-            const extractedData = aiExtractedData ? 
-              advancedAI.convertToSheetsFormat(aiExtractedData) : null;
-            
-            if (extractedData) {
-              console.log(`🤖 AI extracted data for session ${session.sessionId}`);
-              processed++;
-              
-              // Update session to mark as processed
-              await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
-            }
-          }
-        } catch (error) {
-          console.warn(`Failed to process session ${session.sessionId}:`, error.message);
+      const response = await fetch('http://localhost:5000/api/admin/auto-sync-integrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.synced > 0) {
+          console.log(`✅ Backup sync completed: ${result.synced} conversations recovered`);
         }
       }
-      
-      if (processed > 0) {
-        console.log(`✅ AI processed ${processed} conversations successfully`);
-      }
     }
   } catch (error) {
-    console.warn('Failed to check for new chats:', error);
+    console.warn('Backup sync failed:', error);
   }
-}, 2 * 60 * 1000); // Every 2 minutes
+}, 5 * 60 * 1000); // Every 5 minutes
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
@@ -495,33 +458,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }).catch(err => console.error('Klaviyo sync error:', err));
         }
 
-        // Sync conversation to Google Sheets (non-blocking)
-        if (process.env.GOOGLE_SHEETS_CREDENTIALS && process.env.GOOGLE_SHEETS_ID) {
+        // REAL-TIME SYNC: Trigger immediate synchronization with AI extraction when email is detected
+        console.log(`📧 EMAIL DETECTED: ${userEmail} - Triggering immediate sync to Google Sheets`);
+        
+        // Use integration config for real-time sync with AI extraction  
+        if (integrationConfig.googleSheets.enabled) {
           try {
-            const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
-            const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
+            const sheets = new GoogleSheetsService(integrationConfig.googleSheets.credentials, integrationConfig.googleSheets.spreadsheetId!);
             
             // Get all messages for the session
             const allMessages = await storage.getChatMessages(sessionId);
-            
-            // Get skin analysis from first assistant message
-            let skinAnalysis = null;
-            const firstAssistantMsg = allMessages.find(m => m.role === 'assistant' && (m.metadata as any)?.skinAnalysis);
-            if (firstAssistantMsg) {
-              skinAnalysis = (firstAssistantMsg.metadata as any).skinAnalysis;
+            console.log(`📨 Retrieved ${allMessages.length} messages for real-time sync`);
+
+            // Use Advanced AI extraction for complete data extraction
+            console.log('🤖 Real-time AI extraction starting...');
+            const advancedAI = new AdvancedAIExtractor();
+            const aiExtractedData = await advancedAI.extractConversationData(allMessages);
+            const extractedData = aiExtractedData ? 
+              advancedAI.convertToSheetsFormat(aiExtractedData) : 
+              null;
+
+            if (extractedData) {
+              console.log('📊 Real-time AI extracted data:', {
+                eta: extractedData.eta,
+                sesso: extractedData.sesso,
+                tipoPelle: extractedData.tipoPelle,
+                problemi: extractedData.problemiPelle?.slice(0, 20) // Show first 20 chars
+              });
             }
 
-            sheets.appendConversation(
+            const success = await sheets.appendConversation(
               sessionId,
               session.userName,
               userEmail,
               allMessages,
-              skinAnalysis
-            ).then(success => {
-              if (success) {
-                storage.updateChatSession(sessionId, { googleSheetsSynced: true });
-              }
-            }).catch(err => console.error('Google Sheets sync error:', err));
+              extractedData
+            );
+            
+            if (success) {
+              await storage.updateChatSession(sessionId, { googleSheetsSynced: true });
+              console.log(`✅ REAL-TIME SYNC SUCCESS: ${session.userName} (${userEmail}) synced to Google Sheets`);
+            }
           } catch (err) {
             console.error('Failed to parse Google Sheets credentials:', err);
           }
