@@ -296,24 +296,26 @@ Changelog:
   - Removed "AI-DermaSense" title text from top right of chat interface
   - Kept only Bonnie logo on the left and Shopify indicator when applicable
   - Cleaner header design with minimal branding
-- July 17, 2025. COMPLETE TRANSFORMATION: Ultra-comprehensive AI extraction system for total data capture:
-  - **MAJOR ARCHITECTURAL OVERHAUL**: Completely rebuilt extraction to capture ALL information from every conversation
-  - **77-Column Google Sheets Structure**: Massively expanded from 25 to 77 columns covering every aspect of user data
-  - **Advanced AI Model Optimization**: All services use Gemini 2.5 Flash except skin analysis (Gemini 2.5 Pro for accuracy)
-  - **Ultra-Complete Data Categories**: 
-    * Informazioni Base: età, sesso, nome, città, professione
-    * Analisi Pelle Completa: 12 parametri dettagliati (oleosità, acne, rossori, texture, pori, pigmentazione, sensibilità, zone, condizioni)
-    * Lifestyle Esteso: 12 abitudini dettagliate (protezione solare, idratazione, sonno, alimentazione, fumo, stress, scrub, attività fisica, esposizione sole, ambiente lavoro, qualità aria, clima)
-    * Preferenze Prodotti Complete: 9 categorie (allergie, profumo, routine, prodotti preferiti, marchi, budget, frequenza acquisto, ingredienti da evitare, texture preferite)
-    * Problemi Specifici: 8 analisi mirate (acne tipo/frequenza, rossori causa, secchezza zone, macchie tipo, rughe zone, cicatrici, problemi stagionali)
-    * Routine Dettagliata: 8 aspetti specifici (mattina/sera, detergenti, idratanti, trattamenti, maschere, sieri, strumenti)
-    * Storia Medica: 6 elementi critici (farmaci, trattamenti dermatologici, allergie note, problemi ormonali, gravidanza, storia familiare)
-    * Obiettivi e Aspettative: 5 dimensioni motivazionali (risultati desiderati, priorità, tempo disponibile, aspettative realistiche, motivazioni)
-    * Analisi Conversazione Estesa: 6 metriche qualitative (fase completata, accesso prodotti, qualità dati, note aggiuntive, livello dettaglio, soddisfazione)
-  - **Enhanced AI Prompt Engineering**: Ultra-detailed system instructions for maximum extraction completeness
-  - **Google Sheets Range A1:BY1**: Extended from A-Y to A-BY supporting 77 comprehensive data columns
-  - **Production-Ready System**: All extraction processes optimized for cost efficiency while maintaining comprehensive data capture
-  - **Automatic Header Management**: Updated all endpoints to support complete column structure with proper range management
+- July 17, 2025. Revolutionary AI-powered data extraction system for Google Sheets:
+  - Completely rebuilt data extraction using Advanced AI (Gemini 2.5 Pro) for ultra-precise analysis
+  - Replaced manual pattern matching with intelligent AI interpretation of conversations
+  - AI extracts comprehensive structured data: age, gender, skin type, problems, lifestyle habits
+  - Fixed critical JSON parsing issues with markdown backticks from AI responses
+  - Integrated AI extraction into existing auto-sync system that handles Google Sheets credentials
+  - System now extracts real data instead of showing "Non specificato" for all fields
+  - AI analyzes complete conversation context to deduce missing information
+  - Enhanced logging system shows exact AI extraction results for debugging
+  - Successful integration: auto-sync uses AI extraction to populate Google Sheets with precise data
+  - Production-ready: AI extraction works reliably with 25+ structured data columns
+  - Eliminated data extraction errors through robust JSON cleaning and parsing system
+  - **Added targeted extraction feature**: "Estrai Ultime 5" button in admin dashboard
+  - New endpoint `/api/admin/extract-last-five` processes exactly the 5 most recent completed chats
+  - Enhanced admin interface with dedicated button for extracting latest conversations on demand
+  - **Google Sheets integration fully operational**: AI extraction successfully syncing to Google Sheets with precise data
+  - Fixed credential configuration with proper GOOGLE_CREDENTIALS_JSON and GOOGLE_SPREADSHEET_ID environment variables
+  - Confirmed successful data synchronization with accurate extraction of age, gender, skin type, and problems
+  - **Optimized AI model usage**: Skin analysis uses Gemini 2.5 Pro for maximum image analysis accuracy, all other services use Gemini 2.5 Flash for cost optimization
+  - Balanced approach: critical image analysis maintains high accuracy while chat and data extraction services reduce API costs
 
 ## User Preferences
 
