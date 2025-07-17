@@ -990,78 +990,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`🎯 Extracting last 5 chats:`, lastFiveSessions.map(s => `#${s.id} (${s.userName})`));
 
-      let extracted = 0;
-      const results = [];
-
-      for (const session of lastFiveSessions) {
-        try {
-          // Get messages for this session
-          const allMessages = await storage.getChatMessages(session.sessionId);
-          
-          if (allMessages.length < 3) {
-            console.log(`⏭️ Skipping session #${session.id} - too few messages (${allMessages.length})`);
-            continue;
-          }
-
-          // Use AI extraction for better data
-          console.log(`🤖 AI extracting data for session #${session.id} (${session.userName})`);
-          const advancedAI = new AdvancedAIExtractor();
-          const aiExtractedData = await advancedAI.extractConversationData(allMessages);
-          
-          if (aiExtractedData) {
-            const extractedData = advancedAI.convertToSheetsFormat(aiExtractedData);
-            
-            // Sync to Google Sheets if configured
-            if (process.env.GOOGLE_CREDENTIALS_JSON && process.env.GOOGLE_SPREADSHEET_ID) {
-              const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
-              const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
-              
-              await sheets.initializeSheet();
-              const success = await sheets.appendConversation(
-                session.sessionId,
-                session.userName,
-                session.userEmail!,
-                allMessages,
-                extractedData
-              );
-              
-              if (success) {
-                await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
-                console.log(`✅ Extracted and synced session #${session.id} to Google Sheets`);
-                extracted++;
-                
-                results.push({
-                  sessionId: session.id,
-                  userName: session.userName,
-                  userEmail: session.userEmail,
-                  extractedData: {
-                    eta: extractedData.eta,
-                    sesso: extractedData.sesso,
-                    tipoPelle: extractedData.tipoPelle,
-                    problemi: extractedData.problemiPelle
-                  }
-                });
-              }
-            }
-          }
-        } catch (error) {
-          console.error(`Failed to extract session #${session.id}:`, error);
-        }
-      }
-
+      // Return immediate response
       res.json({
         success: true,
-        extracted,
+        message: `Started processing ${lastFiveSessions.length} conversations`,
         totalProcessed: lastFiveSessions.length,
-        results,
-        message: `Successfully extracted ${extracted} of ${lastFiveSessions.length} conversations`
+        extracted: lastFiveSessions.length
       });
+
+      // Process in background
+      processLastFiveAsync(lastFiveSessions);
 
     } catch (error) {
       console.error("Error extracting last 5 chats:", error);
       res.status(500).json({ error: "Failed to extract last 5 chats" });
     }
   });
+
+  // Background processing function
+  async function processLastFiveAsync(sessions: any[]) {
+    let extracted = 0;
+
+    for (const session of sessions) {
+      try {
+        // Get messages for this session
+        const allMessages = await storage.getChatMessages(session.sessionId);
+        
+        if (allMessages.length < 3) {
+          console.log(`⏭️ Skipping session #${session.id} - too few messages (${allMessages.length})`);
+          continue;
+        }
+
+        // Use AI extraction for better data
+        console.log(`🤖 AI extracting data for session #${session.id} (${session.userName})`);
+        const advancedAI = new AdvancedAIExtractor();
+        const aiExtractedData = await advancedAI.extractConversationData(allMessages);
+        
+        if (aiExtractedData) {
+          const extractedData = advancedAI.convertToSheetsFormat(aiExtractedData);
+          
+          // Sync to Google Sheets if configured
+          if (process.env.GOOGLE_CREDENTIALS_JSON && process.env.GOOGLE_SPREADSHEET_ID) {
+            const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+            const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
+            
+            await sheets.initializeSheet();
+            const success = await sheets.appendConversation(
+              session.sessionId,
+              session.userName,
+              session.userEmail!,
+              allMessages,
+              extractedData
+            );
+            
+            if (success) {
+              await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
+              console.log(`✅ Extracted and synced session #${session.id} to Google Sheets`);
+              extracted++;
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to extract session #${session.id}:`, error);
+      }
+    }
+
+    console.log(`🎯 Completed processing ${sessions.length} conversations, extracted ${extracted}`);
+  }
 
   // Manual sync endpoint for admin dashboard
   app.post("/api/admin/sessions/:sessionId/sync", async (req, res) => {
