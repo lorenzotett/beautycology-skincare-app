@@ -162,7 +162,7 @@ export class SkinAnalysisService {
       if (ext === '.avif') mimeType = 'image/avif';
 
       const response = await this.ai.models.generateContent({
-        model: "gemini-2.5-pro", // Use Pro for better image analysis
+        model: "gemini-2.5-flash", // Use Flash as requested
         config: {
           systemInstruction: SKIN_ANALYSIS_INSTRUCTION,
         },
