@@ -7,6 +7,7 @@ import { SkinAnalysisService } from "./services/skin-analysis";
 import { KlaviyoService } from "./services/klaviyo";
 import { GoogleSheetsService } from "./services/google-sheets";
 import { ChatDataExtractor } from "./services/chat-data-extractor";
+import { RealtimeDataExtractor } from "./services/realtime-extractor";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -15,6 +16,7 @@ import fs from "fs";
 // Service management
 const MAX_SESSIONS_IN_MEMORY = 1000;
 const geminiServices = new Map<string, GeminiService>();
+const realtimeExtractor = new RealtimeDataExtractor();
 
 // Auto-cleanup sessions
 setInterval(() => {
@@ -63,6 +65,18 @@ setInterval(async () => {
     console.warn('Failed to auto-sync integrations:', error);
   }
 }, 60 * 1000);
+
+// Real-time AI data extraction monitoring every 30 seconds
+setInterval(async () => {
+  try {
+    const result = await realtimeExtractor.checkForNewChats();
+    if (result.processed > 0) {
+      console.log(`🤖 AI extracted data from ${result.processed} new conversations: ${result.newSessions.join(', ')}`);
+    }
+  } catch (error) {
+    console.warn('Failed to check for new chats:', error);
+  }
+}, 30 * 1000);
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
@@ -894,6 +908,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error testing AI extraction:", error);
       res.status(500).json({ error: "Failed to test AI extraction" });
+    }
+  });
+
+  // Real-time AI extraction status endpoint
+  app.get("/api/admin/realtime-extraction/status", async (req, res) => {
+    try {
+      const status = realtimeExtractor.getCurrentStatus();
+      res.json({
+        success: true,
+        ...status,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error getting realtime extraction status:", error);
+      res.status(500).json({ error: "Failed to get status" });
+    }
+  });
+
+  // Manual AI extraction trigger endpoint
+  app.post("/api/admin/realtime-extraction/trigger", async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+      
+      if (sessionId) {
+        // Extract specific session
+        const success = await realtimeExtractor.processSession(parseInt(sessionId));
+        res.json({
+          success,
+          message: success ? `AI extraction completed for session ${sessionId}` : `Failed to extract session ${sessionId}`
+        });
+      } else {
+        // Check for new chats
+        const result = await realtimeExtractor.checkForNewChats();
+        res.json({
+          success: true,
+          processed: result.processed,
+          newSessions: result.newSessions,
+          message: `AI extracted data from ${result.processed} conversations`
+        });
+      }
+    } catch (error) {
+      console.error("Error triggering AI extraction:", error);
+      res.status(500).json({ error: "Failed to trigger AI extraction" });
     }
   });
 

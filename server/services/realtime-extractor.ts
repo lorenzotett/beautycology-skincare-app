@@ -1,0 +1,169 @@
+import { storage } from "../storage";
+import { ChatDataExtractor } from "./chat-data-extractor";
+import { AdvancedAIExtractor } from "./advanced-ai-extractor";
+import { GoogleSheetsService } from "./google-sheets";
+import { KlaviyoService } from "./klaviyo";
+
+export class RealtimeDataExtractor {
+  private lastProcessedSessionId: number = 0;
+  private isProcessing: boolean = false;
+  private chatExtractor: ChatDataExtractor;
+  private advancedAIExtractor: AdvancedAIExtractor;
+  private googleSheets: GoogleSheetsService;
+  private klaviyo: KlaviyoService;
+
+  constructor() {
+    this.chatExtractor = new ChatDataExtractor();
+    this.advancedAIExtractor = new AdvancedAIExtractor();
+    this.googleSheets = new GoogleSheetsService();
+    this.klaviyo = new KlaviyoService();
+    this.initializeLastProcessedId();
+  }
+
+  private async initializeLastProcessedId() {
+    try {
+      // Get the latest session from storage to start monitoring from there
+      const sessions = await storage.getAllChatSessions();
+      
+      if (sessions.length > 0) {
+        // Sort by creation date to get the most recent
+        sessions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        this.lastProcessedSessionId = sessions[0].id || 0;
+        console.log(`Realtime extractor initialized. Monitoring from session ID: ${this.lastProcessedSessionId}`);
+      }
+    } catch (error) {
+      console.error('Failed to initialize last processed session ID:', error);
+    }
+  }
+
+  async checkForNewChats(): Promise<{ processed: number; newSessions: string[] }> {
+    if (this.isProcessing) {
+      return { processed: 0, newSessions: [] };
+    }
+
+    this.isProcessing = true;
+    const newSessions: string[] = [];
+    let processed = 0;
+
+    try {
+      // Get all sessions and filter for new ones
+      const allSessions = await storage.getAllChatSessions();
+      
+      // Filter only sessions newer than last processed
+      const newSessionsList = allSessions.filter(session => 
+        (session.id || 0) > this.lastProcessedSessionId
+      ).slice(0, 50); // Limit to 50 new sessions
+
+      for (const session of newSessionsList) {
+        try {
+          // Get messages for this session
+          const messages = await storage.getChatMessages(session.sessionId);
+          if (!messages) continue;
+
+          // Check if this session has enough messages to be worth processing
+          if (messages.length < 3) continue;
+
+          // Extract data using Advanced AI
+          console.log(`🤖 Advanced AI extracting data for new session: ${session.userId} (ID: ${session.id})`);
+          
+          const aiExtractedData = await this.advancedAIExtractor.extractConversationData(messages);
+          
+          // Convert to sheets format
+          const extractedData = aiExtractedData ? 
+            this.advancedAIExtractor.convertToSheetsFormat(aiExtractedData) : 
+            await this.chatExtractor.extractConversationData(
+              messages,
+              session.userId,
+              this.extractEmailFromMessages(messages)
+            );
+
+          // Sync to Google Sheets
+          const sheetsSuccess = await this.googleSheets.syncConversation(
+            session.sessionId,
+            session.userId,
+            this.extractEmailFromMessages(messages),
+            messages,
+            extractedData
+          );
+
+          // Sync to Klaviyo if email found
+          const email = this.extractEmailFromMessages(messages);
+          if (email) {
+            await this.klaviyo.syncProfile(session.userId, email, messages);
+          }
+
+          if (sheetsSuccess) {
+            newSessions.push(session.userId);
+            processed++;
+            console.log(`✅ AI extracted and synced data for ${session.userId}`);
+          }
+
+          // Update last processed ID
+          this.lastProcessedSessionId = Math.max(this.lastProcessedSessionId, session.id || 0);
+          
+        } catch (error) {
+          console.error(`Failed to process session ${session.id}:`, error);
+        }
+      }
+
+    } catch (error) {
+      console.error('Error checking for new chats:', error);
+    } finally {
+      this.isProcessing = false;
+    }
+
+    return { processed, newSessions };
+  }
+
+  private extractEmailFromMessages(messages: any[]): string | null {
+    for (const message of messages) {
+      if (message.role === 'user') {
+        const emailMatch = message.content.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/);
+        if (emailMatch) {
+          return emailMatch[0];
+        }
+      }
+    }
+    return null;
+  }
+
+  // Manual trigger for immediate processing
+  async processSession(sessionId: number): Promise<boolean> {
+    try {
+      const sessionDetails = await storage.getSessionDetails(sessionId);
+      if (!sessionDetails) return false;
+
+      console.log(`🤖 Manual AI extraction for session: ${sessionDetails.userId} (ID: ${sessionId})`);
+      
+      const extractedData = await this.chatExtractor.extractConversationData(
+        sessionDetails.messages,
+        sessionDetails.userId,
+        this.extractEmailFromMessages(sessionDetails.messages)
+      );
+
+      const success = await this.googleSheets.syncConversation(
+        sessionId,
+        sessionDetails.userId,
+        this.extractEmailFromMessages(sessionDetails.messages),
+        sessionDetails.messages,
+        extractedData
+      );
+
+      if (success) {
+        console.log(`✅ Manual AI extraction completed for ${sessionDetails.userId}`);
+      }
+
+      return success;
+    } catch (error) {
+      console.error(`Failed to manually process session ${sessionId}:`, error);
+      return false;
+    }
+  }
+
+  getCurrentStatus() {
+    return {
+      lastProcessedSessionId: this.lastProcessedSessionId,
+      isProcessing: this.isProcessing
+    };
+  }
+}

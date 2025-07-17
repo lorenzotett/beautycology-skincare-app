@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatMessage, ChatSession } from "@shared/schema";
-import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3, Copy, X, Eye, ChevronDown, Download, Trash2 } from "lucide-react";
+import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3, Copy, X, Eye, ChevronDown, Download, Trash2, Bot, Zap, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MessageBubble } from "@/components/message-bubble";
 
@@ -46,6 +46,7 @@ export default function AdminDashboard() {
   const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(25);
+  const [realtimeStatus, setRealtimeStatus] = useState<any>(null);
   const { toast } = useToast();
 
   // Check if user is already authenticated
@@ -55,6 +56,25 @@ export default function AdminDashboard() {
       setIsAuthenticated(true);
     }
   }, []);
+
+  // Fetch realtime extraction status
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    const fetchRealtimeStatus = async () => {
+      try {
+        const response = await apiRequest("GET", "/api/admin/realtime-extraction/status");
+        const data = await response.json();
+        setRealtimeStatus(data);
+      } catch (error) {
+        console.error('Failed to fetch realtime status:', error);
+      }
+    };
+    
+    fetchRealtimeStatus();
+    const interval = setInterval(fetchRealtimeStatus, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -248,6 +268,38 @@ export default function AdminDashboard() {
       deleteChatMutation.mutate(sessionId);
     }
   };
+
+  // AI Extraction Trigger Mutation
+  const triggerAIExtractionMutation = useMutation({
+    mutationFn: async (sessionId?: string) => {
+      const body = sessionId ? { sessionId } : {};
+      const response = await apiRequest("POST", "/api/admin/realtime-extraction/trigger", body);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Estrazione AI completata",
+        description: data.message || "Dati estratti con successo"
+      });
+      // Refresh realtime status
+      setTimeout(async () => {
+        try {
+          const response = await apiRequest("GET", "/api/admin/realtime-extraction/status");
+          const statusData = await response.json();
+          setRealtimeStatus(statusData);
+        } catch (error) {
+          console.error('Failed to refresh status:', error);
+        }
+      }, 2000);
+    },
+    onError: (error) => {
+      toast({
+        title: "Errore estrazione AI",
+        description: "Impossibile estrarre i dati",
+        variant: "destructive"
+      });
+    }
+  });
 
   const { data: stats } = useQuery({
     queryKey: ["admin-stats"],
@@ -626,6 +678,75 @@ export default function AdminDashboard() {
               </div>
             </div>
           </Card>
+        </div>
+
+        {/* AI Real-time System */}
+        <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <Bot className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Sistema IA Estrazione Dati</h3>
+                <p className="text-sm text-gray-600">Monitoraggio ed estrazione automatica in tempo reale</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={() => triggerAIExtractionMutation.mutate()}
+                disabled={triggerAIExtractionMutation.isPending}
+                className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                {triggerAIExtractionMutation.isPending ? (
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Zap className="h-4 w-4" />
+                )}
+                <span>Estrai Ora</span>
+              </Button>
+            </div>
+          </div>
+          
+          {realtimeStatus && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className={`h-2 w-2 rounded-full ${realtimeStatus.isProcessing ? 'bg-yellow-500' : 'bg-green-500'}`} />
+                  <span className="text-sm font-medium text-gray-700">
+                    Stato: {realtimeStatus.isProcessing ? 'Elaborazione' : 'Attivo'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600">
+                  Sistema operativo e monitoraggio automatico ogni 30 secondi
+                </p>
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Play className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Ultima Sessione: #{realtimeStatus.lastProcessedSessionId}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600">
+                  Ultimo ID elaborato dal sistema
+                </p>
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Brain className="h-4 w-4 text-purple-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Aggiornato: {realtimeStatus.timestamp ? new Date(realtimeStatus.timestamp).toLocaleTimeString('it-IT') : 'N/A'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600">
+                  Ultimo controllo sistema
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Filters */}
