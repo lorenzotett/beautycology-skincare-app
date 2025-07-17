@@ -137,6 +137,9 @@ export class GoogleSheetsService {
     // Comprehensive question-answer extraction
     this.extractAllQuestionAnswers(messages, data);
     
+    // Sequential question-answer extraction (improved accuracy)
+    this.extractSequentialQuestionAnswers(messages, data);
+    
     // Log extracted data summary
     const extractedFields = Object.keys(data).filter(key => data[key] && data[key] !== '').length;
     console.log(`Extracted ${extractedFields} data fields from conversation`);
@@ -412,6 +415,52 @@ export class GoogleSheetsService {
                 console.log(`Extracted major skin problems: ${data.problemiPelle}`);
               }
             }
+          }
+        }
+      }
+    }
+  }
+
+  private extractSequentialQuestionAnswers(messages: ChatMessage[], data: any): void {
+    // Define the exact question sequence with precise mappings
+    const questionMappings = [
+      { contains: 'utilizzi scrub o peeling', key: 'utilizzaScrub' },
+      { contains: 'quando ti lavi il viso la tua pelle tira', key: 'pelleTira' },
+      { contains: 'rossori sulla tua pelle. secondo te derivano principalmente da', key: 'causaRossori' },
+      { contains: 'quanti anni hai', key: 'eta' },
+      { contains: 'genere?', key: 'sesso' },
+      { contains: 'ingredienti ai quali la tua pelle è allergica', key: 'allergie' },
+      { contains: 'fragranza che profumi di fiori', key: 'profumo' },
+      { contains: 'metti la crema solare ogni giorno', key: 'protezioneSolare' },
+      { contains: 'quanti litri d\'acqua bevi al giorno', key: 'idratazione' },
+      { contains: 'quante ore dormi in media', key: 'sonno' },
+      { contains: 'hai un\'alimentazione bilanciata', key: 'alimentazione' },
+      { contains: 'fumi?', key: 'fumo' },
+      { contains: 'livello di stress attuale', key: 'stress' },
+      { contains: 'potresti condividere la tua mail', key: 'email' }
+    ];
+
+    // Extract question-answer pairs in sequence
+    for (let i = 0; i < messages.length - 1; i++) {
+      const assistantMsg = messages[i];
+      const userResponse = messages[i + 1];
+      
+      if (assistantMsg.role === 'assistant' && userResponse.role === 'user') {
+        const question = assistantMsg.content.toLowerCase();
+        const answer = userResponse.content.trim();
+        
+        // Skip empty answers and image uploads
+        if (!answer || answer.length < 2 || answer.includes('[Immagine caricata:')) continue;
+        
+        // Find exact match for this question
+        for (const mapping of questionMappings) {
+          if (question.includes(mapping.contains)) {
+            // Only overwrite if we don't have data or this is more specific
+            if (!data[mapping.key] || data[mapping.key] === '') {
+              data[mapping.key] = answer;
+              console.log(`Sequential extraction - ${mapping.key}: "${answer}" (from "${mapping.contains}")`);
+            }
+            break;
           }
         }
       }

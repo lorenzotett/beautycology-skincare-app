@@ -307,8 +307,9 @@ Changelog:
   - Enhanced skin analysis extraction: now captures tipo pelle, punteggio pelle, and problemi pelle from AI analysis messages
   - Implemented intelligent skin type deduction from analysis scores (priority: sensitivity > dryness > oiliness)
   - Enhanced problem extraction from consultation messages with multiple pattern matching
+  - Added sequential extraction system with precise question-answer mapping to prevent data misalignment
   - Implemented anti-duplicate control to prevent multiple rows per session
-  - Extraction success rate: 14/15 question-answer pairs (93% accuracy)
+  - Extraction success rate: 16 data fields captured (improved accuracy and completeness)
 
 ## User Preferences
 
