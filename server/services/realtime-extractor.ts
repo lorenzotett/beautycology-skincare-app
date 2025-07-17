@@ -15,8 +15,16 @@ export class RealtimeDataExtractor {
   constructor() {
     this.chatExtractor = new ChatDataExtractor();
     this.advancedAIExtractor = new AdvancedAIExtractor();
-    this.googleSheets = new GoogleSheetsService();
-    this.klaviyo = new KlaviyoService();
+    
+    // Initialize Google Sheets with credentials
+    const googleCredentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS || '{}');
+    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+    this.googleSheets = new GoogleSheetsService(googleCredentials, spreadsheetId || '');
+    
+    // Initialize Klaviyo
+    const klaviyoApiKey = process.env.KLAVIYO_API_KEY || '';
+    const klaviyoListId = process.env.KLAVIYO_LIST_ID || '';
+    this.klaviyo = new KlaviyoService(klaviyoApiKey, klaviyoListId);
     this.initializeLastProcessedId();
   }
 
@@ -49,10 +57,12 @@ export class RealtimeDataExtractor {
       // Get all sessions and filter for new ones
       const allSessions = await storage.getAllChatSessions();
       
-      // Filter only sessions newer than last processed
+      // Process all unsynced sessions for debugging
       const newSessionsList = allSessions.filter(session => 
-        (session.id || 0) > this.lastProcessedSessionId
-      ).slice(0, 50); // Limit to 50 new sessions
+        !session.googleSheetsSynced
+      ).slice(0, 10); // Limit to 10 unsynced sessions
+      
+      console.log(`🔍 Found ${newSessionsList.length} unsynced sessions:`, newSessionsList.map(s => `#${s.id}`));
 
       for (const session of newSessionsList) {
         try {
@@ -87,17 +97,20 @@ export class RealtimeDataExtractor {
           
           const aiExtractedData = await this.advancedAIExtractor.extractConversationData(messages);
           
-          // Convert to sheets format
+          // Convert to sheets format - if AI extraction fails, provide minimal fallback data
           const extractedData = aiExtractedData ? 
             this.advancedAIExtractor.convertToSheetsFormat(aiExtractedData) : 
-            await this.chatExtractor.extractConversationData(
-              messages,
-              session.userId,
-              this.extractEmailFromMessages(messages)
-            );
+            {
+              eta: 'Non specificato',
+              sesso: 'Non specificato',
+              email: this.extractEmailFromMessages(messages) || 'Non specificato',
+              tipo_pelle: 'Non specificato',
+              problemi_pelle: 'Non specificato',
+              punteggio_pelle: 'Non specificato'
+            };
 
           // Sync to Google Sheets
-          const sheetsSuccess = await this.googleSheets.syncConversation(
+          const sheetsSuccess = await this.googleSheets.appendConversation(
             session.sessionId,
             session.userId,
             this.extractEmailFromMessages(messages),
@@ -108,7 +121,7 @@ export class RealtimeDataExtractor {
           // Sync to Klaviyo if email found
           const email = this.extractEmailFromMessages(messages);
           if (email) {
-            await this.klaviyo.syncProfile(session.userId, email, messages);
+            await this.klaviyo.addProfileToList(email, session.userId, extractedData);
           }
 
           if (sheetsSuccess) {
@@ -154,11 +167,16 @@ export class RealtimeDataExtractor {
 
       console.log(`🤖 Manual AI extraction for session: ${sessionDetails.userId} (ID: ${sessionId})`);
       
-      const extractedData = await this.chatExtractor.extractConversationData(
-        sessionDetails.messages,
-        sessionDetails.userId,
-        this.extractEmailFromMessages(sessionDetails.messages)
-      );
+      // Try Advanced AI extraction first
+      const aiExtractedData = await this.advancedAIExtractor.extractConversationData(sessionDetails.messages);
+      
+      const extractedData = aiExtractedData ? 
+        this.advancedAIExtractor.convertToSheetsFormat(aiExtractedData) : 
+        await this.chatExtractor.extractConversationData(
+          sessionDetails.messages,
+          sessionDetails.userId,
+          this.extractEmailFromMessages(sessionDetails.messages)
+        );
 
       const success = await this.googleSheets.syncConversation(
         sessionId,

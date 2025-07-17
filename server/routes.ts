@@ -1028,6 +1028,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Force reprocess specific session with Advanced AI
+  app.post('/api/admin/reprocess/:sessionId', async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      if (isNaN(sessionId)) {
+        return res.status(400).json({ error: 'Invalid session ID' });
+      }
+
+      const success = await realtimeExtractor.processSession(sessionId);
+      res.json({
+        success,
+        message: success ? 
+          `Successfully reprocessed session ${sessionId}` : 
+          `Failed to reprocess session ${sessionId}`
+      });
+    } catch (error) {
+      console.error('Session reprocessing failed:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to reprocess session' 
+      });
+    }
+  });
+
   const server = createServer(app);
   return server;
 }

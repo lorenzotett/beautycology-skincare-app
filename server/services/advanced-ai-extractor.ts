@@ -100,9 +100,10 @@ Priorità di estrazione:
 3. Inferenze logiche basate sul contesto
 
 Gestione dati mancanti:
-- Se un dato non è presente, usa null
+- Se un dato NON è presente o non può essere determinato, scrivi esattamente null
 - Se è parzialmente presente, estrai quello disponibile
-- Marca come "(dedotto)" le informazioni inferite
+- Marca come "(dedotto)" SOLO le informazioni inferite dall'AI analysis
+- NON usare "Non specificato" come valore - usa sempre null per dati mancanti
 
 Analisi intelligente:
 - Riconosci pattern nelle risposte anche se non seguono l'ordine standard
@@ -137,11 +138,33 @@ Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantene
       const text = response.text();
 
       console.log('🤖 AI response received, parsing JSON...');
+      console.log('🔍 Raw AI response (first 300 chars):', JSON.stringify(text.substring(0, 300)));
+      console.log('🔍 Raw AI response (last 50 chars):', JSON.stringify(text.substring(text.length - 50)));
+
+      // Clean the response text by removing markdown backticks
+      let cleanText = text.trim();
+      // Remove starting backticks
+      if (cleanText.startsWith('```json')) {
+        cleanText = cleanText.substring(7); // Remove '```json'
+      } else if (cleanText.startsWith('```')) {
+        cleanText = cleanText.substring(3); // Remove '```'
+      }
+      // Remove ending backticks
+      if (cleanText.endsWith('```')) {
+        cleanText = cleanText.substring(0, cleanText.length - 3);
+      }
+      cleanText = cleanText.trim();
 
       // Parse JSON response
       try {
-        const extractedData = JSON.parse(text) as ExtractedData;
+        const extractedData = JSON.parse(cleanText) as ExtractedData;
         console.log('✅ Advanced AI extraction completed successfully');
+        console.log('📊 Extracted data preview:', {
+          eta: extractedData.informazioni_base?.eta,
+          sesso: extractedData.informazioni_base?.sesso,
+          tipoPelle: extractedData.analisi_pelle?.tipo_pelle,
+          problemi: extractedData.analisi_pelle?.problemi_principali?.slice(0, 2)
+        });
         return extractedData;
       } catch (parseError) {
         console.error('Failed to parse AI response as JSON:', parseError);
@@ -158,24 +181,25 @@ Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantene
   // Convert extracted data to Google Sheets format
   convertToSheetsFormat(extractedData: ExtractedData): any {
     return {
-      eta: extractedData.informazioni_base.eta || '',
-      sesso: extractedData.informazioni_base.sesso || '',
-      tipoPelle: extractedData.analisi_pelle.tipo_pelle || '',
-      problemiPelle: extractedData.analisi_pelle.problemi_principali.join(', ') || '',
-      punteggioPelle: extractedData.analisi_pelle.punteggio_generale || '',
-      routine: extractedData.preferenze_prodotti.routine_attuale || '',
-      prodotti: extractedData.preferenze_prodotti.routine_attuale || '',
-      allergie: extractedData.preferenze_prodotti.allergie || '',
-      profumo: extractedData.preferenze_prodotti.profumo_fiori || '',
-      sonno: extractedData.abitudini_lifestyle.ore_sonno || '',
-      stress: extractedData.abitudini_lifestyle.stress_level || '',
-      alimentazione: extractedData.abitudini_lifestyle.alimentazione || '',
-      fumo: extractedData.abitudini_lifestyle.fumo || '',
-      idratazione: extractedData.abitudini_lifestyle.idratazione_quotidiana || '',
-      protezioneSolare: extractedData.abitudini_lifestyle.protezione_solare || '',
-      qualitaDati: extractedData.analisi_conversazione.qualita_dati || '',
-      faseCompletata: extractedData.analisi_conversazione.fase_completata || '',
-      accessoProdotti: extractedData.analisi_conversazione.accesso_prodotti || ''
+      eta: extractedData.informazioni_base.eta || 'Non specificato',
+      sesso: extractedData.informazioni_base.sesso || 'Non specificato',
+      tipoPelle: extractedData.analisi_pelle.tipo_pelle || 'Non specificato',
+      problemiPelle: extractedData.analisi_pelle.problemi_principali?.length ? 
+        extractedData.analisi_pelle.problemi_principali.join(', ') : 'Non specificato',
+      punteggioPelle: extractedData.analisi_pelle.punteggio_generale || 'Non specificato',
+      routine: extractedData.preferenze_prodotti.routine_attuale || 'Non specificato',
+      prodotti: extractedData.preferenze_prodotti.routine_attuale || 'Non specificato',
+      allergie: extractedData.preferenze_prodotti.allergie || 'Non specificato',
+      profumo: extractedData.preferenze_prodotti.profumo_fiori || 'Non specificato',
+      sonno: extractedData.abitudini_lifestyle.ore_sonno || 'Non specificato',
+      stress: extractedData.abitudini_lifestyle.stress_level || 'Non specificato',
+      alimentazione: extractedData.abitudini_lifestyle.alimentazione || 'Non specificato',
+      fumo: extractedData.abitudini_lifestyle.fumo || 'Non specificato',
+      idratazione: extractedData.abitudini_lifestyle.idratazione_quotidiana || 'Non specificato',
+      protezioneSolare: extractedData.abitudini_lifestyle.protezione_solare || 'Non specificato',
+      qualitaDati: extractedData.analisi_conversazione.qualita_dati || 'Non specificato',
+      faseCompletata: extractedData.analisi_conversazione.fase_completata || 'Non specificato',
+      accessoProdotti: extractedData.analisi_conversazione.accesso_prodotti || 'Non specificato'
     };
   }
 }
