@@ -302,34 +302,63 @@ export class GoogleSheetsService {
     for (const message of aiMessages) {
       const content = message.content.toLowerCase();
       
-      // Extract skin type from analysis results
-      if (!data.tipoPelle && content.includes('tipo di pelle')) {
-        const skinTypes = ['grassa', 'secca', 'mista', 'normale', 'sensibile', 'combinata'];
-        for (const type of skinTypes) {
-          if (content.includes(type)) {
-            data.tipoPelle = type.charAt(0).toUpperCase() + type.slice(1);
-            console.log(`Extracted skin type: ${data.tipoPelle}`);
-            break;
+      // Extract skin type from analysis results or deduce from scores
+      if (!data.tipoPelle) {
+        // First try direct extraction
+        if (content.includes('tipo di pelle')) {
+          const skinTypes = ['grassa', 'secca', 'mista', 'normale', 'sensibile', 'combinata'];
+          for (const type of skinTypes) {
+            if (content.includes(type)) {
+              data.tipoPelle = type.charAt(0).toUpperCase() + type.slice(1);
+              console.log(`Extracted skin type: ${data.tipoPelle}`);
+              break;
+            }
+          }
+        }
+        
+        // If not found, deduce from analysis scores
+        if (!data.tipoPelle && content.includes('analisi completa della pelle')) {
+          // Extract oleosità score to deduce skin type
+          const oleoMatch = content.match(/oleosità[^\d]*(\d+)\/100/i);
+          const acneMatch = content.match(/acne[^\d]*(\d+)\/100/i);
+          const rossoriMatch = content.match(/rossori[^\d]*(\d+)\/100/i);
+          
+          if (oleoMatch || acneMatch || rossoriMatch) {
+            const oleo = oleoMatch ? parseInt(oleoMatch[1]) : 0;
+            const acne = acneMatch ? parseInt(acneMatch[1]) : 0;
+            const rossori = rossoriMatch ? parseInt(rossoriMatch[1]) : 0;
+            
+            // Deduce skin type based on scores (priority: sensitivity > dryness > oiliness)
+            if (rossori >= 50) {
+              data.tipoPelle = 'Sensibile';
+            } else if (oleo <= 30) {
+              data.tipoPelle = 'Secca';
+            } else if (oleo >= 70 || acne >= 60) {
+              data.tipoPelle = 'Grassa';
+            } else {
+              data.tipoPelle = 'Mista';
+            }
+            console.log(`Deduced skin type from analysis: ${data.tipoPelle} (oleo:${oleo}, acne:${acne}, rossori:${rossori})`);
           }
         }
       }
       
-      // Extract skin score from analysis - look for level patterns
+      // Extract skin score - look for general score patterns
       if (!data.punteggioPelle) {
-        const scoreMatch = content.match(/livello:\s*(\d+)\/100/i) || 
+        const scoreMatch = content.match(/punteggio generale[^\d]*(\d+)\/100/i) || 
+                          content.match(/livello:\s*(\d+)\/100/i) ||
                           content.match(/punteggio[^\d]*(\d+)/i) ||
                           content.match(/score[^\d]*(\d+)/i) ||
-                          content.match(/(\d+)\/100/) ||
-                          content.match(/(\d+)\s*punti/);
+                          content.match(/(\d+)\/100.*buono|ottimo|discreto|critico/i);
         if (scoreMatch) {
           data.punteggioPelle = scoreMatch[1];
           console.log(`Extracted skin score: ${data.punteggioPelle}`);
         }
       }
       
-      // Extract skin problems from analysis - look for specific level patterns
-      if (!data.problemiPelle && (content.includes('necessità') || content.includes('livello:'))) {
-        // Look for problem-level patterns like "Rossori (Livello: 65/100)"
+      // Extract skin problems from analysis - enhanced pattern matching
+      if (!data.problemiPelle && (content.includes('necessità') || content.includes('livello:') || content.includes('analisi completa'))) {
+        // Look for problem-level patterns like "Rossori (Livello: 65/100)" or "• **Rossori (Livello: 65/100):**"
         const problemMatches = content.match(/[•]\s*\*\*([^(]+)\s*\(livello:\s*(\d+)\/100\)/gi);
         
         if (problemMatches) {
@@ -346,23 +375,43 @@ export class GoogleSheetsService {
             console.log(`Extracted skin problems: ${data.problemiPelle}`);
           }
         } else {
-          // Fallback to simple pattern matching
-          const problemPatterns = [
-            /rossori?/i, /acne/i, /punti neri/i, /pori dilatati/i, 
-            /rughe?/i, /secchezza/i, /oleosità/i, /disidratazione/i,
-            /macchie/i, /discromie/i, /sensibilità/i, /texture irregolare/i
-          ];
+          // Look for analysis scores in the detailed analysis section with different patterns
+          const problemScoreMatches = content.match(/-\s*\*\*([^:]+):\*\*\s*(\d+)\/100/gi) ||
+                                     content.match(/[•-]\s*([^:]+):\s*(\d+)\/100/gi) ||
+                                     content.match(/\*\*([^:]+):\*\*[^\d]*(\d+)\/100/gi);
           
-          const foundProblems = [];
-          for (const pattern of problemPatterns) {
-            if (pattern.test(content)) {
-              foundProblems.push(pattern.source.replace(/[\\?]/g, ''));
+          if (problemScoreMatches) {
+            const problems = problemScoreMatches.map(match => {
+              // Try multiple patterns
+              let parts = match.match(/-\s*\*\*([^:]+):\*\*\s*(\d+)\/100/i) ||
+                         match.match(/[•-]\s*([^:]+):\s*(\d+)\/100/i) ||
+                         match.match(/\*\*([^:]+):\*\*[^\d]*(\d+)\/100/i);
+              
+              if (parts) {
+                return `${parts[1].trim()}: ${parts[2]}/100`;
+              }
+              return null;
+            }).filter(Boolean);
+            
+            if (problems.length > 0) {
+              data.problemiPelle = problems.join(', ');
+              console.log(`Extracted skin problems from scores: ${data.problemiPelle}`);
             }
-          }
-          
-          if (foundProblems.length > 0) {
-            data.problemiPelle = foundProblems.join(', ');
-            console.log(`Extracted skin problems (fallback): ${data.problemiPelle}`);
+          } else {
+            // Extract major problems from final consultation message
+            if (content.includes('necessità e consigli specifici')) {
+              const majorProblems = [];
+              if (content.includes('rossori')) majorProblems.push('Rossori');
+              if (content.includes('acne')) majorProblems.push('Acne');
+              if (content.includes('texture irregolare')) majorProblems.push('Texture Irregolare');
+              if (content.includes('rughe')) majorProblems.push('Rughe');
+              if (content.includes('macchie')) majorProblems.push('Macchie');
+              
+              if (majorProblems.length > 0) {
+                data.problemiPelle = majorProblems.join(', ');
+                console.log(`Extracted major skin problems: ${data.problemiPelle}`);
+              }
+            }
           }
         }
       }
