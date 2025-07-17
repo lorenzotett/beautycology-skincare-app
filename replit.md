@@ -308,6 +308,9 @@ Changelog:
   - Successful integration: auto-sync uses AI extraction to populate Google Sheets with precise data
   - Production-ready: AI extraction works reliably with 25+ structured data columns
   - Eliminated data extraction errors through robust JSON cleaning and parsing system
+  - **Added targeted extraction feature**: "Estrai Ultime 5" button in admin dashboard
+  - New endpoint `/api/admin/extract-last-five` processes exactly the 5 most recent completed chats
+  - Enhanced admin interface with dedicated button for extracting latest conversations on demand
 
 ## User Preferences
 

@@ -301,6 +301,29 @@ export default function AdminDashboard() {
     }
   });
 
+  // Extract Last 5 Chats Mutation
+  const extractLastFiveMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/admin/extract-last-five");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Estrazione completata",
+        description: `${data.extracted} delle ultime ${data.totalProcessed} chat estratte con successo`
+      });
+      // Refresh sessions
+      queryClient.invalidateQueries({ queryKey: ["admin-sessions"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Errore estrazione",
+        description: "Impossibile estrarre le ultime 5 chat",
+        variant: "destructive"
+      });
+    }
+  });
+
   const { data: stats } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
@@ -693,6 +716,18 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <Button
+                onClick={() => extractLastFiveMutation.mutate()}
+                disabled={extractLastFiveMutation.isPending}
+                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white"
+              >
+                {extractLastFiveMutation.isPending ? (
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Bot className="h-4 w-4" />
+                )}
+                <span>Estrai Ultime 5</span>
+              </Button>
               <Button
                 onClick={() => triggerAIExtractionMutation.mutate()}
                 disabled={triggerAIExtractionMutation.isPending}

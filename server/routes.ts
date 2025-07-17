@@ -785,11 +785,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allSessions = await storage.getAllChatSessions();
       let synced = 0;
       
-      // Filter sessions that have email but haven't been synced
-      const sessionsToSync = allSessions.filter(session => 
+      // Filter sessions that have email but haven't been synced (limit to last 5)
+      const unsynced = allSessions.filter(session => 
         session.userEmail && 
         (!session.klaviyoSynced || !session.googleSheetsSynced)
       );
+      
+      // Sort by creation date (newest first) and take only last 5
+      const sessionsToSync = unsynced
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 5);
+      
+      console.log(`🔍 Found ${unsynced.length} unsynced sessions, processing latest ${sessionsToSync.length}:`, 
+        sessionsToSync.map(s => `#${s.id}`));
 
       for (const session of sessionsToSync) {
         try {
@@ -967,6 +975,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error triggering AI extraction:", error);
       res.status(500).json({ error: "Failed to trigger AI extraction" });
+    }
+  });
+
+  // Extract last 5 chats endpoint
+  app.post("/api/admin/extract-last-five", async (req, res) => {
+    try {
+      // Get all sessions sorted by creation date (newest first)
+      const allSessions = await storage.getAllChatSessions();
+      const lastFiveSessions = allSessions
+        .filter(session => session.userEmail) // Only sessions with email
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 5);
+
+      console.log(`🎯 Extracting last 5 chats:`, lastFiveSessions.map(s => `#${s.id} (${s.userName})`));
+
+      let extracted = 0;
+      const results = [];
+
+      for (const session of lastFiveSessions) {
+        try {
+          // Get messages for this session
+          const allMessages = await storage.getChatMessages(session.sessionId);
+          
+          if (allMessages.length < 3) {
+            console.log(`⏭️ Skipping session #${session.id} - too few messages (${allMessages.length})`);
+            continue;
+          }
+
+          // Use AI extraction for better data
+          console.log(`🤖 AI extracting data for session #${session.id} (${session.userName})`);
+          const advancedAI = new AdvancedAIExtractor();
+          const aiExtractedData = await advancedAI.extractConversationData(allMessages);
+          
+          if (aiExtractedData) {
+            const extractedData = advancedAI.convertToSheetsFormat(aiExtractedData);
+            
+            // Sync to Google Sheets if configured
+            if (process.env.GOOGLE_CREDENTIALS_JSON && process.env.GOOGLE_SPREADSHEET_ID) {
+              const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+              const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
+              
+              await sheets.initializeSheet();
+              const success = await sheets.appendConversation(
+                session.sessionId,
+                session.userName,
+                session.userEmail!,
+                allMessages,
+                extractedData
+              );
+              
+              if (success) {
+                await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
+                console.log(`✅ Extracted and synced session #${session.id} to Google Sheets`);
+                extracted++;
+                
+                results.push({
+                  sessionId: session.id,
+                  userName: session.userName,
+                  userEmail: session.userEmail,
+                  extractedData: {
+                    eta: extractedData.eta,
+                    sesso: extractedData.sesso,
+                    tipoPelle: extractedData.tipoPelle,
+                    problemi: extractedData.problemiPelle
+                  }
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to extract session #${session.id}:`, error);
+        }
+      }
+
+      res.json({
+        success: true,
+        extracted,
+        totalProcessed: lastFiveSessions.length,
+        results,
+        message: `Successfully extracted ${extracted} of ${lastFiveSessions.length} conversations`
+      });
+
+    } catch (error) {
+      console.error("Error extracting last 5 chats:", error);
+      res.status(500).json({ error: "Failed to extract last 5 chats" });
     }
   });
 
