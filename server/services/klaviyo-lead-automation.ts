@@ -39,33 +39,139 @@ export class KlaviyoLeadAutomation {
   }
 
   /**
-   * Extract name from conversation history
+   * Extract name and email using AI (same as Google Sheets but focused on leads)
    */
-  extractNameFromConversation(messages: ChatMessage[]): string {
-    // Look for the first user message which usually contains the name
-    const firstUserMessage = messages.find(msg => msg.role === 'user');
-    if (firstUserMessage && firstUserMessage.content) {
-      // If it's a simple name (no email), return it
-      if (!this.extractEmailFromMessage(firstUserMessage.content)) {
-        return firstUserMessage.content.trim();
+  async extractLeadDataWithAI(messages: ChatMessage[]): Promise<{ name: string; email: string | null }> {
+    try {
+      // Use the same AI extractor as Google Sheets
+      const extractedData = await this.aiExtractor.extractConversationData(messages);
+      
+      if (extractedData && extractedData.informazioni_base) {
+        const aiEmail = extractedData.informazioni_base.email;
+        
+        // Get name from session or first user message
+        const session = messages.find(msg => msg.sessionId);
+        const sessionData = session ? await storage.getChatSession(session.sessionId) : null;
+        const aiName = sessionData?.userName || 'Lead AI-DermaSense';
+        
+        return {
+          name: aiName,
+          email: aiEmail
+        };
       }
+    } catch (error) {
+      console.warn('AI extraction failed for lead data, falling back to regex:', error);
     }
-
-    // Fallback to sessionId-based name extraction
-    const sessionBasedName = messages.find(msg => msg.sessionId)?.sessionId;
-    if (sessionBasedName) {
-      return `User_${sessionBasedName.substring(0, 8)}`;
-    }
-
-    return 'Lead sconosciuto';
+    
+    // Fallback to regex extraction if AI fails
+    return this.extractLeadDataFallback(messages);
   }
 
   /**
-   * Process a chat message for lead extraction
+   * Fallback method for name/email extraction without AI
+   */
+  private extractLeadDataFallback(messages: ChatMessage[]): { name: string; email: string | null } {
+    // Look for the first user message which usually contains the name
+    const firstUserMessage = messages.find(msg => msg.role === 'user');
+    let name = 'Lead sconosciuto';
+    let email = null;
+
+    if (firstUserMessage && firstUserMessage.content) {
+      // Check if it contains an email
+      email = this.extractEmailFromMessage(firstUserMessage.content);
+      
+      // If it's a simple name (no email), use it as name
+      if (!email) {
+        name = firstUserMessage.content.trim();
+      }
+    }
+
+    // Search for email in all messages
+    if (!email) {
+      for (const message of messages) {
+        const foundEmail = this.extractEmailFromMessage(message.content);
+        if (foundEmail) {
+          email = foundEmail;
+          break;
+        }
+      }
+    }
+
+    // Get name from session if available
+    const session = messages.find(msg => msg.sessionId);
+    if (session) {
+      const sessionBasedName = `User_${session.sessionId.substring(0, 8)}`;
+      if (name === 'Lead sconosciuto') {
+        name = sessionBasedName;
+      }
+    }
+
+    return { name, email };
+  }
+
+  /**
+   * Process a conversation for lead extraction using AI
+   */
+  async processConversationForLeads(sessionId: string): Promise<boolean> {
+    if (!this.klaviyo) {
+      console.log('⚠️ Klaviyo not configured, skipping lead processing');
+      return false;
+    }
+
+    try {
+      // Get all messages for the conversation
+      const messages = await storage.getChatMessages(sessionId);
+      if (!messages || messages.length === 0) {
+        return false;
+      }
+
+      // Use AI to extract lead data (name and email)
+      const leadData = await this.extractLeadDataWithAI(messages);
+      
+      if (leadData.email) {
+        console.log(`📧 LEAD DETECTED: ${leadData.name} (${leadData.email})`);
+        
+        // Get additional session data for context
+        const session = await storage.getChatSession(sessionId);
+        const sessionData = {
+          sessionId: sessionId,
+          source: 'AI-DermaSense Chat',
+          captureDate: new Date().toISOString(),
+          conversationDate: session?.createdAt || new Date(),
+          finalButtonClicked: session?.finalButtonClicked || false,
+          extractionMethod: 'AI-Enhanced'
+        };
+
+        // Add to Klaviyo list
+        const success = await this.klaviyo.addProfileToList(leadData.email, leadData.name, sessionData);
+        
+        if (success) {
+          // Update session to mark as Klaviyo synced
+          await storage.updateChatSession(sessionId, { 
+            klaviyoSynced: true,
+            userEmail: leadData.email 
+          });
+          
+          console.log(`✅ LEAD CAPTURED: ${leadData.name} (${leadData.email}) added to Klaviyo list`);
+          return true;
+        } else {
+          console.error(`❌ Failed to add ${leadData.email} to Klaviyo list`);
+          return false;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      console.error('❌ Error processing conversation for Klaviyo:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Process a single chat message for immediate lead extraction (quick method)
    */
   async processMessageForLeads(sessionId: string, message: string, userName: string): Promise<boolean> {
     if (!this.klaviyo) {
-      console.log('⚠️ Klaviyo not configured, skipping lead processing');
       return false;
     }
 
@@ -75,21 +181,19 @@ export class KlaviyoLeadAutomation {
       console.log(`📧 EMAIL DETECTED: ${extractedEmail} for user: ${userName}`);
       
       try {
-        // Get additional session data for context
         const session = await storage.getChatSession(sessionId);
         const sessionData = {
           sessionId: sessionId,
           source: 'AI-DermaSense Chat',
           captureDate: new Date().toISOString(),
           conversationDate: session?.createdAt || new Date(),
-          finalButtonClicked: session?.finalButtonClicked || false
+          finalButtonClicked: session?.finalButtonClicked || false,
+          extractionMethod: 'Real-time'
         };
 
-        // Add to Klaviyo list
         const success = await this.klaviyo.addProfileToList(extractedEmail, userName, sessionData);
         
         if (success) {
-          // Update session to mark as Klaviyo synced
           await storage.updateChatSession(sessionId, { 
             klaviyoSynced: true,
             userEmail: extractedEmail 

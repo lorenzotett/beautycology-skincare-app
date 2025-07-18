@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { GeminiService } from "./services/gemini";
 import { SkinAnalysisService } from "./services/skin-analysis";
 import { KlaviyoService } from "./services/klaviyo";
+import { KlaviyoLeadAutomation } from "./services/klaviyo-lead-automation";
 import { GoogleSheetsService } from "./services/google-sheets";
 import { ChatDataExtractor } from "./services/chat-data-extractor";
 import { AdvancedAIExtractor } from "./services/advanced-ai-extractor";
@@ -22,6 +23,8 @@ const MAX_SESSIONS_IN_MEMORY = 1000;
 const geminiServices = new Map<string, GeminiService>();
 // Load integration configuration
 const integrationConfig = loadIntegrationConfig();
+// Initialize Klaviyo Lead Automation
+const klaviyoLeadAutomation = new KlaviyoLeadAutomation();
 
 // Auto-cleanup sessions
 setInterval(() => {
@@ -445,18 +448,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userEmail: userEmail
         });
 
-        // Sync with Klaviyo (non-blocking)
-        if (process.env.KLAVIYO_API_KEY && process.env.KLAVIYO_LIST_ID) {
-          const klaviyo = new KlaviyoService(process.env.KLAVIYO_API_KEY, process.env.KLAVIYO_LIST_ID);
-          klaviyo.addProfileToList(userEmail, session.userName, {
-            sessionId: sessionId,
-            createdAt: session.createdAt
-          }).then(success => {
-            if (success) {
-              storage.updateChatSession(sessionId, { klaviyoSynced: true });
-            }
-          }).catch(err => console.error('Klaviyo sync error:', err));
-        }
+        // Enhanced Klaviyo lead automation with AI extraction (non-blocking)
+        console.log('🤖 Starting enhanced Klaviyo lead automation...');
+        klaviyoLeadAutomation.processConversationForLeads(sessionId).then(success => {
+          if (success) {
+            console.log('✅ Enhanced Klaviyo lead automation completed successfully');
+          } else {
+            console.log('⚠️ Enhanced Klaviyo lead automation completed without capturing lead');
+          }
+        }).catch(err => console.error('Enhanced Klaviyo automation error:', err));
 
         // REAL-TIME SYNC: Trigger immediate synchronization with AI extraction when email is detected
         console.log(`📧 EMAIL DETECTED: ${userEmail} - Triggering immediate sync to Google Sheets`);
@@ -818,17 +818,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       for (const session of sessionsToSync) {
         try {
-          // Sync with Klaviyo if not already synced and credentials are available
+          // Enhanced Klaviyo sync with AI extraction if not already synced
           if (!session.klaviyoSynced && integrationConfig.klaviyo.enabled) {
-            const klaviyo = new KlaviyoService(integrationConfig.klaviyo.apiKey!, integrationConfig.klaviyo.listId!);
-            const success = await klaviyo.addProfileToList(session.userEmail!, session.userName, {
-              sessionId: session.sessionId,
-              createdAt: session.createdAt
-            });
-            
+            const success = await klaviyoLeadAutomation.processConversationForLeads(session.sessionId);
             if (success) {
-              await storage.updateChatSession(session.sessionId, { klaviyoSynced: true });
-              console.log(`✅ Synced ${session.userName} (${session.userEmail}) to Klaviyo`);
+              console.log(`✅ Enhanced Klaviyo sync completed for ${session.userName} (${session.userEmail})`);
+            } else {
+              console.log(`⚠️ Enhanced Klaviyo sync failed for ${session.userName} (${session.userEmail})`);
             }
           }
 
@@ -891,6 +887,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error in auto-sync integrations:", error);
       res.status(500).json({ error: "Failed to sync integrations" });
+    }
+  });
+
+  // Test Klaviyo lead automation endpoint
+  app.post("/api/admin/test-klaviyo-automation", async (req, res) => {
+    try {
+      const result = await klaviyoLeadAutomation.testKlaviyoIntegration();
+      res.json(result);
+    } catch (error) {
+      console.error("Error testing Klaviyo automation:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Test failed: ${error.message}` 
+      });
+    }
+  });
+
+  // Get Klaviyo automation status
+  app.get("/api/admin/klaviyo-status", async (req, res) => {
+    try {
+      const status = klaviyoLeadAutomation.getStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("Error getting Klaviyo status:", error);
+      res.status(500).json({ error: "Failed to get Klaviyo status" });
+    }
+  });
+
+  // Batch process unsynced leads
+  app.post("/api/admin/batch-klaviyo-sync", async (req, res) => {
+    try {
+      const result = await klaviyoLeadAutomation.batchProcessUnsyncedLeads();
+      res.json({
+        success: true,
+        processed: result.processed,
+        successful: result.successful,
+        message: `Processed ${result.processed} sessions, ${result.successful} successful`
+      });
+    } catch (error) {
+      console.error("Error in batch Klaviyo sync:", error);
+      res.status(500).json({ error: "Failed to batch sync leads" });
     }
   });
 
