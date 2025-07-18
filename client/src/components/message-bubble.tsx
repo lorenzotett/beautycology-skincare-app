@@ -112,7 +112,7 @@ const parseContentWithLinkButtons = (content: string) => {
   // Also look for the fallback pattern [Accedi ai Prodotti Bonnie]
   if (linkButtons.length === 0 && content.includes('[Accedi ai Prodotti Bonnie]')) {
     linkButtons.push({
-      url: 'https://tinyurl.com/formulabonnie',
+      url: 'https://tinyurl.com/bonnie-beauty',
       text: 'Accedi alla tua skincare personalizzata'
     });
     // Replace the entire sentence with the new format
