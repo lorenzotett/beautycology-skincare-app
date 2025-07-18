@@ -4,7 +4,7 @@
 
 **URL PRINCIPALE PER IL TEAM:**
 ```
-https://bonnie-beauty.replit.app/?admin=true
+https://aidermasense.com/?admin=true
 ```
 
 ## 🚀 COME FUNZIONA
@@ -20,7 +20,7 @@ https://bonnie-beauty.replit.app/?admin=true
 
 **"Accedi alla dashboard admin a questo link:"**
 ```
-https://bonnie-beauty.replit.app/?admin=true
+https://aidermasense.com/?admin=true
 ```
 
 **Credenziali di accesso:**

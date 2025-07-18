@@ -73,6 +73,13 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 ## Recent Changes
 
+### July 18, 2025 - Domain Migration to aidermasense.com
+- **Updated all domain references**: Migrated from `bonnie-beauty.replit.app` to `aidermasense.com`
+- **Updated embed configuration**: Modified `ai-dermasense-embed.html` to use new domain
+- **Updated admin access files**: Changed URLs in `admin-api-direct.html`, `admin-access.html`, and `admin-dashboard-standalone.html`
+- **Updated documentation**: Modified all markdown files to reference the new domain
+- **Preserved functionality**: All features and admin access points maintained with new domain
+
 ### July 17, 2025 - Integration System Optimization
 - **Fixed synchronization issues**: Resolved inconsistent environment variable naming between services
 - **Removed problematic service**: Eliminated broken `realtime-extractor` service that was causing conflicts

@@ -7,7 +7,7 @@ Gli endpoint personalizzati (`/dashboard`, `/admin-direct`) non funzionano in Re
 
 ### **OPZIONE 1: URL Diretto (IMMEDIATO)**
 ```
-https://bonnie-beauty.replit.app/?admin=true
+https://aidermasense.com/?admin=true
 ```
 - ✅ **Funziona subito** - no configurazioni
 - ✅ **Accesso diretto** alla dashboard
@@ -16,7 +16,7 @@ https://bonnie-beauty.replit.app/?admin=true
 
 ### **OPZIONE 2: Pagina Standalone Full (PROFESSIONALE)**
 ```
-https://bonnie-beauty.replit.app/admin-standalone-final.html
+https://aidermasense.com/admin-standalone-final.html
 ```
 - ✅ **Dashboard completa in iframe**
 - ✅ **Header professionale** con branding
@@ -25,7 +25,7 @@ https://bonnie-beauty.replit.app/admin-standalone-final.html
 
 ### **OPZIONE 3: Pagina di Accesso (USER-FRIENDLY)**
 ```
-https://bonnie-beauty.replit.app/admin-simple.html
+https://aidermasense.com/admin-simple.html
 ```
 - ✅ **Interfaccia elegante** con pulsante
 - ✅ **Tutti gli URL** di backup elencati
@@ -35,19 +35,19 @@ https://bonnie-beauty.replit.app/admin-simple.html
 ## 🎯 RACCOMANDAZIONE
 
 ### Per Uso Quotidiano:
-**Usa OPZIONE 1**: `https://bonnie-beauty.replit.app/?admin=true`
+**Usa OPZIONE 1**: `https://aidermasense.com/?admin=true`
 - Più veloce
 - Nessun iframe
 - Accesso diretto
 
 ### Per Condivisione Team:
-**Usa OPZIONE 3**: `https://bonnie-beauty.replit.app/admin-simple.html`
+**Usa OPZIONE 3**: `https://aidermasense.com/admin-simple.html`
 - Più professionale
 - Lista completa URL
 - Istruzioni incluse
 
 ### Per Presentazioni/Demo:
-**Usa OPZIONE 2**: `https://bonnie-beauty.replit.app/admin-standalone-final.html`
+**Usa OPZIONE 2**: `https://aidermasense.com/admin-standalone-final.html`
 - Header con branding
 - Esperienza full-screen
 - Look professionale
@@ -59,13 +59,13 @@ Per smartphone/tablet, tutti e 3 gli URL funzionano perfettamente.
 **QR Code per accesso rapido:**
 ```
 Scansiona questo QR code per accedere alla dashboard:
-[Genera QR code per: https://bonnie-beauty.replit.app/?admin=true]
+[Genera QR code per: https://aidermasense.com/?admin=true]
 ```
 
 ## 🔧 SETUP TEAM
 
-1. **Condividi URL principale**: `https://bonnie-beauty.replit.app/?admin=true`
-2. **Backup per emergenze**: `https://bonnie-beauty.replit.app/admin-simple.html`
+1. **Condividi URL principale**: `https://aidermasense.com/?admin=true`
+2. **Backup per emergenze**: `https://aidermasense.com/admin-simple.html`
 3. **Salva nei bookmark** browser per accesso rapido
 4. **Test accesso** da diversi dispositivi
 

@@ -10,7 +10,7 @@ Gli endpoint personalizzati non funzionano in Replit perché:
 
 ### **URL CHE FUNZIONA SICURAMENTE:**
 ```
-https://bonnie-beauty.replit.app/admin-dashboard-standalone.html
+https://aidermasense.com/admin-dashboard-standalone.html
 ```
 
 Questo URL:
@@ -31,18 +31,18 @@ Questo URL:
 
 **Condividi questo URL con il team:**
 ```
-https://bonnie-beauty.replit.app/admin-dashboard-standalone.html
+https://aidermasense.com/admin-dashboard-standalone.html
 ```
 
 **Backup URL (se il primo non funziona):**
 ```
-https://bonnie-beauty.replit.app/admin-standalone-final.html
-https://bonnie-beauty.replit.app/admin-simple.html
+https://aidermasense.com/admin-standalone-final.html
+https://aidermasense.com/admin-simple.html
 ```
 
 ## 🎯 RACCOMANDAZIONE FINALE
 
-**USA QUESTO URL**: `https://bonnie-beauty.replit.app/admin-dashboard-standalone.html`
+**USA QUESTO URL**: `https://aidermasense.com/admin-dashboard-standalone.html`
 
 Motivi:
 - ✅ **File già esistente** nel progetto
