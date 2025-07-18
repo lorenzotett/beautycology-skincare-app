@@ -352,8 +352,8 @@
     <script>
         // Configurazione
         const CONFIG = {
-            // Sostituire con il vostro URL Replit deployato
-            iframeUrl: 'https://your-repl-name.your-username.replit.app?embed=true&theme=light',
+            // URL con dominio personalizzato
+            iframeUrl: 'https://aidermasense.com?embed=true&theme=light',
             
             // Analytics (opzionale)
             analytics: {
@@ -433,8 +433,8 @@
 
         // Comunicazione con iframe
         window.addEventListener('message', function(event) {
-            // Sostituire con il vostro dominio Replit
-            if (event.origin.includes('replit.app')) {
+            // Controllo origine con dominio personalizzato
+            if (event.origin.includes('aidermasense.com') || event.origin.includes('replit.app')) {
                 if (event.data.type === 'ai_dermasense_close') {
                     closeModal();
                 }
