@@ -885,7 +885,7 @@ A te la scelta!`;
 
   private isConversationComplete(response: string): boolean {
     // Check if conversation has reached completion
-    return response.toLowerCase().includes("bonnie-beauty") || 
+    return response.toLowerCase().includes("formulabonnie") || 
            response.toLowerCase().includes("routine personalizzata");
   }
 
