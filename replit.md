@@ -311,6 +311,10 @@ Changelog:
   - Updated link from https://tinyurl.com/formulabonnie to https://tinyurl.com/bonnie-beauty
   - Updated backend tracking to recognize both "skincare" and "crema" terminology
   - Maintained full mobile compatibility with multiple fallback methods
+- July 18, 2025. Reverted final button link:
+  - Changed final cream access button link back to https://tinyurl.com/formulabonnie
+  - Updated in both gemini.ts system prompt and message-bubble.tsx fallback handler
+  - Maintains consistent user experience across all conversation flows
 - July 16, 2025. Simplified typing indicator message:
   - Changed typing indicator text from "AI-DermaSense sta scrivendo" to "Sta scrivendo"
   - Updated all occurrences in chat-interface.tsx and typing-indicator.tsx
