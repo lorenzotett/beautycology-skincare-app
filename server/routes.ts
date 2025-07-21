@@ -688,6 +688,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
               new Date(session.createdAt) >= fromDate
             );
             break;
+          case 'Ieri':
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            yesterday.setHours(0, 0, 0, 0);
+            const yesterdayEnd = new Date();
+            yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+            yesterdayEnd.setHours(23, 59, 59, 999);
+            filteredSessions = allSessions.filter(session => {
+              const sessionDate = new Date(session.createdAt);
+              return sessionDate >= yesterday && sessionDate <= yesterdayEnd;
+            });
+            break;
           case 'Ultima settimana':
             fromDate = new Date();
             fromDate.setDate(now.getDate() - 7);
@@ -776,6 +788,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             filteredSessions = sessions.filter(session => 
               new Date(session.createdAt) >= fromDate
             );
+            break;
+          case 'Ieri':
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            yesterday.setHours(0, 0, 0, 0);
+            const yesterdayEnd = new Date();
+            yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+            yesterdayEnd.setHours(23, 59, 59, 999);
+            filteredSessions = sessions.filter(session => {
+              const sessionDate = new Date(session.createdAt);
+              return sessionDate >= yesterday && sessionDate <= yesterdayEnd;
+            });
             break;
           case 'Ultima settimana':
             fromDate = new Date();

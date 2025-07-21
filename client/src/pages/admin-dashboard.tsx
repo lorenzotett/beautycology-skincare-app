@@ -37,7 +37,7 @@ interface SessionWithMessages extends ChatSession {
   skinAnalysisCount: number;
 }
 
-type PeriodType = "Tutto il tempo" | "Oggi" | "Ultima settimana" | "Ultimo mese" | "Personalizzato";
+type PeriodType = "Tutto il tempo" | "Oggi" | "Ieri" | "Ultima settimana" | "Ultimo mese" | "Personalizzato";
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -866,6 +866,7 @@ export default function AdminDashboard() {
                   >
                     <option value="Tutto il tempo">Tutto il tempo</option>
                     <option value="Oggi">Oggi</option>
+                    <option value="Ieri">Ieri</option>
                     <option value="Ultima settimana">Ultima settimana</option>
                     <option value="Ultimo mese">Ultimo mese</option>
                     <option value="Personalizzato">Personalizzato</option>
