@@ -667,6 +667,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // WhatsApp button click tracking
+  app.post("/api/chat/:sessionId/whatsapp-button-clicked", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      console.log(`WhatsApp button clicked for session ${sessionId}`);
+
+      await storage.updateChatSession(sessionId, {
+        whatsappButtonClicked: true,
+        whatsappButtonClickedAt: new Date()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking WhatsApp button click:", error);
+      res.status(500).json({ error: "Failed to track WhatsApp button click" });
+    }
+  });
+
   // Admin routes
   app.get("/api/admin/stats", async (req, res) => {
     try {
@@ -739,6 +763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const viewChatCount = realSessions.filter(session => session.firstViewedAt).length;
       const startChatCount = realSessions.filter(session => session.chatStartedAt).length;
       const finalButtonClicks = realSessions.filter(session => session.finalButtonClicked).length;
+      const whatsappButtonClicks = realSessions.filter(session => session.whatsappButtonClicked).length;
 
       // Calculate conversion rates
       const viewToStartRate = viewChatCount > 0 ? ((startChatCount / viewChatCount) * 100).toFixed(1) : '0';
@@ -750,6 +775,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         viewChatCount,
         startChatCount,
         finalButtonClicks,
+        whatsappButtonClicks,
         conversionRates: {
           viewToStart: viewToStartRate,
           startToFinal: startToFinalRate,

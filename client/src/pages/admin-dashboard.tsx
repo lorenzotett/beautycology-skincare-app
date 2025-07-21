@@ -18,6 +18,7 @@ interface AdminStats {
   viewChatCount: number;
   startChatCount: number;
   finalButtonClicks: number;
+  whatsappButtonClicks: number;
   conversionRates: {
     viewToStart: string;
     startToFinal: string;
@@ -676,86 +677,103 @@ export default function AdminDashboard() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <Card className="bg-white p-6 border border-gray-200">
+        <div className="p-4">
+        {/* Statistics Cards - Optimized Layout */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+          <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-600 mb-1 font-medium">Visualizzazioni</p>
-                <p className="text-3xl font-bold text-blue-700">{stats?.viewChatCount || 0}</p>
-                <p className="text-xs text-blue-500">Utenti che hanno visto la chat</p>
+                <p className="text-xs text-blue-600 mb-1 font-medium">View Chat</p>
+                <p className="text-xl font-bold text-blue-700">{stats?.viewChatCount || 0}</p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Eye className="h-6 w-6 text-blue-600" />
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Eye className="h-4 w-4 text-blue-600" />
               </div>
             </div>
           </Card>
 
-          <Card className="bg-white p-6 border border-gray-200">
+          <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-600 mb-1 font-medium">Chat Avviate</p>
-                <p className="text-3xl font-bold text-green-700">{stats?.startChatCount || 0}</p>
-                <p className="text-xs text-green-500">Utenti che hanno inviato il nome</p>
+                <p className="text-xs text-green-600 mb-1 font-medium">Inizio Chat</p>
+                <p className="text-xl font-bold text-green-700">{stats?.startChatCount || 0}</p>
               </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Play className="h-6 w-6 text-green-600" />
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Play className="h-4 w-4 text-green-600" />
               </div>
             </div>
           </Card>
 
-          <Card className="bg-white p-6 border border-gray-200">
+          <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Accesso Skincare</p>
-                <p className="text-3xl font-bold text-gray-900">{stats?.finalButtonClicks || 0}</p>
-                <p className="text-xs text-gray-500">Click pulsante finale</p>
+                <p className="text-xs text-pink-600 mb-1 font-medium">Accesso Skincare</p>
+                <p className="text-xl font-bold text-pink-700">{stats?.finalButtonClicks || 0}</p>
               </div>
-              <div className="p-3 bg-pink-100 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-pink-600" />
+              <div className="p-2 bg-pink-100 rounded-lg">
+                <BarChart3 className="h-4 w-4 text-pink-600" />
               </div>
             </div>
           </Card>
 
-          <Card className="bg-white p-6 border border-gray-200">
+          <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Totale Sessioni</p>
-                <p className="text-3xl font-bold text-gray-900">{stats?.totalSessions || 0}</p>
-                <p className="text-xs text-gray-500">Conversazioni create</p>
+                <p className="text-xs text-emerald-600 mb-1 font-medium">Click WhatsApp</p>
+                <p className="text-xl font-bold text-emerald-700">{stats?.whatsappButtonClicks || 0}</p>
               </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Users className="h-6 w-6 text-purple-600" />
+              <div className="p-2 bg-emerald-100 rounded-lg">
+                <MessageSquare className="h-4 w-4 text-emerald-600" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-white p-3 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-purple-600 mb-1 font-medium">Conversazioni</p>
+                <p className="text-xl font-bold text-purple-700">{stats?.totalSessions || 0}</p>
+              </div>
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Users className="h-4 w-4 text-purple-600" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-white p-3 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-orange-600 mb-1 font-medium">Click Pulsanti</p>
+                <p className="text-xl font-bold text-orange-700">{((stats?.finalButtonClicks || 0) + (stats?.whatsappButtonClicks || 0))}</p>
+              </div>
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Brain className="h-4 w-4 text-orange-600" />
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Conversion Rates */}
+        {/* Conversion Rates - Compact */}
         {stats?.conversionRates && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border border-blue-200">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 p-2 border border-blue-200">
               <div className="text-center">
-                <p className="text-sm text-blue-600 mb-1">View → Start</p>
-                <p className="text-2xl font-bold text-blue-700">{stats.conversionRates.viewToStart}%</p>
-                <p className="text-xs text-blue-500">Da visualizzazione a inizio chat</p>
+                <p className="text-xs text-blue-600 mb-1">View → Start</p>
+                <p className="text-lg font-bold text-blue-700">{stats.conversionRates.viewToStart}%</p>
               </div>
             </Card>
             
-            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 border border-green-200">
+            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 p-2 border border-green-200">
               <div className="text-center">
-                <p className="text-sm text-green-600 mb-1">Start → Final</p>
-                <p className="text-2xl font-bold text-green-700">{stats.conversionRates.startToFinal}%</p>
-                <p className="text-xs text-green-500">Da inizio chat ad accesso skincare</p>
+                <p className="text-xs text-green-600 mb-1">Start → Final</p>
+                <p className="text-lg font-bold text-green-700">{stats.conversionRates.startToFinal}%</p>
               </div>
             </Card>
             
-            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 border border-purple-200">
+            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 p-2 border border-purple-200">
               <div className="text-center">
-                <p className="text-sm text-purple-600 mb-1">View → Final</p>
-                <p className="text-2xl font-bold text-purple-700">{stats.conversionRates.viewToFinal}%</p>
-                <p className="text-xs text-purple-500">Da visualizzazione a skincare</p>
+                <p className="text-xs text-purple-600 mb-1">View → Final</p>
+                <p className="text-lg font-bold text-purple-700">{stats.conversionRates.viewToFinal}%</p>
               </div>
             </Card>
           </div>

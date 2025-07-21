@@ -202,6 +202,30 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       // alert('Tracking error - please contact support if this persists');
     }
   };
+
+  // Function to track WhatsApp button click
+  const trackWhatsAppButtonClick = async (sessionId: string) => {
+    try {
+      console.log('Tracking WhatsApp button click for session:', sessionId);
+      
+      const response = await fetch(`/api/chat/${sessionId}/whatsapp-button-clicked`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('WhatsApp button click tracked successfully:', result);
+    } catch (error) {
+      console.error('Error tracking WhatsApp button click:', error);
+    }
+  };
+
   const isUser = message.role === "user";
   const timestamp = new Date(message.createdAt!).toLocaleTimeString('it-IT', {
     hour: '2-digit',
@@ -331,15 +355,25 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                 className="absolute inset-0 z-10 opacity-0"
                 tabIndex={-1}
                 onClick={async (e) => {
-                  // Only track if it's a skincare button
+                  // Track button clicks based on type
                   const isSkincareButton = linkButton.text.toLowerCase().includes('skincare') || 
                                          linkButton.text.toLowerCase().includes('accedi alla tua');
+                  const isWhatsAppButton = linkButton.text.toLowerCase().includes('whatsapp') ||
+                                          linkButton.url.includes('whatsapp');
+                  
                   if (isSkincareButton) {
                     console.log('Fallback skincare link clicked for session:', message.sessionId);
                     try {
                       await trackFinalButtonClick(message.sessionId);
                     } catch (error) {
                       console.warn('Failed to track button click via fallback:', error);
+                    }
+                  } else if (isWhatsAppButton) {
+                    console.log('Fallback WhatsApp link clicked for session:', message.sessionId);
+                    try {
+                      await trackWhatsAppButtonClick(message.sessionId);
+                    } catch (error) {
+                      console.warn('Failed to track WhatsApp button click via fallback:', error);
                     }
                   }
                 }}
@@ -353,17 +387,25 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   e.preventDefault();
                   e.stopPropagation();
                   
-                  // Only track if it's a skincare button
+                  // Track button clicks based on type
                   const isSkincareButton = linkButton.text.toLowerCase().includes('skincare') || 
                                          linkButton.text.toLowerCase().includes('accedi alla tua');
+                  const isWhatsAppButton = linkButton.text.toLowerCase().includes('whatsapp') ||
+                                          linkButton.url.includes('whatsapp');
                   
                   if (isSkincareButton) {
                     console.log('Final skincare button clicked for session:', message.sessionId);
                     try {
-                      // Track the final button click
                       await trackFinalButtonClick(message.sessionId);
                     } catch (error) {
                       console.warn('Failed to track final button click:', error);
+                    }
+                  } else if (isWhatsAppButton) {
+                    console.log('WhatsApp button clicked for session:', message.sessionId);
+                    try {
+                      await trackWhatsAppButtonClick(message.sessionId);
+                    } catch (error) {
+                      console.warn('Failed to track WhatsApp button click:', error);
                     }
                   } else {
                     console.log('Non-tracking button clicked:', linkButton.text);
@@ -461,14 +503,14 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
         </div>
       )}
       {/* Image display */}
-      {message.metadata?.hasImage && (
+      {(metadata as any)?.hasImage && (
       <div className="mt-2">
-        {(message.metadata?.image || message.metadata?.imageBase64) ? (
+        {((metadata as any)?.image || (metadata as any)?.imageBase64) ? (
           <img 
-            src={message.metadata?.imageBase64 || message.metadata?.image} 
+            src={(metadata as any)?.imageBase64 || (metadata as any)?.image} 
             alt="Immagine caricata" 
             className="max-w-48 rounded-lg border border-dark-accent cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => window.open(message.metadata?.imageBase64 || message.metadata?.image, '_blank')}
+            onClick={() => window.open((metadata as any)?.imageBase64 || (metadata as any)?.image, '_blank')}
             onError={(e) => {
               // Se l'immagine non carica, mostra un placeholder
               const target = e.currentTarget;
@@ -482,14 +524,14 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
         {/* Placeholder per file che non possono essere visualizzati */}
         <div 
           className="max-w-48 h-32 bg-dark-accent rounded-lg border border-dark-accent flex flex-col items-center justify-center cursor-pointer hover:bg-gray-600 transition-colors"
-          style={{ display: (message.metadata?.image || message.metadata?.imageBase64) ? 'none' : 'flex' }}
+          style={{ display: ((metadata as any)?.image || (metadata as any)?.imageBase64) ? 'none' : 'flex' }}
         >
           <Upload size={24} className="text-text-muted mb-2" />
           <span className="text-xs text-text-muted text-center px-2">
-            {message.metadata?.imageName || message.metadata?.imageOriginalName || "File caricato"}
+            {(metadata as any)?.imageName || (metadata as any)?.imageOriginalName || "File caricato"}
           </span>
           <span className="text-xs text-text-muted/60 mt-1">
-            {message.metadata?.isPlaceholder ? "(Immagine ripristinata)" : "(Anteprima non disponibile)"}
+            {(metadata as any)?.isPlaceholder ? "(Immagine ripristinata)" : "(Anteprima non disponibile)"}
           </span>
         </div>
       </div>
