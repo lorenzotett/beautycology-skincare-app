@@ -370,6 +370,16 @@ Changelog:
   - **Error handling**: Comprehensive error handling with fallback mechanisms and detailed logging
   - **Integration verification**: Successfully tested with real data showing instant profile creation and list addition
   - **Non-blocking operation**: Klaviyo sync runs in parallel with Google Sheets sync without affecting chat performance
+- July 21, 2025. COMPREHENSIVE TRACKING SYSTEM AND DOMAIN MIGRATION:
+  - **Domain migration completed**: Successfully migrated from bonnie-beauty.replit.app to aidermasense.com across all files and configurations
+  - **Advanced tracking implementation**: Added comprehensive tracking system with firstViewedAt, chatStartedAt, and finalButtonClickedAt fields
+  - **New metrics dashboard**: Enhanced admin dashboard with View Chat, Start Chat, and Conversion Rate analytics
+  - **Automated tracking**: System automatically tracks user interactions when sessions are created and chat is started
+  - **Conversion rate analytics**: Added visual conversion rate cards showing View→Start, Start→Final, and View→Final percentages
+  - **Time filtering enhancement**: All dashboard statistics now correctly filter by selected time periods
+  - **Custom date range fix**: Resolved bug with custom date picker showing invalid "gg" values, now using native HTML inputs
+  - **Database schema update**: Added new tracking columns to chat_sessions table with proper indexing
+  - **Performance optimization**: Maintained efficient query performance while adding comprehensive analytics
 
 ## User Preferences
 

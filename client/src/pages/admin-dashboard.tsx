@@ -84,9 +84,15 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
-  // Reset to first page when filters change
+  // Reset to first page when filters change and clear invalid date values
   useEffect(() => {
     setCurrentPage(1);
+    
+    // Force clear date fields when period changes to ensure no invalid values
+    if (selectedPeriod !== "Personalizzato") {
+      setCustomDateFrom("");
+      setCustomDateTo("");
+    }
   }, [searchTerm, selectedPeriod, customDateFrom, customDateTo]);
 
   // Lock body scroll when modal is open and handle ESC key
@@ -882,22 +888,20 @@ export default function AdminDashboard() {
               <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <label className="text-sm text-gray-700">Da:</label>
-                  <Input
+                  <input
                     type="date"
-                    value={customDateFrom || ""}
+                    value={customDateFrom}
                     onChange={(e) => setCustomDateFrom(e.target.value)}
-                    className="border-gray-300 min-w-[140px]"
-                    placeholder="yyyy-mm-dd"
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px]"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
                   <label className="text-sm text-gray-700">A:</label>
-                  <Input
+                  <input
                     type="date"
-                    value={customDateTo || ""}
+                    value={customDateTo}
                     onChange={(e) => setCustomDateTo(e.target.value)}
-                    className="border-gray-300 min-w-[140px]"
-                    placeholder="yyyy-mm-dd"
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px]"
                   />
                 </div>
                 <div className="text-sm text-gray-600">
