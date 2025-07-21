@@ -464,6 +464,33 @@
             console.log('AI-DermaSense Event:', eventName, parameters);
         }
 
+        // Track embed view when page loads
+        function trackEmbedView() {
+            try {
+                // Create a simple tracking request to our main site
+                const trackingData = {
+                    sessionId: 'embed_view_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15),
+                    fingerprint: 'embed_' + window.location.hostname,
+                    source: 'shopify_embed'
+                };
+                
+                // Send tracking request to our main site
+                fetch('https://aidermasense.com/api/tracking/view', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(trackingData)
+                }).catch(error => {
+                    console.log('Embed view tracking failed:', error);
+                });
+                
+                console.log('Embed view tracked');
+            } catch (error) {
+                console.log('Embed tracking error:', error);
+            }
+        }
+
         // Responsive handling
         function handleResize() {
             if (window.innerWidth < 768) {
@@ -475,6 +502,12 @@
 
         window.addEventListener('resize', handleResize);
         handleResize(); // Chiamata iniziale
+        
+        // Track embed view when page loads
+        window.addEventListener('load', trackEmbedView);
+        
+        // Fallback: track after 2 seconds if load event doesn't fire
+        setTimeout(trackEmbedView, 2000);
 
         // Preload iframe per performance (opzionale)
         function preloadIframe() {
