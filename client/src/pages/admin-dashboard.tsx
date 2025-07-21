@@ -846,6 +846,11 @@ export default function AdminDashboard() {
                       const value = e.target.value as PeriodType;
                       setSelectedPeriod(value);
                       setShowCustomPeriod(value === "Personalizzato");
+                      // Reset custom dates when switching away from custom period
+                      if (value !== "Personalizzato") {
+                        setCustomDateFrom("");
+                        setCustomDateTo("");
+                      }
                     }}
                     className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 appearance-none pr-8"
                   >
@@ -879,18 +884,20 @@ export default function AdminDashboard() {
                   <label className="text-sm text-gray-700">Da:</label>
                   <Input
                     type="date"
-                    value={customDateFrom}
+                    value={customDateFrom || ""}
                     onChange={(e) => setCustomDateFrom(e.target.value)}
-                    className="border-gray-300"
+                    className="border-gray-300 min-w-[140px]"
+                    placeholder="yyyy-mm-dd"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
                   <label className="text-sm text-gray-700">A:</label>
                   <Input
                     type="date"
-                    value={customDateTo}
+                    value={customDateTo || ""}
                     onChange={(e) => setCustomDateTo(e.target.value)}
-                    className="border-gray-300"
+                    className="border-gray-300 min-w-[140px]"
+                    placeholder="yyyy-mm-dd"
                   />
                 </div>
                 <div className="text-sm text-gray-600">
