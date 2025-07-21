@@ -3,6 +3,7 @@ import { config } from "dotenv";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
+import { promises as fs } from "fs";
 
 // Load environment variables from .env file
 config();
@@ -692,6 +693,20 @@ app.use((req, res, next) => {
 </body>
 </html>`);
   });
+
+  // Add fallback routes for SPA routing in development
+  if (app.get("env") === "development") {
+    // Handle admin dashboard route specifically
+    app.get('/admin-dashboard', async (req, res, next) => {
+      try {
+        const clientTemplate = path.resolve(import.meta.dirname, "../client/index.html");
+        let template = await fs.readFile(clientTemplate, "utf-8");
+        res.status(200).set({ "Content-Type": "text/html" }).end(template);
+      } catch (e) {
+        next(e);
+      }
+    });
+  }
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
