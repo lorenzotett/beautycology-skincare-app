@@ -683,7 +683,7 @@ export default function AdminDashboard() {
           <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-blue-600 mb-1 font-medium">View Chat</p>
+                <p className="text-xs text-blue-600 mb-1 font-medium">View Item</p>
                 <p className="text-xl font-bold text-blue-700">{stats?.viewChatCount || 0}</p>
               </div>
               <div className="p-2 bg-blue-100 rounded-lg">

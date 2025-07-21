@@ -77,9 +77,23 @@ export function ChatInterface() {
 
   // Track chat view - will be called when user sees welcome screen
   const trackViewChat = async () => {
-    // We don't create sessions for views anymore
-    // Views are tracked when the session is actually created
-    console.log("Chat view tracked - welcome screen displayed");
+    try {
+      // Generate a unique session ID for tracking the view
+      const viewSessionId = 'view_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+      
+      // Create a browser fingerprint for better tracking
+      const fingerprint = navigator.userAgent + screen.width + screen.height + navigator.language;
+      const fingerprintHash = fingerprint.replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
+      
+      await apiRequest("POST", "/api/tracking/view", {
+        sessionId: viewSessionId,
+        fingerprint: fingerprintHash
+      });
+      
+      console.log("Chat view tracked - welcome screen displayed");
+    } catch (error) {
+      console.error("Failed to track chat view:", error);
+    }
   };
 
   // Track chat start (when user submits name and actually starts chat)
@@ -287,6 +301,9 @@ export function ChatInterface() {
     onSuccess: (data) => {
       setSessionId(data.sessionId);
       setIsTyping(false);
+      
+      // Track "Inizio Chat" when session is successfully created
+      trackChatStart(data.sessionId);
 
       // Track chat start event - user submitted name and started chat
       trackChatStart(data.sessionId);
