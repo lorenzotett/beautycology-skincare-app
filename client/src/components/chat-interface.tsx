@@ -77,8 +77,8 @@ export function ChatInterface() {
 
   // Track chat view - will be called when user sees welcome screen
   const trackViewChat = async () => {
-    // For now, we track view when a session actually starts
-    // This ensures we have a real session to track
+    // We don't create sessions for views anymore
+    // Views are tracked when the session is actually created
     console.log("Chat view tracked - welcome screen displayed");
   };
 
@@ -287,6 +287,9 @@ export function ChatInterface() {
     onSuccess: (data) => {
       setSessionId(data.sessionId);
       setIsTyping(false);
+
+      // Track chat start event - user submitted name and started chat
+      trackChatStart(data.sessionId);
 
       // Extract user initial from Gemini's corrected name
       const content = data.message.content;

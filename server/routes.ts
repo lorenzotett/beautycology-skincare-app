@@ -268,25 +268,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Track chat view (first screen view)
   app.post("/api/tracking/view", async (req, res) => {
     try {
-      const { sessionId } = req.body;
+      const { sessionId, fingerprint } = req.body;
       
       if (!sessionId) {
         return res.status(400).json({ error: "Session ID is required" });
       }
 
-      const session = await storage.getChatSession(sessionId);
-      if (!session) {
-        return res.status(404).json({ error: "Session not found" });
-      }
+      // Create a minimal session for view tracking
+      const userId = fingerprint && typeof fingerprint === "string" 
+        ? `fp_${fingerprint.substring(0, 16)}` 
+        : `view_${Date.now()}`;
 
-      // Only track the first view
-      if (!session.firstViewedAt) {
+      try {
+        // Create a minimal session just for tracking the view
+        await storage.createChatSession({
+          userId,
+          sessionId,
+          userName: "View Only", // Temporary session, no real user name yet
+        });
+
+        // Immediately mark it as viewed
         await storage.updateChatSession(sessionId, { 
           firstViewedAt: new Date() 
         });
-      }
 
-      res.json({ success: true });
+        res.json({ success: true });
+      } catch (error) {
+        // If session already exists, just update the view timestamp
+        const existingSession = await storage.getChatSession(sessionId);
+        if (existingSession && !existingSession.firstViewedAt) {
+          await storage.updateChatSession(sessionId, { 
+            firstViewedAt: new Date() 
+          });
+        }
+        res.json({ success: true });
+      }
     } catch (error) {
       console.error("Error tracking chat view:", error);
       res.status(500).json({ error: "Failed to track chat view" });
