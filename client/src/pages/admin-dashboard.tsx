@@ -682,9 +682,9 @@ export default function AdminDashboard() {
           <Card className="bg-white p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">View Chat</p>
-                <p className="text-3xl font-bold text-gray-900">{stats?.viewChatCount || 0}</p>
-                <p className="text-xs text-gray-500">Prima schermata visualizzata</p>
+                <p className="text-sm text-blue-600 mb-1 font-medium">Visualizzazioni</p>
+                <p className="text-3xl font-bold text-blue-700">{stats?.viewChatCount || 0}</p>
+                <p className="text-xs text-blue-500">Utenti che hanno visto la chat</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
                 <Eye className="h-6 w-6 text-blue-600" />
@@ -695,9 +695,9 @@ export default function AdminDashboard() {
           <Card className="bg-white p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Inizio Chat</p>
-                <p className="text-3xl font-bold text-gray-900">{stats?.startChatCount || 0}</p>
-                <p className="text-xs text-gray-500">Chat avviate dopo nome</p>
+                <p className="text-sm text-green-600 mb-1 font-medium">Chat Avviate</p>
+                <p className="text-3xl font-bold text-green-700">{stats?.startChatCount || 0}</p>
+                <p className="text-xs text-green-500">Utenti che hanno inviato il nome</p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <Play className="h-6 w-6 text-green-600" />
