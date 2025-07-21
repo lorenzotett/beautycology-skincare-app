@@ -920,14 +920,14 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div className="text-sm text-gray-600">
-                  <strong>{filteredSessions.length}</strong> conversazioni trovate
+                  <strong>{pagination?.totalItems || 0}</strong> conversazioni trovate
                 </div>
               </div>
             )}
 
             {selectedPeriod !== "Personalizzato" && (
               <div className="text-sm text-gray-600">
-                <strong>{filteredSessions.length}</strong> conversazioni trovate nel periodo selezionato
+                <strong>{pagination?.totalItems || 0}</strong> conversazioni trovate nel periodo selezionato
               </div>
             )}
           </div>
