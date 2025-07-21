@@ -73,6 +73,15 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 ## Recent Changes
 
+- July 21, 2025. Enhanced final summary and added WhatsApp support:
+  - Fixed riepilogo finale logic to always include ALL information collected during conversation
+  - Added mandatory user information summary section showing age, skin type, habits, lifestyle, and preferences
+  - Implemented dual-button system at consultation end: skincare access + WhatsApp expert consultation
+  - Added WhatsApp button with green styling and proper tracking differentiation
+  - Enhanced conversation data extraction to ensure no user responses are missed in final summary
+  - Updated AI instructions to require comprehensive recap of all 19 questionnaire answers
+  - Improved frontend button handling to support multiple link buttons with different styling and tracking
+
 ### July 18, 2025 - Domain Migration to aidermasense.com
 - **Updated all domain references**: Migrated from `bonnie-beauty.replit.app` to `aidermasense.com`
 - **Updated embed configuration**: Modified `ai-dermasense-embed.html` to use new domain

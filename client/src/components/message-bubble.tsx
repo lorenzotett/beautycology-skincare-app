@@ -104,7 +104,7 @@ const parseContentWithLinkButtons = (content: string) => {
   while ((match = linkButtonRegex.exec(content)) !== null) {
     linkButtons.push({
       url: match[1],
-      text: 'Accedi alla tua skincare personalizzata'
+      text: match[2] // Use the text from the LINK_BUTTON pattern
     });
     cleanContent = cleanContent.replace(match[0], '');
   }
@@ -331,11 +331,16 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                 className="absolute inset-0 z-10 opacity-0"
                 tabIndex={-1}
                 onClick={async (e) => {
-                  console.log('Fallback link clicked for session:', message.sessionId);
-                  try {
-                    await trackFinalButtonClick(message.sessionId);
-                  } catch (error) {
-                    console.warn('Failed to track button click via fallback:', error);
+                  // Only track if it's a skincare button
+                  const isSkincareButton = linkButton.text.toLowerCase().includes('skincare') || 
+                                         linkButton.text.toLowerCase().includes('accedi alla tua');
+                  if (isSkincareButton) {
+                    console.log('Fallback skincare link clicked for session:', message.sessionId);
+                    try {
+                      await trackFinalButtonClick(message.sessionId);
+                    } catch (error) {
+                      console.warn('Failed to track button click via fallback:', error);
+                    }
                   }
                 }}
               >
@@ -348,13 +353,20 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   e.preventDefault();
                   e.stopPropagation();
                   
-                  console.log('Final button clicked for session:', message.sessionId);
+                  // Only track if it's a skincare button
+                  const isSkincareButton = linkButton.text.toLowerCase().includes('skincare') || 
+                                         linkButton.text.toLowerCase().includes('accedi alla tua');
                   
-                  try {
-                    // Track the final button click
-                    await trackFinalButtonClick(message.sessionId);
-                  } catch (error) {
-                    console.warn('Failed to track button click:', error);
+                  if (isSkincareButton) {
+                    console.log('Final skincare button clicked for session:', message.sessionId);
+                    try {
+                      // Track the final button click
+                      await trackFinalButtonClick(message.sessionId);
+                    } catch (error) {
+                      console.warn('Failed to track final button click:', error);
+                    }
+                  } else {
+                    console.log('Non-tracking button clicked:', linkButton.text);
                   }
                   
                   // Mobile-friendly link opening with multiple fallback methods
@@ -412,33 +424,37 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                 }}
                 className="w-full p-4 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer touch-manipulation relative z-20"
                 style={{
-                  backgroundColor: '#007381',
+                  backgroundColor: linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#007381',
                   color: '#E5F1F2',
-                  border: '2px solid #007381',
+                  border: `2px solid ${linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#007381'}`,
                   minHeight: '48px', // Ensure minimum touch target size for mobile
                   touchAction: 'manipulation', // Prevent zoom on double-tap
                   WebkitTapHighlightColor: 'transparent', // Remove iOS tap highlight
                   userSelect: 'none' // Prevent text selection
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#005a62';
-                  e.currentTarget.style.borderColor = '#005a62';
+                  const hoverColor = linkButton.text.toLowerCase().includes('whatsapp') ? '#1da851' : '#005a62';
+                  e.currentTarget.style.backgroundColor = hoverColor;
+                  e.currentTarget.style.borderColor = hoverColor;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#007381';
-                  e.currentTarget.style.borderColor = '#007381';
+                  const normalColor = linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#007381';
+                  e.currentTarget.style.backgroundColor = normalColor;
+                  e.currentTarget.style.borderColor = normalColor;
                 }}
                 // Additional mobile touch events
                 onTouchStart={(e) => {
-                  e.currentTarget.style.backgroundColor = '#005a62';
-                  e.currentTarget.style.borderColor = '#005a62';
+                  const hoverColor = linkButton.text.toLowerCase().includes('whatsapp') ? '#1da851' : '#005a62';
+                  e.currentTarget.style.backgroundColor = hoverColor;
+                  e.currentTarget.style.borderColor = hoverColor;
                 }}
                 onTouchEnd={(e) => {
-                  e.currentTarget.style.backgroundColor = '#007381';
-                  e.currentTarget.style.borderColor = '#007381';
+                  const normalColor = linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#007381';
+                  e.currentTarget.style.backgroundColor = normalColor;
+                  e.currentTarget.style.borderColor = normalColor;
                 }}
               >
-                🌟 {linkButton.text}
+                {linkButton.text.toLowerCase().includes('whatsapp') ? '💬' : '🌟'} {linkButton.text}
               </button>
             </div>
           ))}
