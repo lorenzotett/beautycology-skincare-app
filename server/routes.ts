@@ -742,6 +742,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const search = req.query.search as string || "";
       const { from, to, period } = req.query;
       
+      console.log(`🔍 ADMIN SESSIONS REQUEST: from=${from}, to=${to}, period=${period}`);
+      
       const sessions = await storage.getAllChatSessions();
       
       // Helper function to filter sessions by date range
@@ -761,7 +763,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter sessions by date range first
       let filteredSessions = sessions;
       if (from || to) {
+        console.log(`🔍 Custom date filtering: from=${from}, to=${to}`);
+        console.log(`📊 Total sessions before filter: ${sessions.length}`);
         filteredSessions = filterSessionsByDateRange(sessions, from, to);
+        console.log(`📊 Sessions after custom date filter: ${filteredSessions.length}`);
       } else if (period) {
         // Handle predefined periods
         const now = new Date();
