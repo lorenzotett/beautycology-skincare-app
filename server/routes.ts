@@ -734,9 +734,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Calculate metrics for filtered sessions
-      const viewChatCount = filteredSessions.filter(session => session.firstViewedAt).length;
-      const startChatCount = filteredSessions.filter(session => session.chatStartedAt).length;
-      const finalButtonClicks = filteredSessions.filter(session => session.finalButtonClicked).length;
+      // Exclude "View Only" sessions from counts to avoid duplicates
+      const realSessions = filteredSessions.filter(session => session.userName !== "View Only");
+      const viewChatCount = realSessions.filter(session => session.firstViewedAt).length;
+      const startChatCount = realSessions.filter(session => session.chatStartedAt).length;
+      const finalButtonClicks = realSessions.filter(session => session.finalButtonClicked).length;
 
       // Calculate conversion rates
       const viewToStartRate = viewChatCount > 0 ? ((startChatCount / viewChatCount) * 100).toFixed(1) : '0';
@@ -744,7 +746,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const viewToFinalRate = viewChatCount > 0 ? ((finalButtonClicks / viewChatCount) * 100).toFixed(1) : '0';
 
       res.json({
-        totalSessions: filteredSessions.length,
+        totalSessions: realSessions.length,
         viewChatCount,
         startChatCount,
         finalButtonClicks,
@@ -754,7 +756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           viewToFinal: viewToFinalRate
         },
         // Keep legacy fields for compatibility
-        todaySessions: filteredSessions.length,
+        todaySessions: realSessions.length,
         totalMessages: (await storage.getAllChatMessages()).length
       });
     } catch (error) {
@@ -772,7 +774,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
 
       
-      const sessions = await storage.getAllChatSessions();
+      const allSessions = await storage.getAllChatSessions();
+      // Exclude "View Only" sessions from the list
+      const sessions = allSessions.filter(session => session.userName !== "View Only");
       
       // Helper function to filter sessions by date range
       const filterSessionsByDateRange = (sessions: any[], fromDate: any, toDate: any) => {
