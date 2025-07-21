@@ -765,10 +765,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const finalButtonClicks = realSessions.filter(session => session.finalButtonClicked).length;
       const whatsappButtonClicks = realSessions.filter(session => session.whatsappButtonClicked).length;
 
-      // Calculate conversion rates
-      const viewToStartRate = viewChatCount > 0 ? ((startChatCount / viewChatCount) * 100).toFixed(1) : '0';
-      const startToFinalRate = startChatCount > 0 ? ((finalButtonClicks / startChatCount) * 100).toFixed(1) : '0';
-      const viewToFinalRate = viewChatCount > 0 ? ((finalButtonClicks / viewChatCount) * 100).toFixed(1) : '0';
+      // Calculate conversion rates with logical validation
+      // Only use sessions that have complete new tracking (view + start tracking)
+      // This ensures we're comparing apples to apples
+      const sessionsWithCompleteTracking = realSessions.filter(session => 
+        session.firstViewedAt && session.chatStartedAt
+      );
+      
+      let viewToStartRate = '0';
+      let startToFinalRate = '0';
+      let viewToFinalRate = '0';
+      
+      if (sessionsWithCompleteTracking.length > 0) {
+        // Use only sessions with complete tracking for conversion calculations
+        const completeTrackingViewCount = sessionsWithCompleteTracking.length; // All have firstViewedAt
+        const completeTrackingStartCount = sessionsWithCompleteTracking.length; // All have chatStartedAt
+        const completeTrackingFinalCount = sessionsWithCompleteTracking.filter(session => 
+          session.finalButtonClickedAt // Use timestamp field for consistency
+        ).length;
+        
+        // Calculate accurate conversion rates
+        viewToStartRate = completeTrackingViewCount > 0 ? ((completeTrackingStartCount / completeTrackingViewCount) * 100).toFixed(1) : '0';
+        startToFinalRate = completeTrackingStartCount > 0 ? ((completeTrackingFinalCount / completeTrackingStartCount) * 100).toFixed(1) : '0';
+        viewToFinalRate = completeTrackingViewCount > 0 ? ((completeTrackingFinalCount / completeTrackingViewCount) * 100).toFixed(1) : '0';
+      }
 
       res.json({
         totalSessions: realSessions.length,
