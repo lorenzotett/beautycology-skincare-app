@@ -15,10 +15,18 @@ import { MessageBubble } from "@/components/message-bubble";
 interface AdminStats {
   totalSessions: number;
   totalMessages: number;
-  activeSessions: number;
-  todaySessions: number;
+  viewChatCount: number;
+  startChatCount: number;
   finalButtonClicks: number;
-  averageMessagesPerSession: number;
+  conversionRates: {
+    viewToStart: string;
+    startToFinal: string;
+    viewToFinal: string;
+  };
+  // Legacy fields for compatibility
+  todaySessions: number;
+  activeSessions?: number;
+  averageMessagesPerSession?: number;
 }
 
 interface SessionWithMessages extends ChatSession {
@@ -325,9 +333,20 @@ export default function AdminDashboard() {
   });
 
   const { data: stats } = useQuery({
-    queryKey: ["admin-stats"],
+    queryKey: ["admin-stats", selectedPeriod, customDateFrom, customDateTo],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/admin/stats");
+      const params = new URLSearchParams();
+      
+      if (selectedPeriod !== "Tutto il tempo") {
+        if (selectedPeriod === "Personalizzato") {
+          if (customDateFrom) params.append("from", customDateFrom);
+          if (customDateTo) params.append("to", customDateTo);
+        } else {
+          params.append("period", selectedPeriod);
+        }
+      }
+      
+      const response = await apiRequest("GET", `/api/admin/stats?${params}`);
       return response.json() as Promise<AdminStats>;
     },
     refetchInterval: 30000,
@@ -335,13 +354,24 @@ export default function AdminDashboard() {
   });
 
   const { data: sessionsData } = useQuery({
-    queryKey: ["admin-sessions", currentPage, searchTerm],
+    queryKey: ["admin-sessions", currentPage, searchTerm, selectedPeriod, customDateFrom, customDateTo],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: itemsPerPage.toString(),
         search: searchTerm
       });
+      
+      // Add date filters
+      if (selectedPeriod !== "Tutto il tempo") {
+        if (selectedPeriod === "Personalizzato") {
+          if (customDateFrom) params.append("from", customDateFrom);
+          if (customDateTo) params.append("to", customDateTo);
+        } else {
+          params.append("period", selectedPeriod);
+        }
+      }
+      
       const response = await apiRequest("GET", `/api/admin/sessions?${params}`);
       return response.json() as Promise<{
         sessions: SessionWithMessages[];
@@ -638,15 +668,16 @@ export default function AdminDashboard() {
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <Card className="bg-white p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total Conversations</p>
-                <p className="text-3xl font-bold text-gray-900">{stats?.totalSessions || 0}</p>
+                <p className="text-sm text-gray-600 mb-1">View Chat</p>
+                <p className="text-3xl font-bold text-gray-900">{stats?.viewChatCount || 0}</p>
+                <p className="text-xs text-gray-500">Prima schermata visualizzata</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-blue-600" />
+                <Eye className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </Card>
@@ -654,11 +685,12 @@ export default function AdminDashboard() {
           <Card className="bg-white p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Active Today</p>
-                <p className="text-3xl font-bold text-gray-900">{stats?.todaySessions || 0}</p>
+                <p className="text-sm text-gray-600 mb-1">Inizio Chat</p>
+                <p className="text-3xl font-bold text-gray-900">{stats?.startChatCount || 0}</p>
+                <p className="text-xs text-gray-500">Chat avviate dopo nome</p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
-                <MessageSquare className="h-6 w-6 text-green-600" />
+                <Play className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </Card>
@@ -666,12 +698,12 @@ export default function AdminDashboard() {
           <Card className="bg-white p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Cream Access</p>
+                <p className="text-sm text-gray-600 mb-1">Accesso Skincare</p>
                 <p className="text-3xl font-bold text-gray-900">{stats?.finalButtonClicks || 0}</p>
-                <p className="text-xs text-gray-500">Final button clicks</p>
+                <p className="text-xs text-gray-500">Click pulsante finale</p>
               </div>
               <div className="p-3 bg-pink-100 rounded-lg">
-                <Eye className="h-6 w-6 text-pink-600" />
+                <BarChart3 className="h-6 w-6 text-pink-600" />
               </div>
             </div>
           </Card>
@@ -679,29 +711,45 @@ export default function AdminDashboard() {
           <Card className="bg-white p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Unique Users</p>
-                <p className="text-3xl font-bold text-gray-900">{getUniqueUsers()}</p>
-                <p className="text-xs text-gray-500">Browser fingerprint tracking</p>
+                <p className="text-sm text-gray-600 mb-1">Totale Sessioni</p>
+                <p className="text-3xl font-bold text-gray-900">{stats?.totalSessions || 0}</p>
+                <p className="text-xs text-gray-500">Conversazioni create</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
                 <Users className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </Card>
-
-          <Card className="bg-white p-6 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Avg Duration</p>
-                <p className="text-3xl font-bold text-gray-900">{getAverageDuration()}</p>
-                <p className="text-xs text-gray-500">per conversation</p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <Clock className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </Card>
         </div>
+
+        {/* Conversion Rates */}
+        {stats?.conversionRates && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border border-blue-200">
+              <div className="text-center">
+                <p className="text-sm text-blue-600 mb-1">View → Start</p>
+                <p className="text-2xl font-bold text-blue-700">{stats.conversionRates.viewToStart}%</p>
+                <p className="text-xs text-blue-500">Da visualizzazione a inizio chat</p>
+              </div>
+            </Card>
+            
+            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 border border-green-200">
+              <div className="text-center">
+                <p className="text-sm text-green-600 mb-1">Start → Final</p>
+                <p className="text-2xl font-bold text-green-700">{stats.conversionRates.startToFinal}%</p>
+                <p className="text-xs text-green-500">Da inizio chat ad accesso skincare</p>
+              </div>
+            </Card>
+            
+            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 border border-purple-200">
+              <div className="text-center">
+                <p className="text-sm text-purple-600 mb-1">View → Final</p>
+                <p className="text-2xl font-bold text-purple-700">{stats.conversionRates.viewToFinal}%</p>
+                <p className="text-xs text-purple-500">Da visualizzazione a skincare</p>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* AI Real-time System */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6">

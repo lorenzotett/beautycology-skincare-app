@@ -19,6 +19,8 @@ export const chatSessions = pgTable("chat_sessions", {
   isActive: boolean("is_active").default(true),
   finalButtonClicked: boolean("final_button_clicked").default(false),
   finalButtonClickedAt: timestamp("final_button_clicked_at"),
+  firstViewedAt: timestamp("first_viewed_at"), // Quando l'utente vede la prima schermata
+  chatStartedAt: timestamp("chat_started_at"), // Quando l'utente avvia effettivamente la chat
   klaviyoSynced: boolean("klaviyo_synced").default(false),
   googleSheetsSynced: boolean("google_sheets_synced").default(false),
 });

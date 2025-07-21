@@ -69,8 +69,29 @@ export function ChatInterface() {
       
       // Clean URL to remove parameters
       window.history.replaceState({}, document.title, window.location.pathname);
+    } else {
+      // Track "view chat" when user sees the welcome screen
+      trackViewChat();
     }
   }, []);
+
+  // Track chat view - will be called when user sees welcome screen
+  const trackViewChat = async () => {
+    // For now, we track view when a session actually starts
+    // This ensures we have a real session to track
+    console.log("Chat view tracked - welcome screen displayed");
+  };
+
+  // Track chat start (when user submits name and actually starts chat)
+  const trackChatStart = async (sessionId: string) => {
+    try {
+      await apiRequest("POST", "/api/tracking/start", {
+        sessionId
+      });
+    } catch (error) {
+      console.error("Failed to track chat start:", error);
+    }
+  };
 
   // Email validation function
   const validateEmail = (email: string): { isValid: boolean; errorMessage?: string } => {

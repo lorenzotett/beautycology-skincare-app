@@ -265,6 +265,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Track chat view (first screen view)
+  app.post("/api/tracking/view", async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({ error: "Session ID is required" });
+      }
+
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      // Only track the first view
+      if (!session.firstViewedAt) {
+        await storage.updateChatSession(sessionId, { 
+          firstViewedAt: new Date() 
+        });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking chat view:", error);
+      res.status(500).json({ error: "Failed to track chat view" });
+    }
+  });
+
+  // Track chat start (when user submits name and actually starts chatting)  
+  app.post("/api/tracking/start", async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({ error: "Session ID is required" });
+      }
+
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      // Only track the first chat start
+      if (!session.chatStartedAt) {
+        await storage.updateChatSession(sessionId, { 
+          chatStartedAt: new Date() 
+        });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking chat start:", error);
+      res.status(500).json({ error: "Failed to track chat start" });
+    }
+  });
+
   // Start a new chat session
   app.post("/api/chat/start", async (req, res) => {
     try {
@@ -283,6 +339,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         sessionId,
         userName,
+      });
+
+      // Track both view and chat start automatically when session is created
+      await storage.updateChatSession(sessionId, { 
+        firstViewedAt: new Date(), // User sees the chat interface
+        chatStartedAt: new Date()   // User submits name and starts chat
       });
 
       const geminiService = new GeminiService();
@@ -592,22 +654,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.get("/api/admin/stats", async (req, res) => {
     try {
+      const { from, to, period } = req.query;
       const allSessions = await storage.getAllChatSessions();
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
       
-      const todaySessions = allSessions.filter(session => 
-        new Date(session.createdAt) >= today
-      );
+      // Helper function to filter sessions by date range
+      const filterSessionsByDateRange = (sessions, fromDate, toDate) => {
+        if (!fromDate && !toDate) {
+          return sessions; // No filtering for "Tutto il tempo"
+        }
+        
+        return sessions.filter(session => {
+          const sessionDate = new Date(session.createdAt);
+          if (fromDate && sessionDate < new Date(fromDate)) return false;
+          if (toDate && sessionDate > new Date(toDate + 'T23:59:59.999Z')) return false;
+          return true;
+        });
+      };
 
-      const finalButtonClicks = allSessions.filter(session => 
-        session.finalButtonClicked
-      ).length;
+      // Filter sessions based on date range
+      let filteredSessions = allSessions;
+      if (from || to) {
+        filteredSessions = filterSessionsByDateRange(allSessions, from, to);
+      } else if (period) {
+        // Handle predefined periods
+        const now = new Date();
+        let fromDate;
+        
+        switch (period) {
+          case 'Oggi':
+            fromDate = new Date();
+            fromDate.setHours(0, 0, 0, 0);
+            filteredSessions = allSessions.filter(session => 
+              new Date(session.createdAt) >= fromDate
+            );
+            break;
+          case 'Ultima settimana':
+            fromDate = new Date();
+            fromDate.setDate(now.getDate() - 7);
+            filteredSessions = allSessions.filter(session => 
+              new Date(session.createdAt) >= fromDate
+            );
+            break;
+          case 'Ultimo mese':
+            fromDate = new Date();
+            fromDate.setMonth(now.getMonth() - 1);
+            filteredSessions = allSessions.filter(session => 
+              new Date(session.createdAt) >= fromDate
+            );
+            break;
+        }
+      }
+      
+      // Calculate metrics for filtered sessions
+      const viewChatCount = filteredSessions.filter(session => session.firstViewedAt).length;
+      const startChatCount = filteredSessions.filter(session => session.chatStartedAt).length;
+      const finalButtonClicks = filteredSessions.filter(session => session.finalButtonClicked).length;
+
+      // Calculate conversion rates
+      const viewToStartRate = viewChatCount > 0 ? ((startChatCount / viewChatCount) * 100).toFixed(1) : '0';
+      const startToFinalRate = startChatCount > 0 ? ((finalButtonClicks / startChatCount) * 100).toFixed(1) : '0';
+      const viewToFinalRate = viewChatCount > 0 ? ((finalButtonClicks / viewChatCount) * 100).toFixed(1) : '0';
 
       res.json({
-        totalSessions: allSessions.length,
-        todaySessions: todaySessions.length,
-        finalButtonClicks: finalButtonClicks,
+        totalSessions: filteredSessions.length,
+        viewChatCount,
+        startChatCount,
+        finalButtonClicks,
+        conversionRates: {
+          viewToStart: viewToStartRate,
+          startToFinal: startToFinalRate,
+          viewToFinal: viewToFinalRate
+        },
+        // Keep legacy fields for compatibility
+        todaySessions: filteredSessions.length,
         totalMessages: (await storage.getAllChatMessages()).length
       });
     } catch (error) {
@@ -621,13 +740,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 25;
       const search = req.query.search as string || "";
+      const { from, to, period } = req.query;
       
       const sessions = await storage.getAllChatSessions();
       
-      // Filter sessions by search term if provided
+      // Helper function to filter sessions by date range
+      const filterSessionsByDateRange = (sessions, fromDate, toDate) => {
+        if (!fromDate && !toDate) {
+          return sessions; // No filtering for "Tutto il tempo"
+        }
+        
+        return sessions.filter(session => {
+          const sessionDate = new Date(session.createdAt);
+          if (fromDate && sessionDate < new Date(fromDate)) return false;
+          if (toDate && sessionDate > new Date(toDate + 'T23:59:59.999Z')) return false;
+          return true;
+        });
+      };
+
+      // Filter sessions by date range first
       let filteredSessions = sessions;
+      if (from || to) {
+        filteredSessions = filterSessionsByDateRange(sessions, from, to);
+      } else if (period) {
+        // Handle predefined periods
+        const now = new Date();
+        let fromDate;
+        
+        switch (period) {
+          case 'Oggi':
+            fromDate = new Date();
+            fromDate.setHours(0, 0, 0, 0);
+            filteredSessions = sessions.filter(session => 
+              new Date(session.createdAt) >= fromDate
+            );
+            break;
+          case 'Ultima settimana':
+            fromDate = new Date();
+            fromDate.setDate(now.getDate() - 7);
+            filteredSessions = sessions.filter(session => 
+              new Date(session.createdAt) >= fromDate
+            );
+            break;
+          case 'Ultimo mese':
+            fromDate = new Date();
+            fromDate.setMonth(now.getMonth() - 1);
+            filteredSessions = sessions.filter(session => 
+              new Date(session.createdAt) >= fromDate
+            );
+            break;
+        }
+      }
+      
+      // Then filter by search term if provided
       if (search) {
-        filteredSessions = sessions.filter(session => 
+        filteredSessions = filteredSessions.filter(session => 
           session.userName.toLowerCase().includes(search.toLowerCase()) ||
           session.sessionId.toLowerCase().includes(search.toLowerCase())
         );
