@@ -242,7 +242,7 @@ export default function AdminDashboard() {
   const selectAllSessions = () => {
     if (!paginatedSessions) return;
     const pageSessionIds = paginatedSessions.map(s => s.sessionId);
-    setSelectedSessions(new Set([...selectedSessions, ...pageSessionIds]));
+    setSelectedSessions(new Set([...Array.from(selectedSessions), ...pageSessionIds]));
   };
 
   const selectAllFiltered = () => {

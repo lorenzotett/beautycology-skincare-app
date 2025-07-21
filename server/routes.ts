@@ -658,7 +658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allSessions = await storage.getAllChatSessions();
       
       // Helper function to filter sessions by date range
-      const filterSessionsByDateRange = (sessions, fromDate, toDate) => {
+      const filterSessionsByDateRange = (sessions: any[], fromDate: any, toDate: any) => {
         if (!fromDate && !toDate) {
           return sessions; // No filtering for "Tutto il tempo"
         }
@@ -747,7 +747,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessions = await storage.getAllChatSessions();
       
       // Helper function to filter sessions by date range
-      const filterSessionsByDateRange = (sessions, fromDate, toDate) => {
+      const filterSessionsByDateRange = (sessions: any[], fromDate: any, toDate: any) => {
         if (!fromDate && !toDate) {
           return sessions; // No filtering for "Tutto il tempo"
         }
