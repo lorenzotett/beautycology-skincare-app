@@ -57,12 +57,16 @@ export default function AdminDashboard() {
   const [realtimeStatus, setRealtimeStatus] = useState<any>(null);
   const { toast } = useToast();
 
-  // Check if user is already authenticated
+  // Check if user is already authenticated and reset date fields
   useEffect(() => {
     const authStatus = localStorage.getItem('admin-authenticated');
     if (authStatus === 'true') {
       setIsAuthenticated(true);
     }
+    
+    // Force reset any invalid date values on component mount
+    setCustomDateFrom("");
+    setCustomDateTo("");
   }, []);
 
   // Fetch realtime extraction status
@@ -890,8 +894,13 @@ export default function AdminDashboard() {
                   <label className="text-sm text-gray-700">Da:</label>
                   <input
                     type="date"
-                    value={customDateFrom}
-                    onChange={(e) => setCustomDateFrom(e.target.value)}
+                    value={customDateFrom.match(/^\d{4}-\d{2}-\d{2}$/) ? customDateFrom : ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (!value || value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        setCustomDateFrom(value);
+                      }
+                    }}
                     className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px]"
                   />
                 </div>
@@ -899,8 +908,13 @@ export default function AdminDashboard() {
                   <label className="text-sm text-gray-700">A:</label>
                   <input
                     type="date"
-                    value={customDateTo}
-                    onChange={(e) => setCustomDateTo(e.target.value)}
+                    value={customDateTo.match(/^\d{4}-\d{2}-\d{2}$/) ? customDateTo : ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (!value || value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        setCustomDateTo(value);
+                      }
+                    }}
                     className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px]"
                   />
                 </div>
