@@ -901,7 +901,7 @@ export default function AdminDashboard() {
                         setCustomDateFrom(value);
                       }
                     }}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px]"
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px] text-gray-900 bg-white"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -915,7 +915,7 @@ export default function AdminDashboard() {
                         setCustomDateTo(value);
                       }
                     }}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px]"
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px] text-gray-900 bg-white"
                   />
                 </div>
                 <div className="text-sm text-gray-600">
