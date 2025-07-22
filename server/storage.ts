@@ -10,7 +10,8 @@ import {
   type InsertChatMessage
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
+import { getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -274,11 +275,16 @@ export class DatabaseStorage implements IStorage {
     return message || undefined;
   }
 
-  async getAllChatSessions(): Promise<ChatSession[]> {
-    return await db
-      .select()
+  async getAllChatSessions(): Promise<(ChatSession & { messageCount: number })[]> {
+    const result = await db
+      .select({
+        ...getTableColumns(chatSessions),
+        messageCount: sql<number>`COALESCE((SELECT COUNT(*) FROM ${chatMessages} WHERE ${chatMessages.sessionId} = ${chatSessions.sessionId}), 0)`.as('messageCount')
+      })
       .from(chatSessions)
       .orderBy(desc(chatSessions.updatedAt));
+    
+    return result as (ChatSession & { messageCount: number })[];
   }
 
   async getAllChatMessages(): Promise<ChatMessage[]> {

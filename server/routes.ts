@@ -776,27 +776,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let startFinalOnly = 0; 
       let viewFinalOnly = 0;
       
-      // Single loop for ALL metrics - MAXIMUM EFFICIENCY
-      realSessions.forEach(session => {
+      // Single loop for ALL metrics with DEBUG
+      realSessions.forEach((session, index) => {
         // Basic counts
         if (session.firstViewedAt) viewChatCount++;
         if (session.chatStartedAt) startChatCount++;
         if (session.finalButtonClicked) finalButtonClicks++;
         if (session.whatsappButtonClicked) whatsappButtonClicks++;
         
-        // NEW SPECIFIC METRICS as requested:
+        // DEBUG: Check first 3 sessions for specific metrics
+        if (index < 3) {
+          console.log(`DEBUG Session ${index}: ${session.userName}, messageCount=${session.messageCount}, finalButtonClicked=${session.finalButtonClicked}, userEmail=${session.userEmail ? 'YES' : 'NO'}`);
+        }
+        
+        // FIXED SPECIFIC METRICS - handle undefined messageCount
+        const msgCount = session.messageCount || 0;
+        
         // 1. View Chat: Sessions that were viewed but with minimal interaction (messageCount <= 3)
-        if (session.messageCount <= 3) {
+        if (msgCount <= 3) {
+          if (index < 5) console.log(`  → VIEW CHAT MATCH for ${session.userName} (msgCount=${msgCount})`);
           viewChatOnly++;
         }
         
         // 2. Start Final: Sessions with substantial messages (>3) but no final button click
-        if (session.messageCount > 3 && !session.finalButtonClicked) {
+        if (msgCount > 3 && !session.finalButtonClicked) {
+          if (index < 5) console.log(`  → START FINAL MATCH for ${session.userName} (msgCount=${msgCount})`);
           startFinalOnly++;
         }
         
         // 3. View Final: Complete conversations (with email) but no final button click
         if (session.userEmail && !session.finalButtonClicked) {
+          if (index < 5) console.log(`  → VIEW FINAL MATCH for ${session.userName} (email=${session.userEmail})`);
           viewFinalOnly++;
         }
       });
