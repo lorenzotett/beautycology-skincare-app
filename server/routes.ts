@@ -763,45 +763,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Calculate metrics for ALL filtered sessions
-      // Exclude "View Only" sessions from counts to avoid duplicates
+      // View Only sessions are homepage visits without name entry
+      const viewOnlySessions = filteredSessions.filter(session => session.userName === "View Only");
       const realSessions = filteredSessions.filter(session => session.userName !== "View Only");
-      console.log(`Computing metrics for ${realSessions.length} real sessions out of ${filteredSessions.length} total`);
+      console.log(`Computing metrics for ${realSessions.length} real sessions + ${viewOnlySessions.length} view-only sessions`);
       
-      // CORRECTED metrics calculation using ALL sessions
+      // Skip loading messages if no real sessions to process
+      const allMessages = realSessions.length > 0 ? await storage.getAllChatMessages() : [];
+      
+      // ACCURATE metrics calculation
       let viewChatCount = 0;
       let startChatCount = 0; 
       let finalButtonClicks = 0;
       let whatsappButtonClicks = 0;
-      let viewChatOnly = 0;
+      let viewChatOnly = viewOnlySessions.length; // View Chat = View Only sessions
       let startFinalOnly = 0; 
       let viewFinalOnly = 0;
       
-      // Single loop for ALL metrics with DEBUG
-      realSessions.forEach((session, index) => {
+      // Process real sessions
+      for (const session of realSessions) {
         // Basic counts
         if (session.firstViewedAt) viewChatCount++;
         if (session.chatStartedAt) startChatCount++;
         if (session.finalButtonClicked) finalButtonClicks++;
         if (session.whatsappButtonClicked) whatsappButtonClicks++;
         
-        // CORRECTED METRICS - using actual messageCount from database
-        const msgCount = session.messageCount || 0;
+        // Get messages for this session to check if final message was received
+        const sessionMessages = allMessages.filter(msg => msg.sessionId === session.sessionId);
         
-        // 1. View Chat: Sessions with NO messages (users who entered but never sent first message)
-        if (msgCount === 0) {
-          viewChatOnly++;
+        // Skip sessions with too few messages (optimization)
+        if (sessionMessages.length < 5) {
+          startFinalOnly++;
+          continue;
         }
         
-        // 2. Start Final: Sessions with ANY messages (>0) but no final button click
-        if (msgCount > 0 && !session.finalButtonClicked) {
+        const lastMessage = sessionMessages[sessionMessages.length - 1];
+        const hasFinalMessage = lastMessage && lastMessage.role === 'assistant' && 
+          (lastMessage.content.includes('skincare personalizzata') || 
+           lastMessage.content.includes('crema personalizzata') ||
+           lastMessage.content.includes('Accedi alla tua'));
+        
+        // 2. Start Final: Sessions that started chat but didn't reach final message
+        if (!hasFinalMessage && !session.finalButtonClicked && !session.whatsappButtonClicked) {
           startFinalOnly++;
         }
         
-        // 3. View Final: Complete conversations (with email) but no final button click
-        if (session.userEmail && !session.finalButtonClicked) {
+        // 3. View Final: Sessions that saw final message but didn't click buttons
+        if (hasFinalMessage && !session.finalButtonClicked && !session.whatsappButtonClicked) {
           viewFinalOnly++;
         }
-      });
+      }
       
       console.log(`FINAL METRICS: total=${realSessions.length}, viewChat=${viewChatCount}, startChat=${startChatCount}, final=${finalButtonClicks}, whatsapp=${whatsappButtonClicks}`);
       console.log(`SPECIFIC METRICS: viewOnly=${viewChatOnly}, startFinal=${startFinalOnly}, viewFinal=${viewFinalOnly}`);
