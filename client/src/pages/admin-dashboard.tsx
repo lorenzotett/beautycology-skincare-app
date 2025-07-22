@@ -682,113 +682,77 @@ export default function AdminDashboard() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="p-4">
-        {/* Statistics Cards - Optimized Layout with 9 metrics */}
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9 gap-2 mb-4">
-          <Card className="bg-white p-2 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-blue-600 mb-1 font-medium">View Item</p>
-                <p className="text-lg font-bold text-blue-700">{stats?.viewChatCount || 0}</p>
-              </div>
-              <div className="p-1.5 bg-blue-100 rounded-lg">
-                <Eye className="h-3 w-3 text-blue-600" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-white p-2 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-green-600 mb-1 font-medium">Inizio Chat</p>
-                <p className="text-lg font-bold text-green-700">{stats?.startChatCount || 0}</p>
-              </div>
-              <div className="p-1.5 bg-green-100 rounded-lg">
-                <Play className="h-3 w-3 text-green-600" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-white p-2 border border-gray-200">
+        {/* Statistics Cards - Optimized Layout with 6 metrics */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+          <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-pink-600 mb-1 font-medium">Accesso Skincare</p>
-                <p className="text-lg font-bold text-pink-700">{stats?.finalButtonClicks || 0}</p>
+                <p className="text-xl font-bold text-pink-700">{stats?.finalButtonClicks || 0}</p>
               </div>
-              <div className="p-1.5 bg-pink-100 rounded-lg">
-                <BarChart3 className="h-3 w-3 text-pink-600" />
+              <div className="p-2 bg-pink-100 rounded-lg">
+                <BarChart3 className="h-4 w-4 text-pink-600" />
               </div>
             </div>
           </Card>
 
-          <Card className="bg-white p-2 border border-gray-200">
+          <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-emerald-600 mb-1 font-medium">Click WhatsApp</p>
-                <p className="text-lg font-bold text-emerald-700">{stats?.whatsappButtonClicks || 0}</p>
+                <p className="text-xl font-bold text-emerald-700">{stats?.whatsappButtonClicks || 0}</p>
               </div>
-              <div className="p-1.5 bg-emerald-100 rounded-lg">
-                <MessageSquare className="h-3 w-3 text-emerald-600" />
+              <div className="p-2 bg-emerald-100 rounded-lg">
+                <MessageSquare className="h-4 w-4 text-emerald-600" />
               </div>
             </div>
           </Card>
 
-          <Card className="bg-white p-2 border border-gray-200">
+          <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-purple-600 mb-1 font-medium">Conversazioni</p>
-                <p className="text-lg font-bold text-purple-700">{stats?.totalSessions || 0}</p>
+                <p className="text-xl font-bold text-purple-700">{stats?.totalSessions || 0}</p>
               </div>
-              <div className="p-1.5 bg-purple-100 rounded-lg">
-                <Users className="h-3 w-3 text-purple-600" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-white p-2 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-orange-600 mb-1 font-medium">Click Pulsanti</p>
-                <p className="text-lg font-bold text-orange-700">{((stats?.finalButtonClicks || 0) + (stats?.whatsappButtonClicks || 0))}</p>
-              </div>
-              <div className="p-1.5 bg-orange-100 rounded-lg">
-                <Brain className="h-3 w-3 text-orange-600" />
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Users className="h-4 w-4 text-purple-600" />
               </div>
             </div>
           </Card>
 
           {/* NEW SPECIFIC METRICS AS REQUESTED */}
-          <Card className="bg-white p-2 border border-gray-200">
+          <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-slate-600 mb-1 font-medium">View Chat</p>
-                <p className="text-lg font-bold text-slate-700">{stats?.viewChatOnly || 0}</p>
+                <p className="text-xl font-bold text-slate-700">{stats?.viewChatOnly || 0}</p>
               </div>
-              <div className="p-1.5 bg-slate-100 rounded-lg">
-                <EyeOff className="h-3 w-3 text-slate-600" />
+              <div className="p-2 bg-slate-100 rounded-lg">
+                <EyeOff className="h-4 w-4 text-slate-600" />
               </div>
             </div>
           </Card>
 
-          <Card className="bg-white p-2 border border-gray-200">
+          <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-indigo-600 mb-1 font-medium">Start Final</p>
-                <p className="text-lg font-bold text-indigo-700">{stats?.startFinalOnly || 0}</p>
+                <p className="text-xl font-bold text-indigo-700">{stats?.startFinalOnly || 0}</p>
               </div>
-              <div className="p-1.5 bg-indigo-100 rounded-lg">
-                <PlayCircle className="h-3 w-3 text-indigo-600" />
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <PlayCircle className="h-4 w-4 text-indigo-600" />
               </div>
             </div>
           </Card>
 
-          <Card className="bg-white p-2 border border-gray-200">
+          <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-rose-600 mb-1 font-medium">View Final</p>
-                <p className="text-lg font-bold text-rose-700">{stats?.viewFinalOnly || 0}</p>
+                <p className="text-xl font-bold text-rose-700">{stats?.viewFinalOnly || 0}</p>
               </div>
-              <div className="p-1.5 bg-rose-100 rounded-lg">
-                <MessageCircleX className="h-3 w-3 text-rose-600" />
+              <div className="p-2 bg-rose-100 rounded-lg">
+                <MessageCircleX className="h-4 w-4 text-rose-600" />
               </div>
             </div>
           </Card>
