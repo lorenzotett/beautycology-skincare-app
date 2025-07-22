@@ -784,29 +784,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (session.finalButtonClicked) finalButtonClicks++;
         if (session.whatsappButtonClicked) whatsappButtonClicks++;
         
-        // DEBUG: Check first 3 sessions for specific metrics
-        if (index < 3) {
-          console.log(`DEBUG Session ${index}: ${session.userName}, messageCount=${session.messageCount}, finalButtonClicked=${session.finalButtonClicked}, userEmail=${session.userEmail ? 'YES' : 'NO'}`);
-        }
-        
-        // FIXED SPECIFIC METRICS - handle undefined messageCount
+        // CORRECTED METRICS - using actual messageCount from database
         const msgCount = session.messageCount || 0;
         
-        // 1. View Chat: Sessions that were viewed but with minimal interaction (messageCount <= 3)
+        // 1. View Chat: Sessions with minimal interaction (messageCount <= 3)  
         if (msgCount <= 3) {
-          if (index < 5) console.log(`  → VIEW CHAT MATCH for ${session.userName} (msgCount=${msgCount})`);
           viewChatOnly++;
         }
         
         // 2. Start Final: Sessions with substantial messages (>3) but no final button click
         if (msgCount > 3 && !session.finalButtonClicked) {
-          if (index < 5) console.log(`  → START FINAL MATCH for ${session.userName} (msgCount=${msgCount})`);
           startFinalOnly++;
         }
         
         // 3. View Final: Complete conversations (with email) but no final button click
         if (session.userEmail && !session.finalButtonClicked) {
-          if (index < 5) console.log(`  → VIEW FINAL MATCH for ${session.userName} (email=${session.userEmail})`);
           viewFinalOnly++;
         }
       });
@@ -819,7 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startToFinalRate = startChatCount > 0 ? ((finalButtonClicks / startChatCount) * 100).toFixed(1) : '0';
       const viewToFinalRate = viewChatCount > 0 ? ((finalButtonClicks / viewChatCount) * 100).toFixed(1) : '0';
       
-      console.log(`Stats computed successfully - all metrics corrected`);
+      console.log(`✅ All metrics computed successfully`);
 
       res.json({
         totalSessions: realSessions.length,

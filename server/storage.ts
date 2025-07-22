@@ -279,7 +279,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .select({
         ...getTableColumns(chatSessions),
-        messageCount: sql<number>`COALESCE((SELECT COUNT(*) FROM ${chatMessages} WHERE ${chatMessages.sessionId} = ${chatSessions.sessionId}), 0)`.as('messageCount')
+        messageCount: sql<number>`COALESCE((SELECT COUNT(*)::integer FROM chat_messages WHERE chat_messages.session_id = chat_sessions.session_id), 0)`.as('messageCount')
       })
       .from(chatSessions)
       .orderBy(desc(chatSessions.updatedAt));
