@@ -696,12 +696,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { from, to, period } = req.query;
       
-      // PERFORMANCE OPTIMIZATION: Limit sessions analyzed for faster response
+      // Get all sessions - NO ARTIFICIAL LIMITING
       const allSessions = await storage.getAllChatSessions();
       console.log(`Stats API: Analyzing ${allSessions.length} total sessions`);
       
-      // If no date filter, only analyze last 1000 sessions for speed
-      const sessionsToAnalyze = (from || to || period) ? allSessions : allSessions.slice(-1000);
+      // Use ALL sessions, not just 1000
+      const sessionsToAnalyze = allSessions;
       
       // Helper function to filter sessions by date range
       const filterSessionsByDateRange = (sessions: any[], fromDate: any, toDate: any) => {
@@ -717,12 +717,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       };
 
-      // Filter sessions based on date range - OPTIMIZED
-      let filteredSessions = sessionsToAnalyze;
+      // Apply date filters if specified
+      let filteredSessions = allSessions;
       if (from || to) {
-        filteredSessions = filterSessionsByDateRange(sessionsToAnalyze, from, to);
+        filteredSessions = filterSessionsByDateRange(allSessions, from, to);
       } else if (period) {
-        // Handle predefined periods - SIMPLIFIED
         const now = new Date();
         let fromDate;
         
@@ -730,7 +729,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case 'Oggi':
             fromDate = new Date();
             fromDate.setHours(0, 0, 0, 0);
-            filteredSessions = sessionsToAnalyze.filter(session => 
+            filteredSessions = allSessions.filter(session => 
               new Date(session.createdAt) >= fromDate
             );
             break;
@@ -741,7 +740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const yesterdayEnd = new Date();
             yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
             yesterdayEnd.setHours(23, 59, 59, 999);
-            filteredSessions = sessionsToAnalyze.filter(session => {
+            filteredSessions = allSessions.filter(session => {
               const sessionDate = new Date(session.createdAt);
               return sessionDate >= yesterday && sessionDate <= yesterdayEnd;
             });
@@ -749,62 +748,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case 'Ultima settimana':
             fromDate = new Date();
             fromDate.setDate(now.getDate() - 7);
-            filteredSessions = sessionsToAnalyze.filter(session => 
+            filteredSessions = allSessions.filter(session => 
               new Date(session.createdAt) >= fromDate
             );
             break;
           case 'Ultimo mese':
             fromDate = new Date();
             fromDate.setMonth(now.getMonth() - 1);
-            filteredSessions = sessionsToAnalyze.filter(session => 
+            filteredSessions = allSessions.filter(session => 
               new Date(session.createdAt) >= fromDate
             );
             break;
         }
       }
       
-      // Calculate metrics for filtered sessions
+      // Calculate metrics for ALL filtered sessions
       // Exclude "View Only" sessions from counts to avoid duplicates
       const realSessions = filteredSessions.filter(session => session.userName !== "View Only");
-      const viewChatCount = realSessions.filter(session => session.firstViewedAt).length;
-      const startChatCount = realSessions.filter(session => session.chatStartedAt).length;
-      const finalButtonClicks = realSessions.filter(session => session.finalButtonClicked).length;
-      const whatsappButtonClicks = realSessions.filter(session => session.whatsappButtonClicked).length;
+      console.log(`Computing metrics for ${realSessions.length} real sessions out of ${filteredSessions.length} total`);
       
-      // CORRECTED metrics calculation
-      console.log(`Computing metrics for ${realSessions.length} real sessions`);
-      
+      // CORRECTED metrics calculation using ALL sessions
+      let viewChatCount = 0;
+      let startChatCount = 0; 
+      let finalButtonClicks = 0;
+      let whatsappButtonClicks = 0;
       let viewChatOnly = 0;
       let startFinalOnly = 0; 
       let viewFinalOnly = 0;
       
-      // Single loop for maximum performance with CORRECTED logic based on actual data patterns
+      // Single loop for ALL metrics - MAXIMUM EFFICIENCY
       realSessions.forEach(session => {
-        // 1. View Chat: People who have sessions but no real messages (messageCount = 0)
-        // This represents people who visited but never actually wrote anything
-        if (session.messageCount === 0) {
+        // Basic counts
+        if (session.firstViewedAt) viewChatCount++;
+        if (session.chatStartedAt) startChatCount++;
+        if (session.finalButtonClicked) finalButtonClicks++;
+        if (session.whatsappButtonClicked) whatsappButtonClicks++;
+        
+        // NEW SPECIFIC METRICS as requested:
+        // 1. View Chat: Sessions that were viewed but with minimal interaction (messageCount <= 3)
+        if (session.messageCount <= 3) {
           viewChatOnly++;
         }
         
-        // 2. Start Final: People who have messages but never clicked final button  
-        if (session.messageCount > 0 && !session.finalButtonClicked) {
+        // 2. Start Final: Sessions with substantial messages (>3) but no final button click
+        if (session.messageCount > 3 && !session.finalButtonClicked) {
           startFinalOnly++;
         }
         
-        // 3. View Final: People who completed chat (have email = completed consultation) but didn't click final button
+        // 3. View Final: Complete conversations (with email) but no final button click
         if (session.userEmail && !session.finalButtonClicked) {
           viewFinalOnly++;
         }
       });
       
-      console.log(`Corrected metrics: viewChatOnly=${viewChatOnly}, startFinalOnly=${startFinalOnly}, viewFinalOnly=${viewFinalOnly}`);
+      console.log(`FINAL METRICS: total=${realSessions.length}, viewChat=${viewChatCount}, startChat=${startChatCount}, final=${finalButtonClicks}, whatsapp=${whatsappButtonClicks}`);
+      console.log(`SPECIFIC METRICS: viewOnly=${viewChatOnly}, startFinal=${startFinalOnly}, viewFinal=${viewFinalOnly}`);
 
-      // ULTRA-SIMPLIFIED conversion rates for instant response
+      // Calculate conversion rates (not displayed but kept for API compatibility)
       const viewToStartRate = viewChatCount > 0 ? ((startChatCount / viewChatCount) * 100).toFixed(1) : '0';
       const startToFinalRate = startChatCount > 0 ? ((finalButtonClicks / startChatCount) * 100).toFixed(1) : '0';
       const viewToFinalRate = viewChatCount > 0 ? ((finalButtonClicks / viewChatCount) * 100).toFixed(1) : '0';
       
-      console.log(`Stats computed successfully in optimized mode`);
+      console.log(`Stats computed successfully - all metrics corrected`);
 
       res.json({
         totalSessions: realSessions.length,
