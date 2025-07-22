@@ -720,15 +720,15 @@ export default function AdminDashboard() {
             </div>
           </Card>
 
-          {/* NEW SPECIFIC METRICS AS REQUESTED */}
+          {/* CONVERSION RATE METRICS */}
           <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-600 mb-1 font-medium">View Chat</p>
-                <p className="text-xl font-bold text-slate-700">{stats?.viewChatOnly || 0}</p>
+                <p className="text-xs text-blue-600 mb-1 font-medium">View → Start</p>
+                <p className="text-xl font-bold text-blue-700">{stats?.conversionRates?.viewToStart || '0'}%</p>
               </div>
-              <div className="p-2 bg-slate-100 rounded-lg">
-                <EyeOff className="h-4 w-4 text-slate-600" />
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Eye className="h-4 w-4 text-blue-600" />
               </div>
             </div>
           </Card>
@@ -736,11 +736,11 @@ export default function AdminDashboard() {
           <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-indigo-600 mb-1 font-medium">Start Final</p>
-                <p className="text-xl font-bold text-indigo-700">{stats?.startFinalOnly || 0}</p>
+                <p className="text-xs text-green-600 mb-1 font-medium">Start → Final</p>
+                <p className="text-xl font-bold text-green-700">{stats?.conversionRates?.startToFinal || '0'}%</p>
               </div>
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <PlayCircle className="h-4 w-4 text-indigo-600" />
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Play className="h-4 w-4 text-green-600" />
               </div>
             </div>
           </Card>
@@ -748,41 +748,17 @@ export default function AdminDashboard() {
           <Card className="bg-white p-3 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-rose-600 mb-1 font-medium">View Final</p>
-                <p className="text-xl font-bold text-rose-700">{stats?.viewFinalOnly || 0}</p>
+                <p className="text-xs text-purple-600 mb-1 font-medium">View → Final</p>
+                <p className="text-xl font-bold text-purple-700">{stats?.conversionRates?.viewToFinal || '0'}%</p>
               </div>
-              <div className="p-2 bg-rose-100 rounded-lg">
-                <MessageCircleX className="h-4 w-4 text-rose-600" />
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <BarChart3 className="h-4 w-4 text-purple-600" />
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Conversion Rates - Compact */}
-        {stats?.conversionRates && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 p-2 border border-blue-200">
-              <div className="text-center">
-                <p className="text-xs text-blue-600 mb-1">View → Start</p>
-                <p className="text-lg font-bold text-blue-700">{stats.conversionRates.viewToStart}%</p>
-              </div>
-            </Card>
-            
-            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 p-2 border border-green-200">
-              <div className="text-center">
-                <p className="text-xs text-green-600 mb-1">Start → Final</p>
-                <p className="text-lg font-bold text-green-700">{stats.conversionRates.startToFinal}%</p>
-              </div>
-            </Card>
-            
-            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 p-2 border border-purple-200">
-              <div className="text-center">
-                <p className="text-xs text-purple-600 mb-1">View → Final</p>
-                <p className="text-lg font-bold text-purple-700">{stats.conversionRates.viewToFinal}%</p>
-              </div>
-            </Card>
-          </div>
-        )}
+
 
         {/* AI Real-time System */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6">
