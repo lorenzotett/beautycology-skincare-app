@@ -764,6 +764,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startChatCount = realSessions.filter(session => session.chatStartedAt).length;
       const finalButtonClicks = realSessions.filter(session => session.finalButtonClicked).length;
       const whatsappButtonClicks = realSessions.filter(session => session.whatsappButtonClicked).length;
+      
+      // Calculate new specific metrics as requested
+      // 1. View Chat: People who view homepage but don't write anything (no chat start)
+      const viewChatOnly = realSessions.filter(session => 
+        session.firstViewedAt && !session.chatStartedAt
+      ).length;
+      
+      // 2. Start Final: People who start chat but don't click final button
+      const startFinalOnly = realSessions.filter(session => 
+        session.chatStartedAt && !session.finalButtonClicked
+      ).length;
+      
+      // 3. View Final: People who complete conversation but don't click final button
+      // We need to check message count to identify completed conversations
+      let viewFinalOnly = 0;
+      for (const session of realSessions) {
+        // Skip if they clicked final button
+        if (session.finalButtonClicked) continue;
+        
+        try {
+          const messages = await storage.getChatMessages(session.sessionId);
+          // Consider conversation completed if it has 5+ messages (substantial conversation)
+          if (messages.length >= 5) {
+            viewFinalOnly++;
+          }
+        } catch (error) {
+          console.error(`Error fetching messages for session ${session.sessionId}:`, error);
+        }
+      }
 
       // Calculate conversion rates with logical validation
       // Only use sessions that have complete new tracking (view + start tracking)
@@ -796,6 +825,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startChatCount,
         finalButtonClicks,
         whatsappButtonClicks,
+        // New specific metrics as requested
+        viewChatOnly,
+        startFinalOnly,
+        viewFinalOnly,
         conversionRates: {
           viewToStart: viewToStartRate,
           startToFinal: startToFinalRate,
