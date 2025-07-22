@@ -776,9 +776,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let startChatCount = 0; 
       let finalButtonClicks = 0;
       let whatsappButtonClicks = 0;
-      let viewChatOnly = viewOnlySessions.length; // View Chat = View Only sessions
+      let viewChatOnly = 0; // Will count all homepage views (View Only + Real sessions)
       let startFinalOnly = 0; 
       let viewFinalOnly = 0;
+      
+      // NEW DEFINITION: View Chat = ALL sessions that loaded the homepage (View Only + Real sessions)
+      // This counts everyone who accessed the chat link and saw the welcome screen
+      viewChatOnly = viewOnlySessions.length + realSessions.length;
       
       // Process real sessions
       for (const session of realSessions) {
@@ -815,7 +819,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`FINAL METRICS: total=${realSessions.length}, viewChat=${viewChatCount}, startChat=${startChatCount}, final=${finalButtonClicks}, whatsapp=${whatsappButtonClicks}`);
-      console.log(`SPECIFIC METRICS: viewOnly=${viewChatOnly}, startFinal=${startFinalOnly}, viewFinal=${viewFinalOnly}`);
+      console.log(`UPDATED METRICS: viewChatAll=${viewChatOnly}, startFinal=${startFinalOnly}, viewFinal=${viewFinalOnly}`);
+      console.log(`VIEW CHAT BREAKDOWN: viewOnlySessions=${viewOnlySessions.length}, realSessions=${realSessions.length}, total=${viewChatOnly}`);
 
       // Calculate conversion rates (not displayed but kept for API compatibility)
       const viewToStartRate = viewChatCount > 0 ? ((startChatCount / viewChatCount) * 100).toFixed(1) : '0';

@@ -726,9 +726,10 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-xs text-slate-600 mb-1 font-medium">View Chat</p>
                 <p className="text-xl font-bold text-slate-700">{stats?.viewChatOnly || 0}</p>
+                <p className="text-xs text-slate-500 mt-1">Tutti gli accessi homepage</p>
               </div>
               <div className="p-2 bg-slate-100 rounded-lg">
-                <EyeOff className="h-4 w-4 text-slate-600" />
+                <Eye className="h-4 w-4 text-slate-600" />
               </div>
             </div>
           </Card>

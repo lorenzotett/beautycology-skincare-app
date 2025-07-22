@@ -78,9 +78,9 @@ This is a full-stack web application that provides AI-powered skin care consulta
   - FIXED metric calculation logic with proper SQL queries for accurate messageCount per session
   - Enhanced metrics layout with 6 responsive cards (removed View Item, Inizio Chat, Click Pulsanti)
   - Corrected metric definitions:
-    * View Chat: Users who visit homepage but send 0 messages (never start conversation)
-    * Start Final: Users who send messages but don't click final button
-    * View Final: Users who complete consultation (have email) but don't click final button
+    * View Chat: ALL users who access the chat link and see the homepage welcome screen (includes both those who start and those who don't)
+    * Start Final: Users who send messages but don't reach the final message with buttons
+    * View Final: Users who see the final message with buttons but don't click them
   - Removed artificial 1000 session limit - now analyzes ALL sessions for accurate totals
   - All metrics respect temporal date filtering and display as absolute numbers (no percentages)
   - Dashboard now shows correct totals matching session count with real interaction data
