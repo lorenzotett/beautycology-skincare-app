@@ -771,32 +771,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const finalButtonClicks = realSessions.filter(session => session.finalButtonClicked).length;
       const whatsappButtonClicks = realSessions.filter(session => session.whatsappButtonClicked).length;
       
-      // ULTRA-FAST calculation of new specific metrics
+      // CORRECTED metrics calculation
       console.log(`Computing metrics for ${realSessions.length} real sessions`);
       
       let viewChatOnly = 0;
       let startFinalOnly = 0; 
       let viewFinalOnly = 0;
       
-      // Single loop for maximum performance
+      // Single loop for maximum performance with CORRECTED logic based on actual data patterns
       realSessions.forEach(session => {
-        // 1. View Chat: People who view homepage but don't write anything
-        if (session.firstViewedAt && !session.chatStartedAt) {
+        // 1. View Chat: People who have sessions but no real messages (messageCount = 0)
+        // This represents people who visited but never actually wrote anything
+        if (session.messageCount === 0) {
           viewChatOnly++;
         }
         
-        // 2. Start Final: People who start chat but don't click final button
-        if (session.chatStartedAt && !session.finalButtonClicked) {
+        // 2. Start Final: People who have messages but never clicked final button  
+        if (session.messageCount > 0 && !session.finalButtonClicked) {
           startFinalOnly++;
         }
         
-        // 3. View Final: Simplified - sessions with userEmail but no final button click
+        // 3. View Final: People who completed chat (have email = completed consultation) but didn't click final button
         if (session.userEmail && !session.finalButtonClicked) {
           viewFinalOnly++;
         }
       });
       
-      console.log(`Metrics calculated: viewChatOnly=${viewChatOnly}, startFinalOnly=${startFinalOnly}, viewFinalOnly=${viewFinalOnly}`);
+      console.log(`Corrected metrics: viewChatOnly=${viewChatOnly}, startFinalOnly=${startFinalOnly}, viewFinalOnly=${viewFinalOnly}`);
 
       // ULTRA-SIMPLIFIED conversion rates for instant response
       const viewToStartRate = viewChatCount > 0 ? ((startChatCount / viewChatCount) * 100).toFixed(1) : '0';

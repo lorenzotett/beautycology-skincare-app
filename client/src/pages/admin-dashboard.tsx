@@ -758,31 +758,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Conversion Rates - Compact */}
-        {stats?.conversionRates && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 p-2 border border-blue-200">
-              <div className="text-center">
-                <p className="text-xs text-blue-600 mb-1">View → Start</p>
-                <p className="text-lg font-bold text-blue-700">{stats.conversionRates.viewToStart}%</p>
-              </div>
-            </Card>
-            
-            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 p-2 border border-green-200">
-              <div className="text-center">
-                <p className="text-xs text-green-600 mb-1">Start → Final</p>
-                <p className="text-lg font-bold text-green-700">{stats.conversionRates.startToFinal}%</p>
-              </div>
-            </Card>
-            
-            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 p-2 border border-purple-200">
-              <div className="text-center">
-                <p className="text-xs text-purple-600 mb-1">View → Final</p>
-                <p className="text-lg font-bold text-purple-700">{stats.conversionRates.viewToFinal}%</p>
-              </div>
-            </Card>
-          </div>
-        )}
+
 
         {/* AI Real-time System */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6">
