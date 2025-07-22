@@ -787,13 +787,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // CORRECTED METRICS - using actual messageCount from database
         const msgCount = session.messageCount || 0;
         
-        // 1. View Chat: Sessions with minimal interaction (messageCount <= 3)  
-        if (msgCount <= 3) {
+        // 1. View Chat: Sessions with NO messages (users who entered but never sent first message)
+        if (msgCount === 0) {
           viewChatOnly++;
         }
         
-        // 2. Start Final: Sessions with substantial messages (>3) but no final button click
-        if (msgCount > 3 && !session.finalButtonClicked) {
+        // 2. Start Final: Sessions with ANY messages (>0) but no final button click
+        if (msgCount > 0 && !session.finalButtonClicked) {
           startFinalOnly++;
         }
         
