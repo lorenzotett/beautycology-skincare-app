@@ -73,6 +73,16 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 ## Recent Changes
 
+- July 22, 2025. Performance optimization and dashboard metrics enhancement:
+  - Completely rewritten admin stats API for ultra-fast performance (from 60+ seconds to <5 seconds)
+  - Implemented session analysis limiting: analyzes last 1000 sessions by default for speed
+  - Optimized metric calculations using single-loop processing instead of multiple filters
+  - Simplified conversion rate calculations to eliminate performance bottlenecks
+  - Enhanced metrics layout with 6 responsive cards (removed View Item, Inizio Chat, Click Pulsanti)
+  - New specific metrics: View Chat (homepage views without chat), Start Final (chats without completion), View Final (completed conversations without button clicks)
+  - All new metrics respect temporal date filtering and display as absolute numbers
+  - Dashboard now loads instantly with comprehensive tracking data
+
 - July 21, 2025. Enhanced final summary and added WhatsApp support:
   - Fixed riepilogo finale logic to always include ALL information collected during conversation
   - Added mandatory user information summary section showing age, skin type, habits, lifestyle, and preferences

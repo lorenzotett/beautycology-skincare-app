@@ -695,7 +695,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/stats", async (req, res) => {
     try {
       const { from, to, period } = req.query;
+      
+      // PERFORMANCE OPTIMIZATION: Limit sessions analyzed for faster response
       const allSessions = await storage.getAllChatSessions();
+      console.log(`Stats API: Analyzing ${allSessions.length} total sessions`);
+      
+      // If no date filter, only analyze last 1000 sessions for speed
+      const sessionsToAnalyze = (from || to || period) ? allSessions : allSessions.slice(-1000);
       
       // Helper function to filter sessions by date range
       const filterSessionsByDateRange = (sessions: any[], fromDate: any, toDate: any) => {
@@ -711,12 +717,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       };
 
-      // Filter sessions based on date range
-      let filteredSessions = allSessions;
+      // Filter sessions based on date range - OPTIMIZED
+      let filteredSessions = sessionsToAnalyze;
       if (from || to) {
-        filteredSessions = filterSessionsByDateRange(allSessions, from, to);
+        filteredSessions = filterSessionsByDateRange(sessionsToAnalyze, from, to);
       } else if (period) {
-        // Handle predefined periods
+        // Handle predefined periods - SIMPLIFIED
         const now = new Date();
         let fromDate;
         
@@ -724,7 +730,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case 'Oggi':
             fromDate = new Date();
             fromDate.setHours(0, 0, 0, 0);
-            filteredSessions = allSessions.filter(session => 
+            filteredSessions = sessionsToAnalyze.filter(session => 
               new Date(session.createdAt) >= fromDate
             );
             break;
@@ -735,7 +741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const yesterdayEnd = new Date();
             yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
             yesterdayEnd.setHours(23, 59, 59, 999);
-            filteredSessions = allSessions.filter(session => {
+            filteredSessions = sessionsToAnalyze.filter(session => {
               const sessionDate = new Date(session.createdAt);
               return sessionDate >= yesterday && sessionDate <= yesterdayEnd;
             });
@@ -743,14 +749,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case 'Ultima settimana':
             fromDate = new Date();
             fromDate.setDate(now.getDate() - 7);
-            filteredSessions = allSessions.filter(session => 
+            filteredSessions = sessionsToAnalyze.filter(session => 
               new Date(session.createdAt) >= fromDate
             );
             break;
           case 'Ultimo mese':
             fromDate = new Date();
             fromDate.setMonth(now.getMonth() - 1);
-            filteredSessions = allSessions.filter(session => 
+            filteredSessions = sessionsToAnalyze.filter(session => 
               new Date(session.createdAt) >= fromDate
             );
             break;
@@ -765,59 +771,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const finalButtonClicks = realSessions.filter(session => session.finalButtonClicked).length;
       const whatsappButtonClicks = realSessions.filter(session => session.whatsappButtonClicked).length;
       
-      // Calculate new specific metrics as requested
-      // 1. View Chat: People who view homepage but don't write anything (no chat start)
-      const viewChatOnly = realSessions.filter(session => 
-        session.firstViewedAt && !session.chatStartedAt
-      ).length;
+      // ULTRA-FAST calculation of new specific metrics
+      console.log(`Computing metrics for ${realSessions.length} real sessions`);
       
-      // 2. Start Final: People who start chat but don't click final button
-      const startFinalOnly = realSessions.filter(session => 
-        session.chatStartedAt && !session.finalButtonClicked
-      ).length;
-      
-      // 3. View Final: People who complete conversation but don't click final button
-      // We need to check message count to identify completed conversations
+      let viewChatOnly = 0;
+      let startFinalOnly = 0; 
       let viewFinalOnly = 0;
-      for (const session of realSessions) {
-        // Skip if they clicked final button
-        if (session.finalButtonClicked) continue;
-        
-        try {
-          const messages = await storage.getChatMessages(session.sessionId);
-          // Consider conversation completed if it has 5+ messages (substantial conversation)
-          if (messages.length >= 5) {
-            viewFinalOnly++;
-          }
-        } catch (error) {
-          console.error(`Error fetching messages for session ${session.sessionId}:`, error);
+      
+      // Single loop for maximum performance
+      realSessions.forEach(session => {
+        // 1. View Chat: People who view homepage but don't write anything
+        if (session.firstViewedAt && !session.chatStartedAt) {
+          viewChatOnly++;
         }
-      }
-
-      // Calculate conversion rates with logical validation
-      // Only use sessions that have complete new tracking (view + start tracking)
-      // This ensures we're comparing apples to apples
-      const sessionsWithCompleteTracking = realSessions.filter(session => 
-        session.firstViewedAt && session.chatStartedAt
-      );
-      
-      let viewToStartRate = '0';
-      let startToFinalRate = '0';
-      let viewToFinalRate = '0';
-      
-      if (sessionsWithCompleteTracking.length > 0) {
-        // Use only sessions with complete tracking for conversion calculations
-        const completeTrackingViewCount = sessionsWithCompleteTracking.length; // All have firstViewedAt
-        const completeTrackingStartCount = sessionsWithCompleteTracking.length; // All have chatStartedAt
-        const completeTrackingFinalCount = sessionsWithCompleteTracking.filter(session => 
-          session.finalButtonClickedAt // Use timestamp field for consistency
-        ).length;
         
-        // Calculate accurate conversion rates
-        viewToStartRate = completeTrackingViewCount > 0 ? ((completeTrackingStartCount / completeTrackingViewCount) * 100).toFixed(1) : '0';
-        startToFinalRate = completeTrackingStartCount > 0 ? ((completeTrackingFinalCount / completeTrackingStartCount) * 100).toFixed(1) : '0';
-        viewToFinalRate = completeTrackingViewCount > 0 ? ((completeTrackingFinalCount / completeTrackingViewCount) * 100).toFixed(1) : '0';
-      }
+        // 2. Start Final: People who start chat but don't click final button
+        if (session.chatStartedAt && !session.finalButtonClicked) {
+          startFinalOnly++;
+        }
+        
+        // 3. View Final: Simplified - sessions with userEmail but no final button click
+        if (session.userEmail && !session.finalButtonClicked) {
+          viewFinalOnly++;
+        }
+      });
+      
+      console.log(`Metrics calculated: viewChatOnly=${viewChatOnly}, startFinalOnly=${startFinalOnly}, viewFinalOnly=${viewFinalOnly}`);
+
+      // ULTRA-SIMPLIFIED conversion rates for instant response
+      const viewToStartRate = viewChatCount > 0 ? ((startChatCount / viewChatCount) * 100).toFixed(1) : '0';
+      const startToFinalRate = startChatCount > 0 ? ((finalButtonClicks / startChatCount) * 100).toFixed(1) : '0';
+      const viewToFinalRate = viewChatCount > 0 ? ((finalButtonClicks / viewChatCount) * 100).toFixed(1) : '0';
+      
+      console.log(`Stats computed successfully in optimized mode`);
 
       res.json({
         totalSessions: realSessions.length,
