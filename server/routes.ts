@@ -820,23 +820,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (likelyCompleted) {
           chatCompletate++;
           
-          // Calculate chat duration for completed chats
-          if (session.chatStartedAt && session.finalButtonClickedAt) {
+          // Calculate chat duration for completed chats with improved logic
+          if (session.chatStartedAt) {
             const startTime = new Date(session.chatStartedAt);
-            const endTime = new Date(session.finalButtonClickedAt);
-            const durationMs = endTime.getTime() - startTime.getTime();
-            if (durationMs > 0 && durationMs < 3600000) { // Max 1 hour to filter outliers
-              totalChatDuration += durationMs;
-              completedChatsWithDuration++;
+            let endTime = null;
+            let durationType = '';
+            
+            // Priority 1: Use final button click time (most accurate)
+            if (session.finalButtonClickedAt) {
+              endTime = new Date(session.finalButtonClickedAt);
+              durationType = 'button';
             }
-          } else if (session.chatStartedAt && session.updatedAt) {
-            // Fallback: use updatedAt as end time for sessions without explicit final click
-            const startTime = new Date(session.chatStartedAt);
-            const endTime = new Date(session.updatedAt);
-            const durationMs = endTime.getTime() - startTime.getTime();
-            if (durationMs > 0 && durationMs < 3600000) { // Max 1 hour to filter outliers
-              totalChatDuration += durationMs;
-              completedChatsWithDuration++;
+            // Priority 2: For email-provided sessions, use a more intelligent estimation
+            else if (session.userEmail && session.updatedAt) {
+              // For sessions with email but no final click, estimate completion time
+              // Use updatedAt but cap it to a reasonable consultation duration
+              const potentialEndTime = new Date(session.updatedAt);
+              const potentialDurationMs = potentialEndTime.getTime() - startTime.getTime();
+              
+              // If duration seems reasonable (5-45 minutes), use updatedAt
+              if (potentialDurationMs > 300000 && potentialDurationMs < 2700000) { // 5-45 minutes
+                endTime = potentialEndTime;
+                durationType = 'email_estimated';
+              }
+            }
+            
+            // Calculate duration if we have a valid end time
+            if (endTime) {
+              const durationMs = endTime.getTime() - startTime.getTime();
+              const durationMinutes = Math.round(durationMs / 60000);
+              
+              // Validate duration is reasonable (1-60 minutes)
+              if (durationMs > 60000 && durationMs < 3600000) {
+                totalChatDuration += durationMs;
+                completedChatsWithDuration++;
+                
+                // Enhanced logging for validation
+                if (completedChatsWithDuration <= 5) {
+                  console.log(`Duration calc: ${session.userName} - ${durationMinutes}min (${durationType})`);
+                }
+              }
             }
           }
         } else {
@@ -852,7 +875,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`FINAL METRICS: total=${realSessions.length}, viewChat=${viewChatCount}, startChat=${startChatCount}, final=${finalButtonClicks}, whatsapp=${whatsappButtonClicks}`);
       console.log(`UPDATED METRICS: viewChatAll=${viewChatOnly}, chatCompletate=${chatCompletate}, startFinal=${startFinalOnly}, viewFinal=${viewFinalOnly}`);
-      console.log(`DURATION METRICS: avgDuration=${averageChatDurationMinutes}min from ${completedChatsWithDuration} completed chats`);
+      console.log(`DURATION METRICS: avgDuration=${averageChatDurationMinutes}min from ${completedChatsWithDuration}/${chatCompletate} completed chats (${Math.round(completedChatsWithDuration/chatCompletate*100)}% coverage)`);
       console.log(`VIEW CHAT BREAKDOWN: viewOnlySessions=${viewOnlySessions.length}, realSessions=${realSessions.length}, total=${viewChatOnly}`);
 
       // Calculate conversion rates (not displayed but kept for API compatibility)
