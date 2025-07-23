@@ -777,6 +777,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let finalButtonClicks = 0;
       let whatsappButtonClicks = 0;
       let viewChatOnly = 0; // Will count all homepage views (View Only + Real sessions)
+      let chatCompletate = 0; // People who reach final message with ingredients and recommendations
       let startFinalOnly = 0; 
       let viewFinalOnly = 0;
       
@@ -807,6 +808,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
            lastMessage.content.includes('crema personalizzata') ||
            lastMessage.content.includes('Accedi alla tua'));
         
+        // Chat Completate: Count people who reached the final message (regardless of clicks)
+        if (hasFinalMessage) {
+          chatCompletate++;
+        }
+        
         // 2. Start Final: Sessions that started chat but didn't reach final message
         if (!hasFinalMessage && !session.finalButtonClicked && !session.whatsappButtonClicked) {
           startFinalOnly++;
@@ -819,7 +825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`FINAL METRICS: total=${realSessions.length}, viewChat=${viewChatCount}, startChat=${startChatCount}, final=${finalButtonClicks}, whatsapp=${whatsappButtonClicks}`);
-      console.log(`UPDATED METRICS: viewChatAll=${viewChatOnly}, startFinal=${startFinalOnly}, viewFinal=${viewFinalOnly}`);
+      console.log(`UPDATED METRICS: viewChatAll=${viewChatOnly}, chatCompletate=${chatCompletate}, startFinal=${startFinalOnly}, viewFinal=${viewFinalOnly}`);
       console.log(`VIEW CHAT BREAKDOWN: viewOnlySessions=${viewOnlySessions.length}, realSessions=${realSessions.length}, total=${viewChatOnly}`);
 
       // Calculate conversion rates (not displayed but kept for API compatibility)
@@ -837,6 +843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         whatsappButtonClicks,
         // New specific metrics as requested
         viewChatOnly,
+        chatCompletate,
         startFinalOnly,
         viewFinalOnly,
         conversionRates: {
