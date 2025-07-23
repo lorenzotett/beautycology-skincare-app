@@ -800,6 +800,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       viewChatOnly = viewOnlySessions.length + realSessions.length;
       
       // OPTIMIZED: Process real sessions using only session metadata (no message loading)
+      let totalChatDuration = 0;
+      let completedChatsWithDuration = 0;
+      
       for (const session of realSessions) {
         // Basic counts from session fields
         if (session.firstViewedAt) viewChatCount++;
@@ -816,14 +819,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (likelyCompleted) {
           chatCompletate++;
+          
+          // Calculate chat duration for completed chats
+          if (session.chatStartedAt && session.finalButtonClickedAt) {
+            const startTime = new Date(session.chatStartedAt);
+            const endTime = new Date(session.finalButtonClickedAt);
+            const durationMs = endTime.getTime() - startTime.getTime();
+            if (durationMs > 0 && durationMs < 3600000) { // Max 1 hour to filter outliers
+              totalChatDuration += durationMs;
+              completedChatsWithDuration++;
+            }
+          } else if (session.chatStartedAt && session.updatedAt) {
+            // Fallback: use updatedAt as end time for sessions without explicit final click
+            const startTime = new Date(session.chatStartedAt);
+            const endTime = new Date(session.updatedAt);
+            const durationMs = endTime.getTime() - startTime.getTime();
+            if (durationMs > 0 && durationMs < 3600000) { // Max 1 hour to filter outliers
+              totalChatDuration += durationMs;
+              completedChatsWithDuration++;
+            }
+          }
         } else {
           // Sessions that started but didn't show completion signs
           startFinalOnly++;
         }
       }
       
+      // Calculate average chat duration in minutes
+      const averageChatDurationMinutes = completedChatsWithDuration > 0 
+        ? Math.round(totalChatDuration / completedChatsWithDuration / 60000) 
+        : 0;
+      
       console.log(`FINAL METRICS: total=${realSessions.length}, viewChat=${viewChatCount}, startChat=${startChatCount}, final=${finalButtonClicks}, whatsapp=${whatsappButtonClicks}`);
       console.log(`UPDATED METRICS: viewChatAll=${viewChatOnly}, chatCompletate=${chatCompletate}, startFinal=${startFinalOnly}, viewFinal=${viewFinalOnly}`);
+      console.log(`DURATION METRICS: avgDuration=${averageChatDurationMinutes}min from ${completedChatsWithDuration} completed chats`);
       console.log(`VIEW CHAT BREAKDOWN: viewOnlySessions=${viewOnlySessions.length}, realSessions=${realSessions.length}, total=${viewChatOnly}`);
 
       // Calculate conversion rates (not displayed but kept for API compatibility)
@@ -844,6 +873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         chatCompletate,
         startFinalOnly,
         viewFinalOnly,
+        averageChatDurationMinutes, // NEW: Average chat duration in minutes
         conversionRates: {
           viewToStart: viewToStartRate,
           startToFinal: startToFinalRate,

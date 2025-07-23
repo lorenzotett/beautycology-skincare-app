@@ -24,6 +24,7 @@ interface AdminStats {
   chatCompletate: number;
   startFinalOnly: number;
   viewFinalOnly: number;
+  averageChatDurationMinutes: number; // NEW: Average chat duration in minutes
   conversionRates: {
     viewToStart: string;
     startToFinal: string;
@@ -683,8 +684,8 @@ export default function AdminDashboard() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="p-4">
-        {/* Statistics Cards - New Layout with 5 metrics as requested */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+        {/* Statistics Cards - Layout with 6 metrics including Duration */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           {/* 1. View Chat */}
           <Card className="bg-white p-4 border border-gray-200">
             <div className="flex items-center justify-between">
@@ -746,6 +747,19 @@ export default function AdminDashboard() {
               </div>
               <div className="p-3 bg-emerald-100 rounded-lg">
                 <MessageSquare className="h-5 w-5 text-emerald-600" />
+              </div>
+            </div>
+          </Card>
+
+          {/* 6. Durata Media Chat */}
+          <Card className="bg-white p-4 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-orange-600 mb-2 font-medium">Durata Media Chat</p>
+                <p className="text-2xl font-bold text-orange-700">{stats?.averageChatDurationMinutes || 0}min</p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <Clock className="h-5 w-5 text-orange-600" />
               </div>
             </div>
           </Card>
