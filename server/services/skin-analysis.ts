@@ -214,10 +214,16 @@ export class SkinAnalysisService {
       validated.elasticita = 80;
     }
     
-    // REGOLA 5: SICUREZZA FINALE - Se elasticità è ancora sotto 50, forza a 70 (presunzione di normalità)
-    if (validated.elasticita < 50) {
-      console.log(`🚨 CORREZIONE SICUREZZA ELASTICITÀ: da ${validated.elasticita} a 70 (presunzione di normalità)`);
-      validated.elasticita = 70;
+    // REGOLA 5: SICUREZZA FINALE - SOGLIA MINIMA ASSOLUTA per elasticità
+    if (validated.elasticita < 60) {
+      console.log(`🚨 CORREZIONE SICUREZZA FINALE: da ${validated.elasticita} a 75 (soglia minima assoluta)`);
+      validated.elasticita = 75;
+    }
+    
+    // REGOLA 6: ULTRA-SICUREZZA - Nessuna elasticità può essere sotto 70 senza motivi gravi
+    if (validated.elasticita < 70 && validated.rughe < 60) {
+      console.log(`🛡️ ULTRA-SICUREZZA ELASTICITÀ: da ${validated.elasticita} a 75 (nessuna rughe severe)`);
+      validated.elasticita = 75;
     }
     
     // 2. ALTRI PARAMETRI - Controlli di coerenza
