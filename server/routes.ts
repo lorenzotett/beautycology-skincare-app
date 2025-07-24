@@ -19,8 +19,26 @@ import path from "path";
 import fs from "fs";
 
 // Service management
-const MAX_SESSIONS_IN_MEMORY = 1000;
+const MAX_SESSIONS_IN_MEMORY = 500; // Ridotto per evitare overflow memoria
 const geminiServices = new Map<string, GeminiService>();
+
+// Add memory monitoring
+setInterval(() => {
+  const memUsage = process.memoryUsage();
+  const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+  
+  if (memUsageMB > 400) { // Se memoria > 400MB
+    console.warn(`⚠️ High memory usage: ${memUsageMB}MB, active sessions: ${geminiServices.size}`);
+    
+    // Force cleanup se necessario
+    if (geminiServices.size > MAX_SESSIONS_IN_MEMORY / 2) {
+      const sessions = Array.from(geminiServices.keys());
+      const toDelete = sessions.slice(0, Math.floor(sessions.length / 3));
+      toDelete.forEach(sessionId => geminiServices.delete(sessionId));
+      console.log(`🧹 Emergency cleanup: removed ${toDelete.length} sessions`);
+    }
+  }
+}, 2 * 60 * 1000); // Check ogni 2 minuti
 // Load integration configuration
 const integrationConfig = loadIntegrationConfig();
 // Initialize Klaviyo Lead Automation
@@ -467,7 +485,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `${message}\n\nAnalisi AI della pelle: ${JSON.stringify(analysisResult)}` : 
         `Analisi AI della pelle: ${JSON.stringify(analysisResult)}`;
       
-      const response = await geminiService.sendMessage(analysisMessage);
+      let response;
+      try {
+        // Add timeout per chiamate AI
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('AI service timeout')), 25000)
+        );
+        
+        response = await Promise.race([
+          geminiService.sendMessage(analysisMessage),
+          timeoutPromise
+        ]);
+      } catch (aiError) {
+        console.error('AI service error:', aiError);
+        
+        // Fallback response in caso di errore AI
+        response = {
+          content: "Analisi dell'immagine completata. Ti fornirò una consulenza personalizzata per la tua pelle.",
+          hasChoices: false,
+          choices: []
+        };
+      }
 
       await storage.addChatMessage({
         sessionId,

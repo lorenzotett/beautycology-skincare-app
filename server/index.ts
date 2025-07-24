@@ -68,12 +68,32 @@ app.use((req, res, next) => {
 // Add global error handlers to prevent crashes
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception (preventing crash):', error);
+  console.error('Stack:', error.stack);
   // Don't exit - this is what causes the intermittent errors
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  if (reason instanceof Error) {
+    console.error('Error stack:', reason.stack);
+  }
   // Don't exit - handle gracefully
+});
+
+// Add warning handlers
+process.on('warning', (warning) => {
+  console.warn('Process warning:', warning.name, warning.message);
+});
+
+// Graceful shutdown handler
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  process.exit(0);
 });
 
 (async () => {
@@ -362,10 +382,20 @@ process.on('unhandledRejection', (reason, promise) => {
 
   // Add health check endpoint
   app.get('/health', (req, res) => {
+    const memUsage = process.memoryUsage();
+    const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+    
     res.status(200).json({ 
       status: 'healthy', 
       timestamp: new Date().toISOString(),
-      uptime: process.uptime()
+      uptime: Math.round(process.uptime()),
+      memory: {
+        heapUsed: memUsageMB + 'MB',
+        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + 'MB'
+      },
+      activeSessions: geminiServices ? geminiServices.size : 0,
+      nodeVersion: process.version,
+      platform: process.platform
     });
   });
 
@@ -387,21 +417,31 @@ process.on('unhandledRejection', (reason, promise) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
     
-    console.error('Server error:', {
-      status,
-      message,
-      stack: err.stack,
-      url: _req.url,
-      method: _req.method
-    });
+    // Log dettagliato dell'errore
+    console.error('=== SERVER ERROR ===');
+    console.error('Status:', status);
+    console.error('Message:', message);
+    console.error('URL:', _req.url);
+    console.error('Method:', _req.method);
+    console.error('Headers:', _req.headers);
+    console.error('Body:', _req.body);
+    console.error('Stack:', err.stack);
+    console.error('===================');
 
     // Only send response if headers haven't been sent yet
     if (!res.headersSent) {
-      res.status(status).json({ message });
+      try {
+        res.status(status).json({ 
+          message: status === 500 ? "Si è verificato un errore temporaneo. Riprova tra poco." : message,
+          timestamp: new Date().toISOString(),
+          requestId: _req.headers['x-request-id'] || 'unknown'
+        });
+      } catch (sendError) {
+        console.error('Error sending error response:', sendError);
+      }
     }
     
     // Don't throw the error again - just log it
-    // throwing here causes the server to crash occasionally
   });
 
   // Admin access routes MUST be defined BEFORE catch-all routes
