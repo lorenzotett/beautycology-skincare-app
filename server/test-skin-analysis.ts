@@ -267,6 +267,48 @@ class SkinAnalysisValidator {
     } else {
       console.log("   ❌ Correzione coerenza non applicata\n");
     }
+
+    // Test 3: CASO ESTREMO - Elasticità molto bassa (20)
+    console.log("Test 3: Caso estremo - elasticità critica");
+    const analysis3 = this.simulateAnalysis({
+      elasticita: 20,  // Molto bassa
+      rughe: 30,       // Normali
+      danni_solari: 25,// Normali
+      acne: 40,        // Moderata
+      idratazione: 65  // Buona
+    });
+
+    const validated3 = service['validateAndCorrectAnalysis'](analysis3);
+    
+    console.log(`   Prima: elasticità ${analysis3.elasticita}`);
+    console.log(`   Dopo: elasticità ${validated3.elasticita}`);
+    
+    if (validated3.elasticita >= 70) {
+      console.log("   ✅ Correzione sicurezza finale applicata\n");
+    } else {
+      console.log("   ❌ Valore ancora problematico dopo correzione\n");
+    }
+
+    // Test 4: Pelle con solo acne (caso reale comune)
+    console.log("Test 4: Pelle giovane con acne");
+    const analysis4 = this.simulateAnalysis({
+      elasticita: 45,  // Incorrettamente bassa
+      rughe: 15,       // Molto basse (pelle giovane)
+      danni_solari: 20,// Bassi
+      acne: 70,        // Alta (indicatore pelle giovane)
+      idratazione: 60  // Discreta
+    });
+
+    const validated4 = service['validateAndCorrectAnalysis'](analysis4);
+    
+    console.log(`   Prima: elasticità ${analysis4.elasticita}`);
+    console.log(`   Dopo: elasticità ${validated4.elasticita}`);
+    
+    if (validated4.elasticita >= 80) {
+      console.log("   ✅ Riconosciuta pelle giovane con acne\n");
+    } else {
+      console.log("   ❌ Non riconosciuta come pelle giovane\n");
+    }
   }
 }
 

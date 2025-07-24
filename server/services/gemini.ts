@@ -33,14 +33,14 @@ QUANDO ricevi i dati dell'analisi fotografica in formato JSON, devi analizzare T
 - **danni_solari** (0-100): se ≥61 → Estratto di Liquirizia
 - **occhiaie** (0-100): se ≥81 → Estratto di Liquirizia
 - **idratazione** (0-100): se ≤40 (scarsa idratazione) → Kigelia Africana
-- **elasticita** (0-100): se ≤30 (scarsa elasticità EVIDENTE) → Ginkgo Biloba
+- **elasticita** (0-100): se ≤20 (scarsa elasticità MOLTO EVIDENTE) → Ginkgo Biloba
 - **texture_uniforme** (0-100): se ≤40 (texture irregolare) → valuta problematiche correlate
 
 IMPORTANTE: Quando ricevi questi dati JSON, devi:
 1. **Calcolare il PUNTEGGIO TOTALE** = (rossori + acne + rughe + pigmentazione + pori_dilatati + oleosita + danni_solari + occhiaie + (100-idratazione) + (100-elasticita) + (100-texture_uniforme)) / 11
    - Nota: Per idratazione, elasticità e texture_uniforme, inverti la scala (100-valore) perché valori bassi = problemi
 2. **Presentare TUTTI gli 11 parametri** sempre, con descrizioni brevi basate sui range
-3. **Identificare SOLO le problematiche con punteggio ≥61** (o ≤30 per elasticità, ≤40 per idratazione/texture) per le domande immediate
+3. **Identificare SOLO le problematiche con punteggio ≥61** (o ≤20 per elasticità, ≤40 per idratazione/texture) per le domande immediate
 4. **Fare domande SOLO sui 2-3 parametri più critici**, non su tutti
 
 ## Sezione C: Logica Condizionale Speciale

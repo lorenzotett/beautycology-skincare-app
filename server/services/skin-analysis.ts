@@ -87,22 +87,29 @@ ANALIZZA questa foto del viso e restituisci ESCLUSIVAMENTE un oggetto JSON con q
 - 81-100: Idratazione ottimale, pelle rimpolpata
 
 ### ELASTICITÀ (0=scarsa, 100=ottima):
-**ATTENZIONE: L'elasticità è difficile da valutare in una foto statica. Sii MOLTO conservativo.**
+**⚠️ REGOLA ASSOLUTA: L'ELASTICITÀ È QUASI IMPOSSIBILE DA VALUTARE IN UNA FOTO STATICA**
 
-**CRITERI VISIVI SPECIFICI:**
-- **Perdita di tono evidente**: Pelle che appare "cascante" lungo il contorno del viso
-- **Rilassamento**: Lineamenti del viso che appaiono "scesi" o poco definiti
-- **Segni di invecchiamento avanzato**: Rughe profonde combinate con perdita di volume
-- **Texture rilassata**: Pelle che non appare tonica e soda
+**PRESUNZIONE DI NORMALITÀ**: Assumi SEMPRE che l'elasticità sia normale (75-95) salvo EVIDENZE INEQUIVOCABILI di problemi strutturali gravi.
 
-**PUNTEGGI CONSERVATIVI:**
-- 0-20: Solo se evidenti segni di rilassamento severo (pelle molto matura, >50 anni)
-- 21-40: Solo se chiari segni di perdita di tono (cedimenti visibili, lineamenti poco definiti)
-- 41-60: Pelle che mostra lievi segni di perdita di tono ma non evidenti
-- 61-80: Pelle normale per l'età, nessun segno evidente di rilassamento
-- 81-100: Pelle giovane e tonica, lineamenti ben definiti
+**QUANDO ASSEGNARE PUNTEGGI PROBLEMATICI (<60):**
+- SOLO se la persona appare visibilmente over 60 anni E ha cedimenti evidenti del viso
+- SOLO se ci sono rughe profondissime combinate con perdita di volume evidente
+- SOLO se il contorno del viso appare gravemente compromesso
 
-**REGOLA CRITICA**: Per soggetti sotto i 35 anni, assegna SEMPRE punteggi 70-100 salvo evidenti problemi strutturali. L'elasticità diminuisce naturalmente con l'età, non assegnare punteggi bassi senza motivi evidenti.
+**PUNTEGGI ULTRA-CONSERVATIVI:**
+- 0-30: MAI assegnare salvo casi estremi di pelle molto anziana (>65 anni) con gravi cedimenti
+- 31-50: Solo per persone mature (>55 anni) con segni evidenti di rilassamento
+- 51-70: Pelle adulta normale senza segni particolari
+- 71-85: DEFAULT per qualsiasi pelle che non mostra problemi evidenti
+- 86-100: Pelle giovane o particolarmente tonica
+
+**REGOLE FERREE:**
+1. **Età apparente <40 anni**: SEMPRE punteggio 80-95
+2. **Età apparente 40-55 anni**: SEMPRE punteggio 70-85  
+3. **Età apparente >55 anni**: Considera 60-80 solo se ci sono segni evidenti
+4. **In caso di dubbio**: SEMPRE scegli il punteggio PIÙ ALTO possibile
+
+**IMPORTANTE**: È meglio sottovalutare un problema di elasticità che sovrastimarlo. L'elasticità vera si valuta al tatto, non dalla foto.
 
 ### TEXTURE UNIFORME (0=irregolare, 100=liscia):
 - 0-20: Texture molto irregolare, superficie ruvida
@@ -134,7 +141,9 @@ ANALIZZA questa foto del viso e restituisci ESCLUSIVAMENTE un oggetto JSON con q
 **SOGLIE DI SICUREZZA:**
 - Non assegnare mai più di 3 parametri con punteggi critici (>80) contemporaneamente senza evidenze chiare
 - Per pelli giovani (<25 anni), massimo 2 parametri sopra 60 salvo problemi evidenti
-- Elasticità: default conservativo 70-85 per pelli normali, 60-70 solo per pelli mature
+- **ELASTICITÀ: PRESUNZIONE DI NORMALITÀ 70-90. Assegna <50 SOLO per pelli visibilmente molto mature (>60 anni) con cedimenti gravi**
+
+**⚠️ REGOLA FINALE ELASTICITÀ: In caso di QUALSIASI dubbio sull'elasticità, assegna SEMPRE 75-85. È meglio sottovalutare che sovrastimare questo parametro.**
 
 IMPORTANTE: Considera l'illuminazione, l'angolazione e la qualità dell'immagine. Sii preciso ma realistico nella valutazione. EVITA FALSI POSITIVI.
 
@@ -166,27 +175,52 @@ export class SkinAnalysisService {
   private validateAndCorrectAnalysis(analysis: SkinAnalysisResult): SkinAnalysisResult {
     const validated = { ...analysis };
     
-    // 1. ELASTICITÀ - Correzione per falsi positivi
-    // Se tutti gli altri parametri indicano pelle giovane/sana, elasticità non può essere troppo bassa
-    const healthyIndicators = [
-      validated.rughe < 30,
-      validated.danni_solari < 35,
-      validated.acne < 50,
-      validated.idratazione > 60
+    // 1. ELASTICITÀ - Correzione ULTRA-AGGRESSIVA per falsi positivi
+    
+    // REGOLA 1: Se la pelle sembra giovane (pochi segni di invecchiamento), elasticità deve essere alta
+    const youthIndicators = [
+      validated.rughe < 40,        // Poche rughe
+      validated.danni_solari < 40, // Pochi danni solari  
+      validated.idratazione > 60,  // Buona idratazione
+      validated.acne > 30          // Anche acne indica spesso pelle giovane
     ].filter(Boolean).length;
     
-    if (healthyIndicators >= 3 && validated.elasticita < 50) {
-      console.log(`⚠️ Correzione elasticità: da ${validated.elasticita} a 75 (pelle sembra giovane/sana)`);
+    if (youthIndicators >= 2 && validated.elasticita < 70) {
+      console.log(`🔧 CORREZIONE ELASTICITÀ: da ${validated.elasticita} a 80 (indicatori di pelle giovane: ${youthIndicators})`);
+      validated.elasticita = 80;
+    }
+    
+    // REGOLA 2: Default conservativo - se elasticità è troppo bassa senza motivo, correggila
+    if (validated.elasticita < 60 && validated.rughe < 50) {
+      console.log(`🔧 CORREZIONE ELASTICITÀ CONSERVATIVA: da ${validated.elasticita} a 75 (no rughe severe)`);
       validated.elasticita = 75;
     }
     
-    // 2. COERENZA TRA PARAMETRI CORRELATI
-    // Se idratazione alta, elasticità non può essere troppo bassa
-    if (validated.idratazione > 70 && validated.elasticita < 40) {
-      console.log(`⚠️ Correzione elasticità per coerenza idratazione: da ${validated.elasticita} a 65`);
-      validated.elasticita = 65;
+    // REGOLA 3: Se idratazione è alta, elasticità deve essere almeno buona
+    if (validated.idratazione > 70 && validated.elasticita < 65) {
+      console.log(`🔧 CORREZIONE ELASTICITÀ-IDRATAZIONE: da ${validated.elasticita} a 75 (pelle ben idratata)`);
+      validated.elasticita = 75;
     }
     
+    // REGOLA 4: Se nessun parametro di invecchiamento è critico, elasticità deve essere normale
+    const agingProblems = [
+      validated.rughe > 60,
+      validated.danni_solari > 60,
+      validated.pigmentazione > 70
+    ].filter(Boolean).length;
+    
+    if (agingProblems === 0 && validated.elasticita < 70) {
+      console.log(`🔧 CORREZIONE ELASTICITÀ NO-AGING: da ${validated.elasticita} a 80 (nessun segno di invecchiamento critico)`);
+      validated.elasticita = 80;
+    }
+    
+    // REGOLA 5: SICUREZZA FINALE - Se elasticità è ancora sotto 50, forza a 70 (presunzione di normalità)
+    if (validated.elasticita < 50) {
+      console.log(`🚨 CORREZIONE SICUREZZA ELASTICITÀ: da ${validated.elasticita} a 70 (presunzione di normalità)`);
+      validated.elasticita = 70;
+    }
+    
+    // 2. ALTRI PARAMETRI - Controlli di coerenza
     // Se acne molto bassa, pori dilatati non possono essere altissimi
     if (validated.acne < 20 && validated.pori_dilatati > 75) {
       console.log(`⚠️ Correzione pori dilatati: da ${validated.pori_dilatati} a 55 (acne bassa)`);
