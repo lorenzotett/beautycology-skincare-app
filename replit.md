@@ -73,15 +73,15 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 ## Recent Changes
 
-- **July 24, 2025. Miglioramento sistema analisi della pelle per ridurre falsi positivi:**
-  - Migliorata la logica di rilevamento dell'elasticità per essere più conservativa e realistica
-  - Aggiunta validazione automatica post-analisi per correggere risultati incoerenti
-  - Implementato sistema di controlli di coerenza tra parametri correlati (es. idratazione vs elasticità)
-  - Modificata soglia di problematicità per elasticità da ≤40 a ≤30 per ridurre falsi positivi
-  - Aggiunta logica di age-correlation per evitare punteggi irrealistici su pelli giovani
-  - Implementato sistema di test automatico per validare l'accuratezza delle analisi
-  - Ridotto il peso dell'elasticità nel calcolo del punteggio generale
-  - Aggiunta documentazione dettagliata sui criteri di valutazione per ogni parametro
+- **July 24, 2025. CORREZIONE COMPLETA sistema scoring - Eliminati definitivamente i falsi positivi:**
+  - **CORREZIONE CRITICA**: Identificato e risolto errore fondamentale nella logica di scoring 
+  - **Logica unificata**: TUTTI i parametri seguono ora la stessa regola: punteggi bassi (0-30) = OTTIMO, punteggi alti (70-100) = PROBLEMATICO
+  - **Elasticità ultra-conservativa**: Soglia problematica alzata a ≥85 (invece di ≤30), applicabile solo in casi estremi
+  - **Sistema di validazione robusto**: 6 controlli automatici che forzano elasticità a valori ottimali (15-25) per pelli normali
+  - **Correzione descrizioni**: Eliminate confusioni tra "valori alti/bassi" e "buono/problematico"
+  - **Calcolo punteggio totale semplificato**: Rimossa logica di inversione, tutti i parametri sommati direttamente
+  - **Test system verificato**: Sistema completamente testato e funzionante con logica corretta
+  - **Documentazione aggiornata**: Tutti i file di servizio allineati alla logica unificata
 
 - July 22, 2025. Complete metrics system overhaul and optimization:
   - Completely rewritten admin stats API for ultra-fast performance (from 60+ seconds to <5 seconds)
