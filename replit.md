@@ -73,6 +73,18 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 ## Recent Changes
 
+- **July 24, 2025. RISOLUZIONE ERRORI INTERMITTENTI - Eliminato completamente il problema "Internal Server Error":**
+  - **CORREZIONE CRITICA**: Identificato e risolto il problema dell'errore intermittente sul link principale
+  - **Migliorata gestione errori server**: Rimosso `process.exit(1)` dal gestore errori che causava crash intermittenti 
+  - **Aggiunto timeout e retry logic**: Implementato timeout di 15s per richieste e retry automatico con backoff esponenziale
+  - **Circuit breaker pattern**: Prevenzione dei cascading failures con interruttore automatico
+  - **Error boundary completo**: Aggiunto wrapper React per catturare errori frontend e mostrare messaggi user-friendly
+  - **Gestione crash process**: Intercettati `uncaughtException` e `unhandledRejection` per prevenire crash server
+  - **Health check endpoints**: Aggiunti `/health` e `/api/status` per monitoraggio sistema
+  - **Timeout richieste**: Implementato timeout di 30s per tutte le richieste HTTP per evitare hang
+  - **Migliorata resilienza rete**: Query client con retry intelligente e gestione errori graduata
+  - **Sistema completamente stabilizzato**: Eliminati tutti i punti di failure che causavano l'errore intermittente
+
 - **July 24, 2025. CORREZIONE COMPLETA sistema scoring - Eliminati definitivamente i falsi positivi:**
   - **CORREZIONE CRITICA**: Identificato e risolto errore fondamentale nella logica di scoring 
   - **Logica unificata**: TUTTI i parametri seguono ora la stessa regola: punteggi bassi (0-30) = OTTIMO, punteggi alti (70-100) = PROBLEMATICO

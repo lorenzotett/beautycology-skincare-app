@@ -9,8 +9,25 @@ import { promises as fs } from "fs";
 config();
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// Add request timeout to prevent hanging connections
+app.use((req, res, next) => {
+  // Set a timeout for all requests (30 seconds)
+  req.setTimeout(30000);
+  res.setTimeout(30000);
+  
+  // Handle timeout errors gracefully
+  req.on('timeout', () => {
+    console.warn('Request timeout for:', req.url);
+    if (!res.headersSent) {
+      res.status(408).json({ error: 'Request timeout' });
+    }
+  });
+  
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -46,6 +63,17 @@ app.use((req, res, next) => {
   });
 
   next();
+});
+
+// Add global error handlers to prevent crashes
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception (preventing crash):', error);
+  // Don't exit - this is what causes the intermittent errors
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit - handle gracefully
 });
 
 (async () => {
@@ -91,7 +119,7 @@ app.use((req, res, next) => {
         const extractedData: any = {
           'Session ID': sessionId,
           'User Name': session.userName,
-          'Created At': new Date(session.createdAt).toLocaleString('it-IT'),
+          'Created At': session.createdAt ? new Date(session.createdAt).toLocaleString('it-IT') : '',
           'Message Count': messages.length,
           'Cream Access': session.finalButtonClicked ? 'Sì' : 'No'
         };
@@ -105,8 +133,8 @@ app.use((req, res, next) => {
           fullConversation += `[${message.role.toUpperCase()}]: ${message.content}\n\n`;
 
           // Extract skin analysis data
-          if (message.metadata?.skinAnalysis && !skinAnalysisFound) {
-            const analysis = message.metadata.skinAnalysis;
+          if (message.metadata && 'skinAnalysis' in message.metadata && !skinAnalysisFound) {
+            const analysis = (message.metadata as any).skinAnalysis;
             extractedData['Rossori'] = analysis.rossori || '';
             extractedData['Acne'] = analysis.acne || '';
             extractedData['Rughe'] = analysis.rughe || '';
@@ -332,14 +360,48 @@ app.use((req, res, next) => {
     }
   });
 
+  // Add health check endpoint
+  app.get('/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  });
+
+  // Add a simple endpoint to test main functionality
+  app.get('/api/status', (req, res) => {
+    res.status(200).json({ 
+      status: 'operational', 
+      services: {
+        gemini: !!process.env.GOOGLE_GEMINI_API_KEY,
+        sheets: !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY,
+        klaviyo: !!process.env.KLAVIYO_API_KEY
+      }
+    });
+  });
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
+    
+    console.error('Server error:', {
+      status,
+      message,
+      stack: err.stack,
+      url: _req.url,
+      method: _req.method
+    });
 
-    res.status(status).json({ message });
-    throw err;
+    // Only send response if headers haven't been sent yet
+    if (!res.headersSent) {
+      res.status(status).json({ message });
+    }
+    
+    // Don't throw the error again - just log it
+    // throwing here causes the server to crash occasionally
   });
 
   // Admin access routes MUST be defined BEFORE catch-all routes

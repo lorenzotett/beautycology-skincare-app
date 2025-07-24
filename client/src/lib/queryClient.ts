@@ -11,16 +11,40 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  retries = 2
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: data ? { "Content-Type": "application/json" } : {},
+        body: data ? JSON.stringify(data) : undefined,
+        credentials: "include",
+        // Add timeout to prevent hanging requests
+        signal: AbortSignal.timeout(15000) // 15 second timeout
+      });
 
-  await throwIfResNotOk(res);
-  return res;
+      await throwIfResNotOk(res);
+      return res;
+    } catch (error) {
+      lastError = error as Error;
+      
+      // Don't retry on 400-499 client errors (except timeouts)
+      if (error instanceof Error && error.message.includes('4') && 
+          !error.message.includes('408') && !error.message.includes('timeout')) {
+        throw error;
+      }
+      
+      // Wait before retrying (exponential backoff)
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+      }
+    }
+  }
+  
+  throw lastError || new Error('Network request failed after retries');
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -31,6 +55,8 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
+      // Add timeout to queries too
+      signal: AbortSignal.timeout(10000) // 10 second timeout for queries
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
@@ -48,10 +74,29 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,
-      retry: false,
+      retry: (failureCount, error) => {
+        // Retry network errors and server errors, but not client errors
+        const errorMessage = error?.message || '';
+        if (errorMessage.includes('500') || errorMessage.includes('502') || 
+            errorMessage.includes('503') || errorMessage.includes('504') ||
+            errorMessage.includes('timeout') || errorMessage.includes('fetch')) {
+          return failureCount < 3;
+        }
+        return false;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
     mutations: {
-      retry: false,
+      retry: (failureCount, error) => {
+        // Only retry mutations on server errors or network issues
+        const errorMessage = error?.message || '';
+        if (errorMessage.includes('500') || errorMessage.includes('502') || 
+            errorMessage.includes('503') || errorMessage.includes('timeout')) {
+          return failureCount < 2;
+        }
+        return false;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     },
   },
 });
