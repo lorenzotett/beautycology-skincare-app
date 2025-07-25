@@ -97,8 +97,28 @@ process.on('SIGINT', () => {
 });
 
 (async () => {
-  // Add CSV export endpoint BEFORE Vite setup to ensure it's not intercepted
-  app.post("/api/admin/export-csv", async (req, res) => {
+  try {
+    // Add health check endpoint first for deployment verification
+    app.get('/health', (req, res) => {
+      const memUsage = process.memoryUsage();
+      const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+      
+      res.status(200).json({ 
+        status: 'healthy', 
+        timestamp: new Date().toISOString(),
+        uptime: Math.round(process.uptime()),
+        memory: {
+          heapUsed: memUsageMB + 'MB',
+          heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + 'MB'
+        },
+        nodeVersion: process.version,
+        platform: process.platform,
+        env: process.env.NODE_ENV
+      });
+    });
+
+    // Add CSV export endpoint BEFORE Vite setup to ensure it's not intercepted
+    app.post("/api/admin/export-csv", async (req, res) => {
     try {
       const { sessionIds } = req.body;
       
@@ -818,4 +838,15 @@ process.on('SIGINT', () => {
   }, () => {
     log(`serving on port ${port}`);
   });
+
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      env: process.env.NODE_ENV,
+      nodeVersion: process.version
+    });
+    process.exit(1);
+  }
 })();
