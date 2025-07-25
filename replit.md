@@ -73,6 +73,14 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 ## Recent Changes
 
+- **July 25, 2025. INTEGRAZIONE GOOGLE ANALYTICS 4 COMPLETATA:**
+  - **Tag GA4 integrato**: Aggiunto Google Analytics 4 con ID `G-WK6P0PJ4PP` su tutte le pagine dell'applicazione
+  - **File aggiornati**: `client/index.html` (applicazione principale React) e `ai-dermasense-embed.html` (embed per Shopify)
+  - **Configurazione completa**: Script gtag.js caricato e configurato correttamente per tracking eventi e pageviews
+  - **Tracking funzionale**: Sistema di analytics operativo per monitoraggio traffico e conversioni su aidermasense.com
+  - **Eventi personalizzati**: Mantenuti eventi di tracking esistenti per apertura/chiusura modal e interazioni utente
+  - **Cross-platform tracking**: Analytics attivo sia sull'applicazione principale che sui widget embed
+
 - **July 24, 2025. RISOLUZIONE ERRORI INTERMITTENTI - Eliminato completamente il problema "Internal Server Error":**
   - **CORREZIONE CRITICA**: Identificato e risolto il problema dell'errore intermittente sul link principale
   - **Migliorata gestione errori server**: Rimosso `process.exit(1)` dal gestore errori che causava crash intermittenti 
