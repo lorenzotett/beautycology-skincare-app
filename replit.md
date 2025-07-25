@@ -73,16 +73,18 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 ## Recent Changes
 
-- **July 25, 2025. INTEGRAZIONE ANALYTICS E FACEBOOK DOMAIN VERIFICATION:**
+- **July 25, 2025. INTEGRAZIONE COMPLETA FACEBOOK E GOOGLE ANALYTICS:**
+  - **Meta Pixel integrato**: Aggiunto Facebook Pixel con ID `1119696619977788` per tracking conversioni e remarketing
   - **Facebook Domain Verification**: Aggiunto meta tag per verifica dominio Facebook con content `5rua6o6ihlhu4q5mrvhyuahr53trof`
   - **Configurazione cross-domain**: Aggiornato GA4 con linker per tracking tra domini bonniebeauty.it e aidermasense.com
   - **Tag GA4 integrato**: Google Analytics 4 con ID `G-WK6P0PJ4PP` configurato su tutte le pagine dell'applicazione
   - **File aggiornati**: `client/index.html` (applicazione principale React) e `ai-dermasense-embed.html` (embed per Shopify)
   - **Cross-domain configuration**: Implementato linker domains per tracciamento unificato tra siti
   - **Meta tag verification**: Verifica dominio Facebook implementata su entrambi i file HTML per supporto pubblicitario
+  - **Pixel implementation**: Meta Pixel script in head e noscript fallback in body per completa compatibilità
   - **Tracking funzionale**: Sistema di analytics operativo per monitoraggio traffico e conversioni
   - **Eventi personalizzati**: Mantenuti eventi di tracking esistenti per apertura/chiusura modal e interazioni utente
-  - **Cross-platform tracking**: Analytics attivo sia sull'applicazione principale che sui widget embed
+  - **Cross-platform tracking**: Analytics e pixel attivi sia sull'applicazione principale che sui widget embed
 
 - **July 24, 2025. RISOLUZIONE ERRORI INTERMITTENTI - Eliminato completamente il problema "Internal Server Error":**
   - **CORREZIONE CRITICA**: Identificato e risolto il problema dell'errore intermittente sul link principale
