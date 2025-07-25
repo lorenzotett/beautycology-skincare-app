@@ -73,11 +73,12 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 ## Recent Changes
 
-- **July 25, 2025. INTEGRAZIONE GOOGLE ANALYTICS 4 COMPLETATA:**
-  - **Tag GA4 integrato**: Aggiunto Google Analytics 4 con ID `G-WK6P0PJ4PP` su tutte le pagine dell'applicazione
+- **July 25, 2025. AGGIORNAMENTO GOOGLE ANALYTICS 4 - Cross-Domain Tracking:**
+  - **Configurazione cross-domain**: Aggiornato GA4 con linker per tracking tra domini bonniebeauty.it e aidermasense.com
+  - **Tag GA4 integrato**: Google Analytics 4 con ID `G-WK6P0PJ4PP` configurato su tutte le pagine dell'applicazione
   - **File aggiornati**: `client/index.html` (applicazione principale React) e `ai-dermasense-embed.html` (embed per Shopify)
-  - **Configurazione completa**: Script gtag.js caricato e configurato correttamente per tracking eventi e pageviews
-  - **Tracking funzionale**: Sistema di analytics operativo per monitoraggio traffico e conversioni su aidermasense.com
+  - **Cross-domain configuration**: Implementato linker domains per tracciamento unificato tra siti
+  - **Tracking funzionale**: Sistema di analytics operativo per monitoraggio traffico e conversioni
   - **Eventi personalizzati**: Mantenuti eventi di tracking esistenti per apertura/chiusura modal e interazioni utente
   - **Cross-platform tracking**: Analytics attivo sia sull'applicazione principale che sui widget embed
 
