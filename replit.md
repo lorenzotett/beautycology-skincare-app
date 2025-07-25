@@ -73,7 +73,8 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 ## Recent Changes
 
-- **July 25, 2025. INTEGRAZIONE COMPLETA FACEBOOK E GOOGLE ANALYTICS:**
+- **July 25, 2025. INTEGRAZIONE COMPLETA TRACKING E ANALYTICS - GTM, GA4 E META PIXEL:**
+  - **Google Tag Manager integrato**: Aggiunto GTM con ID `GTM-TJDDR8DQ` per gestione centralizzata di tutti i tag
   - **Meta Pixel integrato**: Aggiunto Facebook Pixel con ID `1119696619977788` per tracking conversioni e remarketing
   - **Facebook Domain Verification**: Aggiunto meta tag per verifica dominio Facebook con content `5rua6o6ihlhu4q5mrvhyuahr53trof`
   - **Configurazione cross-domain**: Aggiornato GA4 con linker per tracking tra domini bonniebeauty.it e aidermasense.com
@@ -81,10 +82,11 @@ This is a full-stack web application that provides AI-powered skin care consulta
   - **File aggiornati**: `client/index.html` (applicazione principale React) e `ai-dermasense-embed.html` (embed per Shopify)
   - **Cross-domain configuration**: Implementato linker domains per tracciamento unificato tra siti
   - **Meta tag verification**: Verifica dominio Facebook implementata su entrambi i file HTML per supporto pubblicitario
+  - **GTM implementation**: Script GTM in head e iframe noscript in body per completa compatibilità
   - **Pixel implementation**: Meta Pixel script in head e noscript fallback in body per completa compatibilità
-  - **Tracking funzionale**: Sistema di analytics operativo per monitoraggio traffico e conversioni
+  - **Tracking completo**: Sistema di analytics operativo con GTM, GA4 e Meta Pixel per monitoraggio completo
   - **Eventi personalizzati**: Mantenuti eventi di tracking esistenti per apertura/chiusura modal e interazioni utente
-  - **Cross-platform tracking**: Analytics e pixel attivi sia sull'applicazione principale che sui widget embed
+  - **Cross-platform tracking**: Tutti i sistemi di tracking attivi sia sull'applicazione principale che sui widget embed
 
 - **July 24, 2025. RISOLUZIONE ERRORI INTERMITTENTI - Eliminato completamente il problema "Internal Server Error":**
   - **CORREZIONE CRITICA**: Identificato e risolto il problema dell'errore intermittente sul link principale
