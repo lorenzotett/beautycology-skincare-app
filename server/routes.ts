@@ -22,23 +22,29 @@ import fs from "fs";
 const MAX_SESSIONS_IN_MEMORY = 500; // Ridotto per evitare overflow memoria
 const geminiServices = new Map<string, GeminiService>();
 
-// Add memory monitoring
+// Add memory monitoring with aggressive cleanup
 setInterval(() => {
   const memUsage = process.memoryUsage();
   const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
   
-  if (memUsageMB > 400) { // Se memoria > 400MB
+  if (memUsageMB > 350) { // Reduced threshold from 400MB to 350MB
     console.warn(`⚠️ High memory usage: ${memUsageMB}MB, active sessions: ${geminiServices.size}`);
     
-    // Force cleanup se necessario
-    if (geminiServices.size > MAX_SESSIONS_IN_MEMORY / 2) {
+    // More aggressive cleanup
+    if (geminiServices.size > 50) { // If more than 50 sessions
       const sessions = Array.from(geminiServices.keys());
-      const toDelete = sessions.slice(0, Math.floor(sessions.length / 3));
+      const toDelete = sessions.slice(0, Math.floor(sessions.length / 2)); // Remove half
       toDelete.forEach(sessionId => geminiServices.delete(sessionId));
       console.log(`🧹 Emergency cleanup: removed ${toDelete.length} sessions`);
+      
+      // Force garbage collection if available
+      if (global.gc) {
+        global.gc();
+        console.log('🗑️ Forced garbage collection');
+      }
     }
   }
-}, 2 * 60 * 1000); // Check ogni 2 minuti
+}, 1 * 60 * 1000); // Check every minute instead of 2
 // Load integration configuration
 const integrationConfig = loadIntegrationConfig();
 // Initialize Klaviyo Lead Automation
@@ -54,7 +60,10 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-// Auto-fix missing images every 5 minutes
+// DISABLED: Auto-fix missing images - causing performance issues
+// This was causing slow requests (19+ seconds) and memory problems
+// Images can be fixed manually through admin dashboard if needed
+/*
 setInterval(async () => {
   try {
     const response = await fetch('http://localhost:5000/api/admin/auto-fix-images', {
@@ -72,6 +81,7 @@ setInterval(async () => {
     console.warn('Failed to auto-fix images during cleanup:', error);
   }
 }, 5 * 60 * 1000);
+*/
 
 // Backup sync every 5 minutes (only for sessions that failed real-time sync)
 setInterval(async () => {
@@ -144,23 +154,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(process.cwd(), 'iframe-redirect.html'));
   });
 
-  // Auto-fix missing images endpoint - NEW VERSION WITH REAL IMAGE RECOVERY
+  // Auto-fix missing images endpoint - OPTIMIZED VERSION
   app.post("/api/admin/auto-fix-images", async (req, res) => {
     try {
-      const allMessages = await storage.getAllChatMessages();
-      const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      // OPTIMIZATION: Only process recent sessions to avoid loading all messages
+      const recentSessions = await storage.getAllChatSessions();
+      const cutoffTime = new Date(Date.now() - 12 * 60 * 60 * 1000); // Only last 12 hours
       
-      const recentImagesWithoutBase64 = allMessages.filter(msg => 
-        msg.metadata && 
-        (msg.metadata as any).hasImage &&
-        !(msg.metadata as any).imageBase64 &&
-        new Date(msg.createdAt!) > cutoffTime
-      );
+      // Filter to recent sessions only
+      const sessionsToCheck = recentSessions
+        .filter(s => new Date(s.createdAt) > cutoffTime)
+        .slice(0, 10); // Limit to 10 most recent sessions
       
       let fixed = 0;
       let realImageRecovered = 0;
+      let totalChecked = 0;
       
-      for (const message of recentImagesWithoutBase64) {
+      // Process each session's messages separately to avoid memory overload
+      for (const session of sessionsToCheck) {
+        const messages = await storage.getChatMessages(session.sessionId);
+        
+        const imagesWithoutBase64 = messages.filter(msg => 
+          msg.metadata && 
+          (msg.metadata as any).hasImage &&
+          !(msg.metadata as any).imageBase64
+        ).slice(0, 5); // Max 5 images per session
+        
+        totalChecked += imagesWithoutBase64.length;
+        
+        for (const message of imagesWithoutBase64) {
         const metadata = message.metadata as any;
         let imageBase64 = null;
         
@@ -198,13 +220,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateChatMessage(message.id, { metadata: updatedMetadata });
         fixed++;
         console.log(`Auto-fixed missing image for message ${message.id}`);
+        }
       }
       
       res.json({ 
         success: true, 
         fixedImages: fixed,
         realImagesRecovered: realImageRecovered,
-        totalRecentImages: recentImagesWithoutBase64.length
+        totalChecked: totalChecked,
+        sessionsProcessed: sessionsToCheck.length
       });
     } catch (error) {
       console.error("Error auto-fixing missing images:", error);

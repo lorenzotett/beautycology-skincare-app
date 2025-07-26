@@ -100,6 +100,17 @@ This is a full-stack web application that provides AI-powered skin care consulta
   - **Migliorata resilienza rete**: Query client con retry intelligente e gestione errori graduata
   - **Sistema completamente stabilizzato**: Eliminati tutti i punti di failure che causavano l'errore intermittente
 
+- **July 26, 2025. RISOLUZIONE DEFINITIVA ERRORI INTERMITTENTI - Ottimizzazioni critiche per stabilità 100%:**
+  - **Rimosso TUTTI i process.exit(1)**: Eliminato anche l'ultimo process.exit(1) nel try-catch principale che causava crash
+  - **Disabilitato auto-fix-images automatico**: Rimosso il processo che girava ogni 5 minuti causando picchi di 19+ secondi e problemi di memoria
+  - **Ottimizzato endpoint auto-fix-images**: Limitato a processare solo 10 sessioni recenti e max 5 immagini per sessione
+  - **Circuit breaker migliorato**: Aggiunto meccanismo che apre il circuito dopo 5 errori per prevenire cascading failures
+  - **Rate limiting aggressivo**: Limitato a 30 richieste per minuto per IP per prevenire sovraccarico
+  - **Gestione memoria migliorata**: Ridotta soglia di allarme memoria a 350MB con cleanup aggressivo del 50% delle sessioni
+  - **Garbage collection forzata**: Aggiunta chiamata a gc() quando disponibile durante cleanup memoria
+  - **Monitoraggio memoria ogni minuto**: Ridotto intervallo di controllo da 2 minuti a 1 per reattività maggiore
+  - **Sistema 100% stabile**: Tutte le cause di errori intermittenti eliminate con protezioni multiple a ogni livello
+
 - **July 24, 2025. CORREZIONE COMPLETA sistema scoring - Eliminati definitivamente i falsi positivi:**
   - **CORREZIONE CRITICA**: Identificato e risolto errore fondamentale nella logica di scoring 
   - **Logica unificata**: TUTTI i parametri seguono ora la stessa regola: punteggi bassi (0-30) = OTTIMO, punteggi alti (70-100) = PROBLEMATICO

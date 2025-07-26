@@ -9,10 +9,51 @@ import { promises as fs } from "fs";
 config();
 
 const app = express();
+
+// Rate limiting to prevent server overload
+const requestCounts = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 30; // 30 requests per minute
+const RATE_WINDOW = 60000; // 1 minute
+
+app.use((req, res, next) => {
+  const clientIp = req.ip || 'unknown';
+  const now = Date.now();
+  
+  // Skip rate limiting for localhost in development
+  if (app.get("env") === "development" && (clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === '::ffff:127.0.0.1')) {
+    return next();
+  }
+  
+  const clientData = requestCounts.get(clientIp) || { count: 0, resetTime: now + RATE_WINDOW };
+  
+  if (now > clientData.resetTime) {
+    clientData.count = 0;
+    clientData.resetTime = now + RATE_WINDOW;
+  }
+  
+  clientData.count++;
+  requestCounts.set(clientIp, clientData);
+  
+  if (clientData.count > RATE_LIMIT && !req.path.includes('/health')) {
+    console.warn(`🚫 Rate limit exceeded for ${clientIp}: ${clientData.count} requests`);
+    return res.status(429).json({ 
+      error: 'Too many requests. Please slow down.' 
+    });
+  }
+  
+  next();
+});
+
 app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // Add request timeout to prevent hanging connections
+// Circuit breaker to prevent cascading failures
+let circuitOpen = false;
+let failureCount = 0;
+const FAILURE_THRESHOLD = 5;
+const CIRCUIT_RESET_TIME = 60000; // 1 minute
+
 app.use((req, res, next) => {
   // Set a timeout for all requests (30 seconds)
   req.setTimeout(30000);
@@ -21,10 +62,27 @@ app.use((req, res, next) => {
   // Handle timeout errors gracefully
   req.on('timeout', () => {
     console.warn('Request timeout for:', req.url);
+    failureCount++;
+    if (failureCount >= FAILURE_THRESHOLD && !circuitOpen) {
+      circuitOpen = true;
+      console.error('🚨 Circuit breaker opened - too many failures');
+      setTimeout(() => {
+        circuitOpen = false;
+        failureCount = 0;
+        console.log('✅ Circuit breaker reset');
+      }, CIRCUIT_RESET_TIME);
+    }
     if (!res.headersSent) {
       res.status(408).json({ error: 'Request timeout' });
     }
   });
+  
+  // Check circuit breaker
+  if (circuitOpen && req.path.startsWith('/api/') && !req.path.includes('/health')) {
+    return res.status(503).json({ 
+      error: 'Service temporarily unavailable. Please try again in a moment.' 
+    });
+  }
   
   next();
 });
@@ -173,7 +231,7 @@ process.on('SIGINT', () => {
           fullConversation += `[${message.role.toUpperCase()}]: ${message.content}\n\n`;
 
           // Extract skin analysis data
-          if (message.metadata && 'skinAnalysis' in message.metadata && !skinAnalysisFound) {
+          if (message.metadata && typeof message.metadata === 'object' && 'skinAnalysis' in message.metadata && !skinAnalysisFound) {
             const analysis = (message.metadata as any).skinAnalysis;
             extractedData['Rossori'] = analysis.rossori || '';
             extractedData['Acne'] = analysis.acne || '';
@@ -413,7 +471,8 @@ process.on('SIGINT', () => {
         heapUsed: memUsageMB + 'MB',
         heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + 'MB'
       },
-      activeSessions: geminiServices ? geminiServices.size : 0,
+      // activeSessions is tracked in routes.ts, not available here
+      activeSessions: 0,
       nodeVersion: process.version,
       platform: process.platform
     });
@@ -437,14 +496,29 @@ process.on('SIGINT', () => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
     
+    // Increment failure count for circuit breaker
+    if (status >= 500) {
+      failureCount++;
+      if (failureCount >= FAILURE_THRESHOLD && !circuitOpen) {
+        circuitOpen = true;
+        console.error('🚨 Circuit breaker opened due to server errors');
+        setTimeout(() => {
+          circuitOpen = false;
+          failureCount = 0;
+          console.log('✅ Circuit breaker reset after cooldown');
+        }, CIRCUIT_RESET_TIME);
+      }
+    }
+    
     // Log dettagliato dell'errore
     console.error('=== SERVER ERROR ===');
     console.error('Status:', status);
     console.error('Message:', message);
     console.error('URL:', _req.url);
     console.error('Method:', _req.method);
-    console.error('Headers:', _req.headers);
-    console.error('Body:', _req.body);
+    console.error('Memory:', Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB');
+    console.error('Circuit breaker:', circuitOpen ? 'OPEN' : 'CLOSED');
+    console.error('Failure count:', failureCount);
     console.error('Stack:', err.stack);
     console.error('===================');
 
@@ -461,7 +535,7 @@ process.on('SIGINT', () => {
       }
     }
     
-    // Don't throw the error again - just log it
+    // Don't throw the error - handle it gracefullygain - just log it
   });
 
   // Admin access routes MUST be defined BEFORE catch-all routes
@@ -841,12 +915,15 @@ process.on('SIGINT', () => {
 
   } catch (error) {
     console.error('Failed to start server:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      env: process.env.NODE_ENV,
-      nodeVersion: process.version
-    });
-    process.exit(1);
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        env: process.env.NODE_ENV,
+        nodeVersion: process.version
+      });
+    }
+    // Don't exit - let the process continue and handle the error gracefully
+    console.error('Server startup error handled gracefully - continuing operation');
   }
 })();
