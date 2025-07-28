@@ -754,7 +754,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // OPTIMIZATION 8: Advanced cache system for ultra-fast queries
-  let sessionsCache = null;
+  let sessionsCache: any[] | null = null;
   let cacheTimestamp = 0;
   const CACHE_DURATION = 15000; // 15 seconds cache for faster updates
   
@@ -824,14 +824,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allSessions = await getCachedSessions();
       let filteredSessions;
       if (dateFilter) {
-        // Filter cached sessions by date range
-        filteredSessions = allSessions.filter(session => {
+        // Filter cached sessions by date range with proper date handling
+        filteredSessions = allSessions.filter((session: any) => {
+          if (!session.createdAt) return false;
+          
           const sessionDate = new Date(session.createdAt);
-          if (dateFilter.from && sessionDate < new Date(dateFilter.from)) return false;
-          if (dateFilter.to && sessionDate > new Date(dateFilter.to)) return false;
+          const fromDate = dateFilter.from ? new Date(dateFilter.from as string) : null;
+          const toDate = dateFilter.to ? new Date(dateFilter.to as string) : null;
+          
+          // If from date is specified, session must be after or equal to from date
+          if (fromDate && sessionDate < fromDate) return false;
+          
+          // If to date is specified, session must be before or equal to to date
+          if (toDate && sessionDate > toDate) return false;
+          
           return true;
         });
-        console.log(`Stats API: Fast filter applied - ${filteredSessions.length} sessions in date range`);
+        console.log(`Stats API: Date filter applied - ${filteredSessions.length}/${allSessions.length} sessions match date range`);
+        console.log(`Date filter: from=${dateFilter.from || 'none'}, to=${dateFilter.to || 'none'}`);
       } else {
         // Use all cached sessions
         filteredSessions = allSessions;
@@ -840,8 +850,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Calculate metrics for ALL filtered sessions
       // View Only sessions are homepage visits without name entry
-      const viewOnlySessions = filteredSessions.filter(session => session.userName === "View Only");
-      const realSessions = filteredSessions.filter(session => session.userName !== "View Only");
+      const viewOnlySessions = filteredSessions.filter((session: any) => session.userName === "View Only");
+      const realSessions = filteredSessions.filter((session: any) => session.userName !== "View Only");
       console.log(`Computing metrics for ${realSessions.length} real sessions + ${viewOnlySessions.length} view-only sessions`);
       
       // OPTIMIZATION 3: Skip loading ALL messages, use session metadata only
@@ -860,6 +870,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // NEW DEFINITION: View Chat = ALL sessions that loaded the homepage (View Only + Real sessions)
       // This counts everyone who accessed the chat link and saw the welcome screen
       viewChatOnly = viewOnlySessions.length + realSessions.length;
+      console.log(`View Chat calculation: ${viewOnlySessions.length} view-only + ${realSessions.length} real = ${viewChatOnly} total`);
       
       // OPTIMIZED: Process real sessions using only session metadata (no message loading)
       let totalChatDuration = 0;
@@ -1018,16 +1029,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const allSessions = await getCachedSessions();
       // Exclude "View Only" sessions from the list
-      let sessions = allSessions.filter(session => session.userName !== "View Only");
+      let sessions = allSessions.filter((session: any) => session.userName !== "View Only");
       
       // OPTIMIZATION 6: Apply date filter first to reduce dataset
       if (dateFilter) {
-        sessions = sessions.filter(session => {
+        const beforeFilter = sessions.length;
+        sessions = sessions.filter((session: any) => {
+          if (!session.createdAt) return false;
+          
           const sessionDate = new Date(session.createdAt);
-          if (dateFilter.from && sessionDate < new Date(dateFilter.from)) return false;
-          if (dateFilter.to && sessionDate > new Date(dateFilter.to)) return false;
+          const fromDate = dateFilter.from ? new Date(dateFilter.from as string) : null;
+          const toDate = dateFilter.to ? new Date(dateFilter.to as string) : null;
+          
+          // If from date is specified, session must be after or equal to from date
+          if (fromDate && sessionDate < fromDate) return false;
+          
+          // If to date is specified, session must be before or equal to to date
+          if (toDate && sessionDate > toDate) return false;
+          
           return true;
         });
+        console.log(`Sessions API: Date filter applied - ${sessions.length}/${beforeFilter} sessions match date range`);
       }
 
       // Date filtering already applied above, use the filtered sessions
@@ -1035,14 +1057,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Then filter by search term if provided
       if (search) {
-        filteredSessions = filteredSessions.filter(session => 
+        filteredSessions = filteredSessions.filter((session: any) => 
           session.userName.toLowerCase().includes(search.toLowerCase()) ||
           session.sessionId.toLowerCase().includes(search.toLowerCase())
         );
       }
       
       // Sort sessions by creation date (newest first)
-      filteredSessions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      filteredSessions.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
       // Calculate pagination
       const startIndex = (page - 1) * limit;
