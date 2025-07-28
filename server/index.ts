@@ -19,17 +19,28 @@ app.use((req, res, next) => {
   const clientIp = req.ip || 'unknown';
   const now = Date.now();
   
-  // Skip rate limiting for localhost and admin routes
-  if (app.get("env") === "development" && (clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === '::ffff:127.0.0.1')) {
+  // Skip rate limiting for development mode completely
+  if (app.get("env") === "development") {
     return next();
   }
   
-  // Skip rate limiting for admin routes, API endpoints, and internal IPs in production
-  if (req.path.includes('/admin') || 
+  // Skip rate limiting for static pages, admin routes, health checks, and internal IPs in production
+  if (req.path === '/' || 
+      req.path === '/admin-dashboard' ||
+      req.path.includes('/admin') || 
       req.path.includes('/health') || 
       req.path.includes('/api/admin') ||
+      req.path.includes('/attached_assets') ||
+      req.path.includes('.html') ||
+      req.path.includes('.js') ||
+      req.path.includes('.css') ||
       clientIp.startsWith('172.31.') || // AWS internal IPs
       clientIp === '::ffff:172.31.118.98') { // Specific internal IP
+    return next();
+  }
+  
+  // Only apply rate limiting to API endpoints
+  if (!req.path.startsWith('/api/')) {
     return next();
   }
   
@@ -43,8 +54,8 @@ app.use((req, res, next) => {
   clientData.count++;
   requestCounts.set(clientIp, clientData);
   
-  if (clientData.count > RATE_LIMIT && !req.path.includes('/health')) {
-    console.warn(`🚫 Rate limit exceeded for ${clientIp}: ${clientData.count} requests`);
+  if (clientData.count > RATE_LIMIT) {
+    console.warn(`🚫 Rate limit exceeded for ${clientIp}: ${clientData.count} requests on ${req.path}`);
     return res.status(429).json({ 
       error: 'Too many requests. Please slow down.' 
     });
