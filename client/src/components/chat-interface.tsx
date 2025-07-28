@@ -500,10 +500,17 @@ export function ChatInterface() {
           formData.append('message', messageToSend);
         }
 
+        // Add timeout for image upload (60 seconds to match server)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+        
         response = await fetch("/api/chat/message-with-image", {
           method: "POST",
           body: formData,
+          signal: controller.signal,
         });
+        
+        clearTimeout(timeoutId);
       } else {
         // Send text message
         response = await fetch("/api/chat/message", {
@@ -519,9 +526,18 @@ export function ChatInterface() {
       }
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`HTTP error! status: ${response.status}, body: ${errorText}`);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json() as ChatMessageResponse;
+      
+      let data;
+      try {
+        data = await response.json() as ChatMessageResponse;
+      } catch (jsonError) {
+        console.error('Failed to parse response as JSON:', jsonError);
+        throw new Error('Invalid response format from server');
+      }
 
       // Add assistant response
       const assistantMessage: ChatMessage = {
@@ -565,9 +581,15 @@ export function ChatInterface() {
         console.error("Image upload error:", error);
       }
       
-      // Check if it's a network error
-      if (error instanceof Error && error.message.includes('Failed to fetch')) {
-        errorMessage = "Errore di connessione. Controlla la tua connessione internet e riprova.";
+      // Check for specific error types
+      if (error instanceof Error) {
+        if (error.name === 'AbortError' || error.message.includes('aborted')) {
+          errorMessage = "L'analisi dell'immagine sta richiedendo troppo tempo. Per favore riprova con un'altra foto o riduci la dimensione dell'immagine.";
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessage = "Errore di connessione. Controlla la tua connessione internet e riprova.";
+        } else if (error.message.includes('500')) {
+          errorMessage = "Errore del server durante l'analisi. Per favore riprova tra qualche secondo.";
+        }
       }
       
       toast({

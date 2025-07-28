@@ -64,9 +64,10 @@ const FAILURE_THRESHOLD = 5;
 const CIRCUIT_RESET_TIME = 60000; // 1 minute
 
 app.use((req, res, next) => {
-  // Set a timeout for all requests (longer for admin endpoints)
+  // Set a timeout for all requests (longer for admin and image endpoints)
   const isAdminEndpoint = req.path.includes('/admin');
-  const timeout = isAdminEndpoint ? 90000 : 30000; // 90s for admin, 30s for others
+  const isImageEndpoint = req.path.includes('/message-with-image');
+  const timeout = isAdminEndpoint ? 90000 : isImageEndpoint ? 60000 : 30000; // 90s for admin, 60s for images, 30s for others
   req.setTimeout(timeout);
   res.setTimeout(timeout);
   

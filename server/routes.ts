@@ -539,15 +539,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let response;
       try {
-        // Add timeout per chiamate AI
+        console.log('🤖 Sending analysis to AI service...');
+        // Increase timeout for AI service calls to 50 seconds
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('AI service timeout')), 25000)
+          setTimeout(() => reject(new Error('AI service timeout')), 50000)
         );
         
         response = await Promise.race([
           geminiService.sendMessage(analysisMessage),
           timeoutPromise
         ]);
+        console.log('✅ AI response received successfully');
       } catch (aiError) {
         console.error('AI service error:', aiError);
         
@@ -570,12 +572,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      res.json({
-        message: response,
-      });
+      console.log('📤 Sending response to client...');
+      
+      // Ensure response is sent before any potential connection issues
+      try {
+        res.json({
+          message: response,
+        });
+        console.log('✅ Response sent successfully');
+      } catch (sendError) {
+        console.error('❌ Error sending response:', sendError);
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Failed to send response" });
+        }
+      }
     } catch (error) {
       console.error("Error sending message with image:", error);
-      res.status(500).json({ error: "Failed to send message with image" });
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to send message with image" });
+      }
     }
   });
 
