@@ -753,10 +753,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // OPTIMIZATION 8: Advanced cache system for ultra-fast queries
+  // OPTIMIZATION 8: ULTRA-FAST cache system with 5-minute cache duration
   let sessionsCache: any[] | null = null;
   let cacheTimestamp = 0;
-  const CACHE_DURATION = 60000; // 60 seconds cache for production performance
+  const CACHE_DURATION = 600000; // 10 minutes cache for MAXIMUM speed
   
   const invalidateCache = () => {
     sessionsCache = null;
@@ -767,7 +767,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const getCachedSessions = async () => {
     const now = Date.now();
     if (sessionsCache && (now - cacheTimestamp) < CACHE_DURATION) {
-      console.log(`⚡ Cache hit - ${sessionsCache.length} sessions (${Math.round((now - cacheTimestamp)/1000)}s old)`);
+      console.log(`⚡ INSTANT Cache hit - ${sessionsCache.length} sessions (${Math.round((now - cacheTimestamp)/1000)}s old)`);
       return sessionsCache;
     }
     
@@ -779,6 +779,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`💾 Cached ${sessionsCache.length} sessions in ${loadTime}ms`);
     return sessionsCache;
   };
+  
+  // PRELOAD cache at startup for instant first load
+  getCachedSessions().then(() => {
+    console.log(`🚀 PRELOADED sessions cache at startup for instant performance`);
+  }).catch(console.error);
+  
+  // PRELOAD cache at startup for instant first load
+  getCachedSessions().then(() => {
+    console.log(`🚀 PRELOADED sessions cache at startup for instant performance`);
+  }).catch(console.error);
 
   // Add admin API status endpoint for deployment verification
   app.get("/api/admin/status", async (req, res) => {

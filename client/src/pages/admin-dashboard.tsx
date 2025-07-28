@@ -375,7 +375,7 @@ export default function AdminDashboard() {
     },
     refetchInterval: false, // Disabilita auto-refresh per velocità
     enabled: isAuthenticated,
-    staleTime: 30000, // Cache per 30 secondi
+    staleTime: 300000, // Cache per 5 minuti per velocità massima
   });
 
   const { data: sessionsData } = useQuery({
@@ -410,7 +410,7 @@ export default function AdminDashboard() {
     },
     refetchInterval: false, // Disabilita auto-refresh per velocità
     enabled: isAuthenticated,
-    staleTime: 30000, // Cache per 30 secondi
+    staleTime: 300000, // Cache per 5 minuti per velocità massima
   });
 
   const sessions = sessionsData?.sessions || [];
