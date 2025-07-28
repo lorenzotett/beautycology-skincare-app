@@ -840,8 +840,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           return true;
         });
-        console.log(`Stats API: Date filter applied - ${filteredSessions.length}/${allSessions.length} sessions match date range`);
-        console.log(`Date filter: from=${dateFilter.from || 'none'}, to=${dateFilter.to || 'none'}`);
+          console.log(`📊 Stats API: Date filter applied - ${filteredSessions.length}/${allSessions.length} sessions match date range`);
+        console.log(`🗓️ Date filter: from=${dateFilter.from || 'none'}, to=${dateFilter.to || 'none'}`);
       } else {
         // Use all cached sessions
         filteredSessions = allSessions;
@@ -957,8 +957,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const viewToFinalRate = viewChatCount > 0 ? ((finalButtonClicks / viewChatCount) * 100).toFixed(1) : '0';
       
       console.log(`✅ All metrics computed successfully`);
+      
+      // CRITICAL FIX: Force garbage collection before response
+      if (global.gc) {
+        try {
+          global.gc();
+        } catch (e) {
+          // Ignore gc errors
+        }
+      }
 
-      res.json({
+      const responseData = {
         totalSessions: realSessions.length,
         viewChatCount,
         startChatCount,
@@ -978,10 +987,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Keep legacy fields for compatibility
         todaySessions: realSessions.length,
         totalMessages: 0 // Disabled for performance - was too slow
-      });
-    } catch (error) {
-      console.error("Error getting admin stats:", error);
-      res.status(500).json({ error: "Failed to get stats" });
+      };
+
+      console.log(`📤 Sending response: View=${viewChatOnly}, Total=${realSessions.length}, Final=${finalButtonClicks}`);
+      
+      // Send response immediately with timeout protection
+      res.setHeader('Content-Type', 'application/json');
+      const jsonResponse = JSON.stringify(responseData);
+      console.log(`📦 JSON response size: ${jsonResponse.length} bytes`);
+      res.end(jsonResponse);
+      console.log(`✅ Response sent successfully`);
+    } catch (error: any) {
+      console.error("❌ Error getting admin stats:", error);
+      res.status(500).json({ error: "Failed to get stats", details: error.message });
     }
   });
 

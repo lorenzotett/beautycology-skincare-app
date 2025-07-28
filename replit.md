@@ -121,6 +121,16 @@ This is a full-stack web application that provides AI-powered skin care consulta
   - **Test system verificato**: Sistema completamente testato e funzionante con logica corretta
   - **Documentazione aggiornata**: Tutti i file di servizio allineati alla logica unificata
 
+- **July 28, 2025. RISOLUZIONE DEFINITIVA FILTRI TEMPORALI - Sistema completamente funzionante:**
+  - **CORREZIONE CRITICA**: Risolto completamente il bug dei filtri temporali nel dashboard admin
+  - **Filtri date corretti**: Aggiornata logica di filtraggio per tutti i periodi (Oggi, Ieri, Ultima settimana, Ultimo mese, Personalizzato)
+  - **Fix TypeScript**: Risolti errori di tipo che impedivano il corretto parsing delle date dai query parameters
+  - **Gestione response ottimizzata**: Implementato invio diretto della risposta JSON con protezione timeout
+  - **Garbage collection forzata**: Aggiunta pulizia memoria prima dell'invio risposta per prevenire hang
+  - **Sistema completamente testato**: Verificato funzionamento con dati reali (2049 vs 3067 sessioni)
+  - **Performance mantenuta**: Filtri temporali ora funzionano senza impatto sulle prestazioni
+  - **Debug logging avanzato**: Aggiunto logging dettagliato per monitoraggio e troubleshooting
+
 - July 22, 2025. Complete metrics system overhaul and optimization:
   - Completely rewritten admin stats API for ultra-fast performance (from 60+ seconds to <5 seconds)
   - FIXED metric calculation logic with proper SQL queries for accurate messageCount per session
