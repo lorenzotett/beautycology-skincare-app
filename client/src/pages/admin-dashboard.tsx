@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatMessage, ChatSession } from "@shared/schema";
-import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3, Copy, X, Eye, ChevronDown, Download, Trash2, Bot, Zap, Play, EyeOff, PlayCircle, MessageCircleX } from "lucide-react";
+import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3, Copy, X, Eye, ChevronDown, Download, Trash2, Bot, Zap, Play, EyeOff, PlayCircle, MessageCircleX, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MessageBubble } from "@/components/message-bubble";
 
@@ -76,24 +76,24 @@ export default function AdminDashboard() {
     setCustomDateTo("");
   }, []);
 
-  // Fetch realtime extraction status
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    
-    const fetchRealtimeStatus = async () => {
-      try {
-        const response = await apiRequest("GET", "/api/admin/realtime-extraction/status");
-        const data = await response.json();
-        setRealtimeStatus(data);
-      } catch (error) {
-        console.error('Failed to fetch realtime status:', error);
-      }
-    };
-    
-    fetchRealtimeStatus();
-    const interval = setInterval(fetchRealtimeStatus, 30000); // Update every 30 seconds
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  // DISABILITATO: Fetch realtime extraction status (troppo lento - 6 secondi)
+  // useEffect(() => {
+  //   if (!isAuthenticated) return;
+  //   
+  //   const fetchRealtimeStatus = async () => {
+  //     try {
+  //       const response = await apiRequest("GET", "/api/admin/realtime-extraction/status");
+  //       const data = await response.json();
+  //       setRealtimeStatus(data);
+  //     } catch (error) {
+  //       console.error('Failed to fetch realtime status:', error);
+  //     }
+  //   };
+  //   
+  //   fetchRealtimeStatus();
+  //   const interval = setInterval(fetchRealtimeStatus, 30000); // Update every 30 seconds
+  //   return () => clearInterval(interval);
+  // }, [isAuthenticated]);
 
   // Reset to first page when filters change and clear invalid date values
   useEffect(() => {
@@ -104,7 +104,11 @@ export default function AdminDashboard() {
       setCustomDateFrom("");
       setCustomDateTo("");
     }
-  }, [searchTerm, selectedPeriod, customDateFrom, customDateTo]);
+    
+    // Force immediate refetch when filters change
+    queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-sessions"] });
+  }, [searchTerm, selectedPeriod, customDateFrom, customDateTo, queryClient]);
 
   // Lock body scroll when modal is open and handle ESC key
   useEffect(() => {
@@ -369,8 +373,9 @@ export default function AdminDashboard() {
       const response = await apiRequest("GET", `/api/admin/stats?${params}`);
       return response.json() as Promise<AdminStats>;
     },
-    refetchInterval: 60000, // Reduce refetch frequency for production
+    refetchInterval: false, // Disabilita auto-refresh per velocità
     enabled: isAuthenticated,
+    staleTime: 30000, // Cache per 30 secondi
   });
 
   const { data: sessionsData } = useQuery({
@@ -403,8 +408,9 @@ export default function AdminDashboard() {
         };
       }>;
     },
-    refetchInterval: 30000, // Reduce refetch frequency for production
+    refetchInterval: false, // Disabilita auto-refresh per velocità
     enabled: isAuthenticated,
+    staleTime: 30000, // Cache per 30 secondi
   });
 
   const sessions = sessionsData?.sessions || [];
@@ -770,8 +776,8 @@ export default function AdminDashboard() {
 
 
 
-        {/* AI Real-time System */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6">
+        {/* AI Real-time System - NASCOSTO per velocità */}
+        <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6 hidden">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-indigo-100 rounded-lg">
@@ -895,6 +901,19 @@ export default function AdminDashboard() {
                   />
                 </div>
               </div>
+              
+              {/* Refresh Button */}
+              <Button
+                onClick={() => {
+                  queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+                  queryClient.invalidateQueries({ queryKey: ["admin-sessions"] });
+                }}
+                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
+                size="sm"
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span>Aggiorna</span>
+              </Button>
             </div>
 
             {/* Custom Date Range */}

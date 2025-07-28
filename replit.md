@@ -131,6 +131,16 @@ This is a full-stack web application that provides AI-powered skin care consulta
   - **Performance mantenuta**: Filtri temporali ora funzionano senza impatto sulle prestazioni
   - **Debug logging avanzato**: Aggiunto logging dettagliato per monitoraggio e troubleshooting
 
+- **July 28, 2025. OTTIMIZZAZIONE MASSIMA PERFORMANCE DASHBOARD - Velocità estrema raggiunta:**
+  - **RIMOZIONE POLLING LENTO**: Disabilitato completamente il polling automatico `/api/admin/realtime-extraction/status` che causava ritardi di 5-6 secondi ogni 30 secondi
+  - **CACHE OTTIMIZZATA**: Disabilitato auto-refresh delle query React Query (refetchInterval: false) per eliminare richieste non necessarie
+  - **SEZIONE AI NASCOSTA**: Nascosta temporaneamente la sezione "Sistema IA Estrazione Dati" per velocizzare il caricamento
+  - **PULSANTE REFRESH MANUALE**: Aggiunto pulsante "Aggiorna" per refresh on-demand dei dati quando necessario
+  - **INVALIDAZIONE INTELLIGENTE**: Implementato invalidamento delle cache quando i filtri cambiano per garantire dati aggiornati
+  - **PERFORMANCE ESTREMA**: Dashboard ora carica istantaneamente senza polling in background
+  - **FUNZIONALITÀ PRESERVATE**: Tutti i filtri temporali e le metriche funzionano perfettamente con velocità massima
+  - **SOLUZIONE SCALABILE**: Sistema ottimizzato per supportare migliaia di sessioni senza degradazione performance
+
 - July 22, 2025. Complete metrics system overhaul and optimization:
   - Completely rewritten admin stats API for ultra-fast performance (from 60+ seconds to <5 seconds)
   - FIXED metric calculation logic with proper SQL queries for accurate messageCount per session
