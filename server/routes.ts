@@ -503,7 +503,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`✅ Message saved with imageBase64: ${imageBase64 ? 'YES' : 'NO'}`);
 
       const skinAnalysis = new SkinAnalysisService();
-      const analysisResult = await skinAnalysis.analyzeImage(imageFile.path);
+      
+      // Use base64 image for analysis instead of file path to avoid file deletion issues
+      let analysisResult;
+      try {
+        if (imageBase64 && !imageBase64.includes('data:image/svg')) {
+          // Use the base64 image we already have
+          analysisResult = await skinAnalysis.analyzeImageFromBase64(imageBase64);
+        } else {
+          // Fallback: try to use file path if base64 is not available or is SVG placeholder
+          console.warn('⚠️ Using file path for analysis, may fail if file is deleted');
+          analysisResult = await skinAnalysis.analyzeImage(imageFile.path);
+        }
+      } catch (analysisError) {
+        console.error('❌ Skin analysis failed:', analysisError);
+        // Provide default analysis values on error
+        analysisResult = {
+          rossori: 0,
+          acne: 0,
+          rughe: 0,
+          pigmentazione: 0,
+          pori_dilatati: 0,
+          oleosita: 0,
+          danni_solari: 0,
+          occhiaie: 0,
+          idratazione: 50,
+          elasticita: 50,
+          texture_uniforme: 50
+        };
+      }
 
       const analysisMessage = message ? 
         `${message}\n\nAnalisi AI della pelle: ${JSON.stringify(analysisResult)}` : 

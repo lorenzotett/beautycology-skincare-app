@@ -277,21 +277,21 @@ export class SkinAnalysisService {
     return cleaned.trim();
   }
 
-  async analyzeImage(imagePath: string): Promise<SkinAnalysisResult> {
+  async analyzeImageFromBase64(base64DataUrl: string, mimeType?: string): Promise<SkinAnalysisResult> {
     try {
-      // Read the image file
-      const imageData = fs.readFileSync(imagePath);
-      const base64Image = imageData.toString('base64');
+      // Extract base64 data from data URL if present
+      let base64Image = base64DataUrl;
+      let detectedMimeType = mimeType || 'image/jpeg';
       
-      // Get the mime type from file extension
-      const path = await import('path');
-      const ext = path.extname(imagePath).toLowerCase();
-      let mimeType = 'image/jpeg';
-      if (ext === '.png') mimeType = 'image/png';
-      if (ext === '.gif') mimeType = 'image/gif';
-      if (ext === '.webp') mimeType = 'image/webp';
-      if (ext === '.heic' || ext === '.heif') mimeType = 'image/heic';
-      if (ext === '.avif') mimeType = 'image/avif';
+      if (base64DataUrl.startsWith('data:')) {
+        const matches = base64DataUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (matches) {
+          detectedMimeType = matches[1];
+          base64Image = matches[2];
+        } else {
+          throw new Error('Invalid base64 data URL format');
+        }
+      }
 
       const response = await this.ai.models.generateContent({
         model: "gemini-2.5-pro", // Use Pro for better image analysis accuracy
@@ -303,7 +303,7 @@ export class SkinAnalysisService {
           parts: [{
             inlineData: {
               data: base64Image,
-              mimeType: mimeType
+              mimeType: detectedMimeType
             }
           }]
         }]
@@ -335,8 +335,38 @@ export class SkinAnalysisService {
         throw new Error(`Failed to parse skin analysis JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
       }
     } catch (error) {
-      console.error("Error analyzing skin image:", error);
+      console.error("Error analyzing skin image from base64:", error);
       throw new Error("Failed to analyze skin image");
+    }
+  }
+
+  async analyzeImage(imagePath: string): Promise<SkinAnalysisResult> {
+    try {
+      // Check if file exists first
+      if (!fs.existsSync(imagePath)) {
+        console.error(`File not found: ${imagePath}`);
+        throw new Error('Image file not found');
+      }
+      
+      // Read the image file
+      const imageData = fs.readFileSync(imagePath);
+      const base64Image = imageData.toString('base64');
+      
+      // Get the mime type from file extension
+      const path = await import('path');
+      const ext = path.extname(imagePath).toLowerCase();
+      let mimeType = 'image/jpeg';
+      if (ext === '.png') mimeType = 'image/png';
+      if (ext === '.gif') mimeType = 'image/gif';
+      if (ext === '.webp') mimeType = 'image/webp';
+      if (ext === '.heic' || ext === '.heif') mimeType = 'image/heic';
+      if (ext === '.avif') mimeType = 'image/avif';
+
+      // Use the base64 method to avoid duplication
+      return this.analyzeImageFromBase64(base64Image, mimeType);
+    } catch (error) {
+      console.error("Error analyzing skin image from path:", error);
+      throw error;
     }
   }
 }

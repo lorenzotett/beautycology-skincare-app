@@ -42,7 +42,7 @@ export function ChatInterface() {
   const [emailSent, setEmailSent] = useState<boolean>(false);
   const { toast } = useToast();
   const [isListening, setIsListening] = useState(false);
-  const recognition = useRef<SpeechRecognition | null>(null);
+  const recognition = useRef<any>(null);
   const [isFromIframe, setIsFromIframe] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -268,7 +268,7 @@ export function ChatInterface() {
     };
     
     // Create URL for new tab with session parameters
-    const chatUrl = `${window.location.origin}/?${new URLSearchParams(sessionParams).toString()}`;
+    const chatUrl = `${window.location.origin}/?${new URLSearchParams(sessionParams as any).toString()}`;
     
     // Open chat in new tab
     const newWindow = window.open(chatUrl, '_blank');
@@ -556,9 +556,23 @@ export function ChatInterface() {
       if (messageRotation) {
         clearInterval(messageRotation);
       }
+
+      // Provide more specific error messages
+      let errorMessage = "Impossibile inviare il messaggio. Riprova.";
+      
+      if (imageToSend) {
+        errorMessage = "Errore durante l'invio dell'immagine. Riprova o prova con un'altra foto.";
+        console.error("Image upload error:", error);
+      }
+      
+      // Check if it's a network error
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        errorMessage = "Errore di connessione. Controlla la tua connessione internet e riprova.";
+      }
+      
       toast({
         title: "Errore",
-        description: "Impossibile inviare il messaggio. Riprova.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
