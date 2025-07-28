@@ -620,7 +620,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: null,
       });
 
-      // Check if message contains email and update session
+      // FIRST: Generate AI response immediately
+      const response = await geminiService.sendMessage(message);
+
+      // Save assistant message
+      await storage.addChatMessage({
+        sessionId,
+        role: "assistant",
+        content: response.content,
+        metadata: {
+          hasChoices: response.hasChoices,
+          choices: response.choices,
+        },
+      });
+
+      // IMPORTANT: Send response to client immediately before any email processing
+      res.json({
+        message: response,
+      });
+
+      // NOW process email in the background AFTER response is sent
       const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
       const emailMatch = message.match(emailRegex);
       if (emailMatch && session) {
@@ -641,68 +660,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }).catch(err => console.error('Enhanced Klaviyo automation error:', err));
 
-        // REAL-TIME SYNC: Trigger immediate synchronization with AI extraction when email is detected
-        console.log(`📧 EMAIL DETECTED: ${userEmail} - Triggering immediate sync to Google Sheets`);
+        // BACKGROUND SYNC: Trigger synchronization with AI extraction when email is detected
+        console.log(`📧 EMAIL DETECTED: ${userEmail} - Triggering background sync to Google Sheets`);
         
-        // Use integration config for real-time sync with AI extraction  
+        // Use integration config for background sync with AI extraction  
         if (integrationConfig.googleSheets.enabled) {
-          try {
-            const sheets = new GoogleSheetsService(integrationConfig.googleSheets.credentials, integrationConfig.googleSheets.spreadsheetId!);
-            
-            // Get all messages for the session
-            const allMessages = await storage.getChatMessages(sessionId);
-            console.log(`📨 Retrieved ${allMessages.length} messages for real-time sync`);
+          // Run Google Sheets sync in background - don't wait for it
+          (async () => {
+            try {
+              const sheets = new GoogleSheetsService(integrationConfig.googleSheets.credentials, integrationConfig.googleSheets.spreadsheetId!);
+              
+              // Get all messages for the session
+              const allMessages = await storage.getChatMessages(sessionId);
+              console.log(`📨 Retrieved ${allMessages.length} messages for background sync`);
 
-            // Use Advanced AI extraction for complete data extraction
-            console.log('🤖 Real-time AI extraction starting...');
-            const advancedAI = new AdvancedAIExtractor();
-            const aiExtractedData = await advancedAI.extractConversationData(allMessages);
-            const extractedData = aiExtractedData ? 
-              advancedAI.convertToSheetsFormat(aiExtractedData) : 
-              null;
+              // Use Advanced AI extraction for complete data extraction
+              console.log('🤖 Background AI extraction starting...');
+              const advancedAI = new AdvancedAIExtractor();
+              const aiExtractedData = await advancedAI.extractConversationData(allMessages);
+              const extractedData = aiExtractedData ? 
+                advancedAI.convertToSheetsFormat(aiExtractedData) : 
+                null;
 
-            if (extractedData) {
-              console.log('📊 Real-time AI extracted data:', {
-                eta: extractedData.eta,
-                sesso: extractedData.sesso,
-                tipoPelle: extractedData.tipoPelle,
-                problemi: extractedData.problemiPelle?.slice(0, 20) // Show first 20 chars
-              });
+              if (extractedData) {
+                console.log('📊 Background AI extracted data:', {
+                  eta: extractedData.eta,
+                  sesso: extractedData.sesso,
+                  tipoPelle: extractedData.tipoPelle,
+                  problemi: extractedData.problemiPelle?.slice(0, 20) // Show first 20 chars
+                });
+              }
+
+              const success = await sheets.appendConversation(
+                sessionId,
+                session.userName,
+                userEmail,
+                allMessages,
+                extractedData
+              );
+              
+              if (success) {
+                await storage.updateChatSession(sessionId, { googleSheetsSynced: true });
+                console.log(`✅ BACKGROUND SYNC SUCCESS: ${session.userName} (${userEmail}) synced to Google Sheets`);
+              }
+            } catch (err) {
+              console.error('Background Google Sheets sync error:', err);
             }
-
-            const success = await sheets.appendConversation(
-              sessionId,
-              session.userName,
-              userEmail,
-              allMessages,
-              extractedData
-            );
-            
-            if (success) {
-              await storage.updateChatSession(sessionId, { googleSheetsSynced: true });
-              console.log(`✅ REAL-TIME SYNC SUCCESS: ${session.userName} (${userEmail}) synced to Google Sheets`);
-            }
-          } catch (err) {
-            console.error('Failed to parse Google Sheets credentials:', err);
-          }
+          })(); // Execute immediately in background
         }
       }
-
-      const response = await geminiService.sendMessage(message);
-
-      await storage.addChatMessage({
-        sessionId,
-        role: "assistant",
-        content: response.content,
-        metadata: {
-          hasChoices: response.hasChoices,
-          choices: response.choices,
-        },
-      });
-
-      res.json({
-        message: response,
-      });
     } catch (error) {
       console.error("Error sending message:", error);
       res.status(500).json({ error: "Failed to send message" });
