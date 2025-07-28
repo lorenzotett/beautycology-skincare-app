@@ -23,7 +23,7 @@ export async function apiRequest(
         body: data ? JSON.stringify(data) : undefined,
         credentials: "include",
         // Add timeout to prevent hanging requests
-        signal: AbortSignal.timeout(15000) // 15 second timeout
+        signal: AbortSignal.timeout(90000) // 90 second timeout for admin dashboard
       });
 
       await throwIfResNotOk(res);
@@ -56,7 +56,7 @@ export const getQueryFn: <T>(options: {
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
       // Add timeout to queries too
-      signal: AbortSignal.timeout(10000) // 10 second timeout for queries
+      signal: AbortSignal.timeout(90000) // 90 second timeout for admin queries
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

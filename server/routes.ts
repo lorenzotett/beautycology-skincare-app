@@ -756,7 +756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // OPTIMIZATION 8: Advanced cache system for ultra-fast queries
   let sessionsCache: any[] | null = null;
   let cacheTimestamp = 0;
-  const CACHE_DURATION = 15000; // 15 seconds cache for faster updates
+  const CACHE_DURATION = 60000; // 60 seconds cache for production performance
   
   const invalidateCache = () => {
     sessionsCache = null;
@@ -780,9 +780,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return sessionsCache;
   };
 
+  // Add admin API status endpoint for deployment verification
+  app.get("/api/admin/status", async (req, res) => {
+    try {
+      const sessionCount = await storage.getAllChatSessions().then(sessions => sessions.length);
+      const memUsage = process.memoryUsage();
+      
+      res.json({
+        status: "operational",
+        timestamp: new Date().toISOString(),
+        sessionCount,
+        memory: {
+          heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + "MB",
+          heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + "MB"
+        },
+        cache: {
+          active: !!sessionsCache,
+          timestamp: cacheTimestamp,
+          size: sessionsCache?.length || 0
+        },
+        environment: process.env.NODE_ENV,
+        uptime: Math.round(process.uptime()) + "s"
+      });
+    } catch (error: any) {
+      res.status(500).json({ 
+        status: "error", 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Admin routes - ULTRA-OPTIMIZED FOR SPEED
   app.get("/api/admin/stats", async (req, res) => {
     try {
+      // Track request start time
+      (req as any).startTime = Date.now();
       const { from, to, period } = req.query;
       
       // OPTIMIZATION 1: Calculate date range first, then get filtered sessions
@@ -846,6 +879,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Use all cached sessions
         filteredSessions = allSessions;
         console.log(`Stats API: No filter - analyzing ${filteredSessions.length} total sessions`);
+      }
+      
+      // OPTIMIZATION: Limit processing for large datasets
+      const MAX_SESSIONS_TO_PROCESS = 5000; // Prevent timeout on huge datasets
+      
+      if (filteredSessions.length > MAX_SESSIONS_TO_PROCESS) {
+        console.warn(`⚠️ Too many sessions (${filteredSessions.length}), limiting to ${MAX_SESSIONS_TO_PROCESS} most recent`);
+        filteredSessions = filteredSessions
+          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, MAX_SESSIONS_TO_PROCESS);
       }
       
       // Calculate metrics for ALL filtered sessions
@@ -958,6 +1001,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`✅ All metrics computed successfully`);
       
+      // Check request duration before response
+      const requestDuration = Date.now() - ((req as any).startTime || Date.now());
+      if (requestDuration > 85000) { // Near 90s timeout
+        console.warn(`⚠️ Request near timeout (${requestDuration}ms), sending quick response`);
+      }
+      
       // CRITICAL FIX: Force garbage collection before response
       if (global.gc) {
         try {
@@ -993,10 +1042,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send response immediately with timeout protection
       res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Cache-Control', 'public, max-age=60'); // Cache response for 60s
       const jsonResponse = JSON.stringify(responseData);
       console.log(`📦 JSON response size: ${jsonResponse.length} bytes`);
       res.end(jsonResponse);
       console.log(`✅ Response sent successfully`);
+      
+      // Defer garbage collection to avoid blocking
+      if (global.gc) {
+        setTimeout(() => {
+          try { global.gc(); } catch (e) { /* ignore */ }
+        }, 100);
+      }
     } catch (error: any) {
       console.error("❌ Error getting admin stats:", error);
       res.status(500).json({ error: "Failed to get stats", details: error.message });

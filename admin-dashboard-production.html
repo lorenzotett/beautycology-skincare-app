@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AI DermaSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f7f7f7;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 5rem auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .login-form h2 {
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #7f8c8d;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .filters {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .sessions-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .sessions-header {
+            padding: 1rem 1.5rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+        }
+
+        .session-row {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .session-row:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge.success {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #7f8c8d;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #f8f9fa;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔐 Admin Dashboard - AI DermaSense</h1>
+        <div id="user-info" class="hidden">
+            <span>Welcome, Admin</span>
+            <button onclick="logout()" class="btn" style="width: auto; padding: 0.5rem 1rem; margin-left: 1rem;">Logout</button>
+        </div>
+    </div>
+
+    <div id="login-container" class="container">
+        <form class="login-form" onsubmit="login(event)">
+            <h2>Admin Login</h2>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+    </div>
+
+    <div id="dashboard-container" class="container hidden">
+        <div class="filters">
+            <label>Date Range:</label>
+            <select id="dateFilter" class="filter-select" onchange="updateStats()">
+                <option value="">All Time</option>
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="week">Last Week</option>
+                <option value="month">Last Month</option>
+            </select>
+            <button onclick="refreshData()" class="btn" style="width: auto; padding: 0.5rem 1rem;">Refresh</button>
+        </div>
+
+        <div id="stats-container" class="loading">Loading statistics...</div>
+        
+        <div id="sessions-container" class="loading">Loading sessions...</div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let isAuthenticated = false;
+        const API_TIMEOUT = 90000; // 90 seconds
+
+        // Check if already authenticated
+        window.onload = () => {
+            if (localStorage.getItem('admin-authenticated') === 'true') {
+                showDashboard();
+            }
+        };
+
+        function login(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === 'admin' && password === 'password123') {
+                localStorage.setItem('admin-authenticated', 'true');
+                showDashboard();
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('admin-authenticated');
+            location.reload();
+        }
+
+        function showDashboard() {
+            isAuthenticated = true;
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('dashboard-container').classList.remove('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            loadData();
+        }
+
+        async function loadData() {
+            await Promise.all([updateStats(), loadSessions(1)]);
+        }
+
+        async function updateStats() {
+            const statsContainer = document.getElementById('stats-container');
+            statsContainer.innerHTML = '<div class="loading">Loading statistics...</div>';
+
+            try {
+                const dateFilter = document.getElementById('dateFilter').value;
+                let url = '/api/admin/stats';
+                if (dateFilter) {
+                    url += `?period=${dateFilter}`;
+                }
+
+                const response = await fetch(url, {
+                    signal: AbortSignal.timeout(API_TIMEOUT)
+                });
+
+                if (!response.ok) throw new Error('Failed to load stats');
+
+                const data = await response.json();
+                displayStats(data);
+            } catch (error) {
+                statsContainer.innerHTML = `<div class="error">Error loading statistics: ${error.message}</div>`;
+            }
+        }
+
+        function displayStats(data) {
+            const statsContainer = document.getElementById('stats-container');
+            statsContainer.innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>View Chat</h3>
+                        <div class="value">${data.viewChatOnly || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Sessions</h3>
+                        <div class="value">${data.totalSessions || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Completed Chats</h3>
+                        <div class="value">${data.chatCompletate || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Final Button Clicks</h3>
+                        <div class="value">${data.finalButtonClicks || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>WhatsApp Clicks</h3>
+                        <div class="value">${data.whatsappButtonClicks || 0}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Avg Duration</h3>
+                        <div class="value">${data.averageChatDurationMinutes || 0} min</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadSessions(page) {
+            const sessionsContainer = document.getElementById('sessions-container');
+            sessionsContainer.innerHTML = '<div class="loading">Loading sessions...</div>';
+
+            try {
+                currentPage = page;
+                const dateFilter = document.getElementById('dateFilter').value;
+                let url = `/api/admin/sessions?page=${page}&limit=25`;
+                if (dateFilter) {
+                    url += `&period=${dateFilter}`;
+                }
+
+                const response = await fetch(url, {
+                    signal: AbortSignal.timeout(API_TIMEOUT)
+                });
+
+                if (!response.ok) throw new Error('Failed to load sessions');
+
+                const data = await response.json();
+                totalPages = data.pagination.totalPages;
+                displaySessions(data);
+            } catch (error) {
+                sessionsContainer.innerHTML = `<div class="error">Error loading sessions: ${error.message}</div>`;
+            }
+        }
+
+        function displaySessions(data) {
+            const sessionsContainer = document.getElementById('sessions-container');
+            
+            let html = `
+                <div class="sessions-table">
+                    <div class="sessions-header">
+                        Recent Sessions (${data.pagination.total} total)
+                    </div>
+            `;
+
+            if (data.sessions.length === 0) {
+                html += '<div class="session-row">No sessions found</div>';
+            } else {
+                data.sessions.forEach(session => {
+                    const date = new Date(session.createdAt).toLocaleString('it-IT');
+                    html += `
+                        <div class="session-row">
+                            <div>${session.userName}</div>
+                            <div>${date}</div>
+                            <div>${session.messageCount} messages</div>
+                            <div>
+                                ${session.finalButtonClicked ? '<span class="badge success">Cream Access</span>' : ''}
+                                ${session.hasImages ? '<span class="badge">Has Images</span>' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += '</div>';
+
+            // Pagination
+            if (totalPages > 1) {
+                html += '<div class="pagination">';
+                html += `<button onclick="loadSessions(1)" ${currentPage === 1 ? 'disabled' : ''}>First</button>`;
+                html += `<button onclick="loadSessions(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>`;
+                
+                // Show page numbers
+                for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+                    html += `<button onclick="loadSessions(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+                }
+                
+                html += `<button onclick="loadSessions(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`;
+                html += `<button onclick="loadSessions(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Last</button>`;
+                html += '</div>';
+            }
+
+            sessionsContainer.innerHTML = html;
+        }
+
+        function refreshData() {
+            loadData();
+        }
+    </script>
+</body>
+</html>

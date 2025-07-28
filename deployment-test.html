@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Deployment Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background: #4caf50; color: white; }
+        .error { background: #f44336; color: white; }
+        .pending { background: #ff9800; color: white; }
+        pre {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Dashboard Deployment Test</h1>
+    
+    <div class="test-section">
+        <h2>1. API Status Check</h2>
+        <button onclick="testApiStatus()">Test API Status</button>
+        <div id="api-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Admin Stats Test</h2>
+        <button onclick="testAdminStats()">Test Admin Stats</button>
+        <div id="stats-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Sessions API Test</h2>
+        <button onclick="testSessions()">Test Sessions API</button>
+        <div id="sessions-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Full Dashboard Load Test</h2>
+        <button onclick="testFullDashboard()">Test Full Dashboard</button>
+        <div id="dashboard-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. Date Filter Test</h2>
+        <button onclick="testDateFilters()">Test Date Filters</button>
+        <div id="filter-result"></div>
+    </div>
+
+    <script>
+        const baseUrl = window.location.origin;
+        
+        async function testApiStatus() {
+            const resultDiv = document.getElementById('api-status');
+            resultDiv.innerHTML = '<span class="status pending">Testing...</span>';
+            
+            try {
+                const start = Date.now();
+                const response = await fetch(`${baseUrl}/api/admin/status`);
+                const duration = Date.now() - start;
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'operational') {
+                    resultDiv.innerHTML = `
+                        <span class="status success">✅ API Operational</span>
+                        <p>Response time: ${duration}ms</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    throw new Error('API not operational');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="status error">❌ API Error</span>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testAdminStats() {
+            const resultDiv = document.getElementById('stats-result');
+            resultDiv.innerHTML = '<span class="status pending">Testing...</span>';
+            
+            try {
+                const start = Date.now();
+                const response = await fetch(`${baseUrl}/api/admin/stats`, {
+                    signal: AbortSignal.timeout(90000) // 90s timeout
+                });
+                const duration = Date.now() - start;
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <span class="status success">✅ Stats API Working</span>
+                        <p>Response time: ${duration}ms</p>
+                        <p>View Chat: ${data.viewChatOnly}</p>
+                        <p>Total Sessions: ${data.totalSessions}</p>
+                        <p>Final Button Clicks: ${data.finalButtonClicks}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    throw new Error('Stats API failed');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="status error">❌ Stats Error</span>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testSessions() {
+            const resultDiv = document.getElementById('sessions-result');
+            resultDiv.innerHTML = '<span class="status pending">Testing...</span>';
+            
+            try {
+                const start = Date.now();
+                const response = await fetch(`${baseUrl}/api/admin/sessions?page=1&limit=10`, {
+                    signal: AbortSignal.timeout(90000)
+                });
+                const duration = Date.now() - start;
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <span class="status success">✅ Sessions API Working</span>
+                        <p>Response time: ${duration}ms</p>
+                        <p>Total Sessions: ${data.pagination.total}</p>
+                        <p>Sessions loaded: ${data.sessions.length}</p>
+                    `;
+                } else {
+                    throw new Error('Sessions API failed');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="status error">❌ Sessions Error</span>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testFullDashboard() {
+            const resultDiv = document.getElementById('dashboard-result');
+            resultDiv.innerHTML = '<span class="status pending">Testing full dashboard load...</span>';
+            
+            const tests = [
+                { name: 'Admin Auth', url: '/admin-dashboard' },
+                { name: 'Stats API', url: '/api/admin/stats' },
+                { name: 'Sessions API', url: '/api/admin/sessions' }
+            ];
+            
+            const results = [];
+            
+            for (const test of tests) {
+                try {
+                    const start = Date.now();
+                    const response = await fetch(`${baseUrl}${test.url}`, {
+                        signal: AbortSignal.timeout(90000)
+                    });
+                    const duration = Date.now() - start;
+                    
+                    results.push({
+                        name: test.name,
+                        success: response.ok,
+                        duration,
+                        status: response.status
+                    });
+                } catch (error) {
+                    results.push({
+                        name: test.name,
+                        success: false,
+                        error: error.message
+                    });
+                }
+            }
+            
+            const allSuccess = results.every(r => r.success);
+            resultDiv.innerHTML = `
+                <span class="status ${allSuccess ? 'success' : 'error'}">
+                    ${allSuccess ? '✅ All Tests Passed' : '❌ Some Tests Failed'}
+                </span>
+                <ul>
+                    ${results.map(r => `
+                        <li>${r.success ? '✅' : '❌'} ${r.name}: 
+                            ${r.duration ? `${r.duration}ms` : r.error}
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+        
+        async function testDateFilters() {
+            const resultDiv = document.getElementById('filter-result');
+            resultDiv.innerHTML = '<span class="status pending">Testing date filters...</span>';
+            
+            const filters = [
+                { name: 'All Time', params: '' },
+                { name: 'Last Week', params: '?period=week' },
+                { name: 'Custom Range', params: '?from=2025-07-18&to=2025-07-27' }
+            ];
+            
+            const results = [];
+            
+            for (const filter of filters) {
+                try {
+                    const response = await fetch(`${baseUrl}/api/admin/stats${filter.params}`, {
+                        signal: AbortSignal.timeout(90000)
+                    });
+                    const data = await response.json();
+                    
+                    results.push({
+                        name: filter.name,
+                        success: response.ok,
+                        viewChat: data.viewChatOnly,
+                        sessions: data.totalSessions
+                    });
+                } catch (error) {
+                    results.push({
+                        name: filter.name,
+                        success: false,
+                        error: error.message
+                    });
+                }
+            }
+            
+            resultDiv.innerHTML = `
+                <span class="status success">✅ Date Filter Results</span>
+                <table border="1" cellpadding="5">
+                    <tr>
+                        <th>Filter</th>
+                        <th>View Chat</th>
+                        <th>Sessions</th>
+                    </tr>
+                    ${results.map(r => `
+                        <tr>
+                            <td>${r.name}</td>
+                            <td>${r.viewChat || 'Error'}</td>
+                            <td>${r.sessions || r.error}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+            `;
+        }
+        
+        // Auto-run basic test on load
+        window.onload = () => {
+            testApiStatus();
+        };
+    </script>
+</body>
+</html>

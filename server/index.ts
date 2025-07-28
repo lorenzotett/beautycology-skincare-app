@@ -19,8 +19,17 @@ app.use((req, res, next) => {
   const clientIp = req.ip || 'unknown';
   const now = Date.now();
   
-  // Skip rate limiting for localhost in development
+  // Skip rate limiting for localhost and admin routes
   if (app.get("env") === "development" && (clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === '::ffff:127.0.0.1')) {
+    return next();
+  }
+  
+  // Skip rate limiting for admin routes, API endpoints, and internal IPs in production
+  if (req.path.includes('/admin') || 
+      req.path.includes('/health') || 
+      req.path.includes('/api/admin') ||
+      clientIp.startsWith('172.31.') || // AWS internal IPs
+      clientIp === '::ffff:172.31.118.98') { // Specific internal IP
     return next();
   }
   
@@ -55,9 +64,11 @@ const FAILURE_THRESHOLD = 5;
 const CIRCUIT_RESET_TIME = 60000; // 1 minute
 
 app.use((req, res, next) => {
-  // Set a timeout for all requests (30 seconds)
-  req.setTimeout(30000);
-  res.setTimeout(30000);
+  // Set a timeout for all requests (longer for admin endpoints)
+  const isAdminEndpoint = req.path.includes('/admin');
+  const timeout = isAdminEndpoint ? 90000 : 30000; // 90s for admin, 30s for others
+  req.setTimeout(timeout);
+  res.setTimeout(timeout);
   
   // Handle timeout errors gracefully
   req.on('timeout', () => {

@@ -143,6 +143,9 @@ export default function AdminDashboard() {
     if (username === "admin" && password === "password123") {
       setIsAuthenticated(true);
       localStorage.setItem('admin-authenticated', 'true');
+      // Force immediate stats load after login
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-sessions"] });
     } else {
       alert("Credenziali non valide");
     }
@@ -366,7 +369,7 @@ export default function AdminDashboard() {
       const response = await apiRequest("GET", `/api/admin/stats?${params}`);
       return response.json() as Promise<AdminStats>;
     },
-    refetchInterval: 30000,
+    refetchInterval: 60000, // Reduce refetch frequency for production
     enabled: isAuthenticated,
   });
 
@@ -400,7 +403,7 @@ export default function AdminDashboard() {
         };
       }>;
     },
-    refetchInterval: 10000,
+    refetchInterval: 30000, // Reduce refetch frequency for production
     enabled: isAuthenticated,
   });
 
