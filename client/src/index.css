@@ -224,6 +224,52 @@ body, html {
 
 /* Container styling restored after test */
 
+/* Chat Modal Specific Styles */
+.chat-modal-content {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+.chat-modal-content .message-bubble {
+  max-width: 85% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+.chat-modal-content .bg-user-msg {
+  max-width: fit-content !important;
+  min-width: 80px !important;
+  margin-left: auto !important;
+}
+
+.chat-modal-content .bg-assistant-msg {
+  max-width: 85% !important;
+  margin-right: auto !important;
+}
+
+/* Ensure images fit properly in modal */
+.chat-modal-content img {
+  max-width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+/* Choice buttons adaptation for modal */
+.chat-modal-content .choice-button {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+}
+
+/* Text content adaptation */
+.chat-modal-content p, 
+.chat-modal-content div {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);

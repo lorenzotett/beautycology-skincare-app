@@ -73,6 +73,16 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 ## Recent Changes
 
+- **July 29, 2025. MIGLIORAMENTO VISUALIZZAZIONE CHAT DASHBOARD - Eliminato scroll orizzontale:**
+  - **PROBLEMA RISOLTO**: Chat modal nel dashboard admin richiedeva scroll orizzontale per visualizzare completamente il contenuto
+  - **Modal completamente ridisegnato**: Aumentato massimo da max-w-4xl a max-w-6xl con design responsive ottimizzato
+  - **Layout adattivo**: Su desktop usa 95vw x 95vh per utilizzo ottimale dello schermo disponibile
+  - **Background chat**: Aggiunto sfondo #E5F1F2 per coerenza visiva con interfaccia chat principale
+  - **CSS specifici modal**: Creata classe chat-modal-content con regole specifiche per word-wrap e overflow
+  - **Prevenzione overflow**: Impostato overflow-x-hidden e word-break per contenuto che si adatta senza scroll orizzontale
+  - **Responsive completo**: Modal si adatta perfettamente sia su desktop che mobile mantenendo leggibilità ottimale
+  - **Test completato**: Verificato funzionamento con chat lunghe e contenuto complesso senza bisogno di scroll orizzontale
+
 - **July 25, 2025. INTEGRAZIONE COMPLETA TRACKING E ANALYTICS - GTM, GA4 E META PIXEL:**
   - **Google Tag Manager integrato**: Aggiunto GTM con ID `GTM-TJDDR8DQ` per gestione centralizzata di tutti i tag
   - **Meta Pixel integrato**: Aggiunto Facebook Pixel con ID `1119696619977788` per tracking conversioni e remarketing

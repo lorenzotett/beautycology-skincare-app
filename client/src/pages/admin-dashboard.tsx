@@ -964,18 +964,18 @@ export default function AdminDashboard() {
         {/* Chat Detail Modal */}
         {selectedSession && sessionDetails && (
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setSelectedSession(null);
               }
             }}
           >
-            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-              <div className="p-6 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+            <div className="bg-white rounded-lg w-full h-full md:w-[95vw] md:h-[95vh] md:max-w-6xl md:max-h-[95vh] overflow-hidden flex flex-col">
+              <div className="p-4 md:p-6 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Chat Details</h2>
-                  <p className="text-gray-600">User: {sessionDetails.userName}</p>
+                  <h2 className="text-lg md:text-xl font-bold text-gray-900">Chat Details</h2>
+                  <p className="text-sm md:text-base text-gray-600">User: {sessionDetails.userName}</p>
                 </div>
                 <Button
                   variant="outline"
@@ -987,8 +987,8 @@ export default function AdminDashboard() {
                 </Button>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="space-y-4 max-w-4xl mx-auto">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 chat-modal-content" style={{backgroundColor: '#E5F1F2'}}>
+                <div className="space-y-4 w-full max-w-none">
                   {sessionDetails.messages.map((message) => (
                     <div key={message.id} className="w-full">
                       <MessageBubble 
