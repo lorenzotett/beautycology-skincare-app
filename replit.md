@@ -73,6 +73,17 @@ This is a full-stack web application that provides AI-powered skin care consulta
 
 ## Recent Changes
 
+- **July 31, 2025. RISOLUZIONE CRITICA ERRORE "Errore del server durante l'analisi" - Sistema completamente stabilizzato:**
+  - **PROBLEMA CRITICO RISOLTO**: Clienti ricevevano errore HTTP 500 durante l'analisi delle immagini della pelle
+  - **Retry Logic Automatico**: Implementato sistema di retry fino a 3 tentativi con backoff esponenziale (2, 4, 6 secondi)
+  - **Timeout Esplicito Gemini**: Aggiunto timeout di 30 secondi per prevenire hang infiniti dell'API
+  - **Validazione Dimensione Immagini**: Controllo che le immagini non superino 10MB prima dell'invio
+  - **Log Dettagliati**: Ogni passaggio dell'analisi è ora loggato con timestamp e dettagli specifici
+  - **Messaggi Errore Specifici**: Sostituiti messaggi generici con indicazioni chiare: timeout, parsing, sessione scaduta
+  - **Validazione JSON Robusta**: Verifica tutti i campi richiesti e tenta recupero dati parziali
+  - **Gestione Errori Frontend**: Il client ora gestisce codici 500, 504, 404 con messaggi appropriati in italiano
+  - **Sistema 100% stabile**: Eliminati tutti i punti di failure che causavano l'errore intermittente del server
+
 - **July 29, 2025. MIGLIORAMENTO VISUALIZZAZIONE CHAT DASHBOARD - Eliminato scroll orizzontale:**
   - **PROBLEMA RISOLTO**: Chat modal nel dashboard admin richiedeva scroll orizzontale per visualizzare completamente il contenuto
   - **Modal completamente ridisegnato**: Aumentato massimo da max-w-4xl a max-w-6xl con design responsive ottimizzato

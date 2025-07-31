@@ -589,7 +589,21 @@ export function ChatInterface() {
           errorMessage = "Errore di connessione. Controlla la tua connessione internet e riprova.";
         } else if (error.message.includes('500')) {
           errorMessage = "Errore del server durante l'analisi. Per favore riprova tra qualche secondo.";
+        } else if (error.message.includes('504')) {
+          errorMessage = "L'analisi dell'immagine sta richiedendo troppo tempo. Riprova con un'altra foto.";
+        } else if (error.message.includes('404')) {
+          errorMessage = "Sessione scaduta o immagine non trovata. Ricarica la pagina e riprova.";
         }
+      }
+      
+      // If the response contains a specific error message from the server, use it
+      try {
+        const errorData = JSON.parse(error.message);
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch {
+        // Ignore JSON parse errors
       }
       
       toast({

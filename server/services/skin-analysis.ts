@@ -292,22 +292,53 @@ export class SkinAnalysisService {
           throw new Error('Invalid base64 data URL format');
         }
       }
+      
+      // Check image size (Gemini has limits)
+      const imageSizeInBytes = (base64Image.length * 3) / 4; // Approximate size
+      const imageSizeInMB = imageSizeInBytes / (1024 * 1024);
+      
+      console.log(`📏 Dimensione immagine: ${imageSizeInMB.toFixed(2)}MB`);
+      
+      if (imageSizeInMB > 10) {
+        throw new Error(`Immagine troppo grande: ${imageSizeInMB.toFixed(2)}MB. Massimo consentito: 10MB`);
+      }
+      
+      // Verify supported mime types
+      const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+      if (!supportedTypes.includes(detectedMimeType)) {
+        console.warn(`⚠️ Tipo MIME non standard: ${detectedMimeType}. Uso image/jpeg come fallback`);
+        detectedMimeType = 'image/jpeg';
+      }
 
-      const response = await this.ai.models.generateContent({
-        model: "gemini-2.5-pro", // Use Pro for better image analysis accuracy
-        config: {
-          systemInstruction: SKIN_ANALYSIS_INSTRUCTION,
-        },
-        contents: [{
-          role: "user",
-          parts: [{
-            inlineData: {
-              data: base64Image,
-              mimeType: detectedMimeType
-            }
+      // Create timeout promise (30 seconds for image analysis)
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Gemini API timeout dopo 30 secondi')), 30000)
+      );
+      
+      console.log(`🤖 Invio immagine a Gemini 2.5 Pro per analisi (timeout: 30s)...`);
+      const startTime = Date.now();
+      
+      const response = await Promise.race([
+        this.ai.models.generateContent({
+          model: "gemini-2.5-pro", // Use Pro for better image analysis accuracy
+          config: {
+            systemInstruction: SKIN_ANALYSIS_INSTRUCTION,
+          },
+          contents: [{
+            role: "user",
+            parts: [{
+              inlineData: {
+                data: base64Image,
+                mimeType: detectedMimeType
+              }
+            }]
           }]
-        }]
-      });
+        }),
+        timeoutPromise
+      ]);
+      
+      const elapsedTime = Date.now() - startTime;
+      console.log(`✅ Risposta ricevuta da Gemini in ${elapsedTime}ms`);
 
       const content = response.text || "";
       console.log("Raw AI response:", content);
@@ -321,15 +352,44 @@ export class SkinAnalysisService {
         const rawAnalysisResult = JSON.parse(cleanedContent);
         console.log("Raw analysis result:", rawAnalysisResult);
         
+        // Verify all required fields are present
+        const requiredFields = ['rossori', 'acne', 'rughe', 'pigmentazione', 'pori_dilatati', 
+                              'oleosita', 'danni_solari', 'occhiaie', 'idratazione', 
+                              'elasticita', 'texture_uniforme'];
+        
+        for (const field of requiredFields) {
+          if (!(field in rawAnalysisResult)) {
+            throw new Error(`Campo mancante nella risposta AI: ${field}`);
+          }
+          if (typeof rawAnalysisResult[field] !== 'number') {
+            throw new Error(`Campo ${field} non è un numero: ${rawAnalysisResult[field]}`);
+          }
+        }
+        
         // Apply validation and corrections
         const validatedResult = this.validateAndCorrectAnalysis(rawAnalysisResult);
         console.log("Validated analysis result:", validatedResult);
         
         return validatedResult;
       } catch (parseError) {
-        console.error("Error parsing skin analysis JSON:", parseError);
-        console.error("Raw response:", content);
-        console.error("Cleaned response:", cleanedContent);
+        console.error("❌ Error parsing skin analysis JSON:", parseError);
+        console.error("❌ Raw response length:", content.length);
+        console.error("❌ First 200 chars of raw response:", content.substring(0, 200));
+        console.error("❌ Last 200 chars of raw response:", content.substring(content.length - 200));
+        console.error("❌ Cleaned response length:", cleanedContent.length);
+        
+        // Try to extract partial data if possible
+        try {
+          // Check if response contains any JSON-like structure
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            console.log("🔧 Tentativo di recupero JSON parziale...");
+            const partialJson = JSON.parse(jsonMatch[0]);
+            console.log("✅ JSON parziale recuperato:", partialJson);
+          }
+        } catch (e) {
+          console.error("❌ Impossibile recuperare JSON parziale");
+        }
         
         // No fallback - throw error to force retry
         throw new Error(`Failed to parse skin analysis JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);

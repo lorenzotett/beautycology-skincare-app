@@ -506,31 +506,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Use base64 image for analysis instead of file path to avoid file deletion issues
       let analysisResult;
-      try {
-        if (imageBase64 && !imageBase64.includes('data:image/svg')) {
-          // Use the base64 image we already have
-          analysisResult = await skinAnalysis.analyzeImageFromBase64(imageBase64);
-        } else {
-          // Fallback: try to use file path if base64 is not available or is SVG placeholder
-          console.warn('⚠️ Using file path for analysis, may fail if file is deleted');
-          analysisResult = await skinAnalysis.analyzeImage(imageFile.path);
+      let analysisRetries = 0;
+      const maxRetries = 2;
+      
+      while (analysisRetries <= maxRetries) {
+        try {
+          console.log(`🔍 Tentativo di analisi ${analysisRetries + 1}/${maxRetries + 1}...`);
+          
+          if (imageBase64 && !imageBase64.includes('data:image/svg')) {
+            // Use the base64 image we already have
+            analysisResult = await skinAnalysis.analyzeImageFromBase64(imageBase64);
+            console.log('✅ Analisi completata con successo');
+            break;
+          } else {
+            // Fallback: try to use file path if base64 is not available or is SVG placeholder
+            console.warn('⚠️ Using file path for analysis, may fail if file is deleted');
+            analysisResult = await skinAnalysis.analyzeImage(imageFile.path);
+            console.log('✅ Analisi completata con successo (da file)');
+            break;
+          }
+        } catch (analysisError) {
+          analysisRetries++;
+          console.error(`❌ Tentativo ${analysisRetries} fallito:`, analysisError);
+          
+          if (analysisRetries > maxRetries) {
+            console.error('❌ ERRORE CRITICO: Tutti i tentativi di analisi sono falliti');
+            
+            // Check specific error types
+            const errorMessage = analysisError instanceof Error ? analysisError.message : String(analysisError);
+            
+            if (errorMessage.includes('Failed to parse skin analysis JSON')) {
+              console.error('❌ Errore nel parsing JSON della risposta AI');
+            } else if (errorMessage.includes('timeout')) {
+              console.error('❌ Timeout durante l\'analisi AI');
+            } else if (errorMessage.includes('Image file not found')) {
+              console.error('❌ File immagine non trovato');
+            }
+            
+            // Provide default analysis values on error
+            analysisResult = {
+              rossori: 0,
+              acne: 0,
+              rughe: 0,
+              pigmentazione: 0,
+              pori_dilatati: 0,
+              oleosita: 0,
+              danni_solari: 0,
+              occhiaie: 0,
+              idratazione: 50,
+              elasticita: 50,
+              texture_uniforme: 50
+            };
+            
+            console.log('⚠️ Utilizzando valori di analisi predefiniti');
+            break;
+          } else {
+            console.log(`⏳ Attesa di ${analysisRetries * 2} secondi prima del prossimo tentativo...`);
+            await new Promise(resolve => setTimeout(resolve, analysisRetries * 2000));
+          }
         }
-      } catch (analysisError) {
-        console.error('❌ Skin analysis failed:', analysisError);
-        // Provide default analysis values on error
-        analysisResult = {
-          rossori: 0,
-          acne: 0,
-          rughe: 0,
-          pigmentazione: 0,
-          pori_dilatati: 0,
-          oleosita: 0,
-          danni_solari: 0,
-          occhiaie: 0,
-          idratazione: 50,
-          elasticita: 50,
-          texture_uniforme: 50
-        };
       }
 
       const analysisMessage = message ? 
@@ -587,9 +621,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
     } catch (error) {
-      console.error("Error sending message with image:", error);
+      console.error("❌ ERRORE CRITICO nell'endpoint message-with-image:", error);
+      
+      // Log dettagliato per debug
+      if (error instanceof Error) {
+        console.error("❌ Tipo errore:", error.name);
+        console.error("❌ Messaggio:", error.message);
+        console.error("❌ Stack:", error.stack);
+      }
+      
       if (!res.headersSent) {
-        res.status(500).json({ error: "Failed to send message with image" });
+        // Provide more specific error messages
+        let errorMessage = "Si è verificato un errore durante l'analisi dell'immagine";
+        let statusCode = 500;
+        
+        if (error instanceof Error) {
+          if (error.message.includes('timeout')) {
+            errorMessage = "L'analisi dell'immagine sta richiedendo troppo tempo. Riprova con un'altra foto.";
+            statusCode = 504; // Gateway Timeout
+          } else if (error.message.includes('parse')) {
+            errorMessage = "Errore nell'elaborazione dell'analisi. Riprova tra qualche secondo.";
+          } else if (error.message.includes('not found')) {
+            errorMessage = "Immagine non trovata. Ricarica la pagina e riprova.";
+            statusCode = 404;
+          } else if (error.message.includes('Session not found')) {
+            errorMessage = "Sessione scaduta. Ricarica la pagina per iniziare una nuova chat.";
+            statusCode = 404;
+          }
+        }
+        
+        console.error(`❌ Invio risposta errore al client: ${statusCode} - ${errorMessage}`);
+        res.status(statusCode).json({ 
+          error: errorMessage,
+          details: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : String(error) : undefined
+        });
       }
     }
   });
