@@ -506,7 +506,7 @@ process.on('SIGINT', () => {
     res.status(200).json({ 
       status: 'operational', 
       services: {
-        gemini: !!process.env.GOOGLE_GEMINI_API_KEY,
+        gemini: !!process.env.GEMINI_API_KEY,
         sheets: !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY,
         klaviyo: !!process.env.KLAVIYO_API_KEY
       }
