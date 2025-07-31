@@ -445,9 +445,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Session not found" });
       }
 
-      const geminiService = geminiServices.get(sessionId);
+      let geminiService = geminiServices.get(sessionId);
       if (!geminiService) {
-        return res.status(404).json({ error: "Chat service not found" });
+        // Recreate the Gemini service if it was removed from memory
+        console.log(`♻️ Recreating Gemini service for session ${sessionId} (image upload)`);
+        geminiService = new GeminiService();
+        geminiServices.set(sessionId, geminiService);
       }
 
       // CRITICAL: Immediate base64 conversion before any other operations
@@ -673,9 +676,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Session not found" });
       }
 
-      const geminiService = geminiServices.get(sessionId);
+      let geminiService = geminiServices.get(sessionId);
       if (!geminiService) {
-        return res.status(404).json({ error: "Chat service not found" });
+        // Recreate the Gemini service if it was removed from memory
+        console.log(`♻️ Recreating Gemini service for session ${sessionId}`);
+        geminiService = new GeminiService();
+        geminiServices.set(sessionId, geminiService);
       }
 
       await storage.addChatMessage({
