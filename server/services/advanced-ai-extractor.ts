@@ -39,7 +39,7 @@ interface ExtractedData {
 
 export class AdvancedAIExtractor {
   private genAI: GoogleGenerativeAI;
-  
+
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -143,7 +143,7 @@ Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantene
       })));
 
       console.log('🤖 Advanced AI extraction starting...');
-      
+
       const result = await model.generateContent(conversationText);
       const response = await result.response;
       const text = response.text();

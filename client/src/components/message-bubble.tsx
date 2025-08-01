@@ -15,7 +15,7 @@ interface MessageBubbleProps {
 const formatMarkdown = (text: string): string => {
   // Replace **bold text** with <strong>bold text</strong>
   let formattedText = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-  
+
   // Replace *bold text* with <strong>bold text</strong>  
   formattedText = formattedText.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
 
@@ -66,7 +66,7 @@ const formatMarkdown = (text: string): string => {
     /\*\*Ingrediente consigliato:\*\*\s*([^\n]+)/g,
     '<div class="mb-1 ml-6"><strong class="text-sm font-medium text-green-700">Ingrediente consigliato:</strong> <span class="text-sm">$1</span></div>'
   );
-  
+
   formattedText = formattedText.replace(
     /\*\*Come funziona:\*\*\s*([^\n]+)/g,
     '<div class="mb-3 ml-6"><strong class="text-sm font-medium text-blue-700">Come funziona:</strong> <span class="text-sm">$1</span></div>'
@@ -159,9 +159,9 @@ const parseSkinAnalysis = (content: string) => {
     splitContent = content.split('**🔍 PANORAMICA PROBLEMI PRINCIPALI:**');
   }
   const remainingContent = splitContent.length > 1 ? splitContent[1] : '';
-  
 
-  
+
+
   return {
     overallScore,
     overallDescription,
@@ -177,23 +177,84 @@ const extractMetric = (content: string, metricName: string): number => {
   return match ? parseInt(match[1]) : 0;
 };
 
+// Validate and limit ingredients to max 4
+const validateIngredients = (content: string): string => {
+  // Check if content contains ingredient section
+  const ingredientSectionRegex = /🧪\s*\*\*INGREDIENTI PER LA TUA CREMA PERSONALIZZATA BONNIE\*\*[\s\S]*?(?=---|\n\n##|$)/i;
+  const match = content.match(ingredientSectionRegex);
+
+  if (match) {
+    const ingredientSection = match[0];
+    // Extract ingredient list items
+    const ingredientItems = ingredientSection.match(/[-•]\s*\*\*[^:]+:/g) || [];
+
+    if (ingredientItems.length > 4) {
+      console.warn(`⚠️ Troppi ingredienti rilevati (${ingredientItems.length}). Limitando a 4.`);
+      // Keep only first 4 ingredients
+      const limitedSection = ingredientSection.replace(
+        /([-•]\s*\*\*[^:]+:[\s\S]*?(?=[-•]\s*\*\*|---|\n\n|$))/g,
+        (match, ingredient, offset, string) => {
+          const ingredientIndex = (string.substring(0, offset).match(/[-•]\s*\*\*[^:]+:/g) || []).length;
+          return ingredientIndex < 4 ? match : '';
+        }
+      );
+      return content.replace(ingredientSection, limitedSection);
+    }
+  }
+
+  return content;
+};
+
+// Format the message content for display
+const formatContent = (content: string) => {
+  const validatedContent = validateIngredients(content);
+
+  return validatedContent
+    // Format ingredient section
+    .replace(
+      /(🧪\s*\*\*INGREDIENTI PER LA TUA CREMA PERSONALIZZATA BONNIE\*\*[\s\S]*?)(?=---|\n\n##|$)/gi,
+      '<div class="ingredient-section">$1</div>'
+    )
+    // Format routine section
+    .replace(
+      /(📋\s*\*\*LA TUA ROUTINE SKINCARE COMPLETA CONSIGLIATA\*\*[\s\S]*?)(?=\n\n##|$)/gi,
+      '<div class="routine-section">$1</div>'
+    )
+    // Format warning messages
+    .replace(
+      /⚠️\s*\*\*IMPORTANTE\*\*:([^⚠️💡]*?)(?=⚠️|💡|\n\n|$)/gi,
+      '<div class="warning-box">⚠️ <strong>IMPORTANTE</strong>:$1</div>'
+    )
+    // Format info messages
+    .replace(
+      /💡\s*\*\*RICORDA\*\*:([^⚠️💡]*?)(?=⚠️|💡|\n\n|$)/gi,
+      '<div class="info-box">💡 <strong>RICORDA</strong>:$1</div>'
+    )
+    // Standard formatting
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br />');
+};
+
 export function MessageBubble({ message, onChoiceSelect, isAnswered = false, userInitial = "U", onImageClick }: MessageBubbleProps) {
   // Function to track final button click
   const trackFinalButtonClick = async (sessionId: string) => {
     try {
       console.log('Tracking final button click for session:', sessionId);
-      
+
       const response = await fetch(`/api/chat/${sessionId}/final-button-clicked`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
       console.log('Final button click tracked successfully:', result);
     } catch (error) {
@@ -207,18 +268,18 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   const trackWhatsAppButtonClick = async (sessionId: string) => {
     try {
       console.log('Tracking WhatsApp button click for session:', sessionId);
-      
+
       const response = await fetch(`/api/chat/${sessionId}/whatsapp-button-clicked`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
       console.log('WhatsApp button click tracked successfully:', result);
     } catch (error) {
@@ -238,12 +299,12 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
 
   // Parse skin analysis data if present
   const skinAnalysis = !isUser ? parseSkinAnalysis(message.content) : null;
-  
+
   // Parse link buttons from content
   const contentWithButtons = !isUser ? parseContentWithLinkButtons(message.content) : { content: message.content, linkButtons: [] };
-  
 
-  
+
+
 
 
   // Debug log to check if choices are properly passed
@@ -315,14 +376,14 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
               }}
             />
           )}
-          
+
           {/* Skin Analysis Table */}
           <SkinAnalysisTable 
             data={skinAnalysis.metrics}
             overallScore={skinAnalysis.overallScore}
             overallDescription={skinAnalysis.overallDescription}
           />
-          
+
           {/* Show remaining content after analysis */}
           {skinAnalysis.remainingContent && (
             <div
@@ -341,7 +402,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           dangerouslySetInnerHTML={{ __html: formatMarkdown(contentWithButtons.content) }}
         />
       )}
-      
+
       {/* Link Buttons */}
       {contentWithButtons.linkButtons.length > 0 && (
         <div className="mt-4 space-y-2">
@@ -360,7 +421,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                                          linkButton.text.toLowerCase().includes('accedi alla tua');
                   const isWhatsAppButton = linkButton.text.toLowerCase().includes('whatsapp') ||
                                           linkButton.url.includes('whatsapp');
-                  
+
                   if (isSkincareButton) {
                     console.log('Fallback skincare link clicked for session:', message.sessionId);
                     try {
@@ -380,19 +441,19 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
               >
                 {linkButton.text}
               </a>
-              
+
               {/* Main button */}
               <button
                 onClick={async (e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  
+
                   // Track button clicks based on type
                   const isSkincareButton = linkButton.text.toLowerCase().includes('skincare') || 
                                          linkButton.text.toLowerCase().includes('accedi alla tua');
                   const isWhatsAppButton = linkButton.text.toLowerCase().includes('whatsapp') ||
                                           linkButton.url.includes('whatsapp');
-                  
+
                   if (isSkincareButton) {
                     console.log('Final skincare button clicked for session:', message.sessionId);
                     try {
@@ -410,7 +471,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   } else {
                     console.log('Non-tracking button clicked:', linkButton.text);
                   }
-                  
+
                   // Mobile-friendly link opening with multiple fallback methods
                   const openLink = () => {
                     // Method 1: Try window.open (works on most devices)
@@ -423,7 +484,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                     } catch (error) {
                       console.warn('window.open failed:', error);
                     }
-                    
+
                     // Method 2: Create temporary link and click it (mobile Safari fallback)
                     try {
                       const tempLink = document.createElement('a');
@@ -438,7 +499,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                     } catch (error) {
                       console.warn('Temporary link failed:', error);
                     }
-                    
+
                     // Method 3: Trigger the hidden link click (iOS compatibility)
                     try {
                       const hiddenLink = e.currentTarget?.parentElement?.querySelector('a');
@@ -449,7 +510,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                     } catch (error) {
                       console.warn('Hidden link trigger failed:', error);
                     }
-                    
+
                     // Method 4: Direct location assignment (last resort)
                     try {
                       window.location.href = linkButton.url;
@@ -457,10 +518,10 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                     } catch (error) {
                       console.error('All link opening methods failed:', error);
                     }
-                    
+
                     return false;
                   };
-                  
+
                   // Add slight delay to ensure tracking completes
                   setTimeout(openLink, 100);
                 }}

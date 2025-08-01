@@ -72,3 +72,37 @@ export function MessagesSkeleton() {
 }
 
 import { Card } from "@/components/ui/card";
+
+interface SkeletonLoaderProps {
+  type?: 'sessions' | 'stats' | 'chat' | 'analysis';
+  message?: string;
+}
+
+export function SkeletonLoader({ type = 'sessions', message }: SkeletonLoaderProps) {
+  const getLoadingMessage = () => {
+    switch (type) {
+      case 'sessions':
+        return message || '📋 Caricamento sessioni...';
+      case 'stats':
+        return message || '📊 Aggiornamento statistiche...';
+      case 'chat':
+        return message || '💬 Caricamento conversazione...';
+      case 'analysis':
+        return message || '🔬 Analisi della pelle in corso...';
+      default:
+        return message || 'Caricamento...';
+    }
+  };
+
+  return (
+    <div className="space-y-4 p-4">
+      <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+        <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+        {getLoadingMessage()}
+      </div>
+      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+      <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+      <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+    </div>
+  );
+}

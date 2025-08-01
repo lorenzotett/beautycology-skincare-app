@@ -107,7 +107,7 @@
     height: -webkit-fill-available !important;
     min-height: -webkit-fill-available !important;
   }
-  
+
   @media (max-width: 768px) {
     html, body {
       height: -webkit-fill-available !important;
@@ -132,13 +132,13 @@
       min-height: -webkit-fill-available !important;
       max-height: -webkit-fill-available !important;
     }
-    
+
     .desktop-wide {
       height: -webkit-fill-available !important;
       min-height: -webkit-fill-available !important;
       max-height: -webkit-fill-available !important;
     }
-    
+
     .messages-area {
       max-height: calc(-webkit-fill-available - 140px) !important;
       height: calc(-webkit-fill-available - 140px) !important;
@@ -525,4 +525,66 @@ body, html {
       background-color: #E5F1F2 !important;
     }
   }
+}
+
+/* Custom message styling */
+.message-content {
+  line-height: 1.6;
+}
+
+/* Styling for ingredient and routine sections */
+.message-content .ingredient-section {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px solid #0ea5e9;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  position: relative;
+}
+
+.message-content .ingredient-section::before {
+  content: "🧪";
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  background: white;
+  padding: 0 8px;
+  font-size: 1.2em;
+}
+
+.message-content .routine-section {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2px solid #22c55e;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  position: relative;
+}
+
+.message-content .routine-section::before {
+  content: "📋";
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  background: white;
+  padding: 0 8px;
+  font-size: 1.2em;
+}
+
+.message-content .warning-box {
+  background: #fef3cd;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  font-size: 0.9em;
+}
+
+.message-content .info-box {
+  background: #dbeafe;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  font-size: 0.9em;
 }

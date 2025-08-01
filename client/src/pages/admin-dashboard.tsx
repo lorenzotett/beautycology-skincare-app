@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -65,6 +64,14 @@ export default function AdminDashboard() {
   const [itemsPerPage] = useState(25);
   const [realtimeStatus, setRealtimeStatus] = useState<any>(null);
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Cache per le sessioni
+  const [sessionsCache, setSessionsCache] = useState<Map<string, any>>(new Map());
+  const [lastCacheUpdate, setLastCacheUpdate] = useState<number>(0);
 
   // Check if user is already authenticated and reset date fields
   useEffect(() => {
@@ -72,7 +79,7 @@ export default function AdminDashboard() {
     if (authStatus === 'true') {
       setIsAuthenticated(true);
     }
-    
+
     // Force reset any invalid date values on component mount
     setCustomDateFrom("");
     setCustomDateTo("");
@@ -100,13 +107,13 @@ export default function AdminDashboard() {
   // Reset to first page when filters change and clear invalid date values
   useEffect(() => {
     setCurrentPage(1);
-    
+
     // Force clear date fields when period changes to ensure no invalid values
     if (selectedPeriod !== "Personalizzato") {
       setCustomDateFrom("");
       setCustomDateTo("");
     }
-    
+
     // Force immediate refetch when filters change
     queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
     queryClient.invalidateQueries({ queryKey: ["admin-sessions"] });
@@ -116,7 +123,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (selectedSession || zoomedImage) {
       document.body.style.overflow = 'hidden';
-      
+
       // Add ESC key listener
       const handleEscKey = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
@@ -127,9 +134,9 @@ export default function AdminDashboard() {
           }
         }
       };
-      
+
       document.addEventListener('keydown', handleEscKey);
-      
+
       return () => {
         document.body.style.overflow = 'unset';
         document.removeEventListener('keydown', handleEscKey);
@@ -137,7 +144,7 @@ export default function AdminDashboard() {
     } else {
       document.body.style.overflow = 'unset';
     }
-    
+
     // Cleanup on unmount
     return () => {
       document.body.style.overflow = 'unset';
@@ -203,7 +210,7 @@ export default function AdminDashboard() {
           sessionIds: Array.from(selectedSessions)
         })
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to download CSV');
       }
@@ -362,12 +369,12 @@ export default function AdminDashboard() {
     queryKey: ["admin-stats", selectedPeriod, customDateFrom, customDateTo, searchTerm],
     queryFn: async () => {
       const params = new URLSearchParams();
-      
+
       // Add search filter to stats
       if (searchTerm) {
         params.append("search", searchTerm);
       }
-      
+
       if (selectedPeriod !== "Tutto il tempo") {
         if (selectedPeriod === "Personalizzato") {
           if (customDateFrom) params.append("from", customDateFrom);
@@ -376,7 +383,7 @@ export default function AdminDashboard() {
           params.append("period", selectedPeriod);
         }
       }
-      
+
       const response = await apiRequest("GET", `/api/admin/stats?${params}`);
       return response.json() as Promise<AdminStats>;
     },
@@ -385,15 +392,30 @@ export default function AdminDashboard() {
     staleTime: 300000, // Cache per 5 minuti per velocità massima
   });
 
-  const { data: sessionsData } = useQuery({
-    queryKey: ["admin-sessions", currentPage, searchTerm, selectedPeriod, customDateFrom, customDateTo],
-    queryFn: async () => {
+  const getCacheKey = (dateFilter?: { from?: Date; to?: Date }) => {
+    if (!dateFilter) return 'all-sessions';
+    return `sessions-${dateFilter.from?.toISOString()}-${dateFilter.to?.toISOString()}`;
+  };
+
+  const fetchSessions = async (dateFilter?: { from?: Date; to?: Date }) => {
+    const cacheKey = getCacheKey(dateFilter);
+    const now = Date.now();
+
+    // Usa cache se disponibile e recente (< 30 secondi)
+    if (sessionsCache.has(cacheKey) && (now - lastCacheUpdate) < 30000) {
+      console.log('📋 Using cached sessions data');
+      setSessions(sessionsCache.get(cacheKey));
+      return;
+    }
+
+    setIsLoadingSessions(true);
+    try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: itemsPerPage.toString(),
         search: searchTerm
       });
-      
+
       // Add date filters
       if (selectedPeriod !== "Tutto il tempo") {
         if (selectedPeriod === "Personalizzato") {
@@ -403,7 +425,52 @@ export default function AdminDashboard() {
           params.append("period", selectedPeriod);
         }
       }
-      
+
+      const response = await apiRequest("GET", `/api/admin/sessions?${params}`);
+      const data = await response.json() as Promise<{
+        sessions: SessionWithMessages[];
+        pagination: {
+          currentPage: number;
+          totalPages: number;
+          totalItems: number;
+          itemsPerPage: number;
+        };
+      }>;
+      const sessions = data.sessions || [];
+
+      // Aggiorna cache
+      const cacheKey = getCacheKey(dateFilter);
+      setSessionsCache(prev => new Map(prev.set(cacheKey, sessions)));
+      setLastCacheUpdate(now);
+
+      setSessions(sessions);
+    } catch (err) {
+      console.error('Error fetching sessions:', err);
+      setError('Failed to fetch sessions');
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  };
+
+  const { data: sessionsData } = useQuery({
+    queryKey: ["admin-sessions", currentPage, searchTerm, selectedPeriod, customDateFrom, customDateTo],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        search: searchTerm
+      });
+
+      // Add date filters
+      if (selectedPeriod !== "Tutto il tempo") {
+        if (selectedPeriod === "Personalizzato") {
+          if (customDateFrom) params.append("from", customDateFrom);
+          if (customDateTo) params.append("to", customDateTo);
+        } else {
+          params.append("period", selectedPeriod);
+        }
+      }
+
       const response = await apiRequest("GET", `/api/admin/sessions?${params}`);
       return response.json() as Promise<{
         sessions: SessionWithMessages[];
@@ -463,7 +530,7 @@ export default function AdminDashboard() {
   const getPaginationButtons = () => {
     const buttons = [];
     const maxButtons = 5;
-    
+
     if (totalPages <= maxButtons) {
       // Show all pages
       for (let i = 1; i <= totalPages; i++) {
@@ -493,7 +560,7 @@ export default function AdminDashboard() {
         buttons.push(totalPages);
       }
     }
-    
+
     return buttons;
   };
 
@@ -514,12 +581,12 @@ export default function AdminDashboard() {
 
   const getUniqueUsers = useMemo(() => {
     if (!sessions) return 0;
-    
+
     // Count unique users by fingerprint (userId starting with 'fp_')
     // and fallback to username for old sessions without fingerprint
     const uniqueFingerprints = new Set();
     const uniqueUsernames = new Set();
-    
+
     sessions.forEach(session => {
       if (session.userId.startsWith('fp_')) {
         // Modern fingerprint-based user ID
@@ -529,37 +596,37 @@ export default function AdminDashboard() {
         uniqueUsernames.add(session.userName);
       }
     });
-    
+
     return uniqueFingerprints.size + uniqueUsernames.size;
   }, [sessions]);
 
   const getAverageDuration = useMemo(() => {
     if (!sessions || sessions.length === 0) return "0m";
-    
+
     const totalDuration = sessions.reduce((acc, session) => {
       const start = new Date(session.createdAt);
       // Use lastActivity if available, otherwise use updatedAt
       const end = session.lastActivity !== null ? new Date(session.lastActivity) : new Date(session.updatedAt);
       const duration = end.getTime() - start.getTime();
-      
+
       // Only count sessions with meaningful duration (at least 30 seconds)
       if (duration > 30000) {
         return acc + duration;
       }
       return acc;
     }, 0);
-    
+
     // Count only sessions with meaningful activity
     const activeSessions = sessions.filter(session => {
       const start = new Date(session.createdAt);
       const end = session.lastActivity !== null ? new Date(session.lastActivity) : new Date(session.updatedAt);
       return (end.getTime() - start.getTime()) > 30000;
     });
-    
+
     if (activeSessions.length === 0) return "0m";
-    
+
     const avgMinutes = Math.floor(totalDuration / (1000 * 60 * activeSessions.length));
-    
+
     // Format better for display
     if (avgMinutes < 60) {
       return `${avgMinutes}m`;
@@ -578,7 +645,7 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Login</h1>
             <p className="text-gray-600">Access the AI DermoSense dashboard</p>
           </div>
-          
+
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -592,7 +659,7 @@ export default function AdminDashboard() {
                 required
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password
@@ -605,12 +672,12 @@ export default function AdminDashboard() {
                 required
               />
             </div>
-            
+
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
               Sign In
             </Button>
           </form>
-          
+
           <div className="mt-6 p-4 bg-gray-100 rounded-lg">
             <p className="text-sm text-gray-600 font-medium">Test Credentials:</p>
             <p className="text-sm text-gray-600">Username: admin</p>
@@ -836,7 +903,7 @@ export default function AdminDashboard() {
               </Button>
             </div>
           </div>
-          
+
           {realtimeStatus && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-50 p-4 rounded-lg">
@@ -850,7 +917,7 @@ export default function AdminDashboard() {
                   Sistema operativo e monitoraggio automatico ogni 30 secondi
                 </p>
               </div>
-              
+
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
                   <Play className="h-4 w-4 text-blue-600" />
@@ -862,7 +929,7 @@ export default function AdminDashboard() {
                   Ultimo ID elaborato dal sistema
                 </p>
               </div>
-              
+
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
                   <Brain className="h-4 w-4 text-purple-600" />
@@ -910,7 +977,7 @@ export default function AdminDashboard() {
                   <ChevronDown className="absolute right-2 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
                 </div>
               </div>
-              
+
               <div className="flex-1 max-w-md">
                 <div className="relative">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -922,7 +989,7 @@ export default function AdminDashboard() {
                   />
                 </div>
               </div>
-              
+
               {/* Refresh Button */}
               <Button
                 onClick={() => {
@@ -1007,7 +1074,7 @@ export default function AdminDashboard() {
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 chat-modal-content" style={{backgroundColor: '#E5F1F2'}}>
                 <div className="space-y-4 w-full max-w-none">
                   {sessionDetails.messages.map((message) => (
@@ -1064,7 +1131,7 @@ export default function AdminDashboard() {
             <h2 className="text-lg font-semibold text-gray-900">Conversazioni</h2>
             <p className="text-sm text-gray-600">Tutte le conversazioni con AI DermoSense</p>
           </div>
-          
+
           <div className="p-6">
             {/* Loading state with skeleton loader */}
             {sessionsData === undefined && isAuthenticated ? (
@@ -1105,7 +1172,7 @@ export default function AdminDashboard() {
                     <span className="font-medium">{pagination?.totalItems || 0}</span> conversazioni
                   </p>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Button
                     variant="outline"
@@ -1116,7 +1183,7 @@ export default function AdminDashboard() {
                   >
                     Precedente
                   </Button>
-                  
+
                   {getPaginationButtons().map((page, index) => (
                     <Button
                       key={index}
@@ -1133,7 +1200,7 @@ export default function AdminDashboard() {
                       {page}
                     </Button>
                   ))}
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
