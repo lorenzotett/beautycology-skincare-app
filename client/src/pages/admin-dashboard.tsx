@@ -359,9 +359,14 @@ export default function AdminDashboard() {
   });
 
   const { data: stats } = useQuery({
-    queryKey: ["admin-stats", selectedPeriod, customDateFrom, customDateTo],
+    queryKey: ["admin-stats", selectedPeriod, customDateFrom, customDateTo, searchTerm],
     queryFn: async () => {
       const params = new URLSearchParams();
+      
+      // Add search filter to stats
+      if (searchTerm) {
+        params.append("search", searchTerm);
+      }
       
       if (selectedPeriod !== "Tutto il tempo") {
         if (selectedPeriod === "Personalizzato") {

@@ -946,6 +946,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const allSessions = sessionsCache || [];
     let filteredSessions = allSessions;
     
+    // Apply search filter first if present
+    if (filter?.search) {
+      const searchTerm = filter.search.toLowerCase();
+      filteredSessions = filteredSessions.filter((session: any) => {
+        return (
+          session.userName?.toLowerCase().includes(searchTerm) ||
+          session.userEmail?.toLowerCase().includes(searchTerm) ||
+          session.sessionId?.toLowerCase().includes(searchTerm) ||
+          session.userId?.toLowerCase().includes(searchTerm)
+        );
+      });
+    }
+    
     if (filter?.period) {
       const now = new Date();
       let dateFilter = null;
@@ -1096,40 +1109,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes - ULTRA-OPTIMIZED FOR SPEED
   app.get("/api/admin/stats", async (req, res) => {
     try {
-      const { from, to, period } = req.query;
+      const { from, to, period, search } = req.query;
       
-      // Check pre-computed cache first for common periods
-      if (!from && !to && period) {
-        let cacheKey = '';
-        switch (period) {
-          case 'Oggi': cacheKey = 'today'; break;
-          case 'Ieri': cacheKey = 'yesterday'; break;
-          case 'Ultima settimana': cacheKey = 'week'; break;
-          case 'Ultimo mese': cacheKey = 'month'; break;
-        }
-        
-        if (cacheKey && statsCache[cacheKey]) {
-          const cached = statsCache[cacheKey];
-          if (Date.now() - cached.timestamp < STATS_CACHE_DURATION) {
-            console.log(`⚡ INSTANT stats cache hit for ${cacheKey}`);
-            res.setHeader('Content-Type', 'application/json');
-            res.setHeader('Cache-Control', 'public, max-age=60');
-            res.setHeader('X-Cache', 'HIT');
-            return res.json(cached.data);
+      // Skip cache if search is applied - we need filtered results
+      if (!search) {
+        // Check pre-computed cache first for common periods
+        if (!from && !to && period) {
+          let cacheKey = '';
+          switch (period) {
+            case 'Oggi': cacheKey = 'today'; break;
+            case 'Ieri': cacheKey = 'yesterday'; break;
+            case 'Ultima settimana': cacheKey = 'week'; break;
+            case 'Ultimo mese': cacheKey = 'month'; break;
+          }
+          
+          if (cacheKey && statsCache[cacheKey]) {
+            const cached = statsCache[cacheKey];
+            if (Date.now() - cached.timestamp < STATS_CACHE_DURATION) {
+              console.log(`⚡ INSTANT stats cache hit for ${cacheKey}`);
+              res.setHeader('Content-Type', 'application/json');
+              res.setHeader('Cache-Control', 'public, max-age=60');
+              res.setHeader('X-Cache', 'HIT');
+              return res.json(cached.data);
+            }
           }
         }
-      }
-      
-      // Check for "all time" cache
-      if (!from && !to && !period) {
-        if (statsCache['all']) {
-          const cached = statsCache['all'];
-          if (Date.now() - cached.timestamp < STATS_CACHE_DURATION) {
-            console.log(`⚡ INSTANT stats cache hit for all time`);
-            res.setHeader('Content-Type', 'application/json');
-            res.setHeader('Cache-Control', 'public, max-age=60');
-            res.setHeader('X-Cache', 'HIT');
-            return res.json(cached.data);
+        
+        // Check for "all time" cache
+        if (!from && !to && !period) {
+          if (statsCache['all']) {
+            const cached = statsCache['all'];
+            if (Date.now() - cached.timestamp < STATS_CACHE_DURATION) {
+              console.log(`⚡ INSTANT stats cache hit for all time`);
+              res.setHeader('Content-Type', 'application/json');
+              res.setHeader('Cache-Control', 'public, max-age=60');
+              res.setHeader('X-Cache', 'HIT');
+              return res.json(cached.data);
+            }
           }
         }
       }
@@ -1139,7 +1155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await getCachedSessions(); // Ensure sessions are loaded
       
       const stats = await computeStatsForPeriod(
-        from || to ? { from, to } : period ? { period } : null
+        from || to ? { from, to, search } : period ? { period, search } : { search }
       );
       
       // Update cache if it's a common period
