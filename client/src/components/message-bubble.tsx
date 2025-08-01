@@ -21,8 +21,14 @@ const formatMarkdown = (text: string): string => {
 
   // Format sections with emoji headers
   formattedText = formattedText.replace(
-    /^(📋|🌅|🌙|💡|⚠️)\s*\*\*([^*]+)\*\*/gm,
+    /^(📋|🌅|🌙|💡|⚠️|🧪)\s*\*\*([^*]+)\*\*/gm,
     '<div class="mb-3 mt-4"><strong class="text-base font-semibold">$1 $2</strong></div>'
+  );
+
+  // Format ingredient section title
+  formattedText = formattedText.replace(
+    /##\s*🧪\s*\*\*INGREDIENTI PERSONALIZZATI PER LA TUA PELLE\*\*/g,
+    '<div class="bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 rounded-lg p-4 mb-6 text-center"><h2 class="text-xl font-bold text-green-800">🧪 INGREDIENTI PERSONALIZZATI PER LA TUA PELLE</h2></div>'
   );
 
   // Format numbered list items
@@ -61,10 +67,28 @@ const formatMarkdown = (text: string): string => {
     '<div class="mb-3 mt-3"><strong class="font-semibold text-sm">• $1:</strong></div>'
   );
 
-  // Format ingredient recommendations
+  // Format ingredient sections with enhanced styling
+  formattedText = formattedText.replace(
+    /###\s*🌿\s*\*\*([^*]+)\*\*/g,
+    '<div class="ingredient-card bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-4 mb-4 rounded-r-lg"><div class="text-lg font-bold text-green-800 mb-2">🌿 $1</div>'
+  );
+
+  // Format problem target
+  formattedText = formattedText.replace(
+    /\*\*🎯 Problema target:\*\*\s*([^\n]+)/g,
+    '<div class="mb-2"><span class="inline-block bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">🎯 $1</span></div>'
+  );
+
+  // Format action description
+  formattedText = formattedText.replace(
+    /\*\*⚡ Come agisce:\*\*\s*([^\n]+)/g,
+    '<div class="text-gray-700 text-sm leading-relaxed">⚡ $1</div></div>'
+  );
+
+  // Format ingredient recommendations (legacy support)
   formattedText = formattedText.replace(
     /\*\*Ingrediente consigliato:\*\*\s*([^\n]+)/g,
-    '<div class="mb-1 ml-6"><strong class="text-sm font-medium text-green-700">Ingrediente consigliato:</strong> <span class="text-sm">$1</span></div>'
+    '<div class="mb-1 ml-6"><strong class="text-sm font-medium text-green-700">Ingrediente consigliato:</strong> <span class="text-sm font-bold text-green-900">$1</span></div>'
   );
 
   formattedText = formattedText.replace(

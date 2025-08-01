@@ -581,10 +581,13 @@ body, html {
 }
 
 .message-content .info-box {
-  background: #dbeafe;
-  border: 1px solid #3b82f6;
-  border-radius: 8px;
-  padding: 12px;
-  margin: 12px 0;
-  font-size: 0.9em;
-}
+    @apply bg-blue-50 border-l-4 border-blue-400 p-3 my-3 rounded-r-lg;
+  }
+
+  .ingredient-card {
+    @apply bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-4 mb-4 rounded-r-lg shadow-sm;
+  }
+
+  .ingredient-card .text-lg {
+    @apply text-green-800 font-bold mb-2;
+  }

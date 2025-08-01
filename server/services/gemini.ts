@@ -435,7 +435,7 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
 - Pelle che tira sempre: "Oh, questo mi dice molto! 🤔 Probabilmente il detergente attuale è troppo aggressivo - sistemeremo questo problema."
 - Acqua meno di 1L: "Troppo poca! 💧 L'idratazione interna è fondamentale per una pelle radiosa - proviamo ad aumentare gradualmente!"
 - Acqua 1.5-2L: "Perfetto! 🌟 Una buona idratazione è uno dei segreti per una pelle bellissima!"
-- Sonno meno di 6h: "Oh no! 😴 Il poco riposo può davvero influire sulla rigenerazione cutanea - la pelle ama dormire!"
+- Sonnomeno di 6h: "Oh no! 😴 Il poco riposo può davvero influire sulla rigenerazione cutanea - la pelle ama dormire!"
 - Sonno 7-8h: "Ottimo! 🌙 Un buon riposo è uno dei migliori trattamenti di bellezza naturali!"
 - Alimentazione molto bilanciata: "Eccellente! 🥗 Una buona alimentazione è la base per una pelle luminosa - si vede che te ne prendi cura!"
 - Stress alto (8-10): "Lo capisco, lo stress può davvero peggiorare molte condizioni cutanee 😌 Vedremo come aiutare la tua pelle a rilassarsi."
@@ -792,6 +792,49 @@ A te la scelta!`;
         contents: contents
       });
 
+      const problem = {name: "test", severity: 100}
+      const ingredient = {name: "test", description: "test"};
+
+      const skinTypeAnalysis = "test";
+      const lifestyleInfo = "test";
+      const specialNotes = "test";
+          // Costruisci il messaggio finale
+          let finalMessage = finalConsultation;
+          let finalIngredientsList = '';
+
+          finalMessage += `
+### 🌿 **${ingredient.name.toUpperCase()}**
+**🎯 Problema target:** ${problem.name} (Livello: ${problem.severity}/100)
+**⚡ Come agisce:** ${ingredient.description}
+
+---
+`;
+
+            // Aggiungi alla lista per il riepilogo
+            finalIngredientsList += `• **${problem.name}** → **${ingredient.name}**\n`;
+
+finalMessage += `
+
+## 📋 **RIEPILOGO COMPLETO**
+
+**👤 PROFILO UTENTE**
+• Età: ${this.userAge || 'Non specificata'}
+• Tipo di pelle: ${skinTypeAnalysis}
+• Sensibilità: ${this.isSensitiveSkin ? 'Sensibile' : 'Non sensibile'}
+
+**🎯 PROBLEMI IDENTIFICATI & INGREDIENTI**
+${finalIngredientsList}
+
+**💡 LIFESTYLE & ABITUDINI**
+• Skincare attuale: ${this.skinCareHabits}
+• Lifestyle: ${lifestyleInfo}
+• Protezione solare: ${this.sunscreenHabits || 'Non specificata'}
+• Note speciali: ${specialNotes}
+
+---
+
+🌟 **Vuoi ricevere la tua routine skincare personalizzata completa?**`;
+
       const content = response.text || "Mi dispiace, non ho capito. Puoi ripetere?";
       this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message }; // Keep original message in history
       this.conversationHistory.push({ role: "assistant", content });
@@ -1068,7 +1111,6 @@ A te la scelta!`;
     }
 
     if (lowerQuestion.includes("email")) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const isValid = emailRegex.test(lowerAnswer);
       console.log(`Email validation: ${isValid}`);
       return isValid;
