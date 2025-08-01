@@ -56,19 +56,25 @@ export const SessionListItem = memo(function SessionListItem({
                 <User className="h-4 w-4 text-gray-500" />
                 <span className="font-semibold text-gray-900">{session.userName}</span>
               </div>
-              {session.finalButtonClicked && (
-                <Badge className="bg-green-100 text-green-800">
-                  Completato
-                </Badge>
-              )}
-              {session.whatsappButtonClicked && (
+              {/* Status badges based on user requirements */}
+              {session.klaviyoSynced && (
                 <Badge className="bg-purple-100 text-purple-800">
-                  WhatsApp
+                  Klaviyo
                 </Badge>
               )}
               {session.googleSheetsSynced && (
+                <Badge className="bg-green-100 text-green-800">
+                  Sheets
+                </Badge>
+              )}
+              {session.finalButtonClicked && (
+                <Badge className="bg-pink-100 text-pink-800">
+                  Cream Access
+                </Badge>
+              )}
+              {session.whatsappButtonClicked && (
                 <Badge className="bg-blue-100 text-blue-800">
-                  Sincronizzato
+                  WhatsApp
                 </Badge>
               )}
               {session.hasImages && (
