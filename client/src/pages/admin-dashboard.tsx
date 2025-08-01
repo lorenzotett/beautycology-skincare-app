@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,8 @@ import { ChatMessage, ChatSession } from "@shared/schema";
 import { Search, Users, MessageSquare, Calendar, Clock, Image, Brain, User, LogOut, BarChart3, Copy, X, Eye, ChevronDown, Download, Trash2, Bot, Zap, Play, EyeOff, PlayCircle, MessageCircleX, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MessageBubble } from "@/components/message-bubble";
+import { StatCardSkeleton, SessionListSkeleton, MessagesSkeleton } from "@/components/skeleton-loader";
+import { SessionListItem } from "@/components/session-list-item";
 
 interface AdminStats {
   totalSessions: number;
@@ -160,7 +162,7 @@ export default function AdminDashboard() {
     localStorage.removeItem('admin-authenticated');
   };
 
-  const copyToClipboard = async (text: string, label: string) => {
+  const copyToClipboard = useCallback(async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
       toast({
@@ -174,7 +176,7 @@ export default function AdminDashboard() {
         variant: "destructive",
       });
     }
-  };
+  }, [toast]);
 
   const handleDownloadCSV = async () => {
     if (selectedSessions.size === 0) {
@@ -505,7 +507,7 @@ export default function AdminDashboard() {
     });
   };
 
-  const getUniqueUsers = () => {
+  const getUniqueUsers = useMemo(() => {
     if (!sessions) return 0;
     
     // Count unique users by fingerprint (userId starting with 'fp_')
@@ -524,15 +526,15 @@ export default function AdminDashboard() {
     });
     
     return uniqueFingerprints.size + uniqueUsernames.size;
-  };
+  }, [sessions]);
 
-  const getAverageDuration = () => {
+  const getAverageDuration = useMemo(() => {
     if (!sessions || sessions.length === 0) return "0m";
     
     const totalDuration = sessions.reduce((acc, session) => {
       const start = new Date(session.createdAt);
-      // Use lastActivity instead of updatedAt for more accurate duration
-      const end = new Date(session.lastActivity);
+      // Use lastActivity if available, otherwise use updatedAt
+      const end = session.lastActivity !== null ? new Date(session.lastActivity) : new Date(session.updatedAt);
       const duration = end.getTime() - start.getTime();
       
       // Only count sessions with meaningful duration (at least 30 seconds)
@@ -545,7 +547,7 @@ export default function AdminDashboard() {
     // Count only sessions with meaningful activity
     const activeSessions = sessions.filter(session => {
       const start = new Date(session.createdAt);
-      const end = new Date(session.lastActivity);
+      const end = session.lastActivity !== null ? new Date(session.lastActivity) : new Date(session.updatedAt);
       return (end.getTime() - start.getTime()) > 30000;
     });
     
@@ -561,7 +563,7 @@ export default function AdminDashboard() {
       const minutes = avgMinutes % 60;
       return `${hours}h ${minutes}m`;
     }
-  };
+  }, [sessions]);
 
   if (!isAuthenticated) {
     return (
@@ -695,83 +697,97 @@ export default function AdminDashboard() {
         <div className="p-4">
         {/* Statistics Cards - Layout with 6 metrics including Duration */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-          {/* 1. View Chat */}
-          <Card className="bg-white p-4 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 mb-2 font-medium">View Chat</p>
-                <p className="text-2xl font-bold text-slate-700">{stats?.viewChatOnly || 0}</p>
-              </div>
-              <div className="p-3 bg-slate-100 rounded-lg">
-                <Eye className="h-5 w-5 text-slate-600" />
-              </div>
-            </div>
-          </Card>
+          {/* Show skeleton loaders when stats are loading */}
+          {stats === undefined && isAuthenticated ? (
+            <>
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+            </>
+          ) : (
+            <>
+              {/* 1. View Chat */}
+              <Card className="bg-white p-4 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600 mb-2 font-medium">View Chat</p>
+                    <p className="text-2xl font-bold text-slate-700">{stats?.viewChatOnly || 0}</p>
+                  </div>
+                  <div className="p-3 bg-slate-100 rounded-lg">
+                    <Eye className="h-5 w-5 text-slate-600" />
+                  </div>
+                </div>
+              </Card>
 
-          {/* 2. Inizio Chat (renamed from Conversazioni) */}
-          <Card className="bg-white p-4 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-purple-600 mb-2 font-medium">Inizio Chat</p>
-                <p className="text-2xl font-bold text-purple-700">{stats?.totalSessions || 0}</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Users className="h-5 w-5 text-purple-600" />
-              </div>
-            </div>
-          </Card>
+              {/* 2. Inizio Chat (renamed from Conversazioni) */}
+              <Card className="bg-white p-4 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-purple-600 mb-2 font-medium">Inizio Chat</p>
+                    <p className="text-2xl font-bold text-purple-700">{stats?.totalSessions || 0}</p>
+                  </div>
+                  <div className="p-3 bg-purple-100 rounded-lg">
+                    <Users className="h-5 w-5 text-purple-600" />
+                  </div>
+                </div>
+              </Card>
 
-          {/* 3. Chat Completate (new metric) */}
-          <Card className="bg-white p-4 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-600 mb-2 font-medium">Chat Completate</p>
-                <p className="text-2xl font-bold text-blue-700">{stats?.chatCompletate || 0}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <MessageSquare className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </Card>
+              {/* 3. Chat Completate (new metric) */}
+              <Card className="bg-white p-4 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-blue-600 mb-2 font-medium">Chat Completate</p>
+                    <p className="text-2xl font-bold text-blue-700">{stats?.chatCompletate || 0}</p>
+                  </div>
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <MessageSquare className="h-5 w-5 text-blue-600" />
+                  </div>
+                </div>
+              </Card>
 
-          {/* 4. Accesso Skincare */}
-          <Card className="bg-white p-4 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-pink-600 mb-2 font-medium">Accesso Skincare</p>
-                <p className="text-2xl font-bold text-pink-700">{stats?.finalButtonClicks || 0}</p>
-              </div>
-              <div className="p-3 bg-pink-100 rounded-lg">
-                <BarChart3 className="h-5 w-5 text-pink-600" />
-              </div>
-            </div>
-          </Card>
+              {/* 4. Accesso Skincare */}
+              <Card className="bg-white p-4 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-pink-600 mb-2 font-medium">Accesso Skincare</p>
+                    <p className="text-2xl font-bold text-pink-700">{stats?.finalButtonClicks || 0}</p>
+                  </div>
+                  <div className="p-3 bg-pink-100 rounded-lg">
+                    <BarChart3 className="h-5 w-5 text-pink-600" />
+                  </div>
+                </div>
+              </Card>
 
-          {/* 5. Click WhatsApp */}
-          <Card className="bg-white p-4 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-emerald-600 mb-2 font-medium">Click WhatsApp</p>
-                <p className="text-2xl font-bold text-emerald-700">{stats?.whatsappButtonClicks || 0}</p>
-              </div>
-              <div className="p-3 bg-emerald-100 rounded-lg">
-                <MessageSquare className="h-5 w-5 text-emerald-600" />
-              </div>
-            </div>
-          </Card>
+              {/* 5. Click WhatsApp */}
+              <Card className="bg-white p-4 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-emerald-600 mb-2 font-medium">Click WhatsApp</p>
+                    <p className="text-2xl font-bold text-emerald-700">{stats?.whatsappButtonClicks || 0}</p>
+                  </div>
+                  <div className="p-3 bg-emerald-100 rounded-lg">
+                    <MessageSquare className="h-5 w-5 text-emerald-600" />
+                  </div>
+                </div>
+              </Card>
 
-          {/* 6. Durata Media Chat */}
-          <Card className="bg-white p-4 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-orange-600 mb-2 font-medium">Durata Media Chat</p>
-                <p className="text-2xl font-bold text-orange-700">{stats?.averageChatDurationMinutes || 0}min</p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <Clock className="h-5 w-5 text-orange-600" />
-              </div>
-            </div>
-          </Card>
+              {/* 6. Durata Media Chat */}
+              <Card className="bg-white p-4 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-orange-600 mb-2 font-medium">Durata Media Chat</p>
+                    <p className="text-2xl font-bold text-orange-700">{stats?.averageChatDurationMinutes || 0}min</p>
+                  </div>
+                  <div className="p-3 bg-orange-100 rounded-lg">
+                    <Clock className="h-5 w-5 text-orange-600" />
+                  </div>
+                </div>
+              </Card>
+            </>
+          )}
         </div>
 
 
@@ -802,7 +818,7 @@ export default function AdminDashboard() {
                 <span>Estrai Ultime 5</span>
               </Button>
               <Button
-                onClick={() => triggerAIExtractionMutation.mutate()}
+                onClick={() => triggerAIExtractionMutation.mutate(undefined)}
                 disabled={triggerAIExtractionMutation.isPending}
                 className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white"
               >
@@ -1037,161 +1053,41 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Conversations Table */}
-        <Card className="bg-white border border-gray-200">
+        {/* Conversations List */}
+        <div className="bg-white rounded-lg border border-gray-200">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Conversations</h2>
-            <p className="text-sm text-gray-600">All user conversations with AI DermoSense</p>
+            <h2 className="text-lg font-semibold text-gray-900">Conversazioni</h2>
+            <p className="text-sm text-gray-600">Tutte le conversazioni con AI DermoSense</p>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  {isSelectionMode && (
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <input
-                        type="checkbox"
-                        checked={paginatedSessions.length > 0 && paginatedSessions.every(s => selectedSessions.has(s.sessionId))}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            selectAllSessions();
-                          } else {
-                            // Deselect only current page sessions
-                            const newSelected = new Set(selectedSessions);
-                            paginatedSessions.forEach(s => newSelected.delete(s.sessionId));
-                            setSelectedSessions(newSelected);
-                          }
-                        }}
-                        className="rounded border-gray-300"
-                      />
-                    </th>
-                  )}
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thread ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Fingerprint</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Message</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+          <div className="p-6">
+            {/* Loading state with skeleton loader */}
+            {sessionsData === undefined && isAuthenticated ? (
+              <SessionListSkeleton />
+            ) : paginatedSessions.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Nessuna conversazione trovata</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
                 {paginatedSessions.map((session) => (
-                  <tr key={session.sessionId} className={`hover:bg-gray-50 ${selectedSessions.has(session.sessionId) ? 'bg-blue-50' : ''}`}>
-                    {isSelectionMode && (
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="checkbox"
-                          checked={selectedSessions.has(session.sessionId)}
-                          onChange={() => toggleSessionSelection(session.sessionId)}
-                          className="rounded border-gray-300"
-                        />
-                      </td>
-                    )}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded">
-                        #{session.id}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{session.userName}</div>
-                      {session.userEmail && (
-                        <div className="text-xs text-gray-500 mt-1">{session.userEmail}</div>
-                      )}
-                      <div className="flex items-center gap-2 mt-1">
-                        {session.klaviyoSynced && (
-                          <Badge className="bg-purple-100 text-purple-800 text-xs">Klaviyo ✓</Badge>
-                        )}
-                        {session.googleSheetsSynced && (
-                          <Badge className="bg-green-100 text-green-800 text-xs">Sheets ✓</Badge>
-                        )}
-                        {!session.googleSheetsSynced && !session.klaviyoSynced && (
-                          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-xs">
-                            Incompleta
-                          </Badge>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div 
-                        className="text-sm text-blue-600 font-mono cursor-pointer hover:text-blue-800 flex items-center group"
-                        title={session.sessionId}
-                        onClick={() => copyToClipboard(session.sessionId, "Thread ID")}
-                      >
-                        <span>{session.sessionId.substring(0, 12)}...</span>
-                        <Copy className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div 
-                        className="text-sm text-blue-600 font-mono cursor-pointer hover:text-blue-800 flex items-center group"
-                        title={session.userId}
-                        onClick={() => copyToClipboard(session.userId, "User Fingerprint")}
-                      >
-                        <span>{session.userId.substring(0, 12)}...</span>
-                        <Copy className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {formatDate(session.createdAt)} {formatTime(session.createdAt)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {formatDate(session.updatedAt)} {formatTime(session.updatedAt)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {session.isActive ? (
-                          <Badge className="bg-green-100 text-green-800">Updated</Badge>
-                        ) : (
-                          <Badge variant="secondary">Updated</Badge>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="text-blue-600 border-blue-600 hover:bg-blue-50 flex items-center space-x-1"
-                          onClick={() => {
-                            console.log('View clicked for session:', session.sessionId);
-                            setSelectedSession(session);
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span>View</span>
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="text-red-600 border-red-600 hover:bg-red-50 flex items-center space-x-1"
-                          onClick={() => handleDeleteChat(session.sessionId, session.userName)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span>Delete</span>
-                        </Button>
-                        {session.finalButtonClicked && (
-                          <Badge className="bg-pink-100 text-pink-800 text-xs">
-                            Cream Access
-                          </Badge>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                  <SessionListItem
+                    key={session.sessionId}
+                    session={session}
+                    isSelected={selectedSessions.has(session.sessionId)}
+                    isSelectionMode={isSelectionMode}
+                    onSelect={toggleSessionSelection}
+                    onView={setSelectedSession}
+                    onCopy={copyToClipboard}
+                    onDelete={handleDeleteChat}
+                    formatDate={formatDate}
+                    formatTime={formatTime}
+                  />
                 ))}
-              </tbody>
-            </table>
+              </div>
+            )}
           </div>
-          
-          {filteredSessions.length === 0 && (
-            <div className="p-8 text-center text-gray-500">
-              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Nessuna conversazione trovata</p>
-            </div>
-          )}
 
           {/* Pagination Controls */}
           {filteredSessions.length > 0 && totalPages > 1 && (
@@ -1246,7 +1142,7 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
-        </Card>
+        </div>
         </div>
       </div>
     </div>

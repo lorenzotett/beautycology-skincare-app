@@ -873,15 +873,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // OPTIMIZATION 8: ULTRA-FAST cache system with 5-minute cache duration
+  // OPTIMIZATION 8: ULTRA-FAST multi-layered cache system
   let sessionsCache: any[] | null = null;
   let cacheTimestamp = 0;
-  const CACHE_DURATION = 600000; // 10 minutes cache for MAXIMUM speed
+  const CACHE_DURATION = 1800000; // 30 minutes cache for MAXIMUM speed
+  
+  // Pre-computed stats cache
+  interface StatsCache {
+    [key: string]: {
+      data: any;
+      timestamp: number;
+    };
+  }
+  let statsCache: StatsCache = {};
+  const STATS_CACHE_DURATION = 300000; // 5 minutes for stats
+  
+  // Session details cache
+  let sessionDetailsCache = new Map<string, { data: any; timestamp: number }>();
+  const SESSION_DETAILS_CACHE_DURATION = 600000; // 10 minutes
   
   const invalidateCache = () => {
     sessionsCache = null;
     cacheTimestamp = 0;
-    console.log(`🗑️  Cache invalidated`);
+    statsCache = {};
+    sessionDetailsCache.clear();
+    console.log(`🗑️  All caches invalidated`);
   };
   
   const getCachedSessions = async () => {
@@ -897,13 +913,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     cacheTimestamp = now;
     const loadTime = Date.now() - startTime;
     console.log(`💾 Cached ${sessionsCache.length} sessions in ${loadTime}ms`);
+    
+    // Pre-compute all stats for common periods after loading sessions
+    precomputeStats();
+    
     return sessionsCache;
   };
   
-  // PRELOAD cache at startup for instant first load
-  getCachedSessions().then(() => {
-    console.log(`🚀 PRELOADED sessions cache at startup for instant performance`);
-  }).catch(console.error);
+  // Pre-compute stats for common time periods
+  const precomputeStats = async () => {
+    if (!sessionsCache) return;
+    
+    console.log('🔄 Pre-computing stats for common periods...');
+    const periods = [
+      { key: 'all', filter: null },
+      { key: 'today', filter: { period: 'Oggi' } },
+      { key: 'yesterday', filter: { period: 'Ieri' } },
+      { key: 'week', filter: { period: 'Ultima settimana' } },
+      { key: 'month', filter: { period: 'Ultimo mese' } }
+    ];
+    
+    for (const { key, filter } of periods) {
+      const stats = await computeStatsForPeriod(filter);
+      statsCache[key] = { data: stats, timestamp: Date.now() };
+    }
+    
+    console.log('✅ Pre-computed stats for all common periods');
+  };
+  
+  // Compute stats for a specific period
+  const computeStatsForPeriod = async (filter: any) => {
+    const allSessions = sessionsCache || [];
+    let filteredSessions = allSessions;
+    
+    if (filter?.period) {
+      const now = new Date();
+      let dateFilter = null;
+      
+      switch (filter.period) {
+        case 'Oggi':
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          dateFilter = { from: today };
+          break;
+        case 'Ieri':
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          yesterday.setHours(0, 0, 0, 0);
+          const yesterdayEnd = new Date();
+          yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+          yesterdayEnd.setHours(23, 59, 59, 999);
+          dateFilter = { from: yesterday, to: yesterdayEnd };
+          break;
+        case 'Ultima settimana':
+          const weekAgo = new Date();
+          weekAgo.setDate(now.getDate() - 7);
+          dateFilter = { from: weekAgo };
+          break;
+        case 'Ultimo mese':
+          const monthAgo = new Date();
+          monthAgo.setMonth(now.getMonth() - 1);
+          dateFilter = { from: monthAgo };
+          break;
+      }
+      
+      if (dateFilter) {
+        filteredSessions = allSessions.filter((session: any) => {
+          if (!session.createdAt) return false;
+          const sessionDate = new Date(session.createdAt);
+          if (dateFilter.from && sessionDate < dateFilter.from) return false;
+          if (dateFilter.to && sessionDate > dateFilter.to) return false;
+          return true;
+        });
+      }
+    }
+    
+    // Fast computation using the same logic
+    const viewOnlySessions = filteredSessions.filter((s: any) => s.userName === "View Only");
+    const realSessions = filteredSessions.filter((s: any) => s.userName !== "View Only");
+    
+    let viewChatCount = 0, startChatCount = 0, finalButtonClicks = 0, whatsappButtonClicks = 0;
+    let chatCompletate = 0, totalChatDuration = 0, completedChatsWithDuration = 0;
+    
+    for (const session of realSessions) {
+      if (session.firstViewedAt) viewChatCount++;
+      if (session.chatStartedAt) startChatCount++;
+      if (session.finalButtonClicked) finalButtonClicks++;
+      if (session.whatsappButtonClicked) whatsappButtonClicks++;
+      
+      const hasSignificantActivity = session.userEmail || session.finalButtonClicked || session.whatsappButtonClicked;
+      const likelyCompleted = session.googleSheetsSynced || hasSignificantActivity;
+      
+      if (likelyCompleted) {
+        chatCompletate++;
+        
+        if (session.chatStartedAt) {
+          const startTime = new Date(session.chatStartedAt);
+          let endTime = null;
+          
+          if (session.finalButtonClickedAt) {
+            endTime = new Date(session.finalButtonClickedAt);
+          } else if (session.userEmail && session.updatedAt) {
+            const potentialEndTime = new Date(session.updatedAt);
+            const potentialDurationMs = potentialEndTime.getTime() - startTime.getTime();
+            if (potentialDurationMs > 300000 && potentialDurationMs < 2700000) {
+              endTime = potentialEndTime;
+            }
+          }
+          
+          if (endTime) {
+            const durationMs = endTime.getTime() - startTime.getTime();
+            if (durationMs > 60000 && durationMs < 3600000) {
+              totalChatDuration += durationMs;
+              completedChatsWithDuration++;
+            }
+          }
+        }
+      }
+    }
+    
+    const averageChatDurationMinutes = completedChatsWithDuration > 0 
+      ? Math.round(totalChatDuration / completedChatsWithDuration / 60000) 
+      : 0;
+    
+    return {
+      totalSessions: realSessions.length,
+      viewChatCount,
+      startChatCount,
+      finalButtonClicks,
+      whatsappButtonClicks,
+      viewChatOnly: viewOnlySessions.length + realSessions.length,
+      chatCompletate,
+      startFinalOnly: realSessions.length - chatCompletate,
+      viewFinalOnly: 0,
+      averageChatDurationMinutes,
+      conversionRates: {
+        viewToStart: viewChatCount > 0 ? ((startChatCount / viewChatCount) * 100).toFixed(1) : '0',
+        startToFinal: startChatCount > 0 ? ((finalButtonClicks / startChatCount) * 100).toFixed(1) : '0',
+        viewToFinal: viewChatCount > 0 ? ((finalButtonClicks / viewChatCount) * 100).toFixed(1) : '0'
+      },
+      todaySessions: realSessions.length,
+      totalMessages: 0
+    };
+  };
   
   // PRELOAD cache at startup for instant first load
   getCachedSessions().then(() => {
@@ -944,246 +1096,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes - ULTRA-OPTIMIZED FOR SPEED
   app.get("/api/admin/stats", async (req, res) => {
     try {
-      // Track request start time
-      (req as any).startTime = Date.now();
       const { from, to, period } = req.query;
       
-      // OPTIMIZATION 1: Calculate date range first, then get filtered sessions
-      let dateFilter = null;
-      if (from || to) {
-        dateFilter = { from, to };
-      } else if (period) {
-        const now = new Date();
-        
+      // Check pre-computed cache first for common periods
+      if (!from && !to && period) {
+        let cacheKey = '';
         switch (period) {
-          case 'Oggi':
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            dateFilter = { from: today.toISOString() };
-            break;
-          case 'Ieri':
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            yesterday.setHours(0, 0, 0, 0);
-            const yesterdayEnd = new Date();
-            yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
-            yesterdayEnd.setHours(23, 59, 59, 999);
-            dateFilter = { from: yesterday.toISOString(), to: yesterdayEnd.toISOString() };
-            break;
-          case 'Ultima settimana':
-            const weekAgo = new Date();
-            weekAgo.setDate(now.getDate() - 7);
-            dateFilter = { from: weekAgo.toISOString() };
-            break;
-          case 'Ultimo mese':
-            const monthAgo = new Date();
-            monthAgo.setMonth(now.getMonth() - 1);
-            dateFilter = { from: monthAgo.toISOString() };
-            break;
+          case 'Oggi': cacheKey = 'today'; break;
+          case 'Ieri': cacheKey = 'yesterday'; break;
+          case 'Ultima settimana': cacheKey = 'week'; break;
+          case 'Ultimo mese': cacheKey = 'month'; break;
         }
-      }
-      
-      // OPTIMIZATION 2: Use cached sessions with fast filtering
-      const allSessions = await getCachedSessions();
-      let filteredSessions;
-      if (dateFilter) {
-        // Filter cached sessions by date range with proper date handling
-        filteredSessions = allSessions.filter((session: any) => {
-          if (!session.createdAt) return false;
-          
-          const sessionDate = new Date(session.createdAt);
-          const fromDate = dateFilter.from ? new Date(dateFilter.from as string) : null;
-          const toDate = dateFilter.to ? new Date(dateFilter.to as string) : null;
-          
-          // If from date is specified, session must be after or equal to from date
-          if (fromDate && sessionDate < fromDate) return false;
-          
-          // If to date is specified, session must be before or equal to to date
-          if (toDate && sessionDate > toDate) return false;
-          
-          return true;
-        });
-          console.log(`📊 Stats API: Date filter applied - ${filteredSessions.length}/${allSessions.length} sessions match date range`);
-        console.log(`🗓️ Date filter: from=${dateFilter.from || 'none'}, to=${dateFilter.to || 'none'}`);
-      } else {
-        // Use all cached sessions
-        filteredSessions = allSessions;
-        console.log(`Stats API: No filter - analyzing ${filteredSessions.length} total sessions`);
-      }
-      
-      // OPTIMIZATION: Limit processing for large datasets
-      const MAX_SESSIONS_TO_PROCESS = 5000; // Prevent timeout on huge datasets
-      
-      if (filteredSessions.length > MAX_SESSIONS_TO_PROCESS) {
-        console.warn(`⚠️ Too many sessions (${filteredSessions.length}), limiting to ${MAX_SESSIONS_TO_PROCESS} most recent`);
-        filteredSessions = filteredSessions
-          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, MAX_SESSIONS_TO_PROCESS);
-      }
-      
-      // Calculate metrics for ALL filtered sessions
-      // View Only sessions are homepage visits without name entry
-      const viewOnlySessions = filteredSessions.filter((session: any) => session.userName === "View Only");
-      const realSessions = filteredSessions.filter((session: any) => session.userName !== "View Only");
-      console.log(`Computing metrics for ${realSessions.length} real sessions + ${viewOnlySessions.length} view-only sessions`);
-      
-      // OPTIMIZATION 3: Skip loading ALL messages, use session metadata only
-      // This is 100x faster than loading and parsing all messages
-      
-      // ULTRA-FAST metrics calculation using only session data
-      let viewChatCount = 0;
-      let startChatCount = 0; 
-      let finalButtonClicks = 0;
-      let whatsappButtonClicks = 0;
-      let viewChatOnly = 0; // Will count all homepage views (View Only + Real sessions)
-      let chatCompletate = 0; // People who reach final message with ingredients and recommendations
-      let startFinalOnly = 0; 
-      let viewFinalOnly = 0;
-      
-      // NEW DEFINITION: View Chat = ALL sessions that loaded the homepage (View Only + Real sessions)
-      // This counts everyone who accessed the chat link and saw the welcome screen
-      viewChatOnly = viewOnlySessions.length + realSessions.length;
-      console.log(`View Chat calculation: ${viewOnlySessions.length} view-only + ${realSessions.length} real = ${viewChatOnly} total`);
-      
-      // OPTIMIZED: Process real sessions using only session metadata (no message loading)
-      let totalChatDuration = 0;
-      let completedChatsWithDuration = 0;
-      
-      for (const session of realSessions) {
-        // Basic counts from session fields
-        if (session.firstViewedAt) viewChatCount++;
-        if (session.chatStartedAt) startChatCount++;
-        if (session.finalButtonClicked) finalButtonClicks++;
-        if (session.whatsappButtonClicked) whatsappButtonClicks++;
         
-        // OPTIMIZATION 4: Estimate chat completion based on session metadata
-        // Sessions that have been extracted (googleSheetsSynced=true) likely completed
-        // Sessions with finalButtonClicked definitely completed
-        // Sessions with significant activity (userEmail exists) likely completed
-        const hasSignificantActivity = session.userEmail || session.finalButtonClicked || session.whatsappButtonClicked;
-        const likelyCompleted = session.googleSheetsSynced || hasSignificantActivity;
-        
-        if (likelyCompleted) {
-          chatCompletate++;
-          
-          // Calculate chat duration for completed chats with improved logic
-          if (session.chatStartedAt) {
-            const startTime = new Date(session.chatStartedAt);
-            let endTime = null;
-            let durationType = '';
-            
-            // Priority 1: Use final button click time (most accurate)
-            if (session.finalButtonClickedAt) {
-              endTime = new Date(session.finalButtonClickedAt);
-              durationType = 'button';
-            }
-            // Priority 2: For email-provided sessions, use a more intelligent estimation
-            else if (session.userEmail && session.updatedAt) {
-              // For sessions with email but no final click, estimate completion time
-              // Use updatedAt but cap it to a reasonable consultation duration
-              const potentialEndTime = new Date(session.updatedAt);
-              const potentialDurationMs = potentialEndTime.getTime() - startTime.getTime();
-              
-              // If duration seems reasonable (5-45 minutes), use updatedAt
-              if (potentialDurationMs > 300000 && potentialDurationMs < 2700000) { // 5-45 minutes
-                endTime = potentialEndTime;
-                durationType = 'email_estimated';
-              }
-            }
-            
-            // Calculate duration if we have a valid end time
-            if (endTime) {
-              const durationMs = endTime.getTime() - startTime.getTime();
-              const durationMinutes = Math.round(durationMs / 60000);
-              
-              // Validate duration is reasonable (1-60 minutes)
-              if (durationMs > 60000 && durationMs < 3600000) {
-                totalChatDuration += durationMs;
-                completedChatsWithDuration++;
-                
-                // Enhanced logging for validation
-                if (completedChatsWithDuration <= 5) {
-                  console.log(`Duration calc: ${session.userName} - ${durationMinutes}min (${durationType})`);
-                }
-              }
-            }
+        if (cacheKey && statsCache[cacheKey]) {
+          const cached = statsCache[cacheKey];
+          if (Date.now() - cached.timestamp < STATS_CACHE_DURATION) {
+            console.log(`⚡ INSTANT stats cache hit for ${cacheKey}`);
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Cache-Control', 'public, max-age=60');
+            res.setHeader('X-Cache', 'HIT');
+            return res.json(cached.data);
           }
-        } else {
-          // Sessions that started but didn't show completion signs
-          startFinalOnly++;
         }
       }
       
-      // Calculate average chat duration in minutes
-      const averageChatDurationMinutes = completedChatsWithDuration > 0 
-        ? Math.round(totalChatDuration / completedChatsWithDuration / 60000) 
-        : 0;
-      
-      console.log(`FINAL METRICS: total=${realSessions.length}, viewChat=${viewChatCount}, startChat=${startChatCount}, final=${finalButtonClicks}, whatsapp=${whatsappButtonClicks}`);
-      console.log(`UPDATED METRICS: viewChatAll=${viewChatOnly}, chatCompletate=${chatCompletate}, startFinal=${startFinalOnly}, viewFinal=${viewFinalOnly}`);
-      console.log(`DURATION METRICS: avgDuration=${averageChatDurationMinutes}min from ${completedChatsWithDuration}/${chatCompletate} completed chats (${Math.round(completedChatsWithDuration/chatCompletate*100)}% coverage)`);
-      console.log(`VIEW CHAT BREAKDOWN: viewOnlySessions=${viewOnlySessions.length}, realSessions=${realSessions.length}, total=${viewChatOnly}`);
-
-      // Calculate conversion rates (not displayed but kept for API compatibility)
-      const viewToStartRate = viewChatCount > 0 ? ((startChatCount / viewChatCount) * 100).toFixed(1) : '0';
-      const startToFinalRate = startChatCount > 0 ? ((finalButtonClicks / startChatCount) * 100).toFixed(1) : '0';
-      const viewToFinalRate = viewChatCount > 0 ? ((finalButtonClicks / viewChatCount) * 100).toFixed(1) : '0';
-      
-      console.log(`✅ All metrics computed successfully`);
-      
-      // Check request duration before response
-      const requestDuration = Date.now() - ((req as any).startTime || Date.now());
-      if (requestDuration > 85000) { // Near 90s timeout
-        console.warn(`⚠️ Request near timeout (${requestDuration}ms), sending quick response`);
-      }
-      
-      // CRITICAL FIX: Force garbage collection before response
-      if (global.gc) {
-        try {
-          global.gc();
-        } catch (e) {
-          // Ignore gc errors
+      // Check for "all time" cache
+      if (!from && !to && !period) {
+        if (statsCache['all']) {
+          const cached = statsCache['all'];
+          if (Date.now() - cached.timestamp < STATS_CACHE_DURATION) {
+            console.log(`⚡ INSTANT stats cache hit for all time`);
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Cache-Control', 'public, max-age=60');
+            res.setHeader('X-Cache', 'HIT');
+            return res.json(cached.data);
+          }
         }
       }
-
-      const responseData = {
-        totalSessions: realSessions.length,
-        viewChatCount,
-        startChatCount,
-        finalButtonClicks,
-        whatsappButtonClicks,
-        // New specific metrics as requested
-        viewChatOnly,
-        chatCompletate,
-        startFinalOnly,
-        viewFinalOnly,
-        averageChatDurationMinutes, // NEW: Average chat duration in minutes
-        conversionRates: {
-          viewToStart: viewToStartRate,
-          startToFinal: startToFinalRate,
-          viewToFinal: viewToFinalRate
-        },
-        // Keep legacy fields for compatibility
-        todaySessions: realSessions.length,
-        totalMessages: 0 // Disabled for performance - was too slow
-      };
-
-      console.log(`📤 Sending response: View=${viewChatOnly}, Total=${realSessions.length}, Final=${finalButtonClicks}`);
       
-      // Send response immediately with timeout protection
+      // If not in cache or custom date range, compute it
+      console.log('🔄 Computing stats for custom period...');
+      await getCachedSessions(); // Ensure sessions are loaded
+      
+      const stats = await computeStatsForPeriod(
+        from || to ? { from, to } : period ? { period } : null
+      );
+      
+      // Update cache if it's a common period
+      if (!from && !to && period) {
+        let cacheKey = '';
+        switch (period) {
+          case 'Oggi': cacheKey = 'today'; break;
+          case 'Ieri': cacheKey = 'yesterday'; break;
+          case 'Ultima settimana': cacheKey = 'week'; break;
+          case 'Ultimo mese': cacheKey = 'month'; break;
+        }
+        if (cacheKey) {
+          statsCache[cacheKey] = { data: stats, timestamp: Date.now() };
+        }
+      } else if (!from && !to && !period) {
+        statsCache['all'] = { data: stats, timestamp: Date.now() };
+      }
+      
       res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Cache-Control', 'public, max-age=60'); // Cache response for 60s
-      const jsonResponse = JSON.stringify(responseData);
-      console.log(`📦 JSON response size: ${jsonResponse.length} bytes`);
-      res.end(jsonResponse);
-      console.log(`✅ Response sent successfully`);
-      
-      // Defer garbage collection to avoid blocking
-      if (global.gc) {
-        setTimeout(() => {
-          try { global.gc(); } catch (e) { /* ignore */ }
-        }, 100);
-      }
+      res.setHeader('Cache-Control', 'public, max-age=60');
+      res.setHeader('X-Cache', 'MISS');
+      res.json(stats);
     } catch (error: any) {
       console.error("❌ Error getting admin stats:", error);
       res.status(500).json({ error: "Failed to get stats", details: error.message });
@@ -1310,6 +1288,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/sessions/:sessionId", async (req, res) => {
     try {
       const { sessionId } = req.params;
+      
+      // Check cache first
+      const cached = sessionDetailsCache.get(sessionId);
+      if (cached && Date.now() - cached.timestamp < SESSION_DETAILS_CACHE_DURATION) {
+        console.log(`⚡ Session details cache hit for ${sessionId}`);
+        res.setHeader('X-Cache', 'HIT');
+        return res.json(cached.data);
+      }
+      
       const session = await storage.getChatSession(sessionId);
       
       if (!session) {
@@ -1318,10 +1305,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const messages = await storage.getChatMessages(sessionId);
       
-      res.json({
+      const data = {
         ...session,
         messages
-      });
+      };
+      
+      // Cache the result
+      sessionDetailsCache.set(sessionId, { data, timestamp: Date.now() });
+      
+      res.setHeader('X-Cache', 'MISS');
+      res.json(data);
     } catch (error) {
       console.error("Error getting session details:", error);
       res.status(500).json({ error: "Failed to get session details" });
