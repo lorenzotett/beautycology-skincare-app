@@ -959,9 +959,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
     
-    if (filter?.period) {
+    // Apply date filters
+    let dateFilter = null;
+    
+    // Handle custom date range
+    if (filter?.from || filter?.to) {
+      dateFilter = {};
+      if (filter.from) {
+        dateFilter.from = new Date(filter.from);
+        dateFilter.from.setHours(0, 0, 0, 0);
+      }
+      if (filter.to) {
+        dateFilter.to = new Date(filter.to);
+        dateFilter.to.setHours(23, 59, 59, 999);
+      }
+    }
+    // Handle predefined periods
+    else if (filter?.period) {
       const now = new Date();
-      let dateFilter = null;
       
       switch (filter.period) {
         case 'Oggi':
@@ -989,16 +1004,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dateFilter = { from: monthAgo };
           break;
       }
-      
-      if (dateFilter) {
-        filteredSessions = allSessions.filter((session: any) => {
-          if (!session.createdAt) return false;
-          const sessionDate = new Date(session.createdAt);
-          if (dateFilter.from && sessionDate < dateFilter.from) return false;
-          if (dateFilter.to && sessionDate > dateFilter.to) return false;
-          return true;
-        });
-      }
+    }
+    
+    // Apply date filter if present
+    if (dateFilter) {
+      console.log('📅 Stats: Applying date filter', dateFilter);
+      filteredSessions = filteredSessions.filter((session: any) => {
+        if (!session.createdAt) return false;
+        const sessionDate = new Date(session.createdAt);
+        if (dateFilter.from && sessionDate < dateFilter.from) return false;
+        if (dateFilter.to && sessionDate > dateFilter.to) return false;
+        return true;
+      });
+      console.log(`📊 Stats: Filtered to ${filteredSessions.length}/${allSessions.length} sessions`);
     }
     
     // Fast computation using the same logic
@@ -1158,8 +1176,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         from || to ? { from, to, search } : period ? { period, search } : { search }
       );
       
-      // Update cache if it's a common period
-      if (!from && !to && period) {
+      // Update cache if it's a common period without search
+      if (!search && !from && !to && period) {
         let cacheKey = '';
         switch (period) {
           case 'Oggi': cacheKey = 'today'; break;
@@ -1170,7 +1188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (cacheKey) {
           statsCache[cacheKey] = { data: stats, timestamp: Date.now() };
         }
-      } else if (!from && !to && !period) {
+      } else if (!search && !from && !to && !period) {
         statsCache['all'] = { data: stats, timestamp: Date.now() };
       }
       
