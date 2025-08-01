@@ -792,48 +792,7 @@ A te la scelta!`;
         contents: contents
       });
 
-      const problem = {name: "test", severity: 100}
-      const ingredient = {name: "test", description: "test"};
-
-      const skinTypeAnalysis = "test";
-      const lifestyleInfo = "test";
-      const specialNotes = "test";
-          // Costruisci il messaggio finale
-          let finalMessage = finalConsultation;
-          let finalIngredientsList = '';
-
-          finalMessage += `
-### 🌿 **${ingredient.name.toUpperCase()}**
-**🎯 Problema target:** ${problem.name} (Livello: ${problem.severity}/100)
-**⚡ Come agisce:** ${ingredient.description}
-
----
-`;
-
-            // Aggiungi alla lista per il riepilogo
-            finalIngredientsList += `• **${problem.name}** → **${ingredient.name}**\n`;
-
-finalMessage += `
-
-## 📋 **RIEPILOGO COMPLETO**
-
-**👤 PROFILO UTENTE**
-• Età: ${this.userAge || 'Non specificata'}
-• Tipo di pelle: ${skinTypeAnalysis}
-• Sensibilità: ${this.isSensitiveSkin ? 'Sensibile' : 'Non sensibile'}
-
-**🎯 PROBLEMI IDENTIFICATI & INGREDIENTI**
-${finalIngredientsList}
-
-**💡 LIFESTYLE & ABITUDINI**
-• Skincare attuale: ${this.skinCareHabits}
-• Lifestyle: ${lifestyleInfo}
-• Protezione solare: ${this.sunscreenHabits || 'Non specificata'}
-• Note speciali: ${specialNotes}
-
----
-
-🌟 **Vuoi ricevere la tua routine skincare personalizzata completa?**`;
+      
 
       const content = response.text || "Mi dispiace, non ho capito. Puoi ripetere?";
       this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message }; // Keep original message in history
