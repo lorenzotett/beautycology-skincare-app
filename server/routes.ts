@@ -1908,29 +1908,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
       const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
       
-      // Manually update headers to correct range A1:Y1
+      // Manually update headers to correct range A1:Z1
       const headers = [[
         'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
         'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
         'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo', 'Idratazione', 'Protezione Solare',
         'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
-        'Note Aggiuntive', 'Num. Messaggi', 'Conversazione Completa'
+        'Note Aggiuntive', 'Ingredienti Consigliati', 'Num. Messaggi', 'Conversazione Completa'
       ]];
       
       await sheets.sheets.spreadsheets.values.update({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
-        range: 'Foglio1!A1:Y1',
+        range: 'Foglio1!A1:Z1',
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: headers
         }
       });
 
-      console.log('Google Sheets headers fixed - now aligned with data columns A-Y');
+      console.log('Google Sheets headers fixed - now aligned with data columns A-Z');
       
       res.json({ 
         success: true, 
-        message: "Headers corretti e allineati alle colonne dati A-Y" 
+        message: "Headers corretti e allineati alle colonne dati A-Z con nuova colonna Ingredienti Consigliati" 
       });
     } catch (error) {
       console.error("Error fixing Google Sheets headers:", error);

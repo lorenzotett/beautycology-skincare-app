@@ -70,6 +70,9 @@ export class GoogleSheetsService {
         conversationText += `[${time}] ${role}: ${message.content}\n`;
       });
 
+      // Extract ingredients from conversation
+      const ingredientiConsigliati = this.extractIngredientsFromMessages(messages);
+
       // Prepare structured data for Google Sheets with extracted values from custom AI model
       const values = [[
         timestamp, // A
@@ -95,13 +98,14 @@ export class GoogleSheetsService {
         extractedData.accessoProdotti || '', // U
         extractedData.qualitaDati || '', // V
         extractedData.noteAggiuntive || '', // W
-        messages.length, // X
-        conversationText // Y
+        ingredientiConsigliati, // Y
+        messages.length, // Z
+        conversationText // AA
       ]];
 
       if (isUpdate && updateRowIndex > 0) {
         // Update existing row with fresh AI data
-        const updateRange = `Foglio1!A${updateRowIndex}:Y${updateRowIndex}`;
+        const updateRange = `Foglio1!A${updateRowIndex}:Z${updateRowIndex}`;
         const response = await this.sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
           range: updateRange,
@@ -115,7 +119,7 @@ export class GoogleSheetsService {
         // Append new conversation to Google Sheets
         const response = await this.sheets.spreadsheets.values.append({
           spreadsheetId: this.spreadsheetId,
-          range: 'Foglio1!A:Y', // Updated range for custom AI model columns
+          range: 'Foglio1!A:Z', // Updated range for custom AI model columns
           valueInputOption: 'USER_ENTERED',
           insertDataOption: 'INSERT_ROWS',
           requestBody: {
@@ -534,27 +538,120 @@ export class GoogleSheetsService {
     }
   }
 
+  private extractIngredientsFromMessages(messages: ChatMessage[]): string {
+    const ingredients = new Set<string>();
+    
+    // Lista completa degli ingredienti noti dal database di conoscenza
+    const knownIngredients = [
+      'Bardana', 'Mirto', 'Elicriso', 'Centella Asiatica', 'Liquirizia', 
+      'Malva', 'Ginkgo Biloba', 'Amamelide', 'Kigelia Africana',
+      'Estratto di Liquirizia', 'Acido Ialuronico', 'Retinolo', 'Niacinamide',
+      'Acido Salicilico', 'Acido Glicolico', 'Vitamina C', 'Vitamina E',
+      'Aloe Vera', 'Camomilla', 'Rosa Mosqueta', 'Argan', 'Jojoba'
+    ];
+
+    // Cerca nei messaggi dell'assistente
+    const assistantMessages = messages.filter(m => m.role === 'assistant');
+    
+    for (const message of assistantMessages) {
+      const content = message.content;
+      
+      // Cerca pattern specifici per ingredienti consigliati
+      if (content.includes('Ingrediente consigliato:') || 
+          content.includes('ingredienti ideali') ||
+          content.includes('principi attivi')) {
+        
+        // Estrai ingredienti dalla sezione delle necessità
+        const necessitySection = content.match(/🔎\s*LE TUE PRINCIPALI NECESSITÀ[\s\S]*?(?=\n\n|\*\*📝|$)/i);
+        if (necessitySection) {
+          for (const ingredient of knownIngredients) {
+            if (necessitySection[0].includes(ingredient)) {
+              ingredients.add(ingredient);
+            }
+          }
+        }
+
+        // Estrai dalla routine personalizzata
+        const routineSection = content.match(/📋\s*ROUTINE PERSONALIZZATA[\s\S]*?(?=\n\n|Puoi accedere|$)/i);
+        if (routineSection) {
+          for (const ingredient of knownIngredients) {
+            if (routineSection[0].includes(ingredient)) {
+              ingredients.add(ingredient);
+            }
+          }
+        }
+
+        // Pattern generici per ingredienti menzionati
+        for (const ingredient of knownIngredients) {
+          const ingredientRegex = new RegExp(`\\b${ingredient}\\b`, 'gi');
+          if (ingredientRegex.test(content)) {
+            // Verifica che sia nel contesto di un consiglio
+            const sentences = content.split(/[.!?]/);
+            for (const sentence of sentences) {
+              if (sentence.includes(ingredient) && 
+                  (sentence.includes('consiglio') || 
+                   sentence.includes('ideale') || 
+                   sentence.includes('perfetto') ||
+                   sentence.includes('aiuta') ||
+                   sentence.includes('ingrediente'))) {
+                ingredients.add(ingredient);
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Se non troviamo ingredienti specifici, prova a estrarre da pattern più generici
+    if (ingredients.size === 0) {
+      for (const message of assistantMessages) {
+        if (message.content.includes('crema personalizzata') || 
+            message.content.includes('formula personalizzata')) {
+          
+          // Cerca pattern come "con [ingrediente]"
+          const withPattern = message.content.match(/con\s+([A-Za-z\s]+?)(?=\s*[,.]|$)/gi);
+          if (withPattern) {
+            for (const match of withPattern) {
+              const potentialIngredient = match.replace(/^con\s+/i, '').trim();
+              for (const knownIngredient of knownIngredients) {
+                if (potentialIngredient.toLowerCase().includes(knownIngredient.toLowerCase())) {
+                  ingredients.add(knownIngredient);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const result = Array.from(ingredients).join(', ');
+    console.log(`📋 Estratti ingredienti consigliati: ${result || 'Nessuno trovato'}`);
+    
+    return result || 'Non specificato';
+  }
+
   async initializeSheet(): Promise<boolean> {
     try {
       // Check if headers exist, if not add them
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A1:Y1'
+        range: 'Foglio1!A1:Z1'
       });
 
       if (!response.data.values || response.data.values.length === 0) {
-        // Add comprehensive headers with new AI model fields (must match data columns A-Y)
+        // Add comprehensive headers with new AI model fields (must match data columns A-Z)
         const headers = [[
           'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
           'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
           'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo', 'Idratazione', 'Protezione Solare',
           'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
-          'Note Aggiuntive', 'Num. Messaggi', 'Conversazione Completa'
+          'Note Aggiuntive', 'Ingredienti Consigliati', 'Num. Messaggi', 'Conversazione Completa'
         ]];
         
         await this.sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
-          range: 'Foglio1!A1:Y1',
+          range: 'Foglio1!A1:Z1',
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: headers
