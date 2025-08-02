@@ -1438,7 +1438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Clear existing data and add new headers
       await sheets.sheets.spreadsheets.values.clear({
         spreadsheetId: process.env.GOOGLE_SHEETS_ID,
-        range: 'Foglio1!A:Z'
+        range: 'Foglio1!A:AA'
       });
       
       // Force header reinitialization
@@ -1452,57 +1452,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
     } catch (error) {
       console.error('Google Sheets reset error:', error);
-      res.status(500).json({ 
-        error: error.message
-      });
-    }
-  });
-
-  // Force repopulate Google Sheets with existing data
-  app.post('/api/admin/repopulate-google-sheets', async (req, res) => {
-    try {
-      if (!process.env.GOOGLE_SHEETS_CREDENTIALS || !process.env.GOOGLE_SHEETS_ID) {
-        return res.status(400).json({ error: 'Google Sheets credentials not configured' });
-      }
-
-      const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
-      const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
-      
-      // First ensure headers are there
-      await sheets.initializeSheet();
-      
-      // Get all sessions
-      const allSessions = await storage.getAllChatSessions();
-      
-      // Limit to recent sessions to avoid overwhelming the API
-      const recentSessions = allSessions.slice(-100); // Last 100 sessions
-      
-      let synced = 0;
-      for (const session of recentSessions) {
-        try {
-          const messages = await storage.getChatMessages(session.id);
-          if (messages && messages.length > 0) {
-            await sheets.appendConversation(
-              session.id,
-              session.userName,
-              session.userEmail,
-              messages
-            );
-            synced++;
-          }
-        } catch (error) {
-          console.error(`Failed to sync session ${session.id}:`, error);
-        }
-      }
-      
-      res.json({ 
-        success: true, 
-        message: `Successfully repopulated Google Sheets with ${synced} conversations`,
-        total: recentSessions.length
-      });
-      
-    } catch (error) {
-      console.error('Google Sheets repopulate error:', error);
       res.status(500).json({ 
         error: error.message
       });
@@ -1959,18 +1908,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
       const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
       
-      // Manually update headers to correct range A1:Z1
+      // Manually update headers to correct range A1:AA1
       const headers = [[
         'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
         'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
         'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo', 'Idratazione', 'Protezione Solare',
         'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
-        'Note Aggiuntive', 'Ingredienti Consigliati', 'Num. Messaggi', 'Conversazione Completa'
+        'Note Aggiuntive', 'Placeholder', 'Ingredienti Consigliati', 'Num. Messaggi', 'Conversazione Completa'
       ]];
       
       await sheets.sheets.spreadsheets.values.update({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
-        range: 'Foglio1!A1:Z1',
+        range: 'Foglio1!A1:AA1',
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: headers
@@ -2001,7 +1950,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const response = await sheets.sheets.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
-        range: 'Foglio1!A1:Z1'
+        range: 'Foglio1!A1:AA1'
       });
 
       const headers = response.data.values ? response.data.values[0] : [];
