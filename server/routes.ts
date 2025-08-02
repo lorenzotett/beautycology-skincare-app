@@ -1458,6 +1458,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Force repopulate Google Sheets with existing data
+  app.post('/api/admin/repopulate-google-sheets', async (req, res) => {
+    try {
+      if (!process.env.GOOGLE_SHEETS_CREDENTIALS || !process.env.GOOGLE_SHEETS_ID) {
+        return res.status(400).json({ error: 'Google Sheets credentials not configured' });
+      }
+
+      const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
+      const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
+      
+      // First ensure headers are there
+      await sheets.initializeSheet();
+      
+      // Get all sessions
+      const allSessions = await storage.getAllChatSessions();
+      
+      // Limit to recent sessions to avoid overwhelming the API
+      const recentSessions = allSessions.slice(-100); // Last 100 sessions
+      
+      let synced = 0;
+      for (const session of recentSessions) {
+        try {
+          const messages = await storage.getChatMessages(session.id);
+          if (messages && messages.length > 0) {
+            await sheets.appendConversation(
+              session.id,
+              session.userName,
+              session.userEmail,
+              messages
+            );
+            synced++;
+          }
+        } catch (error) {
+          console.error(`Failed to sync session ${session.id}:`, error);
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Successfully repopulated Google Sheets with ${synced} conversations`,
+        total: recentSessions.length
+      });
+      
+    } catch (error) {
+      console.error('Google Sheets repopulate error:', error);
+      res.status(500).json({ 
+        error: error.message
+      });
+    }
+  });
+
   // Auto-sync integrations endpoint
   app.post("/api/admin/auto-sync-integrations", async (req, res) => {
     try {
