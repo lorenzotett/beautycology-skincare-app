@@ -45,8 +45,9 @@ export class GoogleSheetsService {
           console.log(`🔄 Session ${sessionId} exists at row ${updateRowIndex}, updating with fresh AI data`);
         }
       }
-      // Format conversation data
-      const timestamp = new Date().toLocaleString('it-IT', {
+      // Format conversation data - use original session creation time, not sync time
+      const sessionCreationDate = messages.length > 0 ? new Date(messages[0].createdAt) : new Date();
+      const timestamp = sessionCreationDate.toLocaleString('it-IT', {
         timeZone: 'Europe/Rome',
         day: '2-digit',
         month: '2-digit',
