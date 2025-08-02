@@ -1465,9 +1465,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let synced = 0;
       let errors = 0;
       
-      // Filter sessions that have email and messages
+      // Filter sessions that have valid email (exclude test/example emails)
       const sessionsToSync = allSessions.filter(session => 
-        session.userEmail && session.userEmail.trim() !== ''
+        session.userEmail && 
+        session.userEmail.trim() !== '' &&
+        !session.userEmail.includes('@example.') &&
+        !session.userEmail.toLowerCase().includes('test')
       );
 
       console.log(`🔄 Starting re-sync of ${sessionsToSync.length} conversations to Google Sheets`);
@@ -1542,9 +1545,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allSessions = await storage.getAllChatSessions();
       let synced = 0;
       
-      // Filter sessions that have email but haven't been synced (limit to last 5)
+      // Filter sessions that have valid email but haven't been synced (limit to last 5)
       const unsynced = allSessions.filter(session => 
         session.userEmail && 
+        session.userEmail.trim() !== '' &&
+        !session.userEmail.includes('@example.') &&
+        !session.userEmail.toLowerCase().includes('test') &&
         (!session.klaviyoSynced || !session.googleSheetsSynced)
       );
       
