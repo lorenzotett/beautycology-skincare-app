@@ -1938,6 +1938,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check Google Sheets headers endpoint
+  app.get("/api/admin/check-sheets-headers", async (req, res) => {
+    try {
+      if (!process.env.GOOGLE_CREDENTIALS_JSON || !process.env.GOOGLE_SPREADSHEET_ID) {
+        return res.status(400).json({ error: "Google Sheets not configured" });
+      }
+
+      const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+      const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
+      
+      const response = await sheets.sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+        range: 'Foglio1!A1:Z1'
+      });
+
+      const headers = response.data.values ? response.data.values[0] : [];
+      
+      res.json({ 
+        success: true, 
+        headers: headers,
+        totalColumns: headers.length,
+        ingredientsColumn: headers.indexOf('Ingredienti Consigliati') + 1 // +1 for human readable (A=1, B=2, etc.)
+      });
+    } catch (error) {
+      console.error("Error checking Google Sheets headers:", error);
+      res.status(500).json({ error: "Failed to check headers" });
+    }
+  });
+
   const server = createServer(app);
   return server;
 }

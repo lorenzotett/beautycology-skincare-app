@@ -54,7 +54,7 @@ Preferred communication style: Simple, everyday language.
 - **Error Handling**: Robust server-side error management with retry logic, explicit timeouts, image validation, detailed logging, and specific error messages.
 - **Performance Optimization**: Removed slow polling, optimized caching, intelligent invalidation for dashboard, and server-side pagination for API responses.
 - **Image Handling**: Prioritizes Base64 images, automatic placeholder generation, and HEIC support.
-- **Data Extraction**: AI-powered (Gemini 2.5 Pro) for precise structured data extraction (age, gender, skin type, problems, lifestyle) into Google Sheets and Klaviyo.
+- **Data Extraction**: AI-powered (Gemini 2.5 Pro) for precise structured data extraction (age, gender, skin type, problems, lifestyle, recommended ingredients) into Google Sheets and Klaviyo.
 - **Tracking System**: Comprehensive tracking with `firstViewedAt`, `chatStartedAt`, and `finalButtonClickedAt` fields, powering dashboard analytics (View Chat, Start Chat, Conversion Rate).
 - **Domain Migration**: Seamless transition from bonnie-beauty.replit.app to aidermasense.com.
 - **Scoring System**: Unified logic for skin scoring, ensuring consistency (low scores = good, high scores = problematic) with robust validation.
