@@ -1458,6 +1458,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Re-sync all conversations to Google Sheets endpoint  
+  app.post("/api/admin/resync-all-conversations", async (req, res) => {
+    try {
+      const allSessions = await storage.getAllChatSessions();
+      let synced = 0;
+      let errors = 0;
+      
+      // Filter sessions that have email and messages
+      const sessionsToSync = allSessions.filter(session => 
+        session.userEmail && session.userEmail.trim() !== ''
+      );
+
+      console.log(`🔄 Starting re-sync of ${sessionsToSync.length} conversations to Google Sheets`);
+
+      if (!integrationConfig.googleSheets.enabled) {
+        return res.status(400).json({ error: 'Google Sheets integration not configured' });
+      }
+
+      const sheets = new GoogleSheetsService(integrationConfig.googleSheets.credentials, integrationConfig.googleSheets.spreadsheetId!);
+
+      for (const session of sessionsToSync) {
+        try {
+          // Get messages for this session
+          const messages = await storage.getChatMessages(session.sessionId);
+          
+          if (messages.length === 0) {
+            console.log(`⚠️ No messages found for session ${session.sessionId}, skipping`);
+            continue;
+          }
+
+          console.log(`🔄 Re-syncing session ${session.sessionId} for ${session.userEmail}`);
+          
+          // Use AI extraction for better data
+          const advancedAI = new AdvancedAIExtractor();
+          const aiExtractedData = await advancedAI.extractConversationData(messages);
+          const extractedData = aiExtractedData ? 
+            advancedAI.convertToSheetsFormat(aiExtractedData) : 
+            null;
+          
+          // Sync to Google Sheets
+          await sheets.appendConversation(
+            session.sessionId,
+            session.userName,
+            session.userEmail,
+            messages,
+            extractedData
+          );
+          
+          // Mark as synced
+          await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
+          synced++;
+          
+          console.log(`✅ Re-synced session ${session.sessionId} for ${session.userEmail}`);
+          
+        } catch (error) {
+          console.error(`❌ Failed to re-sync session ${session.sessionId}:`, error);
+          errors++;
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        totalSessions: allSessions.length,
+        eligibleSessions: sessionsToSync.length,
+        syncedSessions: synced,
+        errors: errors,
+        message: `Successfully re-synced ${synced} conversations to Google Sheets`
+      });
+      
+    } catch (error) {
+      console.error('Re-sync all conversations error:', error);
+      res.status(500).json({ 
+        error: error.message,
+        details: 'Failed to re-sync all conversations'
+      });
+    }
+  });
+
   // Auto-sync integrations endpoint
   app.post("/api/admin/auto-sync-integrations", async (req, res) => {
     try {
