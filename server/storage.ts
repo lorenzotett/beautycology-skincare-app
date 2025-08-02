@@ -282,7 +282,7 @@ export class DatabaseStorage implements IStorage {
         messageCount: sql<number>`COALESCE((SELECT COUNT(*)::integer FROM chat_messages WHERE chat_messages.session_id = chat_sessions.session_id), 0)`.as('messageCount')
       })
       .from(chatSessions)
-      .orderBy(desc(chatSessions.updatedAt));
+      .orderBy(chatSessions.createdAt); // ASC order for historical sync - oldest first
     
     return result as (ChatSession & { messageCount: number })[];
   }
