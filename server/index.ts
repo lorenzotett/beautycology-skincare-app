@@ -934,6 +934,27 @@ process.on('SIGINT', () => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Start automatic backup sync every 5 minutes for new conversations
+    console.log('🤖 Setting up automatic backup sync every 5 minutes...');
+    setInterval(async () => {
+      try {
+        console.log('⏰ Running automatic backup sync for new conversations...');
+        const response = await fetch(`http://localhost:${port}/api/admin/auto-sync-integrations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.syncedSessions > 0) {
+            console.log(`✅ Backup sync completed: ${result.syncedSessions} new conversations synced`);
+          }
+        }
+      } catch (error) {
+        console.error('⚠️ Backup sync error:', (error as Error).message);
+      }
+    }, 5 * 60 * 1000); // Every 5 minutes
   });
 
   } catch (error) {
