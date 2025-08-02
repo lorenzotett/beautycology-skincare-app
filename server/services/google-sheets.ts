@@ -70,8 +70,8 @@ export class GoogleSheetsService {
         conversationText += `[${time}] ${role}: ${message.content}\n`;
       });
 
-      // Extract ingredients from conversation
-      const ingredientiConsigliati = this.extractIngredientsFromMessages(messages);
+      // Get ingredients from AI extraction or fallback to old method
+      const ingredientiConsigliati = extractedData.ingredientiConsigliati || this.extractIngredientsFromMessages(messages);
 
       // Prepare structured data for Google Sheets with extracted values from custom AI model
       const values = [[

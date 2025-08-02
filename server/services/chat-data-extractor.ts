@@ -200,6 +200,17 @@ Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantene
       sheetsFormat.noteAggiuntive = extractedData.analisi_conversazione.note_aggiuntive || 'Non specificato';
     }
 
+    // Aggiungi ingredienti consigliati
+    if (extractedData.ingredienti_consigliati) {
+      if (Array.isArray(extractedData.ingredienti_consigliati.ingredienti_principali)) {
+        sheetsFormat.ingredientiConsigliati = extractedData.ingredienti_consigliati.ingredienti_principali.join(', ');
+      } else {
+        sheetsFormat.ingredientiConsigliati = 'Non specificato';
+      }
+    } else {
+      sheetsFormat.ingredientiConsigliati = 'Non specificato';
+    }
+
     return sheetsFormat;
   }
 

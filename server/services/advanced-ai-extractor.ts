@@ -35,6 +35,10 @@ interface ExtractedData {
     qualita_dati: string | null;
     note_aggiuntive: string | null;
   };
+  ingredienti_consigliati: {
+    ingredienti_principali: string[];
+    spiegazione_ingredienti: string | null;
+  };
 }
 
 export class AdvancedAIExtractor {
@@ -90,6 +94,10 @@ Restituisci un JSON con i seguenti campi:
     "accesso_prodotti": "Sì/No",
     "qualita_dati": "Alta/Media/Bassa",
     "note_aggiuntive": "osservazioni rilevanti"
+  },
+  "ingredienti_consigliati": {
+    "ingredienti_principali": ["lista ingredienti specifici consigliati dall'AI"],
+    "spiegazione_ingredienti": "breve spiegazione del perché questi ingredienti sono stati consigliati"
   }
 }
 
@@ -132,6 +140,14 @@ ATTENZIONE SPECIALE per campi multiple choice:
 - Per idratazione_quotidiana: estrai il valore esatto tra le opzioni fornite
 - Per protezione_solare: estrai il valore esatto tra le opzioni fornite  
 - Non approssimare - usa il valore letterale selezionato dall'utente
+
+ESTRAZIONE INGREDIENTI CONSIGLIATI:
+- Analizza i messaggi dell'AI per identificare ingredienti specifici menzionati come raccomandazioni
+- Cerca nelle sezioni come "LE TUE PRINCIPALI NECESSITÀ", "ROUTINE PERSONALIZZATA", "INGREDIENTI IDEALI"
+- Estrai solo ingredienti esplicitamente consigliati, non quelli menzionati come esempi
+- Includi ingredienti botanici (Bardana, Mirto, Elicriso, Centella Asiatica, Liquirizia, Malva, etc.)
+- Includi principi attivi dermatologici (Acido Ialuronico, Retinolo, Niacinamide, Acido Salicilico, etc.)
+- Fornisci una spiegazione concisa del perché questi ingredienti sono stati scelti
 
 Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantenendo alta precisione e completezza.`
       });
