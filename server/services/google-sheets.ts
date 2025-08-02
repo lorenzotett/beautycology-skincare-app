@@ -98,14 +98,15 @@ export class GoogleSheetsService {
         extractedData.accessoProdotti || '', // U
         extractedData.qualitaDati || '', // V
         extractedData.noteAggiuntive || '', // W
+        '', // X - Placeholder per allineamento colonne
         ingredientiConsigliati, // Y
         messages.length, // Z
-        conversationText // AA
+        conversationText // AA (è oltre Z, range sarà esteso)
       ]];
 
       if (isUpdate && updateRowIndex > 0) {
         // Update existing row with fresh AI data
-        const updateRange = `Foglio1!A${updateRowIndex}:Z${updateRowIndex}`;
+        const updateRange = `Foglio1!A${updateRowIndex}:AA${updateRowIndex}`;
         const response = await this.sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
           range: updateRange,
@@ -119,7 +120,7 @@ export class GoogleSheetsService {
         // Append new conversation to Google Sheets
         const response = await this.sheets.spreadsheets.values.append({
           spreadsheetId: this.spreadsheetId,
-          range: 'Foglio1!A:Z', // Updated range for custom AI model columns
+          range: 'Foglio1!A:AA', // Updated range for custom AI model columns including ingredients
           valueInputOption: 'USER_ENTERED',
           insertDataOption: 'INSERT_ROWS',
           requestBody: {
@@ -636,22 +637,22 @@ export class GoogleSheetsService {
       // Check if headers exist, if not add them
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A1:Z1'
+        range: 'Foglio1!A1:AA1'
       });
 
       if (!response.data.values || response.data.values.length === 0) {
-        // Add comprehensive headers with new AI model fields (must match data columns A-Z)
+        // Add comprehensive headers with new AI model fields (must match data columns A-AA)
         const headers = [[
           'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
           'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
           'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo', 'Idratazione', 'Protezione Solare',
           'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
-          'Note Aggiuntive', 'Ingredienti Consigliati', 'Num. Messaggi', 'Conversazione Completa'
+          'Note Aggiuntive', 'Placeholder', 'Ingredienti Consigliati', 'Num. Messaggi', 'Conversazione Completa'
         ]];
         
         await this.sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
-          range: 'Foglio1!A1:Z1',
+          range: 'Foglio1!A1:AA1',
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: headers
