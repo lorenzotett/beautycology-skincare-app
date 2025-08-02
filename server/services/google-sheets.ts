@@ -74,32 +74,40 @@ export class GoogleSheetsService {
       // Get ingredients from AI extraction or fallback to old method
       const ingredientiConsigliati = extractedData.ingredientiConsigliati || this.extractIngredientsFromMessages(messages);
 
+      // Sanitize all data to ensure proper string format for Google Sheets
+      const sanitizeValue = (value: any): string => {
+        if (value === null || value === undefined) return '';
+        if (Array.isArray(value)) return value.join(', ');
+        if (typeof value === 'object') return JSON.stringify(value);
+        return String(value);
+      };
+
       // Prepare structured data for Google Sheets with extracted values from custom AI model
       const values = [[
         timestamp, // A
         sessionId, // B
         userName, // C
         userEmail || '', // D
-        extractedData.eta || '', // E
-        extractedData.sesso || '', // F
-        extractedData.tipoPelle || '', // G
-        extractedData.problemiPelle || '', // H
-        extractedData.punteggioPelle || '', // I
-        extractedData.routine || '', // J
-        extractedData.allergie || '', // K
-        extractedData.profumo || '', // L
-        extractedData.sonno || '', // M
-        extractedData.stress || '', // N
-        extractedData.alimentazione || '', // O
-        extractedData.fumo || '', // P
-        extractedData.idratazione || '', // Q
-        extractedData.protezioneSolare || '', // R
-        extractedData.utilizzaScrub || '', // S
-        extractedData.faseCompletata || '', // T
-        extractedData.accessoProdotti || '', // U
-        extractedData.qualitaDati || '', // V
-        extractedData.noteAggiuntive || '', // W
-        ingredientiConsigliati, // X
+        sanitizeValue(extractedData.eta), // E
+        sanitizeValue(extractedData.sesso), // F
+        sanitizeValue(extractedData.tipoPelle), // G
+        sanitizeValue(extractedData.problemiPelle), // H
+        sanitizeValue(extractedData.punteggioPelle), // I
+        sanitizeValue(extractedData.routine), // J
+        sanitizeValue(extractedData.allergie), // K
+        sanitizeValue(extractedData.profumo), // L
+        sanitizeValue(extractedData.sonno), // M
+        sanitizeValue(extractedData.stress), // N
+        sanitizeValue(extractedData.alimentazione), // O
+        sanitizeValue(extractedData.fumo), // P
+        sanitizeValue(extractedData.idratazione), // Q
+        sanitizeValue(extractedData.protezioneSolare), // R
+        sanitizeValue(extractedData.utilizzaScrub), // S
+        sanitizeValue(extractedData.faseCompletata), // T
+        sanitizeValue(extractedData.accessoProdotti), // U
+        sanitizeValue(extractedData.qualitaDati), // V
+        sanitizeValue(extractedData.noteAggiuntive), // W
+        sanitizeValue(ingredientiConsigliati), // X
         messages.length, // Y
         conversationText // Z
       ]];
