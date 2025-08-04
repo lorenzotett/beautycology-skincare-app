@@ -677,10 +677,10 @@ export class GoogleSheetsService {
               
             const publicUrl = `${domain}/uploads/${fileName}`;
             
-            // Return IMAGE formula for Google Sheets
-            const imageFormula = `=IMAGE("${publicUrl}",4,80,80)`;
-            console.log(`✅ Converted file to Google Sheets formula: ${imageFormula}`);
-            return imageFormula;
+            // Return direct URL instead of IMAGE formula
+            // Google Sheets may have issues with IMAGE formulas from Replit domains
+            console.log(`✅ Using direct URL for Google Sheets: ${publicUrl}`);
+            return publicUrl;
             
           } catch (error) {
             console.warn(`❌ Failed to read image file: ${metadata.imagePath}`, error);
@@ -710,10 +710,10 @@ export class GoogleSheetsService {
             
           const publicUrl = `${domain}/uploads/${newFileName}`;
           
-          // Return IMAGE formula for Google Sheets
-          const imageFormula = `=IMAGE("${publicUrl}",4,80,80)`;
-          console.log(`✅ Converted uploaded image to Google Sheets formula: ${imageFormula}`);
-          return imageFormula;
+          // Return direct URL instead of IMAGE formula
+          // Google Sheets may have issues with IMAGE formulas from Replit domains
+          console.log(`✅ Using direct URL for Google Sheets: ${publicUrl}`);
+          return publicUrl;
           
         } catch (error) {
           console.warn(`❌ Failed to read uploaded image: ${fileName}`, error);

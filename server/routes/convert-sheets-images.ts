@@ -34,12 +34,40 @@ export async function convertSheetsImagesToFormulas() {
     const values = response.data.values || [];
     console.log(`Found ${values.length} rows to process`);
 
-    // Convert URLs to IMAGE formulas
+    // Convert URLs to direct URLs (not IMAGE formulas)
     const updatedValues = values.map((row, index) => {
       const cellValue = row[0] || '';
       
-      // Skip if already a formula or empty
-      if (cellValue.startsWith('=IMAGE(') || !cellValue || cellValue === 'Nessuna immagine' || cellValue === 'Immagini') {
+      // Log first 10 values to debug
+      if (index < 10) {
+        console.log(`Row ${index + 1} value: "${cellValue}"`);
+      }
+      
+      // Skip header, empty cells, or cells with "Nessuna immagine"
+      if (!cellValue || cellValue === 'Nessuna immagine' || cellValue === 'Immagini') {
+        return [cellValue];
+      }
+      
+      // If it's an IMAGE formula or #ERROR!, extract/convert the URL
+      if (cellValue.startsWith('=IMAGE(') || cellValue === '#ERROR!') {
+        console.log(`Row ${index + 1}: Found IMAGE formula or error: ${cellValue}`);
+        
+        // For IMAGE formulas, extract the URL
+        if (cellValue.startsWith('=IMAGE(')) {
+          const urlMatch = cellValue.match(/=IMAGE\("([^"]+)"/);
+          if (urlMatch && urlMatch[1]) {
+            console.log(`Row ${index + 1}: Extracting URL from IMAGE formula`);
+            return [urlMatch[1]];
+          }
+        }
+        
+        // For #ERROR!, check if there was a URL in the previous sync
+        // For now, just skip errors
+        if (cellValue === '#ERROR!') {
+          console.log(`Row ${index + 1}: Found #ERROR!, skipping`);
+          return [''];  // Clear the error
+        }
+        
         return [cellValue];
       }
       
@@ -59,10 +87,9 @@ export async function convertSheetsImagesToFormulas() {
           finalUrl = firstUrl.replace('http://localhost:5000', domain);
         }
         
-        // Create IMAGE formula
-        const imageFormula = `=IMAGE("${finalUrl}",4,80,80)`;
-        console.log(`Row ${index + 1}: Converting URL to formula`);
-        return [imageFormula];
+        // Return direct URL (IMAGE formulas don't work with Replit domains)
+        console.log(`Row ${index + 1}: Using direct URL`);
+        return [finalUrl];
       }
       
       return [cellValue];
@@ -79,14 +106,23 @@ export async function convertSheetsImagesToFormulas() {
       }
     });
 
-    const converted = updatedValues.filter(row => row[0].startsWith('=IMAGE(')).length;
-    console.log(`✅ Successfully converted ${converted} URLs to IMAGE formulas`);
+    // Count actual conversions (URLs that don't start with = or http)
+    let converted = 0;
+    for (let i = 0; i < values.length; i++) {
+      const original = values[i][0] || '';
+      const updated = updatedValues[i][0] || '';
+      if (original !== updated && updated.includes('http')) {
+        converted++;
+      }
+    }
+    
+    console.log(`✅ Successfully converted ${converted} entries to direct URLs`);
     
     return {
       success: true,
       processed: values.length,
       converted: converted,
-      message: `Converted ${converted} URLs to IMAGE formulas in Google Sheets`
+      message: `Converted ${converted} entries to direct URLs in Google Sheets`
     };
 
   } catch (error) {
