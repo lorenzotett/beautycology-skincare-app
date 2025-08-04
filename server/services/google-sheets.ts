@@ -73,9 +73,9 @@ export class GoogleSheetsService {
 
       // Get ingredients from AI extraction or fallback to old method
       const ingredientiConsigliati = extractedData.ingredientiConsigliati || this.extractIngredientsFromMessages(messages);
-
-      // Extract image URLs from messages
-      const imageUrls = this.extractImageUrlsFromMessages(messages);
+      
+      // Extract image URLs from uploaded photos
+      const immaginiCaricate = this.extractImageUrlsFromMessages(messages);
 
       // Sanitize all data to ensure proper string format for Google Sheets
       const sanitizeValue = (value: any): string => {
@@ -111,7 +111,7 @@ export class GoogleSheetsService {
         sanitizeValue(extractedData.qualitaDati), // V
         sanitizeValue(extractedData.noteAggiuntive), // W
         sanitizeValue(ingredientiConsigliati), // X
-        sanitizeValue(imageUrls), // Y - New column for image URLs
+        sanitizeValue(immaginiCaricate), // Y - Nuova colonna per immagini
         messages.length, // Z
         conversationText // AA
       ]];

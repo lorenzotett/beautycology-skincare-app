@@ -2093,6 +2093,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add image column to Google Sheets (without deleting existing data)
+  app.post("/api/admin/add-image-column", async (req, res) => {
+    try {
+      if (!process.env.GOOGLE_CREDENTIALS_JSON || !process.env.GOOGLE_SPREADSHEET_ID) {
+        return res.status(400).json({ error: "Google Sheets not configured" });
+      }
+
+      const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+      const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
+      
+      // Check current headers
+      const response = await sheets.sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+        range: 'Foglio1!A1:AA1'
+      });
+
+      const currentHeaders = response.data.values ? response.data.values[0] : [];
+      
+      // Only add image column if it doesn't exist
+      if (!currentHeaders.includes('URL Immagini')) {
+        // Update headers to include image column (expand to AA)
+        const newHeaders = [[
+          'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
+          'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
+          'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo', 'Idratazione', 'Protezione Solare',
+          'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
+          'Note Aggiuntive', 'Ingredienti Consigliati', 'URL Immagini', 'Num. Messaggi', 'Conversazione Completa'
+        ]];
+        
+        await sheets.sheets.spreadsheets.values.update({
+          spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+          range: 'Foglio1!A1:AA1',
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: newHeaders
+          }
+        });
+
+        console.log('✅ Added "URL Immagini" column without affecting existing data');
+        
+        res.json({ 
+          success: true, 
+          message: "Colonna immagini aggiunta con successo senza cancellare i dati esistenti" 
+        });
+      } else {
+        res.json({ 
+          success: true, 
+          message: "Colonna immagini già presente" 
+        });
+      }
+    } catch (error) {
+      console.error("Error adding image column:", error);
+      res.status(500).json({ error: "Failed to add image column" });
+    }
+  });
+
+  // Update only conversations with images (without affecting other data)
+  app.post("/api/admin/update-image-column", async (req, res) => {
+    try {
+      if (!process.env.GOOGLE_CREDENTIALS_JSON || !process.env.GOOGLE_SPREADSHEET_ID) {
+        return res.status(400).json({ error: "Google Sheets not configured" });
+      }
+
+      const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+      const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
+      
+      // Get all sessions
+      const allSessions = await storage.getAllChatSessions();
+      let updated = 0;
+      let skipped = 0;
+      
+      console.log(`🖼️ Looking for conversations with images to update column Y...`);
+      
+      // Filter sessions that have valid email and might have images
+      const sessionsToCheck = allSessions.filter(session => 
+        session.userEmail && 
+        session.userEmail.trim() !== '' &&
+        !session.userEmail.includes('@example.') &&
+        !session.userEmail.toLowerCase().includes('test')
+      );
+
+      for (const session of sessionsToCheck) {
+        try {
+          // Get messages for this session
+          const messages = await storage.getChatMessages(session.sessionId);
+          
+          // Check if this session has images
+          const hasImages = messages.some(msg => 
+            msg.metadata && 
+            ((msg.metadata as any).hasImage || 
+             (msg.metadata as any).imageBase64 ||
+             msg.content.includes('[Immagine caricata:'))
+          );
+          
+          if (!hasImages) {
+            skipped++;
+            continue;
+          }
+          
+          console.log(`🖼️ Found images in session ${session.sessionId}, updating...`);
+          
+          // Get existing row data to find the right row
+          const existingData = await sheets.sheets.spreadsheets.values.get({
+            spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+            range: 'Foglio1!B:B' // Session ID column
+          });
+
+          let updateRowIndex = -1;
+          if (existingData.data.values) {
+            const sessionIds = existingData.data.values.flat();
+            const existingIndex = sessionIds.findIndex(id => id === session.sessionId);
+            if (existingIndex >= 0) {
+              updateRowIndex = existingIndex + 1; // +1 because sheets are 1-indexed
+            }
+          }
+          
+          if (updateRowIndex > 0) {
+            // Extract image URLs
+            const imageUrls = sheets.extractImageUrlsFromMessages(messages);
+            
+            // Update only the image column (column Y)
+            await sheets.sheets.spreadsheets.values.update({
+              spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+              range: `Foglio1!Y${updateRowIndex}`,
+              valueInputOption: 'USER_ENTERED',
+              requestBody: {
+                values: [[imageUrls]]
+              }
+            });
+            
+            updated++;
+            console.log(`✅ Updated image column for session ${session.sessionId} at row ${updateRowIndex}`);
+          }
+          
+        } catch (error) {
+          console.error(`❌ Failed to update images for session ${session.sessionId}:`, error);
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        updatedSessions: updated,
+        skippedSessions: skipped,
+        message: `Aggiornate ${updated} conversazioni con immagini nella colonna Y`
+      });
+      
+    } catch (error) {
+      console.error("Error updating image column:", error);
+      res.status(500).json({ error: "Failed to update image column" });
+    }
+  });
+
   // Fix Google Sheets headers endpoint
   app.post("/api/admin/fix-sheets-headers", async (req, res) => {
     try {
@@ -2103,29 +2255,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
       const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
       
-      // Manually update headers to correct range A1:Z1
+      // Manually update headers to correct range A1:AA1 (including image column)
       const headers = [[
         'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
         'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
         'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo', 'Idratazione', 'Protezione Solare',
         'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
-        'Note Aggiuntive', 'Ingredienti Consigliati', 'Num. Messaggi', 'Conversazione Completa'
+        'Note Aggiuntive', 'Ingredienti Consigliati', 'URL Immagini', 'Num. Messaggi', 'Conversazione Completa'
       ]];
       
       await sheets.sheets.spreadsheets.values.update({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
-        range: 'Foglio1!A1:Z1',
+        range: 'Foglio1!A1:AA1',
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: headers
         }
       });
 
-      console.log('Google Sheets headers fixed - now aligned with data columns A-Z');
+      console.log('Google Sheets headers fixed - now aligned with data columns A-AA including images');
       
       res.json({ 
         success: true, 
-        message: "Headers corretti e allineati alle colonne dati A-Z con nuova colonna Ingredienti Consigliati" 
+        message: "Headers corretti e allineati alle colonne dati A-AA con colonna immagini inclusa" 
       });
     } catch (error) {
       console.error("Error fixing Google Sheets headers:", error);
