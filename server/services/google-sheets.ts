@@ -74,8 +74,8 @@ export class GoogleSheetsService {
       // Get ingredients from AI extraction or fallback to old method
       const ingredientiConsigliati = extractedData.ingredientiConsigliati || this.extractIngredientsFromMessages(messages);
       
-      // Extract image URLs from uploaded photos
-      const immaginiCaricate = this.extractImageUrlsFromMessages(messages);
+      // Extract image data (try Base64 first, fallback to URLs)
+      const immaginiCaricate = await this.extractImageBase64FromMessages(messages) || this.extractImageUrlsFromMessages(messages);
 
       // Sanitize all data to ensure proper string format for Google Sheets
       const sanitizeValue = (value: any): string => {
@@ -590,6 +590,82 @@ export class GoogleSheetsService {
     console.log(`🖼️ Estratti URL immagini: ${result || 'Nessuna immagine trovata'}`);
     
     return result || 'Nessuna immagine';
+  }
+
+  private async extractImageBase64FromMessages(messages: ChatMessage[]): Promise<string> {
+    const fs = require('fs').promises;
+    const path = require('path');
+    
+    for (const message of messages) {
+      // Check for Base64 images in metadata first
+      if (message.metadata && (message.metadata as any).hasImage) {
+        const metadata = message.metadata as any;
+        
+        // If we already have Base64, return it
+        if (metadata.imageBase64) {
+          console.log(`🖼️ Found existing Base64 image: ${metadata.imageOriginalName || 'unknown'}`);
+          return metadata.imageBase64;
+        }
+        
+        // Try to read image file and convert to Base64
+        if (metadata.imagePath) {
+          try {
+            const fullPath = path.isAbsolute(metadata.imagePath) 
+              ? metadata.imagePath 
+              : path.join(process.cwd(), metadata.imagePath);
+            
+            const imageBuffer = await fs.readFile(fullPath);
+            const mimeType = this.getMimeType(metadata.imageOriginalName || metadata.imagePath);
+            const base64Image = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+            
+            console.log(`✅ Converted image to Base64: ${metadata.imageOriginalName || path.basename(fullPath)}`);
+            return base64Image;
+          } catch (error) {
+            console.warn(`❌ Failed to read image file: ${metadata.imagePath}`, error);
+          }
+        }
+      }
+      
+      // Check message content for uploaded image files
+      const imageMatches = message.content.match(/\[Immagine caricata:\s*([^\]]+)\]/);
+      if (imageMatches && imageMatches[1]) {
+        const fileName = imageMatches[1].trim();
+        const imagePath = path.join(process.cwd(), 'uploads', fileName);
+        
+        try {
+          const imageBuffer = await fs.readFile(imagePath);
+          const mimeType = this.getMimeType(fileName);
+          const base64Image = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+          
+          console.log(`✅ Converted uploaded image to Base64: ${fileName}`);
+          return base64Image;
+        } catch (error) {
+          console.warn(`❌ Failed to read uploaded image: ${fileName}`, error);
+        }
+      }
+    }
+    
+    console.log(`🖼️ No images found for Base64 conversion`);
+    return '';
+  }
+
+  private getMimeType(fileName: string): string {
+    const ext = fileName.toLowerCase().split('.').pop();
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      case 'heic':
+        return 'image/heic';
+      default:
+        return 'image/jpeg';
+    }
   }
 
   private extractIngredientsFromMessages(messages: ChatMessage[]): string {
