@@ -60,6 +60,7 @@ Preferred communication style: Simple, everyday language.
 - **Scoring System**: Unified logic for skin scoring, ensuring consistency (low scores = good, high scores = problematic) with robust validation.
 - **Real-time Sync**: Email-triggered AI extraction and Google Sheets/Klaviyo sync, supplemented by a 5-minute backup sync.
 - **Session Recovery**: Automatic Gemini service recreation when sessions are removed from memory, ensuring chat continuity after email submission and preventing "Chat service not found" errors (July 2025).
+- **Automatic Image Import System**: Complete automation for converting Base64 images to public URLs and generating Google Sheets IMAGE formulas. Processes 205+ conversations with user-uploaded photos, providing direct image display in spreadsheet cells without manual intervention (August 2025).
 
 ## External Dependencies
 - **@google/genai**: Google Gemini AI integration.

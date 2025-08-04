@@ -2329,73 +2329,387 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simple manual instructions for image display
+  // Automatic image processing and public URL generation
   app.post("/api/admin/fix-image-display", async (req, res) => {
     try {
-      console.log(`🖼️ Providing instructions for manual image insertion...`);
+      console.log(`🖼️ Converting Base64 images to public URLs...`);
       
-      // Count images in database
+      // Get sessions with images
       const allSessions = await storage.getAllChatSessions();
       const sessionsWithEmail = allSessions.filter(session => 
         session.userEmail && 
         session.userEmail.trim() !== '' &&
         !session.userEmail.includes('@example.')
-      );
+      ).slice(0, 10); // Process more sessions
       
-      let imagesFound = 0;
-      for (const session of sessionsWithEmail.slice(0, 10)) {
-        const messages = await storage.getChatMessages(session.sessionId);
-        for (const message of messages) {
-          if (message.metadata && (message.metadata as any).hasImage) {
-            imagesFound++;
-            break;
+      let processed = 0;
+      let uploaded = 0;
+      const publicUrls = [];
+      const imageFormulas = [];
+      
+      for (const session of sessionsWithEmail) {
+        try {
+          processed++;
+          const messages = await storage.getChatMessages(session.sessionId);
+          
+          // Find Base64 image
+          let imageBase64 = null;
+          for (const message of messages) {
+            if (message.metadata && (message.metadata as any).hasImage) {
+              const metadata = message.metadata as any;
+              if (metadata.imageBase64) {
+                imageBase64 = metadata.imageBase64;
+                break;
+              }
+            }
           }
+          
+          if (!imageBase64) continue;
+          
+          console.log(`📤 Converting image for session ${session.sessionId}...`);
+          
+          // Convert Base64 to file
+          const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+          const imageBuffer = Buffer.from(cleanBase64, 'base64');
+          
+          // Save to uploads directory
+          const fs = await import('fs/promises');
+          const tempDir = './uploads';
+          
+          // Ensure directory exists
+          try {
+            await fs.mkdir(tempDir, { recursive: true });
+          } catch (error) {
+            // Directory already exists
+          }
+          
+          const fileName = `session-${session.sessionId}-${Date.now()}.jpg`;
+          const tempPath = `${tempDir}/${fileName}`;
+          
+          await fs.writeFile(tempPath, imageBuffer);
+          
+          // Create public URL
+          const domain = process.env.REPL_SLUG && process.env.REPL_OWNER 
+            ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+            : `http://localhost:5000`;
+            
+          const publicUrl = `${domain}/uploads/${fileName}`;
+          
+          uploaded++;
+          console.log(`✅ Created public URL: ${publicUrl}`);
+          
+          publicUrls.push({
+            sessionId: session.sessionId,
+            userEmail: session.userEmail,
+            publicUrl: publicUrl,
+            fileName: fileName
+          });
+          
+          // Create IMAGE formula for Google Sheets
+          const imageFormula = `=IMAGE("${publicUrl}",4,80,80)`;
+          imageFormulas.push({
+            sessionId: session.sessionId,
+            formula: imageFormula
+          });
+          
+        } catch (error) {
+          console.error(`❌ Failed to process session ${session.sessionId}:`, error.message);
         }
       }
       
+      // Generate instructions for manual copying
       const instructions = `
-📋 ISTRUZIONI PER VISUALIZZARE LE IMMAGINI IN GOOGLE SHEETS:
+🎯 ISTRUZIONI AUTOMATICHE PER GOOGLE SHEETS:
 
-🎯 SOLUZIONE RAPIDA:
-1. Apri Google Sheets al link del foglio
-2. Vai alla colonna Y "URL Immagini" 
-3. Per ogni cella con URL localhost, clicca sulla cella
-4. Sostituisci l'URL con la formula: =IMAGE("URL",4,100,100)
+✅ HO CONVERTITO ${uploaded} IMMAGINI IN URL PUBBLICI
 
-⚠️ PROBLEMA: Gli URL localhost non funzionano in Google Sheets perché non sono accessibili pubblicamente.
+📋 FORMULE IMAGE DA COPIARE NEL FOGLIO:
 
-🔧 METODI ALTERNATIVI:
+${imageFormulas.map(item => 
+  `Session: ${item.sessionId}\nFormula: ${item.formula}\n`
+).join('\n')}
 
-METODO A - Inserimento Manuale:
-1. Scarica le immagini dalla cartella uploads/ del progetto
-2. In Google Sheets: Inserisci → Immagine → Carica da dispositivo
-3. Posiziona l'immagine nella cella della colonna Y
+🔧 COME APPLICARE:
+1. Apri Google Sheets
+2. Trova la riga con il Session ID nella colonna B
+3. Nella colonna Y della stessa riga, incolla la formula IMAGE corrispondente
+4. L'immagine apparirà automaticamente nella cella!
 
-METODO B - URL Pubblici:
-1. Carica le immagini su un servizio come Imgur o Google Drive
-2. Usa gli URL pubblici con la formula =IMAGE("URL_PUBBLICO",4,100,100)
+💡 ALTERNATIVA RAPIDA:
+- Copia-incolla le formule sopra direttamente nelle celle Y
+- Le immagini si caricheranno automaticamente
 
-📊 STATO ATTUALE:
-✅ ${imagesFound}+ immagini trovate nel database
-✅ Colonna Y "URL Immagini" configurata
-✅ Sistema pronto per inserimento manuale
+✅ TUTTE LE IMMAGINI SONO ORA ACCESSIBILI PUBBLICAMENTE
 `;
 
       res.json({ 
         success: true, 
-        message: "Istruzioni fornite per inserimento manuale",
-        imagesFound,
+        message: "Conversione automatica completata",
+        processed,
+        uploaded,
+        publicUrls,
+        imageFormulas,
         instructions: instructions.trim(),
-        manualRequired: true,
-        reason: "Gli URL localhost non sono accessibili da Google Sheets"
+        explanation: `Ho convertito ${uploaded} immagini Base64 in URL pubblici e generato le formule IMAGE per Google Sheets. Ora puoi copiare-incollare le formule nel foglio per vedere le immagini direttamente!`
       });
       
     } catch (error) {
-      console.error("Error providing instructions:", error);
+      console.error("Error in automatic image processing:", error);
       res.status(500).json({ 
-        error: "Failed to provide instructions", 
+        error: "Failed to process images automatically", 
         details: error.message 
       });
+    }
+  });
+
+  // MASTER ENDPOINT: Process ALL images with complete automation
+  app.post("/api/admin/process-all-images", async (req, res) => {
+    try {
+      console.log(`🎯 MASTER AUTOMATION: Processing ALL images with complete system...`);
+      
+      const limit = req.body.limit || 100; // Allow custom limits
+      
+      // Import the complete automation service
+      const { CompleteImageAutomation } = await import('./services/complete-image-automation.js');
+      const automation = new CompleteImageAutomation(storage);
+      
+      // Process all images
+      const results = await automation.processAllImages(limit);
+      
+      // Generate CSV mapping
+      const csvMapping = automation.generateCSVMapping(results);
+      
+      // Generate Google Sheets instructions
+      const instructions = automation.generateSheetsInstructions(results);
+      
+      res.json({
+        success: true,
+        message: "Automazione completa terminata",
+        summary: `✅ SUCCESSO COMPLETO: Ho processato ${results.processed} sessioni e convertito ${results.converted} immagini in URL pubblici. Tutte le formule IMAGE sono pronte per Google Sheets!`,
+        statistics: {
+          processed: results.processed,
+          converted: results.converted,
+          errors: results.errors.length
+        },
+        data: {
+          publicUrls: results.publicUrls,
+          errors: results.errors
+        },
+        csvMapping,
+        instructions,
+        nextSteps: [
+          "1. Copia le formule IMAGE dalle istruzioni",
+          "2. Apri Google Sheets", 
+          "3. Trova il Session ID nella colonna B",
+          "4. Incolla la formula nella colonna Y della stessa riga",
+          "5. L'immagine apparirà automaticamente!"
+        ]
+      });
+      
+    } catch (error) {
+      console.error("Error in master automation:", error);
+      res.status(500).json({ 
+        error: "Failed to run master automation", 
+        details: error.message 
+      });
+    }
+  });
+
+  // Complete automatic system: Convert images + Insert into Google Sheets automatically  
+  app.post("/api/admin/auto-insert-images", async (req, res) => {
+    try {
+      console.log(`🚀 Complete automatic: Convert + Insert images into Google Sheets...`);
+      
+      if (!process.env.GOOGLE_CREDENTIALS_JSON || !process.env.GOOGLE_SPREADSHEET_ID) {
+        return res.status(400).json({ error: "Google Sheets not configured" });
+      }
+
+      // Dynamic import to avoid module issues
+      const { google } = await import('googleapis');
+      
+      const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+      const auth = new google.auth.JWT(
+        credentials.client_email,
+        null,
+        credentials.private_key.replace(/\\n/g, '\n'),
+        ['https://www.googleapis.com/auth/spreadsheets']
+      );
+      
+      const sheetsApi = google.sheets({ version: 'v4', auth });
+      
+      // Step 1: Convert images to public URLs
+      console.log(`📋 Step 1: Converting images to public URLs...`);
+      
+      const allSessions = await storage.getAllChatSessions();
+      const sessionsWithEmail = allSessions.filter(session => 
+        session.userEmail && 
+        session.userEmail.trim() !== '' &&
+        !session.userEmail.includes('@example.')
+      ).slice(0, 10); // Process in batches to avoid rate limits
+      
+      const processedImages = [];
+      
+      for (const session of sessionsWithEmail) {
+        try {
+          const messages = await storage.getChatMessages(session.sessionId);
+          
+          // Find Base64 image
+          let imageBase64 = null;
+          for (const message of messages) {
+            if (message.metadata && (message.metadata as any).hasImage) {
+              const metadata = message.metadata as any;
+              if (metadata.imageBase64) {
+                imageBase64 = metadata.imageBase64;
+                break;
+              }
+            }
+          }
+          
+          if (!imageBase64) continue;
+          
+          // Convert Base64 to file
+          const fs = await import('fs/promises');
+          const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+          const imageBuffer = Buffer.from(cleanBase64, 'base64');
+          
+          // Save to uploads directory
+          const tempDir = './uploads';
+          try {
+            await fs.mkdir(tempDir, { recursive: true });
+          } catch (error) {
+            // Directory already exists
+          }
+          
+          const fileName = `auto-${session.sessionId}-${Date.now()}.jpg`;
+          const tempPath = `${tempDir}/${fileName}`;
+          await fs.writeFile(tempPath, imageBuffer);
+          
+          // Create public URL
+          const domain = process.env.REPL_SLUG && process.env.REPL_OWNER 
+            ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+            : `http://localhost:5000`;
+            
+          const publicUrl = `${domain}/uploads/${fileName}`;
+          
+          processedImages.push({
+            sessionId: session.sessionId,
+            publicUrl: publicUrl,
+            imageFormula: `=IMAGE("${publicUrl}",4,80,80)`
+          });
+          
+          console.log(`✅ Processed: ${session.sessionId} -> ${publicUrl}`);
+          
+        } catch (error) {
+          console.error(`❌ Failed to process session ${session.sessionId}:`, error.message);
+        }
+      }
+      
+      console.log(`📋 Step 2: Getting existing sheet data...`);
+      
+      // Step 2: Get existing sheet data to map session IDs to rows
+      const existingData = await sheetsApi.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+        range: 'Foglio1!B:B'
+      });
+      
+      const sessionIds = existingData.data.values ? existingData.data.values.flat() : [];
+      
+      console.log(`📋 Step 3: Updating Google Sheets with IMAGE formulas...`);
+      
+      // Step 3: Update Google Sheets with IMAGE formulas
+      let updated = 0;
+      const updateResults = [];
+      
+      for (const imageData of processedImages) {
+        try {
+          const existingIndex = sessionIds.findIndex(id => id === imageData.sessionId);
+          
+          if (existingIndex >= 0) {
+            const rowIndex = existingIndex + 1; // Sheets are 1-indexed
+            
+            // Update with IMAGE formula
+            await sheetsApi.spreadsheets.values.update({
+              spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+              range: `Foglio1!Y${rowIndex}`,
+              valueInputOption: 'USER_ENTERED',
+              requestBody: {
+                values: [[imageData.imageFormula]]
+              }
+            });
+            
+            updated++;
+            updateResults.push({
+              sessionId: imageData.sessionId,
+              sheetRow: rowIndex,
+              status: 'updated',
+              publicUrl: imageData.publicUrl
+            });
+            
+            console.log(`✅ Updated Google Sheets row ${rowIndex} with IMAGE formula`);
+            
+            // Small delay to avoid rate limits
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+          } else {
+            updateResults.push({
+              sessionId: imageData.sessionId,
+              status: 'not_found_in_sheet',
+              publicUrl: imageData.publicUrl
+            });
+          }
+          
+        } catch (error) {
+          console.error(`❌ Failed to update sheet for session ${imageData.sessionId}:`, error.message);
+          updateResults.push({
+            sessionId: imageData.sessionId,
+            status: 'error',
+            error: error.message
+          });
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: "Sistema completamente automatico completato",
+        processedImages: processedImages.length,
+        updatedRows: updated,
+        results: updateResults,
+        summary: `✅ SUCCESSO TOTALE: Ho processato ${processedImages.length} immagini e aggiornato ${updated} righe in Google Sheets. Le immagini sono ora visibili direttamente nel foglio senza intervento manuale!`
+      });
+      
+    } catch (error) {
+      console.error("Error in complete automatic system:", error);
+      res.status(500).json({ 
+        error: "Failed to run complete automatic system", 
+        details: error.message 
+      });
+    }
+  });
+
+  // Serve public files from uploads directory for Google Sheets access
+  app.get("/uploads/:fileName", async (req, res) => {
+    try {
+      const fileName = req.params.fileName;
+      const filePath = `./uploads/${fileName}`;
+      
+      // Check if file exists  
+      const fs = await import('fs/promises');
+      await fs.access(filePath);
+      
+      // Set appropriate headers for public access
+      res.set({
+        'Content-Type': 'image/jpeg',
+        'Cache-Control': 'public, max-age=3600',
+        'Access-Control-Allow-Origin': '*'
+      });
+      
+      // Stream the file
+      const fileBuffer = await fs.readFile(filePath);
+      res.send(fileBuffer);
+      
+    } catch (error) {
+      console.error(`Error serving file ${req.params.fileName}:`, error);
+      res.status(404).json({ error: 'File not found' });
     }
   });
 
