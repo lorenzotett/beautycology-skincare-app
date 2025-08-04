@@ -1458,6 +1458,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update conversations with images only
+  app.post("/api/admin/update-conversations-with-images", async (req, res) => {
+    try {
+      if (!process.env.GOOGLE_SHEETS_CREDENTIALS || !process.env.GOOGLE_SHEETS_ID) {
+        return res.status(400).json({ error: 'Google Sheets credentials not configured' });
+      }
+
+      const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
+      const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
+      
+      // Get all sessions
+      const allSessions = await storage.getAllChatSessions();
+      let updated = 0;
+      let errors = 0;
+      
+      console.log(`🖼️ Starting update of conversations with images...`);
+      
+      // Check if the image column exists in the sheet
+      const headerResponse = await sheets.sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SHEETS_ID,
+        range: 'Foglio1!A1:AA1'
+      });
+      
+      const headers = headerResponse.data.values ? headerResponse.data.values[0] : [];
+      const hasImageColumn = headers.includes('URL Immagini');
+      
+      if (!hasImageColumn) {
+        // Add the new column header if it doesn't exist
+        const newHeaders = [...headers, 'URL Immagini'];
+        if (headers.length === 26) { // Was at column Z, now expanding to AA
+          newHeaders.splice(-1, 0, 'URL Immagini'); // Insert before last column (conversation text)
+        }
+        
+        await sheets.sheets.spreadsheets.values.update({
+          spreadsheetId: process.env.GOOGLE_SHEETS_ID,
+          range: `Foglio1!A1:${String.fromCharCode(65 + newHeaders.length - 1)}1`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [newHeaders]
+          }
+        });
+        
+        console.log('✅ Added "URL Immagini" column to existing sheet');
+      }
+
+      for (const session of allSessions) {
+        try {
+          // Get messages for this session
+          const messages = await storage.getChatMessages(session.sessionId);
+          
+          if (!messages || messages.length < 3) {
+            continue;
+          }
+          
+          // Check if conversation has images
+          const hasImages = messages.some(msg => 
+            (msg.metadata && (msg.metadata as any).hasImage) ||
+            msg.content.includes('[Immagine caricata:')
+          );
+          
+          if (!hasImages) {
+            continue; // Skip conversations without images
+          }
+          
+          console.log(`🖼️ Processing session with images: ${session.userName} (${session.sessionId})`);
+          
+          // Use AI extraction for complete data
+          const advancedAI = new AdvancedAIExtractor();
+          const aiExtractedData = await advancedAI.extractConversationData(messages);
+          const extractedData = aiExtractedData ? 
+            advancedAI.convertToSheetsFormat(aiExtractedData) : 
+            null;
+
+          const success = await sheets.appendConversation(
+            session.sessionId,
+            session.userName,
+            session.userEmail!,
+            messages,
+            extractedData
+          );
+          
+          if (success) {
+            await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
+            updated++;
+            console.log(`✅ Updated session ${session.sessionId} with images`);
+          } else {
+            errors++;
+          }
+          
+        } catch (error) {
+          console.error(`❌ Error processing session ${session.sessionId}:`, error);
+          errors++;
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Updated ${updated} conversations with images. ${errors} errors.`,
+        updated,
+        errors
+      });
+      
+    } catch (error) {
+      console.error('Error updating conversations with images:', error);
+      res.status(500).json({ 
+        error: error.message,
+        details: 'Failed to update conversations with images'
+      });
+    }
+  });
+
   // Re-sync all conversations to Google Sheets endpoint  
   app.post("/api/admin/resync-all-conversations", async (req, res) => {
     try {

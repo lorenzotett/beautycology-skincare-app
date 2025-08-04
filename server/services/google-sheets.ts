@@ -74,6 +74,9 @@ export class GoogleSheetsService {
       // Get ingredients from AI extraction or fallback to old method
       const ingredientiConsigliati = extractedData.ingredientiConsigliati || this.extractIngredientsFromMessages(messages);
 
+      // Extract image URLs from messages
+      const imageUrls = this.extractImageUrlsFromMessages(messages);
+
       // Sanitize all data to ensure proper string format for Google Sheets
       const sanitizeValue = (value: any): string => {
         if (value === null || value === undefined) return '';
@@ -108,13 +111,14 @@ export class GoogleSheetsService {
         sanitizeValue(extractedData.qualitaDati), // V
         sanitizeValue(extractedData.noteAggiuntive), // W
         sanitizeValue(ingredientiConsigliati), // X
-        messages.length, // Y
-        conversationText // Z
+        sanitizeValue(imageUrls), // Y - New column for image URLs
+        messages.length, // Z
+        conversationText // AA
       ]];
 
       if (isUpdate && updateRowIndex > 0) {
-        // Update existing row with fresh AI data
-        const updateRange = `Foglio1!A${updateRowIndex}:Z${updateRowIndex}`;
+        // Update existing row with fresh AI data including images
+        const updateRange = `Foglio1!A${updateRowIndex}:AA${updateRowIndex}`;
         const response = await this.sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
           range: updateRange,
@@ -123,19 +127,19 @@ export class GoogleSheetsService {
             values: values
           }
         });
-        console.log(`✅ Successfully updated conversation ${sessionId} at row ${updateRowIndex} with fresh AI data`);
+        console.log(`✅ Successfully updated conversation ${sessionId} at row ${updateRowIndex} with fresh AI data and images`);
       } else {
         // Append new conversation to Google Sheets
         const response = await this.sheets.spreadsheets.values.append({
           spreadsheetId: this.spreadsheetId,
-          range: 'Foglio1!A:Z', // Updated range for custom AI model columns
+          range: 'Foglio1!A:AA', // Updated range to include image URLs column
           valueInputOption: 'USER_ENTERED',
           insertDataOption: 'INSERT_ROWS',
           requestBody: {
             values: values
           }
         });
-        console.log(`✅ Successfully appended new conversation ${sessionId} to Google Sheets`);
+        console.log(`✅ Successfully appended new conversation ${sessionId} to Google Sheets with images`);
       }
       
       return true;
@@ -547,6 +551,47 @@ export class GoogleSheetsService {
     }
   }
 
+  private extractImageUrlsFromMessages(messages: ChatMessage[]): string {
+    const imageUrls: string[] = [];
+    
+    for (const message of messages) {
+      // Check if message has image metadata
+      if (message.metadata && (message.metadata as any).hasImage) {
+        const metadata = message.metadata as any;
+        
+        // Check for various image URL formats
+        if (metadata.imageUrl) {
+          imageUrls.push(metadata.imageUrl);
+        } else if (metadata.imageName) {
+          // Construct URL from image name (assumes images are served from /uploads/)
+          const baseUrl = process.env.NODE_ENV === 'production' 
+            ? `${process.env.REPLIT_DEV_DOMAIN || 'https://your-repl-url.replit.dev'}`
+            : 'http://localhost:5000';
+          imageUrls.push(`${baseUrl}/uploads/${metadata.imageName}`);
+        }
+      }
+      
+      // Also check message content for image references
+      const imageMatches = message.content.match(/\[Immagine caricata:[^\]]+\]/g);
+      if (imageMatches) {
+        for (const match of imageMatches) {
+          const fileName = match.match(/\[Immagine caricata:\s*([^\]]+)\]/);
+          if (fileName) {
+            const baseUrl = process.env.NODE_ENV === 'production' 
+              ? `${process.env.REPLIT_DEV_DOMAIN || 'https://your-repl-url.replit.dev'}`
+              : 'http://localhost:5000';
+            imageUrls.push(`${baseUrl}/uploads/${fileName[1].trim()}`);
+          }
+        }
+      }
+    }
+    
+    const result = imageUrls.join(', ');
+    console.log(`🖼️ Estratti URL immagini: ${result || 'Nessuna immagine trovata'}`);
+    
+    return result || 'Nessuna immagine';
+  }
+
   private extractIngredientsFromMessages(messages: ChatMessage[]): string {
     const ingredients = new Set<string>();
     
@@ -645,29 +690,29 @@ export class GoogleSheetsService {
       // Check if headers exist, if not add them
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
-        range: 'Foglio1!A1:Z1'
+        range: 'Foglio1!A1:AA1'
       });
 
       if (!response.data.values || response.data.values.length === 0) {
-        // Add comprehensive headers with new AI model fields (must match data columns A-Z)
+        // Add comprehensive headers with new AI model fields (must match data columns A-AA)
         const headers = [[
           'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
           'Problemi Pelle', 'Punteggio Pelle', 'Routine Attuale', 'Allergie', 'Profumo',
           'Ore Sonno', 'Stress', 'Alimentazione', 'Fumo', 'Idratazione', 'Protezione Solare',
           'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
-          'Note Aggiuntive', 'Ingredienti Consigliati', 'Num. Messaggi', 'Conversazione Completa'
+          'Note Aggiuntive', 'Ingredienti Consigliati', 'URL Immagini', 'Num. Messaggi', 'Conversazione Completa'
         ]];
         
         await this.sheets.spreadsheets.values.update({
           spreadsheetId: this.spreadsheetId,
-          range: 'Foglio1!A1:Z1',
+          range: 'Foglio1!A1:AA1',
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: headers
           }
         });
 
-        console.log('Google Sheets headers initialized with comprehensive columns');
+        console.log('Google Sheets headers initialized with comprehensive columns including images');
       }
 
       return true;
