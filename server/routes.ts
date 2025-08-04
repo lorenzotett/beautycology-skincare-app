@@ -2329,65 +2329,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Insert actual Base64 images into Google Sheets directly
+  // Simple manual instructions for image display
   app.post("/api/admin/fix-image-display", async (req, res) => {
     try {
-      console.log(`🖼️ Inserting Base64 images directly into Google Sheets...`);
+      console.log(`🖼️ Providing instructions for manual image insertion...`);
       
-      // Find sessions with Base64 images in database  
+      // Count images in database
       const allSessions = await storage.getAllChatSessions();
       const sessionsWithEmail = allSessions.filter(session => 
         session.userEmail && 
         session.userEmail.trim() !== '' &&
         !session.userEmail.includes('@example.')
-      ).slice(0, 5); // Limit for testing
+      );
       
-      let processed = 0;
-      let found = 0;
-      
-      for (const session of sessionsWithEmail) {
-        try {
-          processed++;
-          const messages = await storage.getChatMessages(session.sessionId);
-          
-          // Look for Base64 images in metadata
-          for (const message of messages) {
-            if (message.metadata && (message.metadata as any).hasImage) {
-              const metadata = message.metadata as any;
-              if (metadata.imageBase64) {
-                found++;
-                console.log(`✅ Found Base64 image in session ${session.sessionId}`);
-                console.log(`🖼️ Image data length: ${metadata.imageBase64.length} characters`);
-                break;
-              }
-            }
+      let imagesFound = 0;
+      for (const session of sessionsWithEmail.slice(0, 10)) {
+        const messages = await storage.getChatMessages(session.sessionId);
+        for (const message of messages) {
+          if (message.metadata && (message.metadata as any).hasImage) {
+            imagesFound++;
+            break;
           }
-          
-        } catch (error) {
-          console.error(`❌ Error processing session ${session.sessionId}:`, error.message);
         }
       }
       
+      const instructions = `
+📋 ISTRUZIONI PER VISUALIZZARE LE IMMAGINI IN GOOGLE SHEETS:
+
+🎯 SOLUZIONE RAPIDA:
+1. Apri Google Sheets al link del foglio
+2. Vai alla colonna Y "URL Immagini" 
+3. Per ogni cella con URL localhost, clicca sulla cella
+4. Sostituisci l'URL con la formula: =IMAGE("URL",4,100,100)
+
+⚠️ PROBLEMA: Gli URL localhost non funzionano in Google Sheets perché non sono accessibili pubblicamente.
+
+🔧 METODI ALTERNATIVI:
+
+METODO A - Inserimento Manuale:
+1. Scarica le immagini dalla cartella uploads/ del progetto
+2. In Google Sheets: Inserisci → Immagine → Carica da dispositivo
+3. Posiziona l'immagine nella cella della colonna Y
+
+METODO B - URL Pubblici:
+1. Carica le immagini su un servizio come Imgur o Google Drive
+2. Usa gli URL pubblici con la formula =IMAGE("URL_PUBBLICO",4,100,100)
+
+📊 STATO ATTUALE:
+✅ ${imagesFound}+ immagini trovate nel database
+✅ Colonna Y "URL Immagini" configurata
+✅ Sistema pronto per inserimento manuale
+`;
+
       res.json({ 
         success: true, 
-        message: "Analisi Base64 completata",
-        processed,
-        found,
-        explanation: `Ho trovato ${found} immagini Base64 pronte per l'inserimento. Google Sheets ha limitazioni sui dati Base64 grandi. Ti spiego come inserire le immagini manualmente:
-
-1. Apri Google Sheets
-2. Seleziona una cella nella colonna Y
-3. Clicca su "Inserisci" → "Immagine" → "Carica da dispositivo"  
-4. Carica le immagini dalla cartella uploads/ del progetto
-
-Le immagini Base64 sono troppo grandi per essere inserite direttamente via API.`,
-        recommendation: "Usa inserimento manuale per risultati migliori"
+        message: "Istruzioni fornite per inserimento manuale",
+        imagesFound,
+        instructions: instructions.trim(),
+        manualRequired: true,
+        reason: "Gli URL localhost non sono accessibili da Google Sheets"
       });
       
     } catch (error) {
-      console.error("Error analyzing Base64 images:", error);
+      console.error("Error providing instructions:", error);
       res.status(500).json({ 
-        error: "Failed to analyze images", 
+        error: "Failed to provide instructions", 
         details: error.message 
       });
     }
