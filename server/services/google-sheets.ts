@@ -75,7 +75,21 @@ export class GoogleSheetsService {
       const ingredientiConsigliati = extractedData.ingredientiConsigliati || this.extractIngredientsFromMessages(messages);
       
       // Extract image data (try Base64 first, fallback to URLs)
-      const immaginiCaricate = await this.extractImageBase64FromMessages(messages) || this.extractImageUrlsFromMessages(messages);
+      let immaginiCaricate = await this.extractImageBase64FromMessages(messages);
+      
+      // If no IMAGE formula was generated, try to get URL and convert to formula
+      if (!immaginiCaricate || immaginiCaricate === '') {
+        const imageUrl = this.extractImageUrlsFromMessages(messages);
+        if (imageUrl && imageUrl !== 'Nessuna immagine') {
+          // Convert URL to IMAGE formula for Google Sheets
+          const urls = imageUrl.split(', ');
+          const firstUrl = urls[0];
+          immaginiCaricate = `=IMAGE("${firstUrl}",4,80,80)`;
+          console.log(`📐 Converted URL to Google Sheets formula: ${immaginiCaricate}`);
+        } else {
+          immaginiCaricate = '';
+        }
+      }
 
       // Sanitize all data to ensure proper string format for Google Sheets
       const sanitizeValue = (value: any): string => {
