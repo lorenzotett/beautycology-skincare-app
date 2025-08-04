@@ -1774,6 +1774,169 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export sessions data as Excel with embedded images
+  app.get('/api/admin/sessions/export-excel-images', async (req, res) => {
+    try {
+      console.log('📊 Starting Excel export with embedded images...');
+      
+      // Import ExcelJS dynamically
+      const ExcelJS = await import('exceljs');
+      const fetch = (await import('node-fetch')).default;
+      
+      // Get all sessions with emails and images
+      const sessions = await db
+        .select({
+          id: sessionsTable.id,
+          userName: sessionsTable.userName,
+          userEmail: sessionsTable.userEmail,
+          extractedData: sessionsTable.extractedData,
+          createdAt: sessionsTable.createdAt,
+          chatStartedAt: sessionsTable.chatStartedAt,
+          finalButtonClickedAt: sessionsTable.finalButtonClickedAt,
+          imageUrl: sessionsTable.imageUrl,
+        })
+        .from(sessionsTable)
+        .where(and(
+          isNotNull(sessionsTable.userEmail),
+          isNotNull(sessionsTable.imageUrl)
+        ))
+        .orderBy(desc(sessionsTable.createdAt));
+      
+      console.log(`Found ${sessions.length} sessions with images to export`);
+      
+      // Create a new workbook
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Conversazioni con Immagini');
+      
+      // Define columns
+      worksheet.columns = [
+        { header: 'ID Sessione', key: 'id', width: 15 },
+        { header: 'Nome', key: 'userName', width: 20 },
+        { header: 'Email', key: 'userEmail', width: 30 },
+        { header: 'Data Creazione', key: 'createdAt', width: 20 },
+        { header: 'Data Chat Iniziata', key: 'chatStartedAt', width: 20 },
+        { header: 'Data Finale', key: 'finalButtonClickedAt', width: 20 },
+        { header: 'Età', key: 'age', width: 10 },
+        { header: 'Genere', key: 'gender', width: 15 },
+        { header: 'Tipo di Pelle', key: 'skinType', width: 20 },
+        { header: 'Problemi', key: 'problems', width: 30 },
+        { header: 'Stile di Vita', key: 'lifestyle', width: 30 },
+        { header: 'Ingredienti', key: 'ingredients', width: 40 },
+        { header: 'Immagine', key: 'image', width: 30 },
+      ];
+      
+      // Style the header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE7E7E7' }
+      };
+      
+      // Process each session
+      for (let i = 0; i < sessions.length; i++) {
+        const session = sessions[i];
+        console.log(`Processing session ${i + 1}/${sessions.length}: ${session.id}`);
+        
+        // Parse extracted data
+        const extractedData = session.extractedData && typeof session.extractedData === 'object' 
+          ? session.extractedData as any 
+          : {};
+        
+        // Add row data
+        const row = worksheet.addRow({
+          id: session.id,
+          userName: session.userName || '',
+          userEmail: session.userEmail || '',
+          createdAt: session.createdAt ? new Date(session.createdAt).toLocaleString('it-IT') : '',
+          chatStartedAt: session.chatStartedAt ? new Date(session.chatStartedAt).toLocaleString('it-IT') : '',
+          finalButtonClickedAt: session.finalButtonClickedAt ? new Date(session.finalButtonClickedAt).toLocaleString('it-IT') : '',
+          age: extractedData.age || '',
+          gender: extractedData.gender || '',
+          skinType: extractedData.skinType || '',
+          problems: extractedData.problems || '',
+          lifestyle: extractedData.lifestyle || '',
+          ingredients: extractedData.ingredients?.join(', ') || '',
+          image: 'Immagine caricata'
+        });
+        
+        // Try to download and embed the image
+        if (session.imageUrl) {
+          try {
+            let imageUrl = session.imageUrl;
+            
+            // Convert internal path to full URL if needed
+            if (imageUrl.startsWith('/objects/')) {
+              imageUrl = `http://localhost:${process.env.PORT || 5000}${imageUrl}`;
+            }
+            
+            console.log(`Downloading image from: ${imageUrl}`);
+            
+            // Download the image
+            const response = await fetch(imageUrl);
+            if (response.ok) {
+              const buffer = await response.buffer();
+              
+              // Add image to workbook
+              const imageId = workbook.addImage({
+                buffer: buffer,
+                extension: 'png', // Assume PNG, Excel will handle conversion
+              });
+              
+              // Add image to cell
+              worksheet.addImage(imageId, {
+                tl: { col: 12, row: row.number - 1 }, // Column M (index 12)
+                ext: { width: 150, height: 150 } // Size in pixels
+              });
+              
+              // Set row height to accommodate image
+              worksheet.getRow(row.number).height = 120; // Height in points
+              
+              console.log(`✅ Image embedded for session ${session.id}`);
+            } else {
+              console.log(`❌ Failed to download image for session ${session.id}: ${response.status}`);
+              worksheet.getCell(row.number, 13).value = 'Errore download immagine';
+            }
+          } catch (error) {
+            console.error(`Error processing image for session ${session.id}:`, error);
+            worksheet.getCell(row.number, 13).value = 'Errore immagine';
+          }
+        }
+      }
+      
+      // Auto-fit columns (except image column)
+      worksheet.columns.forEach((column, index) => {
+        if (index < 12) { // Skip image column
+          let maxLength = 0;
+          column.eachCell({ includeEmpty: true }, (cell) => {
+            const columnLength = cell.value ? cell.value.toString().length : 10;
+            if (columnLength > maxLength) {
+              maxLength = columnLength;
+            }
+          });
+          column.width = maxLength < 10 ? 10 : maxLength + 2;
+        }
+      });
+      
+      // Generate the Excel file
+      const buffer = await workbook.xlsx.writeBuffer();
+      
+      // Set response headers
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename="conversazioni_con_immagini.xlsx"');
+      res.setHeader('Content-Length', buffer.length.toString());
+      
+      // Send the file
+      res.send(Buffer.from(buffer));
+      
+      console.log('✅ Excel export completed successfully');
+      
+    } catch (error) {
+      console.error('Error exporting Excel with images:', error);
+      res.status(500).json({ error: 'Failed to export Excel file' });
+    }
+  });
+
   // Auto-sync integrations endpoint
   app.post("/api/admin/auto-sync-integrations", async (req, res) => {
     try {

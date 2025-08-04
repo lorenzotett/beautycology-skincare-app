@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Excel con Immagini - AI DermaSense Admin</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #2980b9;
+        }
+        .info-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .info-box li {
+            margin: 5px 0;
+        }
+        .btn-container {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #34495e;
+        }
+        .btn-secondary:hover {
+            background: #bdc3c7;
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #f39c12;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .warning-box h4 {
+            margin-top: 0;
+            color: #e67e22;
+        }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Export Excel con Immagini</h1>
+        <p class="subtitle">Esporta tutte le conversazioni con immagini in un file Excel</p>
+        
+        <div class="info-box">
+            <h3>ℹ️ Informazioni sull'Export</h3>
+            <p>Questo strumento esporterà:</p>
+            <ul>
+                <li>✅ Tutte le conversazioni che hanno un'email valida</li>
+                <li>✅ Solo le conversazioni che includono immagini</li>
+                <li>✅ Le immagini saranno <strong>incorporate direttamente</strong> nel file Excel</li>
+                <li>✅ Dati completi: nome, email, età, tipo di pelle, problemi, ingredienti</li>
+            </ul>
+            <p><strong>Formato:</strong> Microsoft Excel (.xlsx) con immagini visualizzabili nelle celle</p>
+        </div>
+
+        <div class="btn-container">
+            <button id="exportBtn" class="btn btn-primary" onclick="exportExcel()">
+                <span>📥</span> Scarica Excel con Immagini
+            </button>
+            <a href="/admin-dashboard.html" class="btn btn-secondary">
+                <span>←</span> Torna alla Dashboard
+            </a>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="warning-box">
+            <h4>⚠️ Note Importanti</h4>
+            <ul>
+                <li>Il download potrebbe richiedere alcuni minuti se ci sono molte immagini</li>
+                <li>Il file Excel potrebbe essere grande (diverse decine di MB) a causa delle immagini incorporate</li>
+                <li>Assicurati di avere spazio sufficiente sul dispositivo</li>
+                <li>Le immagini saranno ridimensionate a 150x150 pixel per ottimizzare le dimensioni del file</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function exportExcel() {
+            const btn = document.getElementById('exportBtn');
+            const status = document.getElementById('status');
+            
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Download in corso...';
+            
+            status.className = 'status loading';
+            status.innerHTML = '⏳ Generazione del file Excel in corso... Questo potrebbe richiedere alcuni minuti.';
+            status.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/admin/sessions/export-excel-images', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Errore durante l\'export: ' + response.statusText);
+                }
+                
+                // Get the blob
+                const blob = await response.blob();
+                
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'conversazioni_con_immagini.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                // Show success
+                status.className = 'status success';
+                status.innerHTML = '✅ File Excel scaricato con successo! Controlla la cartella Downloads.';
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                status.className = 'status error';
+                status.innerHTML = '❌ Errore durante l\'export: ' + error.message;
+            } finally {
+                // Re-enable button
+                btn.disabled = false;
+                btn.innerHTML = '<span>📥</span> Scarica Excel con Immagini';
+            }
+        }
+        
+        // Auto-hide status after 10 seconds
+        setInterval(() => {
+            const status = document.getElementById('status');
+            if (status.style.display === 'block' && !status.classList.contains('loading')) {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 10000);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
