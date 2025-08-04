@@ -601,13 +601,47 @@ export class GoogleSheetsService {
       if (message.metadata && (message.metadata as any).hasImage) {
         const metadata = message.metadata as any;
         
-        // If we already have Base64, return it
+        // If we already have Base64, convert to public URL and return IMAGE formula
         if (metadata.imageBase64) {
           console.log(`🖼️ Found existing Base64 image: ${metadata.imageOriginalName || 'unknown'}`);
-          return metadata.imageBase64;
+          
+          try {
+            // Convert Base64 to public URL
+            const cleanBase64 = metadata.imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+            const imageBuffer = Buffer.from(cleanBase64, 'base64');
+            
+            // Save to uploads directory
+            const fileName = `sheets-${message.sessionId}-${Date.now()}.jpg`;
+            const tempPath = path.join(process.cwd(), 'uploads', fileName);
+            
+            // Ensure uploads directory exists
+            try {
+              await fs.mkdir(path.join(process.cwd(), 'uploads'), { recursive: true });
+            } catch (error) {
+              // Directory already exists
+            }
+            
+            await fs.writeFile(tempPath, imageBuffer);
+            
+            // Create public URL
+            const domain = process.env.REPL_SLUG && process.env.REPL_OWNER 
+              ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+              : `http://localhost:5000`;
+              
+            const publicUrl = `${domain}/uploads/${fileName}`;
+            
+            // Return IMAGE formula for Google Sheets
+            const imageFormula = `=IMAGE("${publicUrl}",4,80,80)`;
+            console.log(`✅ Converted image to Google Sheets formula: ${imageFormula}`);
+            return imageFormula;
+            
+          } catch (error) {
+            console.error(`❌ Failed to convert Base64 to public URL:`, error);
+            return '';
+          }
         }
         
-        // Try to read image file and convert to Base64
+        // Try to read image file and convert to public URL
         if (metadata.imagePath) {
           try {
             const fullPath = path.isAbsolute(metadata.imagePath) 
@@ -615,11 +649,25 @@ export class GoogleSheetsService {
               : path.join(process.cwd(), metadata.imagePath);
             
             const imageBuffer = await fs.readFile(fullPath);
-            const mimeType = this.getMimeType(metadata.imageOriginalName || metadata.imagePath);
-            const base64Image = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
             
-            console.log(`✅ Converted image to Base64: ${metadata.imageOriginalName || path.basename(fullPath)}`);
-            return base64Image;
+            // Save to uploads directory with unique name
+            const fileName = `sheets-${message.sessionId}-${Date.now()}.jpg`;
+            const tempPath = path.join(process.cwd(), 'uploads', fileName);
+            
+            await fs.writeFile(tempPath, imageBuffer);
+            
+            // Create public URL
+            const domain = process.env.REPL_SLUG && process.env.REPL_OWNER 
+              ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+              : `http://localhost:5000`;
+              
+            const publicUrl = `${domain}/uploads/${fileName}`;
+            
+            // Return IMAGE formula for Google Sheets
+            const imageFormula = `=IMAGE("${publicUrl}",4,80,80)`;
+            console.log(`✅ Converted file to Google Sheets formula: ${imageFormula}`);
+            return imageFormula;
+            
           } catch (error) {
             console.warn(`❌ Failed to read image file: ${metadata.imagePath}`, error);
           }
@@ -634,18 +682,32 @@ export class GoogleSheetsService {
         
         try {
           const imageBuffer = await fs.readFile(imagePath);
-          const mimeType = this.getMimeType(fileName);
-          const base64Image = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
           
-          console.log(`✅ Converted uploaded image to Base64: ${fileName}`);
-          return base64Image;
+          // Create new filename for public access
+          const newFileName = `sheets-${message.sessionId}-${Date.now()}.jpg`;
+          const newPath = path.join(process.cwd(), 'uploads', newFileName);
+          
+          await fs.writeFile(newPath, imageBuffer);
+          
+          // Create public URL
+          const domain = process.env.REPL_SLUG && process.env.REPL_OWNER 
+            ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+            : `http://localhost:5000`;
+            
+          const publicUrl = `${domain}/uploads/${newFileName}`;
+          
+          // Return IMAGE formula for Google Sheets
+          const imageFormula = `=IMAGE("${publicUrl}",4,80,80)`;
+          console.log(`✅ Converted uploaded image to Google Sheets formula: ${imageFormula}`);
+          return imageFormula;
+          
         } catch (error) {
           console.warn(`❌ Failed to read uploaded image: ${fileName}`, error);
         }
       }
     }
     
-    console.log(`🖼️ No images found for Base64 conversion`);
+    console.log(`🖼️ No images found for conversion`);
     return '';
   }
 
