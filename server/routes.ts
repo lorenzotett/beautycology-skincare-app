@@ -18,6 +18,9 @@ import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { ragService } from './services/rag-simple';
+import { ragService as vectorRagService } from './services/rag';
+import { autoLearningSystem } from './services/auto-learning-system';
 
 // Service management
 const MAX_SESSIONS_IN_MEMORY = 500; // Ridotto per evitare overflow memoria
@@ -27,17 +30,17 @@ const geminiServices = new Map<string, GeminiService>();
 setInterval(() => {
   const memUsage = process.memoryUsage();
   const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
-  
+
   if (memUsageMB > 350) { // Reduced threshold from 400MB to 350MB
     console.warn(`⚠️ High memory usage: ${memUsageMB}MB, active sessions: ${geminiServices.size}`);
-    
+
     // More aggressive cleanup
     if (geminiServices.size > 50) { // If more than 50 sessions
       const sessions = Array.from(geminiServices.keys());
       const toDelete = sessions.slice(0, Math.floor(sessions.length / 2)); // Remove half
       toDelete.forEach(sessionId => geminiServices.delete(sessionId));
       console.log(`🧹 Emergency cleanup: removed ${toDelete.length} sessions`);
-      
+
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
@@ -71,7 +74,7 @@ setInterval(async () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     });
-    
+
     if (response.ok) {
       const result = await response.json();
       if (result.fixedImages > 0) {
@@ -91,15 +94,15 @@ setInterval(async () => {
     const failedSyncSessions = allSessions.filter(session => 
       !session.googleSheetsSynced && session.userEmail
     ).slice(0, 3); // Process only 3 at a time for backup
-    
+
     if (failedSyncSessions.length > 0) {
       console.log(`🔄 Backup sync: Found ${failedSyncSessions.length} failed real-time sync sessions`);
-      
+
       const response = await fetch('http://localhost:5000/api/admin/auto-sync-integrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         if (result.synced > 0) {
@@ -144,7 +147,7 @@ const imageUpload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
-  
+
   // Serve batch upload page for image replacement
   app.get('/admin-batch-upload', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'admin-batch-upload.html'));
@@ -161,32 +164,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // OPTIMIZATION: Only process recent sessions to avoid loading all messages
       const recentSessions = await storage.getAllChatSessions();
       const cutoffTime = new Date(Date.now() - 12 * 60 * 60 * 1000); // Only last 12 hours
-      
+
       // Filter to recent sessions only
       const sessionsToCheck = recentSessions
         .filter(s => new Date(s.createdAt) > cutoffTime)
         .slice(0, 10); // Limit to 10 most recent sessions
-      
+
       let fixed = 0;
       let realImageRecovered = 0;
       let totalChecked = 0;
-      
+
       // Process each session's messages separately to avoid memory overload
       for (const session of sessionsToCheck) {
         const messages = await storage.getChatMessages(session.sessionId);
-        
+
         const imagesWithoutBase64 = messages.filter(msg => 
           msg.metadata && 
           (msg.metadata as any).hasImage &&
           !(msg.metadata as any).imageBase64
         ).slice(0, 5); // Max 5 images per session
-        
+
         totalChecked += imagesWithoutBase64.length;
-        
+
         for (const message of imagesWithoutBase64) {
         const metadata = message.metadata as any;
         let imageBase64 = null;
-        
+
         // Try to recover the real image first
         if (metadata.imagePath && fs.existsSync(metadata.imagePath)) {
           try {
@@ -199,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.warn(`Failed to recover real image for message ${message.id}: ${error}`);
           }
         }
-        
+
         // If real image recovery failed, create SVG placeholder
         if (!imageBase64) {
           const svgContent = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
@@ -211,19 +214,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           </svg>`;
           imageBase64 = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`;
         }
-        
+
         const updatedMetadata = {
           ...message.metadata,
           imageBase64: imageBase64,
           isPlaceholder: realImageRecovered === 0 // Only mark as placeholder if no real image was recovered
         };
-        
+
         await storage.updateChatMessage(message.id, { metadata: updatedMetadata });
         fixed++;
         console.log(`Auto-fixed missing image for message ${message.id}`);
         }
       }
-      
+
       res.json({ 
         success: true, 
         fixedImages: fixed,
@@ -260,14 +263,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const imageBuffer = fs.readFileSync(file.path);
             const mimeType = file.mimetype || 'image/jpeg';
             const imageBase64 = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
-            
+
             const updatedMetadata = {
               ...message.metadata,
               imageBase64: imageBase64,
               isPlaceholder: false,
               batchReplacedAt: new Date().toISOString()
             };
-            
+
             await storage.updateChatMessage(message.id, { metadata: updatedMetadata });
             results.push({ 
               filename: file.originalname, 
@@ -312,7 +315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tracking/view", async (req, res) => {
     try {
       const { sessionId, fingerprint } = req.body;
-      
+
       if (!sessionId) {
         return res.status(400).json({ error: "Session ID is required" });
       }
@@ -356,7 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tracking/start", async (req, res) => {
     try {
       const { sessionId } = req.body;
-      
+
       if (!sessionId) {
         return res.status(400).json({ error: "Session ID is required" });
       }
@@ -384,7 +387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat/start", async (req, res) => {
     try {
       const { userName, fingerprint } = req.body;
-      
+
       if (!userName || typeof userName !== "string") {
         return res.status(400).json({ error: "User name is required" });
       }
@@ -393,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = fingerprint && typeof fingerprint === "string" 
         ? `fp_${fingerprint.substring(0, 16)}` 
         : `user_${Date.now()}`;
-      
+
       const session = await storage.createChatSession({
         userId,
         sessionId,
@@ -436,7 +439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { sessionId, message } = req.body;
       const imageFile = req.file;
-      
+
       if (!sessionId || !imageFile) {
         return res.status(400).json({ error: "Session ID and image are required" });
       }
@@ -463,7 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageBase64 = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
         console.log(`✅ Image converted to base64 IMMEDIATELY, size: ${Math.round(imageBase64.length / 1024)}KB`);
         console.log(`✅ File exists at conversion: ${fs.existsSync(imageFile.path)}`);
-        
+
         // Verify base64 is valid image data (not SVG placeholder)
         if (imageBase64.includes('data:image/svg')) {
           console.error(`❌ WARNING: Base64 contains SVG, not real image`);
@@ -472,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error(`❌ CRITICAL ERROR: Failed to convert image to base64: ${error}`);
         console.error(`❌ File path: ${imageFile.path}`);
         console.error(`❌ File exists: ${fs.existsSync(imageFile.path)}`);
-        
+
         // Create informative placeholder that shows the problem
         const svgContent = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
           <rect width="200" height="200" fill="#ffebee" stroke="#f44336" stroke-width="2"/>
@@ -487,7 +490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userContent = message ? `${message} [Immagine caricata: ${imageFile.originalname}]` : `[Immagine caricata: ${imageFile.originalname}]`;
-      
+
       // CRITICAL: Always save imageBase64 in metadata
       await storage.addChatMessage({
         sessionId,
@@ -507,16 +510,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`✅ Message saved with imageBase64: ${imageBase64 ? 'YES' : 'NO'}`);
 
       const skinAnalysis = new SkinAnalysisService();
-      
+
       // Use base64 image for analysis instead of file path to avoid file deletion issues
       let analysisResult;
       let analysisRetries = 0;
       const maxRetries = 1; // Ridotto a 1 solo retry per evitare attese eccessive
-      
+
       while (analysisRetries <= maxRetries) {
         try {
           console.log(`🔍 Tentativo di analisi ${analysisRetries + 1}/${maxRetries + 1}...`);
-          
+
           if (imageBase64 && !imageBase64.includes('data:image/svg')) {
             // Use the base64 image we already have
             analysisResult = await skinAnalysis.analyzeImageFromBase64(imageBase64);
@@ -532,13 +535,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (analysisError) {
           analysisRetries++;
           console.error(`❌ Tentativo ${analysisRetries} fallito:`, analysisError);
-          
+
           if (analysisRetries > maxRetries) {
             console.error('❌ ERRORE CRITICO: Tutti i tentativi di analisi sono falliti');
-            
+
             // Check specific error types
             const errorMessage = analysisError instanceof Error ? analysisError.message : String(analysisError);
-            
+
             if (errorMessage.includes('Failed to parse skin analysis JSON')) {
               console.error('❌ Errore nel parsing JSON della risposta AI');
             } else if (errorMessage.includes('timeout')) {
@@ -546,7 +549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } else if (errorMessage.includes('Image file not found')) {
               console.error('❌ File immagine non trovato');
             }
-            
+
             // Provide realistic fallback analysis values
             analysisResult = {
               rossori: 25,
@@ -561,7 +564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               elasticita: 20,
               texture_uniforme: 35
             };
-            
+
             console.log('⚡ FALLBACK ATTIVATO: Utilizzando analisi predefinita realistica per continuare');
             break;
           } else {
@@ -574,7 +577,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const analysisMessage = message ? 
         `${message}\n\nAnalisi AI della pelle: ${JSON.stringify(analysisResult)}` : 
         `Analisi AI della pelle: ${JSON.stringify(analysisResult)}`;
-      
+
       let response;
       try {
         console.log('🤖 Sending analysis to AI service...');
@@ -582,7 +585,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('AI service timeout')), 50000)
         );
-        
+
         response = await Promise.race([
           geminiService.sendMessage(analysisMessage),
           timeoutPromise
@@ -590,7 +593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('✅ AI response received successfully');
       } catch (aiError) {
         console.error('AI service error:', aiError);
-        
+
         // Fallback response in caso di errore AI
         response = {
           content: "Analisi dell'immagine completata. Ti fornirò una consulenza personalizzata per la tua pelle.",
@@ -611,7 +614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       console.log('📤 Sending response to client...');
-      
+
       // Ensure response is sent before any potential connection issues
       try {
         res.json({
@@ -626,19 +629,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("❌ ERRORE CRITICO nell'endpoint message-with-image:", error);
-      
+
       // Log dettagliato per debug
       if (error instanceof Error) {
         console.error("❌ Tipo errore:", error.name);
         console.error("❌ Messaggio:", error.message);
         console.error("❌ Stack:", error.stack);
       }
-      
+
       if (!res.headersSent) {
         // Provide more specific error messages
         let errorMessage = "Si è verificato un errore durante l'analisi dell'immagine";
         let statusCode = 500;
-        
+
         if (error instanceof Error) {
           if (error.message.includes('timeout')) {
             errorMessage = "L'analisi dell'immagine sta richiedendo troppo tempo. Riprova con un'altra foto.";
@@ -653,7 +656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             statusCode = 404;
           }
         }
-        
+
         console.error(`❌ Invio risposta errore al client: ${statusCode} - ${errorMessage}`);
         res.status(statusCode).json({ 
           error: errorMessage,
@@ -667,7 +670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat/message", async (req, res) => {
     try {
       const { sessionId, message } = req.body;
-      
+
       if (!sessionId || !message) {
         return res.status(400).json({ error: "Session ID and message are required" });
       }
@@ -716,7 +719,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const emailMatch = message.match(emailRegex);
       if (emailMatch && session) {
         const userEmail = emailMatch[1];
-        
+
         // Update session with email
         await storage.updateChatSession(sessionId, {
           userEmail: userEmail
@@ -734,14 +737,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // BACKGROUND SYNC: Trigger synchronization with AI extraction when email is detected
         console.log(`📧 EMAIL DETECTED: ${userEmail} - Triggering background sync to Google Sheets`);
-        
+
         // Use integration config for background sync with AI extraction  
         if (integrationConfig.googleSheets.enabled) {
           // Run Google Sheets sync in background - don't wait for it
           (async () => {
             try {
               const sheets = new GoogleSheetsService(integrationConfig.googleSheets.credentials, integrationConfig.googleSheets.spreadsheetId!);
-              
+
               // Get all messages for the session
               const allMessages = await storage.getChatMessages(sessionId);
               console.log(`📨 Retrieved ${allMessages.length} messages for background sync`);
@@ -770,7 +773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 allMessages,
                 extractedData
               );
-              
+
               if (success) {
                 await storage.updateChatSession(sessionId, { googleSheetsSynced: true });
                 console.log(`✅ BACKGROUND SYNC SUCCESS: ${session.userName} (${userEmail}) synced to Google Sheets`);
@@ -791,14 +794,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/chat/:sessionId/history", async (req, res) => {
     try {
       const { sessionId } = req.params;
-      
+
       const session = await storage.getChatSession(sessionId);
       if (!session) {
         return res.status(404).json({ error: "Session not found" });
       }
 
       const messages = await storage.getChatMessages(sessionId);
-      
+
       res.json({
         session,
         messages,
@@ -813,7 +816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat/:sessionId/final-button-clicked", async (req, res) => {
     try {
       const { sessionId } = req.params;
-      
+
       const session = await storage.getChatSession(sessionId);
       if (!session) {
         return res.status(404).json({ error: "Session not found" });
@@ -821,7 +824,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate that the chat is complete before allowing tracking
       const messages = await storage.getChatMessages(sessionId);
-      
+
       // Check if chat has enough messages (minimum 5 for a complete consultation)
       if (messages.length < 5) {
         console.log(`Chat ${sessionId} has only ${messages.length} messages - not complete enough for cream access`);
@@ -854,7 +857,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat/:sessionId/whatsapp-button-clicked", async (req, res) => {
     try {
       const { sessionId } = req.params;
-      
+
       const session = await storage.getChatSession(sessionId);
       if (!session) {
         return res.status(404).json({ error: "Session not found" });
@@ -878,7 +881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let sessionsCache: any[] | null = null;
   let cacheTimestamp = 0;
   const CACHE_DURATION = 1800000; // 30 minutes cache for MAXIMUM speed
-  
+
   // Pre-computed stats cache
   interface StatsCache {
     [key: string]: {
@@ -888,11 +891,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   let statsCache: StatsCache = {};
   const STATS_CACHE_DURATION = 300000; // 5 minutes for stats
-  
+
   // Session details cache
   let sessionDetailsCache = new Map<string, { data: any; timestamp: number }>();
   const SESSION_DETAILS_CACHE_DURATION = 600000; // 10 minutes
-  
+
   const invalidateCache = () => {
     sessionsCache = null;
     cacheTimestamp = 0;
@@ -900,31 +903,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     sessionDetailsCache.clear();
     console.log(`🗑️  All caches invalidated`);
   };
-  
+
   const getCachedSessions = async () => {
     const now = Date.now();
     if (sessionsCache && (now - cacheTimestamp) < CACHE_DURATION) {
       console.log(`⚡ INSTANT Cache hit - ${sessionsCache.length} sessions (${Math.round((now - cacheTimestamp)/1000)}s old)`);
       return sessionsCache;
     }
-    
+
     const startTime = Date.now();
     console.log(`🔄 Loading sessions from database...`);
     sessionsCache = await storage.getAllChatSessions();
     cacheTimestamp = now;
     const loadTime = Date.now() - startTime;
     console.log(`💾 Cached ${sessionsCache.length} sessions in ${loadTime}ms`);
-    
+
     // Pre-compute all stats for common periods after loading sessions
     precomputeStats();
-    
+
     return sessionsCache;
   };
-  
+
   // Pre-compute stats for common time periods
   const precomputeStats = async () => {
     if (!sessionsCache) return;
-    
+
     console.log('🔄 Pre-computing stats for common periods...');
     const periods = [
       { key: 'all', filter: null },
@@ -933,20 +936,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       { key: 'week', filter: { period: 'Ultima settimana' } },
       { key: 'month', filter: { period: 'Ultimo mese' } }
     ];
-    
+
     for (const { key, filter } of periods) {
       const stats = await computeStatsForPeriod(filter);
       statsCache[key] = { data: stats, timestamp: Date.now() };
     }
-    
+
     console.log('✅ Pre-computed stats for all common periods');
   };
-  
+
   // Compute stats for a specific period
   const computeStatsForPeriod = async (filter: any) => {
     const allSessions = sessionsCache || [];
     let filteredSessions = allSessions;
-    
+
     // Apply search filter first if present
     if (filter?.search) {
       const searchTerm = filter.search.toLowerCase();
@@ -959,10 +962,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       });
     }
-    
+
     // Apply date filters
     let dateFilter = null;
-    
+
     // Handle custom date range
     if (filter?.from || filter?.to) {
       dateFilter = {};
@@ -978,7 +981,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Handle predefined periods
     else if (filter?.period) {
       const now = new Date();
-      
+
       switch (filter.period) {
         case 'Oggi':
           const today = new Date();
@@ -990,7 +993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           yesterday.setDate(yesterday.getDate() - 1);
           yesterday.setHours(0, 0, 0, 0);
           const yesterdayEnd = new Date();
-          yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+          yesterdayEnd.setDate(yesterday.getDate() - 1);
           yesterdayEnd.setHours(23, 59, 59, 999);
           dateFilter = { from: yesterday, to: yesterdayEnd };
           break;
@@ -1006,7 +1009,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
       }
     }
-    
+
     // Apply date filter if present
     if (dateFilter) {
       console.log('📅 Stats: Applying date filter', dateFilter);
@@ -1019,30 +1022,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       console.log(`📊 Stats: Filtered to ${filteredSessions.length}/${allSessions.length} sessions`);
     }
-    
+
     // Fast computation using the same logic
     const viewOnlySessions = filteredSessions.filter((s: any) => s.userName === "View Only");
     const realSessions = filteredSessions.filter((s: any) => s.userName !== "View Only");
-    
+
     let viewChatCount = 0, startChatCount = 0, finalButtonClicks = 0, whatsappButtonClicks = 0;
     let chatCompletate = 0, totalChatDuration = 0, completedChatsWithDuration = 0;
-    
+
     for (const session of realSessions) {
       if (session.firstViewedAt) viewChatCount++;
       if (session.chatStartedAt) startChatCount++;
       if (session.finalButtonClicked) finalButtonClicks++;
       if (session.whatsappButtonClicked) whatsappButtonClicks++;
-      
+
       const hasSignificantActivity = session.userEmail || session.finalButtonClicked || session.whatsappButtonClicked;
       const likelyCompleted = session.googleSheetsSynced || hasSignificantActivity;
-      
+
       if (likelyCompleted) {
         chatCompletate++;
-        
+
         if (session.chatStartedAt) {
           const startTime = new Date(session.chatStartedAt);
           let endTime = null;
-          
+
           if (session.finalButtonClickedAt) {
             endTime = new Date(session.finalButtonClickedAt);
           } else if (session.userEmail && session.updatedAt) {
@@ -1052,7 +1055,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               endTime = potentialEndTime;
             }
           }
-          
+
           if (endTime) {
             const durationMs = endTime.getTime() - startTime.getTime();
             if (durationMs > 60000 && durationMs < 3600000) {
@@ -1063,11 +1066,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
     }
-    
+
     const averageChatDurationMinutes = completedChatsWithDuration > 0 
       ? Math.round(totalChatDuration / completedChatsWithDuration / 60000) 
       : 0;
-    
+
     return {
       totalSessions: realSessions.length,
       viewChatCount,
@@ -1088,7 +1091,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       totalMessages: 0
     };
   };
-  
+
   // PRELOAD cache at startup for instant first load
   getCachedSessions().then(() => {
     console.log(`🚀 PRELOADED sessions cache at startup for instant performance`);
@@ -1099,7 +1102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sessionCount = await storage.getAllChatSessions().then(sessions => sessions.length);
       const memUsage = process.memoryUsage();
-      
+
       res.json({
         status: "operational",
         timestamp: new Date().toISOString(),
@@ -1129,7 +1132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/stats", async (req, res) => {
     try {
       const { from, to, period, search } = req.query;
-      
+
       // Skip cache if search is applied - we need filtered results
       if (!search) {
         // Check pre-computed cache first for common periods
@@ -1141,7 +1144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             case 'Ultima settimana': cacheKey = 'week'; break;
             case 'Ultimo mese': cacheKey = 'month'; break;
           }
-          
+
           if (cacheKey && statsCache[cacheKey]) {
             const cached = statsCache[cacheKey];
             if (Date.now() - cached.timestamp < STATS_CACHE_DURATION) {
@@ -1153,7 +1156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         }
-        
+
         // Check for "all time" cache
         if (!from && !to && !period) {
           if (statsCache['all']) {
@@ -1168,15 +1171,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
-      
+
       // If not in cache or custom date range, compute it
       console.log('🔄 Computing stats for custom period...');
       await getCachedSessions(); // Ensure sessions are loaded
-      
+
       const stats = await computeStatsForPeriod(
         from || to ? { from, to, search } : period ? { period, search } : { search }
       );
-      
+
       // Update cache if it's a common period without search
       if (!search && !from && !to && period) {
         let cacheKey = '';
@@ -1192,7 +1195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (!search && !from && !to && !period) {
         statsCache['all'] = { data: stats, timestamp: Date.now() };
       }
-      
+
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Cache-Control', 'public, max-age=60');
       res.setHeader('X-Cache', 'MISS');
@@ -1209,14 +1212,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = parseInt(req.query.limit as string) || 25;
       const search = req.query.search as string || "";
       const { from, to, period } = req.query;
-      
+
       // OPTIMIZATION 5: Fast date filter calculation
       let dateFilter = null;
       if (from || to) {
         dateFilter = { from, to };
       } else if (period) {
         const now = new Date();
-        
+
         switch (period) {
           case 'Oggi':
             const today = new Date();
@@ -1228,7 +1231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             yesterday.setDate(yesterday.getDate() - 1);
             yesterday.setHours(0, 0, 0, 0);
             const yesterdayEnd = new Date();
-            yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+            yesterdayEnd.setDate(yesterday.getDate() - 1);
             yesterdayEnd.setHours(23, 59, 59, 999);
             dateFilter = { from: yesterday.toISOString(), to: yesterdayEnd.toISOString() };
             break;
@@ -1244,27 +1247,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
         }
       }
-      
+
       const allSessions = await getCachedSessions();
       // Exclude "View Only" sessions from the list
       let sessions = allSessions.filter((session: any) => session.userName !== "View Only");
-      
+
       // OPTIMIZATION 6: Apply date filter first to reduce dataset
       if (dateFilter) {
         const beforeFilter = sessions.length;
         sessions = sessions.filter((session: any) => {
           if (!session.createdAt) return false;
-          
+
           const sessionDate = new Date(session.createdAt);
           const fromDate = dateFilter.from ? new Date(dateFilter.from as string) : null;
           const toDate = dateFilter.to ? new Date(dateFilter.to as string) : null;
-          
+
           // If from date is specified, session must be after or equal to from date
           if (fromDate && sessionDate < fromDate) return false;
-          
+
           // If to date is specified, session must be before or equal to to date
           if (toDate && sessionDate > toDate) return false;
-          
+
           return true;
         });
         console.log(`Sessions API: Date filter applied - ${sessions.length}/${beforeFilter} sessions match date range`);
@@ -1272,7 +1275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Date filtering already applied above, use the filtered sessions
       let filteredSessions = sessions;
-      
+
       // Then filter by search term if provided
       if (search) {
         filteredSessions = filteredSessions.filter((session: any) => 
@@ -1280,15 +1283,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           session.sessionId.toLowerCase().includes(search.toLowerCase())
         );
       }
-      
+
       // Sort sessions by creation date (newest first)
       filteredSessions.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
+
       // Calculate pagination
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
       const paginatedSessions = filteredSessions.slice(startIndex, endIndex);
-      
+
       // OPTIMIZATION 7: Skip expensive message count calculation - use estimates
       const sessionsWithBasicInfo = paginatedSessions.map((session) => {
         // Estimate message count based on session activity instead of loading all messages
@@ -1296,7 +1299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (session.chatStartedAt) estimatedMessageCount += 5; // Basic conversation
         if (session.userEmail) estimatedMessageCount += 10; // Completed questionnaire
         if (session.finalButtonClicked || session.whatsappButtonClicked) estimatedMessageCount += 15; // Full conversation
-        
+
         return {
           ...session,
           messageCount: estimatedMessageCount, // Fast estimate instead of expensive DB query
@@ -1323,7 +1326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/sessions/:sessionId", async (req, res) => {
     try {
       const { sessionId } = req.params;
-      
+
       // Check cache first
       const cached = sessionDetailsCache.get(sessionId);
       if (cached && Date.now() - cached.timestamp < SESSION_DETAILS_CACHE_DURATION) {
@@ -1331,23 +1334,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.setHeader('X-Cache', 'HIT');
         return res.json(cached.data);
       }
-      
+
       const session = await storage.getChatSession(sessionId);
-      
+
       if (!session) {
         return res.status(404).json({ error: "Session not found" });
       }
 
       const messages = await storage.getChatMessages(sessionId);
-      
+
       const data = {
         ...session,
         messages
       };
-      
+
       // Cache the result
       sessionDetailsCache.set(sessionId, { data, timestamp: Date.now() });
-      
+
       res.setHeader('X-Cache', 'MISS');
       res.json(data);
     } catch (error) {
@@ -1359,14 +1362,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/sessions/:sessionId", async (req, res) => {
     try {
       const { sessionId } = req.params;
-      
+
       const session = await storage.getChatSession(sessionId);
       if (!session) {
         return res.status(404).json({ error: "Session not found" });
       }
 
       await storage.deleteChatSession(sessionId);
-      
+
       res.json({ success: true });
     } catch (error) {
       console.error("Error deleting session:", error);
@@ -1385,28 +1388,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
       console.log('Service account email:', credentials.client_email);
       console.log('Sheet ID:', process.env.GOOGLE_SHEETS_ID);
-      
+
       const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
       console.log('GoogleSheetsService created');
-      
+
       // Test basic access to spreadsheet
       const spreadsheetInfo = await sheets.sheets.spreadsheets.get({
         spreadsheetId: process.env.GOOGLE_SHEETS_ID
       });
       console.log('Spreadsheet title:', spreadsheetInfo.data.properties?.title);
       console.log('Available sheets:', spreadsheetInfo.data.sheets?.map(s => s.properties?.title));
-      
+
       // Get the first sheet name
       const firstSheetName = spreadsheetInfo.data.sheets?.[0]?.properties?.title || 'Sheet1';
       console.log('Using sheet name:', firstSheetName);
-      
+
       // Test if we can read the sheet
       const readTest = await sheets.sheets.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SHEETS_ID,
         range: `${firstSheetName}!A1:A1`
       });
       console.log('Read test successful');
-      
+
       res.json({ 
         success: true, 
         serviceAccount: credentials.client_email,
@@ -1415,7 +1418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         availableSheets: spreadsheetInfo.data.sheets?.map(s => s.properties?.title),
         firstSheetName: firstSheetName
       });
-      
+
     } catch (error) {
       console.error('Google Sheets test error:', error);
       res.status(500).json({ 
@@ -1435,22 +1438,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
       const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
-      
+
       // Clear existing data and add new headers
       await sheets.sheets.spreadsheets.values.clear({
         spreadsheetId: process.env.GOOGLE_SHEETS_ID,
         range: 'Foglio1!A:Z'
       });
-      
+
       // Force header reinitialization
       const initResult = await sheets.initializeSheet();
-      
+
       res.json({ 
         success: true, 
         message: 'Google Sheets reset and reinitialized with new structure',
         initResult
       });
-      
+
     } catch (error) {
       console.error('Google Sheets reset error:', error);
       res.status(500).json({ 
@@ -1468,30 +1471,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
       const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
-      
+
       // Get all sessions
       const allSessions = await storage.getAllChatSessions();
       let updated = 0;
       let errors = 0;
-      
+
       console.log(`🖼️ Starting update of conversations with images...`);
-      
+
       // Check if the image column exists in the sheet
       const headerResponse = await sheets.sheets.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SHEETS_ID,
         range: 'Foglio1!A1:AA1'
       });
-      
+
       const headers = headerResponse.data.values ? headerResponse.data.values[0] : [];
       const hasImageColumn = headers.includes('URL Immagini');
-      
+
       if (!hasImageColumn) {
         // Add the new column header if it doesn't exist
         const newHeaders = [...headers, 'URL Immagini'];
         if (headers.length === 26) { // Was at column Z, now expanding to AA
           newHeaders.splice(-1, 0, 'URL Immagini'); // Insert before last column (conversation text)
         }
-        
+
         await sheets.sheets.spreadsheets.values.update({
           spreadsheetId: process.env.GOOGLE_SHEETS_ID,
           range: `Foglio1!A1:${String.fromCharCode(65 + newHeaders.length - 1)}1`,
@@ -1500,7 +1503,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             values: [newHeaders]
           }
         });
-        
+
         console.log('✅ Added "URL Immagini" column to existing sheet');
       }
 
@@ -1508,23 +1511,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Get messages for this session
           const messages = await storage.getChatMessages(session.sessionId);
-          
+
           if (!messages || messages.length < 3) {
             continue;
           }
-          
+
           // Check if conversation has images
           const hasImages = messages.some(msg => 
             (msg.metadata && (msg.metadata as any).hasImage) ||
             msg.content.includes('[Immagine caricata:')
           );
-          
+
           if (!hasImages) {
             continue; // Skip conversations without images
           }
-          
+
           console.log(`🖼️ Processing session with images: ${session.userName} (${session.sessionId})`);
-          
+
           // Use AI extraction for complete data
           const advancedAI = new AdvancedAIExtractor();
           const aiExtractedData = await advancedAI.extractConversationData(messages);
@@ -1539,7 +1542,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             messages,
             extractedData
           );
-          
+
           if (success) {
             await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
             updated++;
@@ -1547,20 +1550,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else {
             errors++;
           }
-          
+
         } catch (error) {
           console.error(`❌ Error processing session ${session.sessionId}:`, error);
           errors++;
         }
       }
-      
+
       res.json({ 
         success: true, 
         message: `Updated ${updated} conversations with images. ${errors} errors.`,
         updated,
         errors
       });
-      
+
     } catch (error) {
       console.error('Error updating conversations with images:', error);
       res.status(500).json({ 
@@ -1576,7 +1579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allSessions = await storage.getAllChatSessions();
       let synced = 0;
       let errors = 0;
-      
+
       // Filter sessions that have valid email (exclude test/example emails)
       const sessionsToSync = allSessions.filter(session => 
         session.userEmail && 
@@ -1597,21 +1600,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Get messages for this session
           const messages = await storage.getChatMessages(session.sessionId);
-          
+
           if (messages.length === 0) {
             console.log(`⚠️ No messages found for session ${session.sessionId}, skipping`);
             continue;
           }
 
           console.log(`🔄 Re-syncing session ${session.sessionId} for ${session.userEmail}`);
-          
+
           // Use AI extraction for better data
           const advancedAI = new AdvancedAIExtractor();
           const aiExtractedData = await advancedAI.extractConversationData(messages);
           const extractedData = aiExtractedData ? 
             advancedAI.convertToSheetsFormat(aiExtractedData) : 
             null;
-          
+
           // Sync to Google Sheets
           await sheets.appendConversation(
             session.sessionId,
@@ -1620,19 +1623,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             messages,
             extractedData
           );
-          
+
           // Mark as synced
           await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
           synced++;
-          
+
           console.log(`✅ Re-synced session ${session.sessionId} for ${session.userEmail}`);
-          
+
         } catch (error) {
           console.error(`❌ Failed to re-sync session ${session.sessionId}:`, error);
           errors++;
         }
       }
-      
+
       res.json({ 
         success: true, 
         totalSessions: allSessions.length,
@@ -1641,398 +1644,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         errors: errors,
         message: `Successfully re-synced ${synced} conversations to Google Sheets`
       });
-      
+
     } catch (error) {
       console.error('Re-sync all conversations error:', error);
       res.status(500).json({ 
         error: error.message,
         details: 'Failed to re-sync all conversations'
       });
-    }
-  });
-
-  // Admin endpoint to convert existing URLs to IMAGE formulas in Google Sheets
-  app.post('/api/admin/convert-sheets-images', async (req, res) => {
-    try {
-      console.log('🔄 Starting image conversion to formulas...');
-      
-      if (!integrationConfig.googleSheets.enabled) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Google Sheets integration not configured'
-        });
-      }
-      
-      const auth = new google.auth.GoogleAuth({
-        credentials: integrationConfig.googleSheets.credentials,
-        scopes: ['https://www.googleapis.com/auth/spreadsheets']
-      });
-
-      const sheets = google.sheets({ version: 'v4', auth });
-      const spreadsheetId = integrationConfig.googleSheets.spreadsheetId;
-
-      // Get all data from column Y (images column)
-      console.log('📊 Reading current image URLs from Google Sheets...');
-      const response = await sheets.spreadsheets.values.get({
-        spreadsheetId,
-        range: 'Foglio1!Y:Y'
-      });
-
-      const values = response.data.values || [];
-      console.log(`Found ${values.length} rows to process`);
-
-      // Convert URLs to direct URLs (not IMAGE formulas)
-      const updatedValues = values.map((row, index) => {
-        const cellValue = row[0] || '';
-        
-        // Log first 20 values to debug
-        if (index < 20) {
-          console.log(`Row ${index + 1} value: "${cellValue}"`);
-        }
-        
-        // Skip header, empty cells, or cells with "Nessuna immagine"
-        if (!cellValue || cellValue === 'Nessuna immagine' || cellValue === 'Immagini') {
-          return [cellValue];
-        }
-        
-        // If it's an IMAGE formula, extract the URL
-        if (cellValue.startsWith('=IMAGE(')) {
-          const urlMatch = cellValue.match(/=IMAGE\("([^"]+)"/);
-          if (urlMatch && urlMatch[1]) {
-            console.log(`Row ${index + 1}: Extracting URL from IMAGE formula`);
-            return [urlMatch[1]];
-          }
-          return [cellValue];
-        }
-        
-        // If it's an error, clear it
-        if (cellValue === '#ERROR!' || cellValue.includes('ERROR')) {
-          console.log(`Row ${index + 1}: Found error, clearing cell`);
-          return [''];  // Clear the error
-        }
-        
-        // Check if it's a URL
-        if (cellValue.includes('http://') || cellValue.includes('https://')) {
-          // Extract the first URL if multiple
-          const urls = cellValue.split(', ');
-          const firstUrl = urls[0].trim();
-          
-          // Convert localhost URLs to proper domain
-          let finalUrl = firstUrl;
-          if (firstUrl.includes('localhost:5000')) {
-            const domain = process.env.REPL_SLUG && process.env.REPL_OWNER 
-              ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-              : 'https://workspace.BONNIEBEAUTY.repl.co';
-            
-            finalUrl = firstUrl.replace('http://localhost:5000', domain);
-          }
-          
-          // Return direct URL (IMAGE formulas don't work with Replit domains)
-          console.log(`Row ${index + 1}: Using direct URL instead of IMAGE formula`);
-          return [finalUrl];
-        }
-        
-        return [cellValue];
-      });
-
-      // Update all cells at once
-      console.log('📝 Updating Google Sheets with IMAGE formulas...');
-      const updateResponse = await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: 'Foglio1!Y:Y',
-        valueInputOption: 'USER_ENTERED',
-        requestBody: {
-          values: updatedValues
-        }
-      });
-
-      // Count actual conversions
-      let converted = 0;
-      for (let i = 0; i < values.length; i++) {
-        const original = values[i][0] || '';
-        const updated = updatedValues[i][0] || '';
-        if (original !== updated && updated.includes('http')) {
-          converted++;
-        }
-      }
-      
-      console.log(`✅ Successfully converted ${converted} entries to direct URLs`);
-      
-      res.json({
-        success: true,
-        processed: values.length,
-        converted: converted,
-        message: `Converted ${converted} entries to direct URLs in Google Sheets`
-      });
-
-    } catch (error) {
-      console.error('Error converting images:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: error.message
-      });
-    }
-  });
-
-  // Export sessions data as Excel with embedded images
-  app.get('/api/admin/sessions/export-excel-images', async (req, res) => {
-    try {
-      console.log('📊 Starting Excel export with embedded images...');
-      
-      // Import ExcelJS dynamically
-      const ExcelJS = await import('exceljs');
-      const fetch = (await import('node-fetch')).default;
-      
-      // Get all sessions with emails and images
-      const sessions = await db
-        .select({
-          id: sessionsTable.id,
-          userName: sessionsTable.userName,
-          userEmail: sessionsTable.userEmail,
-          extractedData: sessionsTable.extractedData,
-          createdAt: sessionsTable.createdAt,
-          chatStartedAt: sessionsTable.chatStartedAt,
-          finalButtonClickedAt: sessionsTable.finalButtonClickedAt,
-          imageUrl: sessionsTable.imageUrl,
-        })
-        .from(sessionsTable)
-        .where(and(
-          isNotNull(sessionsTable.userEmail),
-          isNotNull(sessionsTable.imageUrl)
-        ))
-        .orderBy(desc(sessionsTable.createdAt));
-      
-      console.log(`Found ${sessions.length} sessions with images to export`);
-      
-      // Create a new workbook
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet('Conversazioni con Immagini');
-      
-      // Define columns
-      worksheet.columns = [
-        { header: 'ID Sessione', key: 'id', width: 15 },
-        { header: 'Nome', key: 'userName', width: 20 },
-        { header: 'Email', key: 'userEmail', width: 30 },
-        { header: 'Data Creazione', key: 'createdAt', width: 20 },
-        { header: 'Data Chat Iniziata', key: 'chatStartedAt', width: 20 },
-        { header: 'Data Finale', key: 'finalButtonClickedAt', width: 20 },
-        { header: 'Età', key: 'age', width: 10 },
-        { header: 'Genere', key: 'gender', width: 15 },
-        { header: 'Tipo di Pelle', key: 'skinType', width: 20 },
-        { header: 'Problemi', key: 'problems', width: 30 },
-        { header: 'Stile di Vita', key: 'lifestyle', width: 30 },
-        { header: 'Ingredienti', key: 'ingredients', width: 40 },
-        { header: 'Immagine', key: 'image', width: 30 },
-      ];
-      
-      // Style the header row
-      worksheet.getRow(1).font = { bold: true };
-      worksheet.getRow(1).fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FFE7E7E7' }
-      };
-      
-      // Process each session
-      for (let i = 0; i < sessions.length; i++) {
-        const session = sessions[i];
-        console.log(`Processing session ${i + 1}/${sessions.length}: ${session.id}`);
-        
-        // Parse extracted data
-        const extractedData = session.extractedData && typeof session.extractedData === 'object' 
-          ? session.extractedData as any 
-          : {};
-        
-        // Add row data
-        const row = worksheet.addRow({
-          id: session.id,
-          userName: session.userName || '',
-          userEmail: session.userEmail || '',
-          createdAt: session.createdAt ? new Date(session.createdAt).toLocaleString('it-IT') : '',
-          chatStartedAt: session.chatStartedAt ? new Date(session.chatStartedAt).toLocaleString('it-IT') : '',
-          finalButtonClickedAt: session.finalButtonClickedAt ? new Date(session.finalButtonClickedAt).toLocaleString('it-IT') : '',
-          age: extractedData.age || '',
-          gender: extractedData.gender || '',
-          skinType: extractedData.skinType || '',
-          problems: extractedData.problems || '',
-          lifestyle: extractedData.lifestyle || '',
-          ingredients: extractedData.ingredients?.join(', ') || '',
-          image: 'Immagine caricata'
-        });
-        
-        // Try to download and embed the image
-        if (session.imageUrl) {
-          try {
-            let imageUrl = session.imageUrl;
-            
-            // Convert internal path to full URL if needed
-            if (imageUrl.startsWith('/objects/')) {
-              imageUrl = `http://localhost:${process.env.PORT || 5000}${imageUrl}`;
-            }
-            
-            console.log(`Downloading image from: ${imageUrl}`);
-            
-            // Download the image
-            const response = await fetch(imageUrl);
-            if (response.ok) {
-              const buffer = await response.buffer();
-              
-              // Add image to workbook
-              const imageId = workbook.addImage({
-                buffer: buffer,
-                extension: 'png', // Assume PNG, Excel will handle conversion
-              });
-              
-              // Add image to cell
-              worksheet.addImage(imageId, {
-                tl: { col: 12, row: row.number - 1 }, // Column M (index 12)
-                ext: { width: 150, height: 150 } // Size in pixels
-              });
-              
-              // Set row height to accommodate image
-              worksheet.getRow(row.number).height = 120; // Height in points
-              
-              console.log(`✅ Image embedded for session ${session.id}`);
-            } else {
-              console.log(`❌ Failed to download image for session ${session.id}: ${response.status}`);
-              worksheet.getCell(row.number, 13).value = 'Errore download immagine';
-            }
-          } catch (error) {
-            console.error(`Error processing image for session ${session.id}:`, error);
-            worksheet.getCell(row.number, 13).value = 'Errore immagine';
-          }
-        }
-      }
-      
-      // Auto-fit columns (except image column)
-      worksheet.columns.forEach((column, index) => {
-        if (index < 12) { // Skip image column
-          let maxLength = 0;
-          column.eachCell({ includeEmpty: true }, (cell) => {
-            const columnLength = cell.value ? cell.value.toString().length : 10;
-            if (columnLength > maxLength) {
-              maxLength = columnLength;
-            }
-          });
-          column.width = maxLength < 10 ? 10 : maxLength + 2;
-        }
-      });
-      
-      // Generate the Excel file
-      const buffer = await workbook.xlsx.writeBuffer();
-      
-      // Set response headers
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', 'attachment; filename="conversazioni_con_immagini.xlsx"');
-      res.setHeader('Content-Length', buffer.length.toString());
-      
-      // Send the file
-      res.send(Buffer.from(buffer));
-      
-      console.log('✅ Excel export completed successfully');
-      
-    } catch (error) {
-      console.error('Error exporting Excel with images:', error);
-      res.status(500).json({ error: 'Failed to export Excel file' });
-    }
-  });
-
-  // Auto-sync integrations endpoint
-  app.post("/api/admin/auto-sync-integrations", async (req, res) => {
-    try {
-      const allSessions = await storage.getAllChatSessions();
-      let synced = 0;
-      
-      // Filter sessions that have valid email but haven't been synced (limit to last 5)
-      const unsynced = allSessions.filter(session => 
-        session.userEmail && 
-        session.userEmail.trim() !== '' &&
-        !session.userEmail.includes('@example.') &&
-        !session.userEmail.toLowerCase().includes('test') &&
-        (!session.klaviyoSynced || !session.googleSheetsSynced)
-      );
-      
-      // Sort by creation date (newest first) and take only last 5
-      const sessionsToSync = unsynced
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 5);
-      
-      if (sessionsToSync.length > 0) {
-        console.log(`🔍 Found ${unsynced.length} unsynced sessions, processing latest ${sessionsToSync.length}:`, 
-          sessionsToSync.map(s => `#${s.id} (${s.userName})`));
-      }
-
-      for (const session of sessionsToSync) {
-        try {
-          // Enhanced Klaviyo sync with AI extraction if not already synced
-          if (!session.klaviyoSynced && integrationConfig.klaviyo.enabled) {
-            const success = await klaviyoLeadAutomation.processConversationForLeads(session.sessionId);
-            if (success) {
-              console.log(`✅ Enhanced Klaviyo sync completed for ${session.userName} (${session.userEmail})`);
-            } else {
-              console.log(`⚠️ Enhanced Klaviyo sync failed for ${session.userName} (${session.userEmail})`);
-            }
-          }
-
-          // Sync with Google Sheets if not already synced and credentials are available
-          if (!session.googleSheetsSynced && integrationConfig.googleSheets.enabled) {
-            try {
-              console.log(`🔄 Attempting to sync session ${session.sessionId} to Google Sheets...`);
-              
-              const sheets = new GoogleSheetsService(integrationConfig.googleSheets.credentials, integrationConfig.googleSheets.spreadsheetId!);
-              
-              // Get all messages for the session
-              const allMessages = await storage.getChatMessages(session.sessionId);
-              console.log(`📨 Retrieved ${allMessages.length} messages for session`);
-
-              // Use AI extraction for better data
-              console.log('🤖 Using Advanced AI extraction for better data...');
-              const advancedAI = new AdvancedAIExtractor();
-              const aiExtractedData = await advancedAI.extractConversationData(allMessages);
-              const extractedData = aiExtractedData ? 
-                advancedAI.convertToSheetsFormat(aiExtractedData) : 
-                null;
-              
-              if (extractedData) {
-                console.log('📊 AI extracted data preview:', {
-                  eta: extractedData.eta,
-                  sesso: extractedData.sesso,
-                  tipoPelle: extractedData.tipoPelle,
-                  problemi: extractedData.problemiPelle?.slice(0, 2) // Only show first 2 problems
-                });
-              }
-
-              const success = await sheets.appendConversation(
-                session.sessionId,
-                session.userName,
-                session.userEmail!,
-                allMessages,
-                extractedData
-              );
-              
-              if (success) {
-                await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
-                console.log(`✅ Synced ${session.userName} conversation to Google Sheets`);
-              }
-            } catch (err) {
-              console.error(`❌ Google Sheets sync failed for session ${session.sessionId}:`, err);
-            }
-          }
-
-          synced++;
-        } catch (error) {
-          console.error(`Failed to sync session ${session.sessionId}:`, error);
-        }
-      }
-
-      res.json({ 
-        success: true, 
-        synced: synced,
-        totalToSync: sessionsToSync.length
-      });
-    } catch (error) {
-      console.error("Error in auto-sync integrations:", error);
-      res.status(500).json({ error: "Failed to sync integrations" });
     }
   });
 
@@ -2081,7 +1699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/test-ai-extraction", async (req, res) => {
     try {
       const { sessionId } = req.body;
-      
+
       if (!sessionId) {
         return res.status(400).json({ error: "Session ID required" });
       }
@@ -2092,7 +1710,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const messages = await storage.getChatMessages(sessionId);
-      
+
       // Trova skin analysis se presente
       let skinAnalysis = null;
       const assistantMsg = messages.find(m => m.role === 'assistant' && (m.metadata as any)?.skinAnalysis);
@@ -2126,7 +1744,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const unsynced = allSessions.filter(session => 
         session.userEmail && !session.googleSheetsSynced
       );
-      
+
       const status = {
         unsyncedSessions: unsynced.length,
         totalSessions: allSessions.length,
@@ -2148,7 +1766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/realtime-extraction/trigger", async (req, res) => {
     try {
       const { sessionId } = req.body;
-      
+
       if (sessionId) {
         // Extract specific session
         // Trigger auto-sync for specific session
@@ -2156,7 +1774,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
-        
+
         if (response.ok) {
           const result = await response.json();
           res.json({
@@ -2172,7 +1790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
-        
+
         if (response.ok) {
           const result = await response.json();
           res.json({
@@ -2200,7 +1818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .slice(0, 5);
 
       console.log(`🎯 Extracting last 5 chats (same order as dashboard):`, lastFiveSessions.map(s => `#${s.id} (${s.userName})`));
-      
+
       // Filter only those with email for actual processing
       const sessionsWithEmail = lastFiveSessions.filter(session => session.userEmail);
       console.log(`📧 Sessions with email for processing:`, sessionsWithEmail.map(s => `#${s.id} (${s.userName})`));
@@ -2232,7 +1850,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Get messages for this session
         const allMessages = await storage.getChatMessages(session.sessionId);
-        
+
         if (allMessages.length < 3) {
           console.log(`⏭️ Skipping session #${session.id} - too few messages (${allMessages.length})`);
           continue;
@@ -2242,15 +1860,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`🤖 AI extracting data for session #${session.id} (${session.userName})`);
         const advancedAI = new AdvancedAIExtractor();
         const aiExtractedData = await advancedAI.extractConversationData(allMessages);
-        
+
         if (aiExtractedData) {
           const extractedData = advancedAI.convertToSheetsFormat(aiExtractedData);
-          
+
           // Sync to Google Sheets if configured
           if (process.env.GOOGLE_CREDENTIALS_JSON && process.env.GOOGLE_SPREADSHEET_ID) {
             const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
             const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
-            
+
             await sheets.initializeSheet();
             const success = await sheets.appendConversation(
               session.sessionId,
@@ -2259,7 +1877,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               allMessages,
               extractedData
             );
-            
+
             if (success) {
               await storage.updateChatSession(session.sessionId, { googleSheetsSynced: true });
               console.log(`✅ Extracted and synced session #${session.id} to Google Sheets`);
@@ -2280,7 +1898,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { sessionId } = req.params;
       const session = await storage.getChatSession(sessionId);
-      
+
       if (!session) {
         return res.status(404).json({ error: "Session not found" });
       }
@@ -2301,7 +1919,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sessionId: session.sessionId,
           createdAt: session.createdAt
         });
-        
+
         if (results.klaviyo) {
           await storage.updateChatSession(sessionId, { klaviyoSynced: true });
         }
@@ -2312,11 +1930,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
           const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SHEETS_ID);
-          
+
           await sheets.initializeSheet();
-          
+
           const allMessages = await storage.getChatMessages(sessionId);
-          
+
           let skinAnalysis = null;
           const assistantMsg = allMessages.find(m => m.role === 'assistant' && (m.metadata as any)?.skinAnalysis);
           if (assistantMsg) {
@@ -2337,7 +1955,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             allMessages,
             extractedData
           );
-          
+
           if (results.googleSheets) {
             await storage.updateChatSession(sessionId, { googleSheetsSynced: true });
           }
@@ -2389,7 +2007,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
       const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
-      
+
       // Check current headers
       const response = await sheets.sheets.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
@@ -2397,7 +2015,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const currentHeaders = response.data.values ? response.data.values[0] : [];
-      
+
       // Only add image column if it doesn't exist
       if (!currentHeaders.includes('URL Immagini')) {
         // Update headers to include image column (expand to AA)
@@ -2408,7 +2026,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
           'Note Aggiuntive', 'Ingredienti Consigliati', 'URL Immagini', 'Num. Messaggi', 'Conversazione Completa'
         ]];
-        
+
         await sheets.sheets.spreadsheets.values.update({
           spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
           range: 'Foglio1!A1:AA1',
@@ -2418,8 +2036,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
 
-        console.log('✅ Added "URL Immagini" column without affecting existing data');
-        
+        console.log('Google Sheets headers fixed - now aligned with data columns A-AA including images');
+
         res.json({ 
           success: true, 
           message: "Colonna immagini aggiunta con successo senza cancellare i dati esistenti" 
@@ -2445,38 +2063,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
       const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
-      
+
       // Get all sessions
       const allSessions = await storage.getAllChatSessions();
       let updated = 0;
       let skipped = 0;
-      
+
       console.log(`🖼️ Collecting conversations with images for batch update...`);
-      
+
       // Filter sessions that have valid email and might have images
       const sessionsToCheck = allSessions.filter(session => 
         session.userEmail && 
         session.userEmail.trim() !== '' &&
         !session.userEmail.includes('@example.') &&
         !session.userEmail.toLowerCase().includes('test')
-      );
+      ).slice(0, 50); // Limit to 50 to avoid quota
 
       // Collect all updates in a batch
       const batchUpdates = [];
-      
+
       // Get existing session IDs once
       const existingData = await sheets.sheets.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
         range: 'Foglio1!B:B' // Session ID column
       });
-      
+
       const sessionIds = existingData.data.values ? existingData.data.values.flat() : [];
 
-      for (const session of sessionsToCheck.slice(0, 50)) { // Limit to 50 to avoid quota
+      for (const session of sessionsToCheck) {
         try {
           // Get messages for this session
           const messages = await storage.getChatMessages(session.sessionId);
-          
+
           // Check if this session has images
           const hasImages = messages.some(msg => 
             msg.metadata && 
@@ -2484,41 +2102,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
              (msg.metadata as any).imageBase64 ||
              msg.content.includes('[Immagine caricata:'))
           );
-          
+
           if (!hasImages) {
             skipped++;
             continue;
           }
-          
+
           // Find row index
           const existingIndex = sessionIds.findIndex(id => id === session.sessionId);
           if (existingIndex >= 0) {
             const updateRowIndex = existingIndex + 1; // +1 because sheets are 1-indexed
-            
+
             // Extract image URLs with =IMAGE() formula for display
             const imageUrls = sheets.extractImageUrlsFromMessages(messages);
-            
+
             // Create formula to display first image if available
             let displayValue = imageUrls;
             if (imageUrls && imageUrls.includes('http')) {
               const firstImageUrl = imageUrls.split(', ')[0];
               displayValue = `=IMAGE("${firstImageUrl}",4,150,150)`;
             }
-            
+
             batchUpdates.push({
               range: `Foglio1!Y${updateRowIndex}`,
               values: [[displayValue]]
             });
-            
+
             updated++;
             console.log(`📋 Prepared update for session ${session.sessionId} at row ${updateRowIndex}`);
           }
-          
+
         } catch (error) {
           console.error(`❌ Failed to prepare update for session ${session.sessionId}:`, error);
         }
       }
-      
+
       // Execute batch update if we have updates
       if (batchUpdates.length > 0) {
         try {
@@ -2548,7 +2166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
-      
+
       res.json({ 
         success: true, 
         updatedSessions: updated,
@@ -2556,7 +2174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         batchSize: batchUpdates.length,
         message: `Preparate ${updated} conversazioni con formule IMAGE() per visualizzare le immagini`
       });
-      
+
     } catch (error) {
       console.error("Error updating image column:", error);
       res.status(500).json({ error: "Failed to update image column" });
@@ -2571,7 +2189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`🖼️ Testing single image update...`);
-      
+
       // Attempt to add an IMAGE formula to a test cell
       const { google } = require('googleapis');
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
@@ -2581,13 +2199,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         credentials.private_key.replace(/\\n/g, '\n'),
         ['https://www.googleapis.com/auth/spreadsheets']
       );
-      
+
       const sheetsApi = google.sheets({ version: 'v4', auth });
-      
+
       // Test with a simple public image URL
       const testImageUrl = "https://via.placeholder.com/100x100.png";
       const testFormula = `=IMAGE("${testImageUrl}",4,100,100)`;
-      
+
       await sheetsApi.spreadsheets.values.update({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
         range: 'Foglio1!Y2', // Test cell
@@ -2596,9 +2214,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           values: [[testFormula]]
         }
       });
-      
+
       console.log(`✅ Test IMAGE formula inserted successfully`);
-      
+
       res.json({ 
         success: true, 
         message: "Test completato",
@@ -2606,7 +2224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         location: "Foglio1!Y2",
         explanation: "Ho inserito una formula IMAGE() di test nella cella Y2. Se vedi un'immagine placeholder lì, la funzionalità funziona."
       });
-      
+
     } catch (error) {
       console.error("Error in test:", error);
       res.status(500).json({ 
@@ -2620,7 +2238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/fix-image-display", async (req, res) => {
     try {
       console.log(`🖼️ Converting Base64 images to public URLs...`);
-      
+
       // Get sessions with images
       const allSessions = await storage.getAllChatSessions();
       const sessionsWithEmail = allSessions.filter(session => 
@@ -2628,17 +2246,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         session.userEmail.trim() !== '' &&
         !session.userEmail.includes('@example.')
       ).slice(0, 10); // Process more sessions
-      
+
       let processed = 0;
       let uploaded = 0;
       const publicUrls = [];
       const imageFormulas = [];
-      
+
       for (const session of sessionsWithEmail) {
         try {
           processed++;
           const messages = await storage.getChatMessages(session.sessionId);
-          
+
           // Find Base64 image
           let imageBase64 = null;
           for (const message of messages) {
@@ -2650,60 +2268,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
           }
-          
+
           if (!imageBase64) continue;
-          
+
           console.log(`📤 Converting image for session ${session.sessionId}...`);
-          
+
           // Convert Base64 to file
           const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
           const imageBuffer = Buffer.from(cleanBase64, 'base64');
-          
+
           // Save to uploads directory
           const fs = await import('fs/promises');
           const tempDir = './uploads';
-          
+
           // Ensure directory exists
           try {
             await fs.mkdir(tempDir, { recursive: true });
           } catch (error) {
             // Directory already exists
           }
-          
+
           const fileName = `session-${session.sessionId}-${Date.now()}.jpg`;
           const tempPath = `${tempDir}/${fileName}`;
-          
+
           await fs.writeFile(tempPath, imageBuffer);
-          
+
           // Create public URL
           const domain = process.env.REPL_SLUG && process.env.REPL_OWNER 
             ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
             : `http://localhost:5000`;
-            
+
           const publicUrl = `${domain}/uploads/${fileName}`;
-          
+
           uploaded++;
           console.log(`✅ Created public URL: ${publicUrl}`);
-          
+
           publicUrls.push({
             sessionId: session.sessionId,
             userEmail: session.userEmail,
             publicUrl: publicUrl,
             fileName: fileName
           });
-          
+
           // Create IMAGE formula for Google Sheets
           const imageFormula = `=IMAGE("${publicUrl}",4,80,80)`;
           imageFormulas.push({
             sessionId: session.sessionId,
             formula: imageFormula
           });
-          
+
         } catch (error) {
           console.error(`❌ Failed to process session ${session.sessionId}:`, error.message);
         }
       }
-      
+
       // Generate instructions for manual copying
       const instructions = `
 🎯 ISTRUZIONI AUTOMATICHE PER GOOGLE SHEETS:
@@ -2739,7 +2357,7 @@ ${imageFormulas.map(item =>
         instructions: instructions.trim(),
         explanation: `Ho convertito ${uploaded} immagini Base64 in URL pubblici e generato le formule IMAGE per Google Sheets. Ora puoi copiare-incollare le formule nel foglio per vedere le immagini direttamente!`
       });
-      
+
     } catch (error) {
       console.error("Error in automatic image processing:", error);
       res.status(500).json({ 
@@ -2753,22 +2371,22 @@ ${imageFormulas.map(item =>
   app.post("/api/admin/process-all-images", async (req, res) => {
     try {
       console.log(`🎯 MASTER AUTOMATION: Processing ALL images with complete system...`);
-      
+
       const limit = req.body.limit || 100; // Allow custom limits
-      
+
       // Import the complete automation service
       const { CompleteImageAutomation } = await import('./services/complete-image-automation.js');
       const automation = new CompleteImageAutomation(storage);
-      
+
       // Process all images
       const results = await automation.processAllImages(limit);
-      
+
       // Generate CSV mapping
       const csvMapping = automation.generateCSVMapping(results);
-      
+
       // Generate Google Sheets instructions
       const instructions = automation.generateSheetsInstructions(results);
-      
+
       res.json({
         success: true,
         message: "Automazione completa terminata",
@@ -2792,7 +2410,7 @@ ${imageFormulas.map(item =>
           "5. L'immagine apparirà automaticamente!"
         ]
       });
-      
+
     } catch (error) {
       console.error("Error in master automation:", error);
       res.status(500).json({ 
@@ -2806,14 +2424,14 @@ ${imageFormulas.map(item =>
   app.post("/api/admin/auto-insert-images", async (req, res) => {
     try {
       console.log(`🚀 Complete automatic: Convert + Insert images into Google Sheets...`);
-      
+
       if (!process.env.GOOGLE_CREDENTIALS_JSON || !process.env.GOOGLE_SPREADSHEET_ID) {
         return res.status(400).json({ error: "Google Sheets not configured" });
       }
 
       // Dynamic import to avoid module issues
       const { google } = await import('googleapis');
-      
+
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
       const auth = new google.auth.JWT(
         credentials.client_email,
@@ -2821,25 +2439,25 @@ ${imageFormulas.map(item =>
         credentials.private_key.replace(/\\n/g, '\n'),
         ['https://www.googleapis.com/auth/spreadsheets']
       );
-      
+
       const sheetsApi = google.sheets({ version: 'v4', auth });
-      
+
       // Step 1: Convert images to public URLs
       console.log(`📋 Step 1: Converting images to public URLs...`);
-      
+
       const allSessions = await storage.getAllChatSessions();
       const sessionsWithEmail = allSessions.filter(session => 
         session.userEmail && 
         session.userEmail.trim() !== '' &&
         !session.userEmail.includes('@example.')
       ).slice(0, 10); // Process in batches to avoid rate limits
-      
+
       const processedImages = [];
-      
+
       for (const session of sessionsWithEmail) {
         try {
           const messages = await storage.getChatMessages(session.sessionId);
-          
+
           // Find Base64 image
           let imageBase64 = null;
           for (const message of messages) {
@@ -2851,14 +2469,14 @@ ${imageFormulas.map(item =>
               }
             }
           }
-          
+
           if (!imageBase64) continue;
-          
+
           // Convert Base64 to file
           const fs = await import('fs/promises');
           const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
           const imageBuffer = Buffer.from(cleanBase64, 'base64');
-          
+
           // Save to uploads directory
           const tempDir = './uploads';
           try {
@@ -2866,54 +2484,54 @@ ${imageFormulas.map(item =>
           } catch (error) {
             // Directory already exists
           }
-          
+
           const fileName = `auto-${session.sessionId}-${Date.now()}.jpg`;
           const tempPath = `${tempDir}/${fileName}`;
           await fs.writeFile(tempPath, imageBuffer);
-          
+
           // Create public URL
           const domain = process.env.REPL_SLUG && process.env.REPL_OWNER 
             ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
             : `http://localhost:5000`;
-            
+
           const publicUrl = `${domain}/uploads/${fileName}`;
-          
+
           processedImages.push({
             sessionId: session.sessionId,
             publicUrl: publicUrl,
             imageFormula: `=IMAGE("${publicUrl}",4,80,80)`
           });
-          
+
           console.log(`✅ Processed: ${session.sessionId} -> ${publicUrl}`);
-          
+
         } catch (error) {
           console.error(`❌ Failed to process session ${session.sessionId}:`, error.message);
         }
       }
-      
+
       console.log(`📋 Step 2: Getting existing sheet data...`);
-      
+
       // Step 2: Get existing sheet data to map session IDs to rows
       const existingData = await sheetsApi.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
         range: 'Foglio1!B:B'
       });
-      
+
       const sessionIds = existingData.data.values ? existingData.data.values.flat() : [];
-      
+
       console.log(`📋 Step 3: Updating Google Sheets with IMAGE formulas...`);
-      
+
       // Step 3: Update Google Sheets with IMAGE formulas
       let updated = 0;
       const updateResults = [];
-      
+
       for (const imageData of processedImages) {
         try {
           const existingIndex = sessionIds.findIndex(id => id === imageData.sessionId);
-          
+
           if (existingIndex >= 0) {
             const rowIndex = existingIndex + 1; // Sheets are 1-indexed
-            
+
             // Update with IMAGE formula
             await sheetsApi.spreadsheets.values.update({
               spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
@@ -2923,7 +2541,7 @@ ${imageFormulas.map(item =>
                 values: [[imageData.imageFormula]]
               }
             });
-            
+
             updated++;
             updateResults.push({
               sessionId: imageData.sessionId,
@@ -2931,12 +2549,12 @@ ${imageFormulas.map(item =>
               status: 'updated',
               publicUrl: imageData.publicUrl
             });
-            
+
             console.log(`✅ Updated Google Sheets row ${rowIndex} with IMAGE formula`);
-            
+
             // Small delay to avoid rate limits
             await new Promise(resolve => setTimeout(resolve, 1500));
-            
+
           } else {
             updateResults.push({
               sessionId: imageData.sessionId,
@@ -2944,7 +2562,7 @@ ${imageFormulas.map(item =>
               publicUrl: imageData.publicUrl
             });
           }
-          
+
         } catch (error) {
           console.error(`❌ Failed to update sheet for session ${imageData.sessionId}:`, error.message);
           updateResults.push({
@@ -2954,7 +2572,7 @@ ${imageFormulas.map(item =>
           });
         }
       }
-      
+
       res.json({ 
         success: true, 
         message: "Sistema completamente automatico completato",
@@ -2963,7 +2581,7 @@ ${imageFormulas.map(item =>
         results: updateResults,
         summary: `✅ SUCCESSO TOTALE: Ho processato ${processedImages.length} immagini e aggiornato ${updated} righe in Google Sheets. Le immagini sono ora visibili direttamente nel foglio senza intervento manuale!`
       });
-      
+
     } catch (error) {
       console.error("Error in complete automatic system:", error);
       res.status(500).json({ 
@@ -2978,22 +2596,22 @@ ${imageFormulas.map(item =>
     try {
       const fileName = req.params.fileName;
       const filePath = `./uploads/${fileName}`;
-      
+
       // Check if file exists  
       const fs = await import('fs/promises');
       await fs.access(filePath);
-      
+
       // Set appropriate headers for public access
       res.set({
         'Content-Type': 'image/jpeg',
         'Cache-Control': 'public, max-age=3600',
         'Access-Control-Allow-Origin': '*'
       });
-      
+
       // Stream the file
       const fileBuffer = await fs.readFile(filePath);
       res.send(fileBuffer);
-      
+
     } catch (error) {
       console.error(`Error serving file ${req.params.fileName}:`, error);
       res.status(404).json({ error: 'File not found' });
@@ -3004,7 +2622,7 @@ ${imageFormulas.map(item =>
   app.post("/api/admin/embed-images-direct", async (req, res) => {
     try {
       console.log(`🖼️ Starting direct image embedding using Sheets API...`);
-      
+
       if (!process.env.GOOGLE_CREDENTIALS_JSON || !process.env.GOOGLE_SPREADSHEET_ID) {
         return res.status(400).json({ error: "Google Sheets not configured" });
       }
@@ -3012,7 +2630,7 @@ ${imageFormulas.map(item =>
       const { google } = require('googleapis');
       const fs = require('fs').promises;
       const path = require('path');
-      
+
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
       const auth = new google.auth.JWT(
         credentials.client_email,
@@ -3020,9 +2638,9 @@ ${imageFormulas.map(item =>
         credentials.private_key.replace(/\\n/g, '\n'),
         ['https://www.googleapis.com/auth/spreadsheets']
       );
-      
+
       const sheetsApi = google.sheets({ version: 'v4', auth });
-      
+
       // Get first session with image for testing
       const allSessions = await storage.getAllChatSessions();
       const sessionsWithEmail = allSessions.filter(session => 
@@ -3030,20 +2648,20 @@ ${imageFormulas.map(item =>
         session.userEmail.trim() !== '' &&
         !session.userEmail.includes('@example.')
       );
-      
+
       let testSession = null;
       let testImagePath = null;
-      
+
       // Find a session with an actual image file
       for (const session of sessionsWithEmail.slice(0, 10)) {
         const messages = await storage.getChatMessages(session.sessionId);
-        
+
         for (const message of messages) {
           const imageMatch = message.content.match(/\[Immagine caricata:\s*([^\]]+)\]/);
           if (imageMatch && imageMatch[1]) {
             const fileName = imageMatch[1].trim();
             const imagePath = path.join(process.cwd(), 'uploads', fileName);
-            
+
             try {
               await fs.access(imagePath);
               testSession = session;
@@ -3056,7 +2674,7 @@ ${imageFormulas.map(item =>
         }
         if (testSession) break;
       }
-      
+
       if (!testSession || !testImagePath) {
         return res.json({
           success: false,
@@ -3064,15 +2682,15 @@ ${imageFormulas.map(item =>
           explanation: "Non ho trovato file immagine accessibili nella cartella uploads per testare l'inserimento diretto."
         });
       }
-      
+
       // Read the image file
       const imageBuffer = await fs.readFile(testImagePath);
       const fileName = path.basename(testImagePath);
-      
+
       // Convert to base64
       const base64Image = imageBuffer.toString('base64');
       const mimeType = testImagePath.endsWith('.png') ? 'image/png' : 'image/jpeg';
-      
+
       // Try to insert the image using batch update with embedded object
       const requests = [{
         insertEmbeddedObject: {
@@ -3107,16 +2725,16 @@ ${imageFormulas.map(item =>
           }
         }
       }];
-      
+
       const response = await sheetsApi.spreadsheets.batchUpdate({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
         requestBody: {
           requests
         }
       });
-      
+
       console.log(`✅ Successfully embedded image: ${fileName}`);
-      
+
       res.json({
         success: true,
         message: "Immagine inserita con successo",
@@ -3125,7 +2743,7 @@ ${imageFormulas.map(item =>
         location: "Y2",
         explanation: "Ho inserito un'immagine di test direttamente nel foglio Google Sheets. Controlla la cella Y2 per vedere l'immagine embedded."
       });
-      
+
     } catch (error) {
       console.error("Error embedding image directly:", error);
       res.status(500).json({ 
@@ -3144,7 +2762,7 @@ ${imageFormulas.map(item =>
 
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
       const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
-      
+
       // Manually update headers to correct range A1:AA1 (including image column)
       const headers = [[
         'Data/Ora', 'Session ID', 'Nome', 'Email', 'Età', 'Sesso', 'Tipo Pelle',
@@ -3153,7 +2771,7 @@ ${imageFormulas.map(item =>
         'Utilizzo Scrub', 'Fase Completata', 'Accesso Prodotti', 'Qualità Dati', 
         'Note Aggiuntive', 'Ingredienti Consigliati', 'URL Immagini', 'Num. Messaggi', 'Conversazione Completa'
       ]];
-      
+
       await sheets.sheets.spreadsheets.values.update({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
         range: 'Foglio1!A1:AA1',
@@ -3164,7 +2782,7 @@ ${imageFormulas.map(item =>
       });
 
       console.log('Google Sheets headers fixed - now aligned with data columns A-AA including images');
-      
+
       res.json({ 
         success: true, 
         message: "Headers corretti e allineati alle colonne dati A-AA con colonna immagini inclusa" 
@@ -3184,14 +2802,14 @@ ${imageFormulas.map(item =>
 
       const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
       const sheets = new GoogleSheetsService(credentials, process.env.GOOGLE_SPREADSHEET_ID);
-      
+
       const response = await sheets.sheets.spreadsheets.values.get({
         spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
         range: 'Foglio1!A1:Z1'
       });
 
       const headers = response.data.values ? response.data.values[0] : [];
-      
+
       res.json({ 
         success: true, 
         headers: headers,
@@ -3201,6 +2819,135 @@ ${imageFormulas.map(item =>
     } catch (error) {
       console.error("Error checking Google Sheets headers:", error);
       res.status(500).json({ error: "Failed to check headers" });
+    }
+  });
+
+  // Auto-Learning System Routes
+  app.post('/api/admin/auto-learning/analyze', async (req, res) => {
+    try {
+      console.log('🧠 Starting auto-learning analysis...');
+
+      // Get recent conversations (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const sessions = await storage.getAllSessions();
+      const recentSessions = sessions.filter(s => 
+        new Date(s.createdAt) > thirtyDaysAgo
+      );
+
+      console.log(`📊 Analyzing ${recentSessions.length} recent sessions...`);
+
+      // Prepare conversation data
+      const conversations = [];
+      for (const session of recentSessions.slice(0, 50)) { // Limit to 50 for performance
+        const messages = await storage.getChatMessages(session.sessionId);
+        if (messages && messages.length >= 5) { // Only analyze substantial conversations
+          conversations.push({
+            sessionId: session.sessionId,
+            messages,
+            userData: {
+              userName: session.userName,
+              createdAt: session.createdAt,
+              finalButtonClicked: session.finalButtonClicked
+            }
+          });
+        }
+      }
+
+      console.log(`🔍 Processing ${conversations.length} substantial conversations...`);
+
+      // Run analysis
+      const analyses = await autoLearningSystem.analyzeConversations(conversations);
+
+      console.log(`✅ Auto-learning analysis completed`);
+
+      res.json({
+        success: true,
+        message: `Analyzed ${analyses.length} conversations`,
+        stats: autoLearningSystem.getLearningStats(),
+        analyses: analyses.slice(0, 10) // Return first 10 for preview
+      });
+    } catch (error) {
+      console.error('Auto-learning analysis error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
+  });
+
+  app.get('/api/admin/auto-learning/insights', async (req, res) => {
+    try {
+      const insights = await autoLearningSystem.getApprovedInsights();
+      const stats = autoLearningSystem.getLearningStats();
+
+      res.json({
+        success: true,
+        insights,
+        stats
+      });
+    } catch (error) {
+      console.error('Error getting insights:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
+  });
+
+  app.post('/api/admin/auto-learning/approve/:insightId', async (req, res) => {
+    try {
+      const { insightId } = req.params;
+      const success = await autoLearningSystem.approveInsight(insightId);
+
+      if (success) {
+        res.json({ success: true, message: 'Insight approved and applied' });
+      } else {
+        res.status(404).json({ success: false, error: 'Insight not found' });
+      }
+    } catch (error) {
+      console.error('Error approving insight:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
+  });
+
+  app.post('/api/admin/auto-learning/reject/:insightId', async (req, res) => {
+    try {
+      const { insightId } = req.params;
+      const success = await autoLearningSystem.rejectInsight(insightId);
+
+      if (success) {
+        res.json({ success: true, message: 'Insight rejected' });
+      } else {
+        res.status(404).json({ success: false, error: 'Insight not found' });
+      }
+    } catch (error) {
+      console.error('Error rejecting insight:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
+  });
+
+  // RAG Knowledge Base Management Routes
+  app.get('/api/admin/rag/stats', async (req, res) => {
+    try {
+      const ragStats = await ragService.getStats();
+      const vectorRagStats = await vectorRagService.getStats();
+
+      res.json({
+        success: true,
+        ragStats,
+        vectorRagStats
+      });
+    } catch (error) {
+      console.error("Error getting RAG stats:", error);
+      res.status(500).json({ error: "Failed to get RAG stats" });
     }
   });
 
