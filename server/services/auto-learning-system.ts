@@ -29,8 +29,10 @@ interface ConversationAnalysis {
 export class AutoLearningSystem {
   private ai: GoogleGenAI;
   private insights: LearningInsight[] = [];
-  private learningThreshold = 3; // Minimum occurrences to consider a pattern
-  private confidenceThreshold = 0.7; // Minimum confidence to auto-apply
+  private learningThreshold = 5; // Minimum occurrences to consider a pattern (aumentato per sicurezza)
+  private confidenceThreshold = 0.8; // Minimum confidence to auto-apply (aumentato per sicurezza)
+  private autonomousLearning = true; // Abilita apprendimento autonomo
+  private maxDailyInsights = 3; // Massimo 3 insights applicati al giorno per gradualità
 
   constructor() {
     this.ai = new GoogleGenAI({ 
@@ -193,35 +195,83 @@ Rispondi in formato JSON:
     this.insights.push(insight);
     await this.saveInsights();
 
-    console.log(`🧠 New learning insight: ${type} - ${content} (frequency: ${frequency})`);
+    console.log(`🧠 New learning insight: ${type} - ${content} (frequency: ${frequency}, confidence: ${insight.confidence})`);
+
+    // APPRENDIMENTO AUTONOMO: Auto-approva se passa i controlli di sicurezza
+    if (this.autonomousLearning && await this.canAutoApprove(insight)) {
+      await this.autoApproveInsight(insight.id);
+    }
   }
 
   private async generateKnowledgeImprovement(
     type: 'frequent_question' | 'knowledge_gap',
     content: string
   ): Promise<string> {
+    const safetyPrompt = `
+IMPORTANTE: Genera SOLO contenuti cosmetici e di skincare routine. NON fornire mai:
+- Diagnosi mediche
+- Consigli medici specifici  
+- Informazioni su patologie cutanee
+- Raccomandazioni farmacologiche
+
+Mantieni il tono coerente con Bonnie (professionale ma accessibile).
+Limita la risposta a massimo 500 parole.
+`;
+
     const prompt = type === 'frequent_question' 
-      ? `Basandoti sulla knowledge base dermatologica esistente, crea una risposta completa e accurata per questa domanda frequente: "${content}". Fornisci informazioni scientifiche, ingredienti consigliati e consigli pratici.`
-      : `Identifica e crea contenuto per colmare questa lacuna nella knowledge base dermatologica: "${content}". Includi definizioni, meccanismi d'azione e applicazioni pratiche.`;
+      ? `${safetyPrompt}
+
+Basandoti sulla knowledge base dermatologica di Bonnie, crea una risposta completa per questa domanda frequente: "${content}". 
+Includi:
+- Spiegazione scientifica semplice
+- Ingredienti cosmetici raccomandati
+- Consigli pratici per la routine
+- Suggerimenti sui prodotti Bonnie (se pertinenti)
+
+Mantieni uno stile educativo ma non medico.`
+      : `${safetyPrompt}
+
+Identifica e crea contenuto cosmetico per questa lacuna: "${content}". 
+Includi:
+- Definizioni cosmetiche (non mediche)
+- Meccanismi d'azione degli ingredienti
+- Applicazioni pratiche nella skincare routine
+
+Focus su cosmetica, non medicina.`;
 
     try {
       const response = await this.ai.getGenerativeModel({ 
         model: "gemini-2.5-flash" 
       }).generateContent(prompt);
 
-      return response.response.text();
+      const content_response = response.response.text();
+      
+      // Verifica finale di sicurezza
+      const medicalTerms = ['diagnosi', 'patologia', 'malattia', 'cura medica'];
+      const hasUnsafeContent = medicalTerms.some(term => 
+        content_response.toLowerCase().includes(term)
+      );
+
+      if (hasUnsafeContent) {
+        return `Informazione cosmetica per: ${content} (contenuto filtrato per sicurezza)`;
+      }
+
+      return content_response;
     } catch (error) {
       console.error('Error generating knowledge improvement:', error);
-      return `Miglioramento suggerito per: ${content}`;
+      return `Miglioramento cosmetico suggerito per: ${content}`;
     }
   }
 
   private calculateConfidence(type: string, frequency: number): number {
-    // Simple confidence calculation based on frequency and type
-    const baseConfidence = Math.min(frequency / 10, 1);
-    const typeBonus = type === 'frequent_question' ? 0.1 : 0.05;
+    // Calcolo confidence più conservativo per apprendimento autonomo
+    const baseConfidence = Math.min(frequency / 15, 0.9); // Max 0.9 invece di 1.0
+    const typeBonus = type === 'frequent_question' ? 0.1 : 0.02; // Bonus ridotto per knowledge_gap
     
-    return Math.min(baseConfidence + typeBonus, 1);
+    // Penalizza se frequency è troppo bassa
+    const frequencyPenalty = frequency < this.learningThreshold ? -0.3 : 0;
+    
+    return Math.max(0.1, Math.min(baseConfidence + typeBonus + frequencyPenalty, 0.95));
   }
 
   async getApprovedInsights(): Promise<LearningInsight[]> {
@@ -306,12 +356,87 @@ ${insight.suggestedKnowledge}
     }
   }
 
+  // Controlla se un insight può essere auto-approvato in sicurezza
+  private async canAutoApprove(insight: LearningInsight): Promise<boolean> {
+    // Controlli di sicurezza per l'apprendimento autonomo
+    
+    // 1. Controllo confidence minima
+    if (insight.confidence < this.confidenceThreshold) {
+      console.log(`❌ Auto-approve blocked: confidence too low (${insight.confidence})`);
+      return false;
+    }
+
+    // 2. Controllo frequenza minima
+    if (insight.frequency < this.learningThreshold) {
+      console.log(`❌ Auto-approve blocked: frequency too low (${insight.frequency})`);
+      return false;
+    }
+
+    // 3. Limite giornaliero per gradualità
+    const today = new Date().toDateString();
+    const todayApprovals = this.insights.filter(i => 
+      i.validationStatus === 'approved' && 
+      new Date(i.createdAt).toDateString() === today
+    ).length;
+
+    if (todayApprovals >= this.maxDailyInsights) {
+      console.log(`❌ Auto-approve blocked: daily limit reached (${todayApprovals}/${this.maxDailyInsights})`);
+      return false;
+    }
+
+    // 4. Controllo contenuto sicuro (no termini medici pericolosi)
+    const dangerousTerms = [
+      'diagnosi', 'malattia', 'patologia', 'medicina', 'farmaco', 'cura',
+      'tumore', 'cancro', 'melanoma', 'infezione', 'virus', 'batterio'
+    ];
+
+    const contentLower = (insight.pattern + ' ' + insight.suggestedKnowledge).toLowerCase();
+    const hasDangerousTerms = dangerousTerms.some(term => contentLower.includes(term));
+
+    if (hasDangerousTerms) {
+      console.log(`❌ Auto-approve blocked: contains medical terms`);
+      return false;
+    }
+
+    // 5. Controllo lunghezza ragionevole (evita contenuti troppo lunghi che potrebbero essere imprecisi)
+    if (insight.suggestedKnowledge.length > 2000) {
+      console.log(`❌ Auto-approve blocked: content too long (${insight.suggestedKnowledge.length} chars)`);
+      return false;
+    }
+
+    // 6. Solo domande frequenti per ora (più sicure)
+    if (insight.topic !== 'frequent_question') {
+      console.log(`❌ Auto-approve blocked: only frequent questions allowed for auto-approval`);
+      return false;
+    }
+
+    console.log(`✅ Auto-approve approved: all safety checks passed`);
+    return true;
+  }
+
+  // Auto-approva un insight
+  private async autoApproveInsight(insightId: string): Promise<boolean> {
+    const insight = this.insights.find(i => i.id === insightId);
+    if (!insight) return false;
+
+    insight.validationStatus = 'approved';
+    await this.saveInsights();
+
+    // Applica automaticamente alla knowledge base
+    await this.applyInsightToKnowledgeBase(insight);
+
+    console.log(`🤖 AUTONOMOUS LEARNING: Auto-approved and applied insight: ${insight.topic} - ${insight.pattern.slice(0, 50)}...`);
+    return true;
+  }
+
   // Get learning statistics
   getLearningStats(): {
     totalInsights: number;
     approvedInsights: number;
     pendingInsights: number;
     averageConfidence: number;
+    autonomousMode: boolean;
+    todayAutoApprovals: number;
   } {
     const approved = this.insights.filter(i => i.validationStatus === 'approved');
     const pending = this.insights.filter(i => i.validationStatus === 'pending');
@@ -319,11 +444,19 @@ ${insight.suggestedKnowledge}
       ? this.insights.reduce((sum, i) => sum + i.confidence, 0) / this.insights.length 
       : 0;
 
+    const today = new Date().toDateString();
+    const todayAutoApprovals = this.insights.filter(i => 
+      i.validationStatus === 'approved' && 
+      new Date(i.createdAt).toDateString() === today
+    ).length;
+
     return {
       totalInsights: this.insights.length,
       approvedInsights: approved.length,
       pendingInsights: pending.length,
-      averageConfidence: Math.round(avgConfidence * 100) / 100
+      averageConfidence: Math.round(avgConfidence * 100) / 100,
+      autonomousMode: this.autonomousLearning,
+      todayAutoApprovals
     };
   }
 }
