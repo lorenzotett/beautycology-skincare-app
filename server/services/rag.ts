@@ -1,4 +1,4 @@
-import { ChromaApi } from 'chromadb';
+import { ChromaClient } from 'chromadb';
 import { GoogleGenAI } from '@google/genai';
 import fs from 'fs';
 import pdfParse from 'pdf-parse';
@@ -25,13 +25,13 @@ interface RAGResult {
 }
 
 export class RAGService {
-  private chromaClient: ChromaApi;
+  private chromaClient: ChromaClient;
   private collection: any;
   private ai: GoogleGenAI;
   private isInitialized = false;
 
   constructor() {
-    this.chromaClient = new ChromaApi({
+    this.chromaClient = new ChromaClient({
       path: process.env.CHROMA_URL || 'http://localhost:8000'
     });
     this.ai = new GoogleGenAI({ 
@@ -115,8 +115,8 @@ export class RAGService {
 
       // Combine the relevant content
       const combinedContent = sources
-        .filter(source => source.distance < 0.8) // Filter by similarity threshold
-        .map(source => source.content)
+        .filter((source: any) => source.distance < 0.8) // Filter by similarity threshold
+        .map((source: any) => source.content)
         .join('\n\n---\n\n');
 
       return {
@@ -189,11 +189,14 @@ export class RAGService {
       try {
         const response = await this.ai.models.embedContent({
           model: 'text-embedding-004',
-          content: text
+          contents: [{
+            role: 'user',
+            parts: [{ text: text }]
+          }]
         });
         
-        if (response.embedding && response.embedding.values) {
-          embeddings.push(response.embedding.values);
+        if (response.embeddings && response.embeddings.length > 0 && response.embeddings[0].values) {
+          embeddings.push(response.embeddings[0].values);
         } else {
           throw new Error('No embedding values received');
         }
@@ -243,7 +246,7 @@ export class RAGService {
       });
 
       const metadatas = results.metadatas || [];
-      const sources = [...new Set(metadatas.map((meta: any) => meta.source))];
+      const sources = Array.from(new Set(metadatas.map((meta: any) => meta.source))) as string[];
       
       return {
         totalDocuments: sources.length,
