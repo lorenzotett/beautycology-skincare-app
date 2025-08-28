@@ -226,16 +226,47 @@ export function ChatInterface() {
       
       // Check for image generation trigger
       if (data.message.content.includes('[TRIGGER:GENERATE_BEFORE_AFTER_IMAGES]')) {
-        // Generate before/after images
-        generateBeforeAfterImages();
+        // Extract ingredients first
+        let extractedIngredients: string[] = [];
+        
+        // Try to extract from metadata first
+        const ingredientsMatch = data.message.content.match(/\[METADATA:INGREDIENTS_PROVIDED:([^\]]+)\]/);
+        if (ingredientsMatch && ingredientsMatch[1].trim()) {
+          extractedIngredients = ingredientsMatch[1].split(',').map(i => i.trim());
+          console.log('Extracted ingredients from metadata:', extractedIngredients);
+        } else {
+          // If no ingredients in metadata, extract from message content
+          console.log('No ingredients in metadata, extracting from message content...');
+          extractedIngredients = extractIngredientsFromMessage(data.message.content);
+          console.log('Extracted ingredients from content:', extractedIngredients);
+        }
+        
+        // Set the ingredients and generate images
+        if (extractedIngredients.length > 0) {
+          setPendingIngredients(extractedIngredients);
+          
+          // Generate before/after images with a small delay to ensure ingredients are set
+          setTimeout(() => {
+            generateBeforeAfterImages();
+          }, 100);
+        } else {
+          console.error('No ingredients found for image generation');
+          toast({
+            title: "Errore",
+            description: "Nessun ingrediente trovato per la generazione delle immagini.",
+            variant: "destructive"
+          });
+        }
       }
       
-      // Extract ingredients if provided
-      const ingredientsMatch = data.message.content.match(/\[METADATA:INGREDIENTS_PROVIDED:([^\]]+)\]/);
-      if (ingredientsMatch) {
-        const ingredients = ingredientsMatch[1].split(',').map(i => i.trim());
-        setPendingIngredients(ingredients);
-        console.log('Extracted ingredients:', ingredients);
+      // Extract ingredients for other purposes (if not already handled above)
+      if (!data.message.content.includes('[TRIGGER:GENERATE_BEFORE_AFTER_IMAGES]')) {
+        const ingredientsMatch = data.message.content.match(/\[METADATA:INGREDIENTS_PROVIDED:([^\]]+)\]/);
+        if (ingredientsMatch && ingredientsMatch[1].trim()) {
+          const ingredients = ingredientsMatch[1].split(',').map(i => i.trim());
+          setPendingIngredients(ingredients);
+          console.log('Extracted ingredients from metadata:', ingredients);
+        }
       }
       
       setMessages(prev => [...prev, assistantMessage]);
@@ -785,6 +816,34 @@ export function ChatInterface() {
       }
     };
   }, [toast]);
+
+  // Function to extract ingredients from message content
+  const extractIngredientsFromMessage = (content: string): string[] => {
+    const knownIngredients = [
+      'Centella Asiatica',
+      'Bardana',
+      'Mirto', 
+      'Elicriso',
+      'Liquirizia',
+      'Ginkgo Biloba',
+      'Amamelide',
+      'Kigelia Africana',
+      'Malva'
+    ];
+    
+    const foundIngredients: string[] = [];
+    
+    knownIngredients.forEach(ingredient => {
+      if (content.includes(ingredient)) {
+        foundIngredients.push(ingredient);
+      }
+    });
+    
+    console.log('Searched for ingredients in:', content.substring(0, 200));
+    console.log('Found ingredients:', foundIngredients);
+    
+    return foundIngredients;
+  };
 
   const generateBeforeAfterImages = async () => {
     if (!sessionId || !pendingIngredients.length) {
