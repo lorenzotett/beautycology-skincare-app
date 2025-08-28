@@ -790,6 +790,10 @@ A te la scelta!`;
 
       // Check if user is answering the last question - be more lenient
       if (this.lastQuestionAsked) {
+        console.log('=== CHECKING ANSWER TO LAST QUESTION ===');
+        console.log('User message:', message);
+        console.log('Last question asked (first 100 chars):', this.lastQuestionAsked?.substring(0, 100));
+        
         const isValidAnswer = this.isValidAnswerToQuestion(message, this.lastQuestionAsked);
 
         // Only repeat if the answer is clearly invalid (very strict criteria)
@@ -800,9 +804,11 @@ A te la scelta!`;
 
         if (isValidAnswer || !isVeryShortAndMeaningless) {
           // Accept the answer and let AI interpret it naturally
+          console.log('Answer accepted, clearing lastQuestionAsked');
           this.lastQuestionAsked = null;
         } else {
           // Only repeat for clearly meaningless responses
+          console.log('Answer rejected as meaningless, repeating question');
           this.conversationHistory.pop();
           const repeatMessage = `Mi dispiace, non ho capito la tua risposta. ${this.lastQuestionAsked}`;
           this.conversationHistory.push({ role: "assistant", content: repeatMessage });
@@ -860,7 +866,9 @@ A te la scelta!`;
       if (content.includes('?')) {
         if (hasChoices) {
           // For multiple choice questions, save the entire content including choices
+          // Make sure to preserve the complete content without any truncation
           this.lastQuestionAsked = content;
+          console.log('Saved complete question with choices:', this.lastQuestionAsked);
         } else {
           // For simple questions, extract just the question
           const questionMatch = content.match(/([^.!?]*\?)/);
