@@ -852,17 +852,23 @@ A te la scelta!`;
       this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message }; // Keep original message in history
       this.conversationHistory.push({ role: "assistant", content });
 
-      // Track if this response contains a question
-      if (content.includes('?')) {
-        const questionMatch = content.match(/([^.!?]*\?)/);
-        if (questionMatch) {
-          this.lastQuestionAsked = questionMatch[1].trim();
-        }
-      }
-
       // Check if the response contains multiple choice options
       const hasChoices = this.detectMultipleChoice(content);
       const choices = hasChoices ? this.extractChoices(content) : undefined;
+      
+      // Track if this response contains a question
+      if (content.includes('?')) {
+        if (hasChoices) {
+          // For multiple choice questions, save the entire content including choices
+          this.lastQuestionAsked = content;
+        } else {
+          // For simple questions, extract just the question
+          const questionMatch = content.match(/([^.!?]*\?)/);
+          if (questionMatch) {
+            this.lastQuestionAsked = questionMatch[1].trim();
+          }
+        }
+      }
 
       // Debug logging
       console.log('=== CHOICE DETECTION DEBUG ===');
@@ -1121,13 +1127,40 @@ A te la scelta!`;
         return isValid;
       }
 
-      // Check for partial text matches
-      const textMatch = choices.some(choice => 
-        lowerAnswer.includes(choice.toLowerCase()) || 
-        choice.toLowerCase().includes(lowerAnswer) ||
-        // More flexible matching for common responses
-        (lowerAnswer.length >= 2 && choice.toLowerCase().includes(lowerAnswer))
-      );
+      // Check for partial text matches with more flexible matching
+      const textMatch = choices.some(choice => {
+        const lowerChoice = choice.toLowerCase();
+        
+        // Direct match
+        if (lowerAnswer === lowerChoice) return true;
+        
+        // Check if answer is contained in choice
+        if (lowerChoice.includes(lowerAnswer) && lowerAnswer.length >= 2) return true;
+        
+        // Check if choice is contained in answer
+        if (lowerAnswer.includes(lowerChoice)) return true;
+        
+        // Special cases for common short answers
+        if ((lowerAnswer === 'si' || lowerAnswer === 'sì' || lowerAnswer === 'yes') && 
+            (lowerChoice.includes('sì') || lowerChoice.includes('si') || lowerChoice.includes('yes'))) {
+          return true;
+        }
+        
+        if ((lowerAnswer === 'no') && lowerChoice.includes('no')) {
+          return true;
+        }
+        
+        // Check for significant word overlap
+        const answerWords = lowerAnswer.split(/\s+/).filter(w => w.length > 2);
+        const choiceWords = lowerChoice.split(/\s+/).filter(w => w.length > 2);
+        const commonWords = answerWords.filter(w => choiceWords.includes(w));
+        if (commonWords.length >= 1 && answerWords.length <= 3) {
+          return true; // If user types 1-3 words and at least one matches, accept it
+        }
+        
+        return false;
+      });
+      
       console.log(`Text match validation: ${textMatch}`);
       return textMatch;
     }
