@@ -838,30 +838,13 @@ A te la scelta!`;
         'L\'utente HA caricato una foto iniziale. Puoi procedere con la generazione del prima/dopo se richiesto.' : 
         'L\'utente NON ha caricato una foto iniziale. NON generare mai il trigger GENERATE_BEFORE_AFTER_IMAGES e non chiedere del prima/dopo.'}`;
 
-      let response;
-      try {
-        response = await this.callGeminiWithRetry({
-          model: "gemini-2.5-flash",
-          config: {
-            systemInstruction: enhancedSystemInstruction,
-          },
-          contents: contents
-        });
-      } catch (error) {
-        console.error("Gemini API call failed completely:", error);
-        // Fallback response for when Gemini fails
-        const fallbackContent = isEmailRequest ? 
-          "Grazie per la tua email! Sto elaborando la tua routine personalizzata. Potresti riprovare tra un momento?" :
-          "Mi dispiace, sto avendo problemi tecnici. Potresti ripetere la tua richiesta?";
-        
-        this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message };
-        this.conversationHistory.push({ role: "assistant", content: fallbackContent });
-        
-        return {
-          content: fallbackContent,
-          hasChoices: false
-        };
-      }
+      const response = await this.callGeminiWithRetry({
+        model: "gemini-2.5-flash",
+        config: {
+          systemInstruction: enhancedSystemInstruction,
+        },
+        contents: contents
+      });
 
       const content = response.text || "Mi dispiace, non ho capito. Puoi ripetere?";
       this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message }; // Keep original message in history
@@ -894,8 +877,24 @@ A te la scelta!`;
         choices,
         isComplete: this.isConversationComplete(content)
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
+      
+      // Only provide fallback for specific connection errors after email validation
+      const isEmailRequestFallback = this.isEmailValidationNeeded();
+      if (isEmailRequestFallback && (error?.message?.includes('request aborted') || error?.message?.includes('timeout'))) {
+        console.log('Using fallback response for email validation timeout');
+        const fallbackContent = "Perfetto! Ho ricevuto la tua email. La tua routine personalizzata ti arriverà presto via email. Nel frattempo, puoi continuare a chattare con me!";
+        
+        this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message };
+        this.conversationHistory.push({ role: "assistant", content: fallbackContent });
+        
+        return {
+          content: fallbackContent,
+          hasChoices: false
+        };
+      }
+      
       throw new Error("Failed to get response from Bonnie");
     }
   }
@@ -1139,6 +1138,7 @@ A te la scelta!`;
     }
 
     if (lowerQuestion.includes("email")) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const isValid = emailRegex.test(lowerAnswer);
       console.log(`Email validation: ${isValid}`);
       return isValid;
