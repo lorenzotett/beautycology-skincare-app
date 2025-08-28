@@ -607,8 +607,8 @@ export class GoogleSheetsService {
   }
 
   private async extractImageBase64FromMessages(messages: ChatMessage[]): Promise<string> {
-    const fs = require('fs').promises;
-    const path = require('path');
+    const fs = await import('fs/promises');
+    const path = await import('path');
     
     for (const message of messages) {
       // Check for Base64 images in metadata first
