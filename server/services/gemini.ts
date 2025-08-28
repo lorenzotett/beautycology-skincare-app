@@ -503,14 +503,20 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
     • **Protezione solare:** [frequenza d'uso menzionata]
     • **Particolarità:** [allergie, preferenze, note aggiuntive se fornite]
 
-    🎨 **Vorresti vedere come apparirà la tua pelle dopo 4 settimane di trattamento con questi ingredienti?**
+    **REGOLA CRITICA PER IL PRIMA/DOPO:**
+    SE l'utente ha caricato una foto iniziale (analisi con dati JSON disponibili):
+      🎨 **Vorresti vedere come apparirà la tua pelle dopo 4 settimane di trattamento con questi ingredienti?**
+      
+      A) Sì, mostrami il prima e dopo
+      B) No, prosegui con la routine
+      
+      [METADATA:INGREDIENTS_PROVIDED:lista_ingredienti_separati_da_virgola]
+      [METADATA:HAS_UPLOADED_PHOTO:true]
+    
+    SE l'utente NON ha caricato una foto (solo descrizione testuale):
+      Passa direttamente alla routine senza chiedere del prima/dopo.
 
-    A) Sì, mostrami il prima e dopo
-    B) No, prosegui con la routine
-
-    [METADATA:INGREDIENTS_PROVIDED:lista_ingredienti_separati_da_virgola]
-
-2.  **QUANDO l'utente risponde "Sì, mostrami il prima e dopo" (opzione A):**
+2.  **QUANDO l'utente risponde "Sì, mostrami il prima e dopo" (opzione A) - SOLO SE HA CARICATO UNA FOTO:**
     Rispondi con: 
     
     "✨ Perfetto! Sto generando le immagini personalizzate che mostrano come apparirà la tua pelle dopo 4 settimane di trattamento con gli ingredienti selezionati per te. Un momento... 🎨
@@ -518,6 +524,9 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
     [TRIGGER:GENERATE_BEFORE_AFTER_IMAGES]"
     
     Dopo che le immagini sono generate, continua con: "Vorresti ora vedere la routine personalizzata completa?"
+    
+    **IMPORTANTE:** Se l'utente NON ha caricato una foto iniziale, NON generare il trigger. Invece rispondi:
+    "Mi dispiace, ma per mostrarti il prima e dopo personalizzato avrei bisogno di una tua foto iniziale. Proseguiamo con la routine personalizzata completa!"
 
 3.  **QUANDO l'utente risponde "No, prosegui con la routine" (opzione B) o dopo aver mostrato le immagini:** Fornisci SOLO la routine completa personalizzata che deve includere:
 
@@ -596,11 +605,14 @@ export class GeminiService {
     }
   }
 
+  private hasUploadedPhoto: boolean = false;
+
   async initializeConversation(userName: string): Promise<ChatResponse> {
     // Start with the user's name
     this.conversationHistory = [
       { role: "user", content: userName }
     ];
+    this.hasUploadedPhoto = false;
 
     try {
       // Let Gemini generate the initial message based on the system instruction
@@ -649,6 +661,9 @@ A te la scelta!`;
 
   async sendMessageWithImage(imagePath: string, message?: string): Promise<ChatResponse> {
     try {
+      // Mark that the user has uploaded a photo
+      this.hasUploadedPhoto = true;
+      
       // Read the image file
       const fs = await import('fs');
       const imageData = fs.readFileSync(imagePath);
@@ -690,10 +705,15 @@ A te la scelta!`;
         parts: parts as any
       });
 
+      // Enhance system instruction to include photo upload status
+      const enhancedSystemInstruction = SYSTEM_INSTRUCTION + `\n\n**STATO FOTO UTENTE:** ${this.hasUploadedPhoto ? 
+        'L\'utente HA caricato una foto iniziale. Puoi procedere con la generazione del prima/dopo se richiesto.' : 
+        'L\'utente NON ha caricato una foto iniziale. NON generare mai il trigger GENERATE_BEFORE_AFTER_IMAGES e non chiedere del prima/dopo.'}`;
+
       const response = await this.callGeminiWithRetry({
         model: "gemini-2.5-flash",
         config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
+          systemInstruction: enhancedSystemInstruction,
         },
         contents: contents
       });
@@ -801,10 +821,15 @@ A te la scelta!`;
         parts: [{ text: enhancedMessage }]
       });
 
+      // Enhance system instruction to include photo upload status
+      const enhancedSystemInstruction = SYSTEM_INSTRUCTION + `\n\n**STATO FOTO UTENTE:** ${this.hasUploadedPhoto ? 
+        'L\'utente HA caricato una foto iniziale. Puoi procedere con la generazione del prima/dopo se richiesto.' : 
+        'L\'utente NON ha caricato una foto iniziale. NON generare mai il trigger GENERATE_BEFORE_AFTER_IMAGES e non chiedere del prima/dopo.'}`;
+
       const response = await this.callGeminiWithRetry({
         model: "gemini-2.5-flash",
         config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
+          systemInstruction: enhancedSystemInstruction,
         },
         contents: contents
       });

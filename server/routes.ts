@@ -454,6 +454,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Recreate the Gemini service if it was removed from memory
         console.log(`♻️ Recreating Gemini service for session ${sessionId} (image upload)`);
         geminiService = new GeminiService();
+        
+        // Check if user had previously uploaded a photo
+        const messages = await storage.getChatMessages(sessionId);
+        for (const msg of messages) {
+          if (msg.metadata && (msg.metadata as any).hasImage) {
+            geminiService.hasUploadedPhoto = true;
+            console.log("✅ Restored hasUploadedPhoto flag for session", sessionId);
+            break;
+          }
+        }
+        
         geminiServices.set(sessionId, geminiService);
       }
 
@@ -685,6 +696,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Recreate the Gemini service if it was removed from memory
         console.log(`♻️ Recreating Gemini service for session ${sessionId}`);
         geminiService = new GeminiService();
+        
+        // Check if user had previously uploaded a photo
+        const messages = await storage.getChatMessages(sessionId);
+        for (const msg of messages) {
+          if (msg.metadata && (msg.metadata as any).hasImage) {
+            geminiService.hasUploadedPhoto = true;
+            console.log("✅ Restored hasUploadedPhoto flag for session", sessionId);
+            break;
+          }
+        }
+        
         geminiServices.set(sessionId, geminiService);
       }
 
@@ -826,8 +848,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Session not found" });
       }
 
-      // Get the latest skin analysis from session
+      // Get messages to find user photo and skin analysis
       const messages = await storage.getChatMessages(sessionId);
+      
+      // Find user's uploaded photo
+      let userPhotoBase64 = null;
+      for (const message of messages) {
+        if (message.metadata && (message.metadata as any).hasImage) {
+          const metadata = message.metadata as any;
+          if (metadata.imageBase64) {
+            userPhotoBase64 = metadata.imageBase64;
+            console.log("📸 Found user photo for before/after generation");
+            break;
+          }
+        }
+      }
+      
+      if (!userPhotoBase64) {
+        return res.status(400).json({ 
+          error: "No user photo found. Before/after generation requires an uploaded photo." 
+        });
+      }
+      
       let skinAnalysis = null;
 
       // Find the latest skin analysis in messages
@@ -851,8 +893,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No skin analysis found for this session" });
       }
 
-      // Generate before/after images
-      const images = await imageGenerationService.generateBeforeAfterImages(
+      // Generate before/after images using user's photo
+      const images = await imageGenerationService.generateBeforeAfterImagesFromUserPhoto(
+        userPhotoBase64,
         skinAnalysis,
         ingredients || [],
         timeframe

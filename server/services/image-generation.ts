@@ -15,6 +15,151 @@ export interface BeforeAfterImages {
 export class ImageGenerationService {
   private model = "gemini-2.0-flash-preview-image-generation";
 
+  async generateBeforeAfterImagesFromUserPhoto(
+    userPhotoBase64: string,
+    skinAnalysis: SkinAnalysisResult,
+    recommendedIngredients: string[],
+    timeframe: string = "4 settimane"
+  ): Promise<BeforeAfterImages | null> {
+    try {
+      console.log("🎨 Generating before/after images from user photo with ingredients:", recommendedIngredients);
+      
+      // Clean the base64 if it has a data URL prefix
+      const cleanBase64 = userPhotoBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+      
+      // The BEFORE image is the user's actual photo
+      const beforeImage = cleanBase64;
+      console.log("✅ Using user's original photo as BEFORE image");
+      
+      // Generate AFTER image based on user's photo with improvements
+      const afterPrompt = this.createAfterPromptFromUserPhoto(skinAnalysis, recommendedIngredients, timeframe, userPhotoBase64);
+      const afterImage = await this.generateImprovedVersionFromPhoto(afterPrompt, userPhotoBase64);
+      
+      if (!afterImage) {
+        console.error("Failed to generate after image from user photo");
+        return null;
+      }
+      
+      return {
+        beforeImage,
+        afterImage
+      };
+    } catch (error) {
+      console.error("❌ Error generating before/after images from user photo:", error);
+      return null;
+    }
+  }
+
+  private createAfterPromptFromUserPhoto(
+    skinAnalysis: SkinAnalysisResult,
+    ingredients: string[],
+    timeframe: string,
+    userPhotoBase64: string
+  ): string {
+    const improvements = [];
+    
+    // Map ingredients to their effects
+    const ingredientEffects: { [key: string]: string } = {
+      "Centella Asiatica": "calmed redness, reduced irritation",
+      "Bardana": "clearer skin with reduced acne",
+      "Mirto": "balanced sebum production, fewer breakouts",
+      "Elicriso": "smoother, more even skin texture",
+      "Liquirizia": "brighter skin tone, faded dark spots",
+      "Ginkgo Biloba": "improved elasticity, reduced fine lines",
+      "Amamelide": "refined pores, matte finish",
+      "Kigelia Africana": "deeply hydrated, plump skin",
+      "Malva": "soothed, calm complexion"
+    };
+    
+    // Add improvements based on ingredients
+    ingredients.forEach(ingredient => {
+      if (ingredientEffects[ingredient]) {
+        improvements.push(ingredientEffects[ingredient]);
+      }
+    });
+    
+    // Add improvements based on skin analysis scores
+    if (skinAnalysis.rossori > 60) {
+      improvements.push("redness significantly reduced");
+    }
+    if (skinAnalysis.acne > 60) {
+      improvements.push("acne cleared, smoother skin");
+    }
+    if (skinAnalysis.rughe > 60) {
+      improvements.push("fine lines visibly softened");
+    }
+    if (skinAnalysis.pigmentazione > 60) {
+      improvements.push("dark spots faded, even tone");
+    }
+    if (skinAnalysis.idratazione > 60) {
+      improvements.push("skin well-hydrated and glowing");
+    }
+    if (skinAnalysis.pori_dilatati > 60) {
+      improvements.push("pores refined and less visible");
+    }
+    
+    const improvementsText = improvements.length > 0
+      ? improvements.join(", ")
+      : "overall skin health improved";
+
+    return `Based on this person's face photo, create an improved version showing realistic results after ${timeframe} of skincare treatment.
+    The improvements should include: ${improvementsText}.
+    Keep the same person, same face structure, same lighting, same angle, same background.
+    Only improve the skin texture and quality realistically - the person should be clearly recognizable as the same individual.
+    Make subtle but noticeable improvements: clearer skin, reduced imperfections, healthy glow, better texture.
+    The changes should look natural and achievable through good skincare, not artificially perfect.`;
+  }
+
+  private async generateImprovedVersionFromPhoto(prompt: string, originalPhotoBase64: string): Promise<string | null> {
+    try {
+      // Clean the base64 if needed
+      const cleanBase64 = originalPhotoBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+      
+      const response = await ai.models.generateContent({
+        model: this.model,
+        contents: [
+          { 
+            role: "user", 
+            parts: [
+              {
+                inlineData: {
+                  data: cleanBase64,
+                  mimeType: "image/jpeg"
+                }
+              },
+              { text: prompt }
+            ] 
+          }
+        ],
+        config: {
+          responseModalities: [Modality.TEXT, Modality.IMAGE],
+        },
+      });
+
+      const candidates = response.candidates;
+      if (!candidates || candidates.length === 0) {
+        return null;
+      }
+
+      const content = candidates[0].content;
+      if (!content || !content.parts) {
+        return null;
+      }
+
+      for (const part of content.parts) {
+        if (part.inlineData && part.inlineData.data) {
+          // Return base64 encoded improved image
+          return part.inlineData.data;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error generating improved version from photo:", error);
+      return null;
+    }
+  }
+
   async generateBeforeAfterImages(
     skinAnalysis: SkinAnalysisResult,
     recommendedIngredients: string[],
