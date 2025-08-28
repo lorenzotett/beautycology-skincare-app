@@ -521,7 +521,9 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
     
     "✨ Perfetto! Sto generando le immagini personalizzate che mostrano come apparirà la tua pelle dopo 4 settimane di trattamento con gli ingredienti selezionati per te. Un momento... 🎨
     
-    [TRIGGER:GENERATE_BEFORE_AFTER_IMAGES]"
+    [TRIGGER:GENERATE_BEFORE_AFTER_IMAGES]
+    [METADATA:INGREDIENTS_PROVIDED:lista_ingredienti_separati_da_virgola]
+    [METADATA:HAS_UPLOADED_PHOTO:true]"
     
     Dopo che le immagini sono generate, continua con: "Vorresti ora vedere la routine personalizzata completa?"
     
