@@ -592,14 +592,26 @@ export class GeminiService {
       try {
         return await ai.models.generateContent(params);
       } catch (error: any) {
-        if ((error.status === 429 || error.status === 503) && attempt < maxRetries) {
-          // Rate limiting o sovraccarico - exponential backoff più aggressivo
-          const jitter = Math.random() * 1000; // Jitter per evitare thundering herd
+        const isRetryableError = 
+          error.status === 429 || 
+          error.status === 503 || 
+          error.message?.includes('request aborted') ||
+          error.message?.includes('timeout') ||
+          error.message?.includes('ECONNRESET') ||
+          error.message?.includes('ENOTFOUND') ||
+          error.code === 'ECONNRESET' ||
+          error.code === 'ETIMEDOUT';
+        
+        if (isRetryableError && attempt < maxRetries) {
+          // Rate limiting, sovraccarico, o problemi di connessione
+          const jitter = Math.random() * 1000;
           const delay = (baseDelay * Math.pow(2, attempt - 1)) + jitter;
-          console.log(`API overloaded (${error.status}). Retrying in ${Math.round(delay)}ms... (attempt ${attempt}/${maxRetries})`);
+          console.log(`API error (${error.status || error.code || 'connection'}): ${error.message}. Retrying in ${Math.round(delay)}ms... (attempt ${attempt}/${maxRetries})`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
+        
+        console.error(`Gemini API call failed after ${attempt} attempts:`, error);
         throw error;
       }
     }
@@ -826,15 +838,30 @@ A te la scelta!`;
         'L\'utente HA caricato una foto iniziale. Puoi procedere con la generazione del prima/dopo se richiesto.' : 
         'L\'utente NON ha caricato una foto iniziale. NON generare mai il trigger GENERATE_BEFORE_AFTER_IMAGES e non chiedere del prima/dopo.'}`;
 
-      const response = await this.callGeminiWithRetry({
-        model: "gemini-2.5-flash",
-        config: {
-          systemInstruction: enhancedSystemInstruction,
-        },
-        contents: contents
-      });
-
-      
+      let response;
+      try {
+        response = await this.callGeminiWithRetry({
+          model: "gemini-2.5-flash",
+          config: {
+            systemInstruction: enhancedSystemInstruction,
+          },
+          contents: contents
+        });
+      } catch (error) {
+        console.error("Gemini API call failed completely:", error);
+        // Fallback response for when Gemini fails
+        const fallbackContent = isEmailRequest ? 
+          "Grazie per la tua email! Sto elaborando la tua routine personalizzata. Potresti riprovare tra un momento?" :
+          "Mi dispiace, sto avendo problemi tecnici. Potresti ripetere la tua richiesta?";
+        
+        this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message };
+        this.conversationHistory.push({ role: "assistant", content: fallbackContent });
+        
+        return {
+          content: fallbackContent,
+          hasChoices: false
+        };
+      }
 
       const content = response.text || "Mi dispiace, non ho capito. Puoi ripetere?";
       this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message }; // Keep original message in history
