@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { MessageBubble } from "./message-bubble";
 import { TypingIndicator } from "./typing-indicator";
+import { BeforeAfterImages } from "./before-after-images";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card } from "./ui/card";
@@ -44,6 +45,8 @@ export function ChatInterface() {
   const [isListening, setIsListening] = useState(false);
   const recognition = useRef<any>(null);
   const [isFromIframe, setIsFromIframe] = useState(false);
+  const [beforeAfterImages, setBeforeAfterImages] = useState<{beforeImage: string; afterImage: string; ingredients: string[]} | null>(null);
+  const [pendingIngredients, setPendingIngredients] = useState<string[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -220,6 +223,21 @@ export function ChatInterface() {
       // Debug log to verify choices are being set
       console.log('Assistant message choices:', data.message.choices);
       console.log('Assistant message hasChoices:', data.message.hasChoices);
+      
+      // Check for image generation trigger
+      if (data.message.content.includes('[TRIGGER:GENERATE_BEFORE_AFTER_IMAGES]')) {
+        // Generate before/after images
+        generateBeforeAfterImages();
+      }
+      
+      // Extract ingredients if provided
+      const ingredientsMatch = data.message.content.match(/\[METADATA:INGREDIENTS_PROVIDED:([^\]]+)\]/);
+      if (ingredientsMatch) {
+        const ingredients = ingredientsMatch[1].split(',').map(i => i.trim());
+        setPendingIngredients(ingredients);
+        console.log('Extracted ingredients:', ingredients);
+      }
+      
       setMessages(prev => [...prev, assistantMessage]);
       setIsTyping(false);
     },
@@ -767,6 +785,71 @@ export function ChatInterface() {
       }
     };
   }, [toast]);
+
+  const generateBeforeAfterImages = async () => {
+    if (!sessionId || !pendingIngredients.length) {
+      console.error("Cannot generate images: no session or ingredients");
+      return;
+    }
+
+    try {
+      // Show loading message
+      setIsTyping(true);
+      setTypingMessage("Sto generando le immagini personalizzate... 🎨");
+
+      const response = await apiRequest("POST", "/api/chat/generate-before-after", {
+        sessionId,
+        ingredients: pendingIngredients,
+        timeframe: "4 settimane"
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Store the generated images
+        setBeforeAfterImages({
+          beforeImage: data.beforeImage,
+          afterImage: data.afterImage,
+          ingredients: pendingIngredients
+        });
+
+        // Add a system message to show the images
+        const imageMessage: ChatMessage = {
+          id: Date.now(),
+          sessionId: sessionId,
+          role: "assistant",
+          content: "Ecco come apparirà la tua pelle dopo 4 settimane di trattamento con gli ingredienti consigliati:",
+          metadata: {
+            hasBeforeAfterImages: true,
+            beforeImage: data.beforeImage,
+            afterImage: data.afterImage,
+            ingredients: pendingIngredients
+          },
+          createdAt: new Date(),
+        };
+
+        setMessages(prev => [...prev, imageMessage]);
+        
+        // Clear pending ingredients
+        setPendingIngredients([]);
+      } else {
+        toast({
+          title: "Errore",
+          description: "Non è stato possibile generare le immagini. Riprova più tardi.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error generating before/after images:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la generazione delle immagini.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsTyping(false);
+    }
+  };
 
   const toggleVoiceRecognition = () => {
     if (!recognition.current) {

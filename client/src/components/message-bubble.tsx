@@ -2,6 +2,7 @@ import { Button } from "./ui/button";
 import { Upload } from "lucide-react";
 import { ChatMessage } from "@shared/schema";
 import { SkinAnalysisTable } from "./skin-analysis-table";
+import { BeforeAfterImages } from "./before-after-images";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -263,6 +264,12 @@ const formatContent = (content: string) => {
 };
 
 export function MessageBubble({ message, onChoiceSelect, isAnswered = false, userInitial = "U", onImageClick }: MessageBubbleProps) {
+  // Remove trigger and metadata markers from content
+  const cleanedContent = message.content
+    .replace(/\[TRIGGER:GENERATE_BEFORE_AFTER_IMAGES\]/g, '')
+    .replace(/\[METADATA:INGREDIENTS_PROVIDED:[^\]]+\]/g, '')
+    .trim();
+  
   // Function to track final button click
   const trackFinalButtonClick = async (sessionId: string) => {
     try {
@@ -322,10 +329,10 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   const choices = metadata?.choices || [];
 
   // Parse skin analysis data if present
-  const skinAnalysis = !isUser ? parseSkinAnalysis(message.content) : null;
+  const skinAnalysis = !isUser ? parseSkinAnalysis(cleanedContent) : null;
 
   // Parse link buttons from content
-  const contentWithButtons = !isUser ? parseContentWithLinkButtons(message.content) : { content: message.content, linkButtons: [] };
+  const contentWithButtons = !isUser ? parseContentWithLinkButtons(cleanedContent) : { content: cleanedContent, linkButtons: [] };
 
 
 
@@ -585,6 +592,17 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
               </button>
             </div>
           ))}
+        </div>
+      )}
+      {/* Before/After Images display */}
+      {metadata?.hasBeforeAfterImages && (
+        <div className="mt-4">
+          <BeforeAfterImages 
+            beforeImage={metadata.beforeImage as string}
+            afterImage={metadata.afterImage as string}
+            ingredients={metadata.ingredients as string[]}
+            timeframe="4 settimane"
+          />
         </div>
       )}
       {/* Image display */}

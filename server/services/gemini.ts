@@ -491,6 +491,9 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
       **Ingrediente consigliato:** [Ingrediente dal database]
       **Come funziona:** [Spiegazione breve di come risolve il problema]
 
+    ## 🧪 **INGREDIENTI PERSONALIZZATI PER LA TUA PELLE**
+    [Lista tutti gli ingredienti consigliati con breve spiegazione]
+
     **IMPORTANTE: SEMPRE INCLUDERE UN RIEPILOGO DELLE INFORMAZIONI RACCOLTE:**
     **📝 RIEPILOGO DELLE TUE CARATTERISTICHE:**
     • **Età:** [età fornita]
@@ -500,9 +503,23 @@ REGOLA OBBLIGATORIA: Se hai eseguito l'analisi della foto, NON chiedere MAI il t
     • **Protezione solare:** [frequenza d'uso menzionata]
     • **Particolarità:** [allergie, preferenze, note aggiuntive se fornite]
 
-    Vorresti che ti fornissi una routine personalizzata completa basata su tutte queste informazioni?
+    🎨 **Vorresti vedere come apparirà la tua pelle dopo 4 settimane di trattamento con questi ingredienti?**
 
-2.  **QUANDO l'utente risponde affermativamente:** Fornisci SOLO la routine completa personalizzata che deve includere:
+    A) Sì, mostrami il prima e dopo
+    B) No, prosegui con la routine
+
+    [METADATA:INGREDIENTS_PROVIDED:lista_ingredienti_separati_da_virgola]
+
+2.  **QUANDO l'utente risponde "Sì, mostrami il prima e dopo" (opzione A):**
+    Rispondi con: 
+    
+    "✨ Perfetto! Sto generando le immagini personalizzate che mostrano come apparirà la tua pelle dopo 4 settimane di trattamento con gli ingredienti selezionati per te. Un momento... 🎨
+    
+    [TRIGGER:GENERATE_BEFORE_AFTER_IMAGES]"
+    
+    Dopo che le immagini sono generate, continua con: "Vorresti ora vedere la routine personalizzata completa?"
+
+3.  **QUANDO l'utente risponde "No, prosegui con la routine" (opzione B) o dopo aver mostrato le immagini:** Fornisci SOLO la routine completa personalizzata che deve includere:
 
     **📋 ROUTINE PERSONALIZZATA COMPLETA:**
 

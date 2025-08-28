@@ -812,6 +812,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate before/after images based on skin analysis and ingredients
+  app.post("/api/chat/generate-before-after", async (req, res) => {
+    try {
+      const { sessionId, ingredients, timeframe = "4 settimane" } = req.body;
+
+      if (!sessionId) {
+        return res.status(400).json({ error: "Session ID is required" });
+      }
+
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      // Get the latest skin analysis from session
+      const messages = await storage.getChatMessages(sessionId);
+      let skinAnalysis = null;
+
+      // Find the latest skin analysis in messages
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i];
+        if (msg.content.includes("Analisi AI della pelle:")) {
+          const analysisMatch = msg.content.match(/Analisi AI della pelle: ({.*?})/s);
+          if (analysisMatch) {
+            try {
+              skinAnalysis = JSON.parse(analysisMatch[1]);
+              console.log("Found skin analysis:", skinAnalysis);
+              break;
+            } catch (e) {
+              console.error("Failed to parse skin analysis:", e);
+            }
+          }
+        }
+      }
+
+      if (!skinAnalysis) {
+        return res.status(400).json({ error: "No skin analysis found for this session" });
+      }
+
+      // Generate before/after images
+      const images = await imageGenerationService.generateBeforeAfterImages(
+        skinAnalysis,
+        ingredients || [],
+        timeframe
+      );
+
+      if (!images) {
+        return res.status(500).json({ error: "Failed to generate images" });
+      }
+
+      // Save the generated images as message metadata
+      await storage.addChatMessage({
+        sessionId,
+        role: "assistant",
+        content: `Ecco come apparirà la tua pelle dopo ${timeframe} di trattamento con gli ingredienti consigliati:
+
+**PRIMA:** La tua pelle attuale
+**DOPO:** La tua pelle dopo ${timeframe}
+
+Ricorda che i risultati possono variare da persona a persona.`,
+        metadata: {
+          hasBeforeAfterImages: true,
+          beforeImage: images.beforeImage,
+          afterImage: images.afterImage,
+          ingredients,
+          timeframe
+        }
+      });
+
+      res.json({
+        success: true,
+        beforeImage: images.beforeImage,
+        afterImage: images.afterImage,
+        message: "Immagini generate con successo"
+      });
+
+    } catch (error) {
+      console.error("Error generating before/after images:", error);
+      res.status(500).json({ error: "Failed to generate before/after images" });
+    }
+  });
+
   // Final button click tracking
   app.post("/api/chat/:sessionId/final-button-clicked", async (req, res) => {
     try {
