@@ -13,7 +13,7 @@ export interface BeforeAfterImages {
 }
 
 export class ImageGenerationService {
-  private model = "gemini-2.0-flash-preview-image-generation";
+  private model = "gemini-2.5-flash-image-preview";
 
   async generateBeforeAfterImagesFromUserPhoto(
     userPhotoBase64: string,
