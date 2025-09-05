@@ -102,12 +102,7 @@ export class ImageGenerationService {
       ? improvements.join(", ")
       : "overall skin health improved";
 
-    return `Based on this person's face photo, create an improved version showing realistic results after ${timeframe} of skincare treatment.
-    The improvements should include: ${improvementsText}.
-    Keep the same person, same face structure, same lighting, same angle, same background.
-    Only improve the skin texture and quality realistically - the person should be clearly recognizable as the same individual.
-    Make subtle but noticeable improvements: clearer skin, reduced imperfections, healthy glow, better texture.
-    The changes should look natural and achievable through good skincare, not artificially perfect.`;
+    return `Remove facial imperfections and make the skin look natural and beautiful. Keep the same person, same face, same lighting, same background. Only improve the skin quality naturally.`;
   }
 
   private async generateImprovedVersionFromPhoto(prompt: string, originalPhotoBase64: string): Promise<string | null> {
