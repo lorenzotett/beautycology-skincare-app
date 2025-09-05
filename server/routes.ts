@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { GeminiService } from "./services/gemini";
 import { SkinAnalysisService } from "./services/skin-analysis";
+import { imageGenerationService } from "./services/image-generation";
 import { KlaviyoService } from "./services/klaviyo";
 import { KlaviyoLeadAutomation } from "./services/klaviyo-lead-automation";
 import { GoogleSheetsService } from "./services/google-sheets";
@@ -585,6 +586,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Generate before/after images immediately after skin analysis
+      let beforeAfterImages = null;
+      try {
+        console.log('🎨 Generating before/after images from uploaded photo...');
+        const cleanBase64 = imageBase64?.replace(/^data:image\/[^;]+;base64,/, '') || '';
+        
+        if (cleanBase64 && !imageBase64?.includes('data:image/svg')) {
+          const images = await imageGenerationService.generateBeforeAfterImagesFromUserPhoto(
+            cleanBase64,
+            analysisResult,
+            ['Bonnie AI'], // Default ingredients for immediate generation
+            '4 settimane'
+          );
+          
+          if (images) {
+            beforeAfterImages = images;
+            console.log('✅ Before/after images generated successfully');
+          } else {
+            console.warn('⚠️ Failed to generate before/after images');
+          }
+        }
+      } catch (imageError) {
+        console.error('❌ Error generating before/after images:', imageError);
+      }
+
       const analysisMessage = message ? 
         `${message}\n\nAnalisi AI della pelle: ${JSON.stringify(analysisResult)}` : 
         `Analisi AI della pelle: ${JSON.stringify(analysisResult)}`;
@@ -621,6 +647,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hasChoices: response.hasChoices,
           choices: response.choices,
           skinAnalysis: analysisResult,
+          hasBeforeAfterImages: beforeAfterImages !== null,
+          beforeImage: beforeAfterImages?.beforeImage || null,
+          afterImage: beforeAfterImages?.afterImage || null,
+          ingredients: ['Bonnie AI'],
         },
       });
 
