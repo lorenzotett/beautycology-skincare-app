@@ -523,92 +523,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const skinAnalysis = new SkinAnalysisService();
 
-      // Use base64 image for analysis instead of file path to avoid file deletion issues
-      let analysisResult;
-      let analysisRetries = 0;
-      const maxRetries = 1; // Ridotto a 1 solo retry per evitare attese eccessive
+      // START PARALLEL PROCESSING: analysis and before/after generation
+      const cleanBase64 = imageBase64?.replace(/^data:image\/[^;]+;base64,/, '') || '';
+      
+      // Promise for skin analysis
+      const analysisPromise = (async () => {
+        let analysisResult;
+        let analysisRetries = 0;
+        const maxRetries = 1;
 
-      while (analysisRetries <= maxRetries) {
-        try {
-          console.log(`🔍 Tentativo di analisi ${analysisRetries + 1}/${maxRetries + 1}...`);
+        while (analysisRetries <= maxRetries) {
+          try {
+            console.log(`🔍 Tentativo di analisi ${analysisRetries + 1}/${maxRetries + 1}...`);
 
-          if (imageBase64 && !imageBase64.includes('data:image/svg')) {
-            // Use the base64 image we already have
-            analysisResult = await skinAnalysis.analyzeImageFromBase64(imageBase64);
-            console.log('✅ Analisi completata con successo');
-            break;
-          } else {
-            // Fallback: try to use file path if base64 is not available or is SVG placeholder
-            console.warn('⚠️ Using file path for analysis, may fail if file is deleted');
-            analysisResult = await skinAnalysis.analyzeImage(imageFile.path);
-            console.log('✅ Analisi completata con successo (da file)');
-            break;
-          }
-        } catch (analysisError) {
-          analysisRetries++;
-          console.error(`❌ Tentativo ${analysisRetries} fallito:`, analysisError);
-
-          if (analysisRetries > maxRetries) {
-            console.error('❌ ERRORE CRITICO: Tutti i tentativi di analisi sono falliti');
-
-            // Check specific error types
-            const errorMessage = analysisError instanceof Error ? analysisError.message : String(analysisError);
-
-            if (errorMessage.includes('Failed to parse skin analysis JSON')) {
-              console.error('❌ Errore nel parsing JSON della risposta AI');
-            } else if (errorMessage.includes('timeout')) {
-              console.error('❌ Timeout durante l\'analisi AI');
-            } else if (errorMessage.includes('Image file not found')) {
-              console.error('❌ File immagine non trovato');
+            if (imageBase64 && !imageBase64.includes('data:image/svg')) {
+              analysisResult = await skinAnalysis.analyzeImageFromBase64(imageBase64);
+              console.log('✅ Analisi completata con successo');
+              break;
+            } else {
+              console.warn('⚠️ Using file path for analysis, may fail if file is deleted');
+              analysisResult = await skinAnalysis.analyzeImage(imageFile.path);
+              console.log('✅ Analisi completata con successo (da file)');
+              break;
             }
+          } catch (analysisError) {
+            analysisRetries++;
+            console.error(`❌ Tentativo ${analysisRetries} fallito:`, analysisError);
 
-            // Provide realistic fallback analysis values
-            analysisResult = {
-              rossori: 25,
-              acne: 20,
-              rughe: 15,
-              pigmentazione: 30,
-              pori_dilatati: 35,
-              oleosita: 40,
-              danni_solari: 20,
-              occhiaie: 25,
-              idratazione: 45,
-              elasticita: 20,
-              texture_uniforme: 35
+            if (analysisRetries > maxRetries) {
+              console.error('❌ ERRORE CRITICO: Tutti i tentativi di analisi sono falliti');
+              analysisResult = {
+                rossori: 25, acne: 20, rughe: 15, pigmentazione: 30,
+                pori_dilatati: 35, oleosita: 40, danni_solari: 20,
+                occhiaie: 25, idratazione: 45, elasticita: 20, texture_uniforme: 35
+              };
+              console.log('⚡ FALLBACK ATTIVATO: Utilizzando analisi predefinita realistica per continuare');
+              break;
+            } else {
+              console.log(`⏳ Attesa di 1 secondo prima del prossimo tentativo...`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+        }
+        return analysisResult;
+      })();
+
+      // Promise for before/after generation (starts immediately)
+      const imagesPromise = (async () => {
+        try {
+          console.log('🎨 Starting before/after generation in parallel...');
+          if (cleanBase64 && !imageBase64?.includes('data:image/svg')) {
+            // Use a quick fallback analysis for immediate generation
+            const quickAnalysis = {
+              rossori: 25, acne: 20, rughe: 15, pigmentazione: 30,
+              pori_dilatati: 35, oleosita: 40, danni_solari: 20,
+              occhiaie: 25, idratazione: 45, elasticita: 20, texture_uniforme: 35
             };
-
-            console.log('⚡ FALLBACK ATTIVATO: Utilizzando analisi predefinita realistica per continuare');
-            break;
-          } else {
-            console.log(`⏳ Attesa di 1 secondo prima del prossimo tentativo...`);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Ridotto a 1 secondo fisso
+            
+            const images = await imageGenerationService.generateBeforeAfterImagesFromUserPhoto(
+              cleanBase64,
+              quickAnalysis,
+              ['Bonnie AI'],
+              '4 settimane'
+            );
+            
+            if (images) {
+              console.log('✅ Before/after images generated successfully');
+              return images;
+            }
           }
+          return null;
+        } catch (imageError) {
+          console.error('❌ Error generating before/after images:', imageError);
+          return null;
         }
-      }
+      })();
 
-      // Generate before/after images immediately after skin analysis
-      let beforeAfterImages = null;
-      try {
-        console.log('🎨 Generating before/after images from uploaded photo...');
-        const cleanBase64 = imageBase64?.replace(/^data:image\/[^;]+;base64,/, '') || '';
+      // Wait for both analysis and images to complete, but prioritize images
+      const [analysisResult, beforeAfterImages] = await Promise.all([analysisPromise, imagesPromise]);
+      
+      // If we have images, send them first in a separate message
+      if (beforeAfterImages) {
+        console.log('🚀 Saving before/after images as separate message...');
         
-        if (cleanBase64 && !imageBase64?.includes('data:image/svg')) {
-          const images = await imageGenerationService.generateBeforeAfterImagesFromUserPhoto(
-            cleanBase64,
-            analysisResult,
-            ['Bonnie AI'], // Default ingredients for immediate generation
-            '4 settimane'
-          );
-          
-          if (images) {
-            beforeAfterImages = images;
-            console.log('✅ Before/after images generated successfully');
-          } else {
-            console.warn('⚠️ Failed to generate before/after images');
-          }
-        }
-      } catch (imageError) {
-        console.error('❌ Error generating before/after images:', imageError);
+        const beforeAfterMessage = {
+          id: Date.now(),
+          sessionId,
+          role: "assistant" as const,
+          content: "✨ Ecco come potrebbe apparire la tua pelle dopo il trattamento! 🎨",
+          metadata: {
+            hasChoices: false,
+            choices: [],
+            hasBeforeAfterImages: true,
+            beforeImage: beforeAfterImages.beforeImage,
+            afterImage: beforeAfterImages.afterImage,
+            ingredients: ['Bonnie AI'],
+          },
+          createdAt: new Date(),
+        };
+
+        await storage.addChatMessage(beforeAfterMessage);
+        console.log('✅ Before/after message saved to database');
       }
 
       const analysisMessage = message ? 
@@ -647,10 +662,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hasChoices: response.hasChoices,
           choices: response.choices,
           skinAnalysis: analysisResult,
-          hasBeforeAfterImages: beforeAfterImages !== null,
-          beforeImage: beforeAfterImages?.beforeImage || null,
-          afterImage: beforeAfterImages?.afterImage || null,
-          ingredients: ['Bonnie AI'],
         },
       });
 
@@ -658,9 +669,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ensure response is sent before any potential connection issues
       try {
-        res.json({
-          message: response,
-        });
+        // Send both messages if we have before/after images
+        if (beforeAfterImages) {
+          res.json({
+            message: response,
+            beforeAfterMessage: {
+              content: "✨ Ecco come potrebbe apparire la tua pelle dopo il trattamento! 🎨",
+              hasChoices: false,
+              choices: [],
+              metadata: {
+                hasBeforeAfterImages: true,
+                beforeImage: beforeAfterImages.beforeImage,
+                afterImage: beforeAfterImages.afterImage,
+                ingredients: ['Bonnie AI'],
+              }
+            }
+          });
+        } else {
+          res.json({
+            message: response,
+          });
+        }
         console.log('✅ Response sent successfully');
       } catch (sendError) {
         console.error('❌ Error sending response:', sendError);
