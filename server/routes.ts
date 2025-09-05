@@ -612,7 +612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('🎨 After image exists:', !!beforeAfterImages.afterImage);
         
         const beforeAfterMessage = {
-          id: Date.now(),
+          id: Math.floor(Math.random() * 2000000000), // Use smaller ID to fit in integer
           sessionId,
           role: "assistant" as const,
           content: "✨ Ecco come potrebbe apparire la tua pelle dopo il trattamento! 🎨",
