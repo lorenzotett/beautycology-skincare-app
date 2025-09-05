@@ -19,47 +19,48 @@ export function BeforeAfterImages({
   const [currentView, setCurrentView] = useState<"before" | "after" | "compare">("compare");
 
   return (
-    <Card className="w-full max-w-2xl mx-auto overflow-hidden shadow-lg">
-      <div className="bg-gradient-to-r from-teal-500 to-emerald-500 p-4 text-white">
-        <h3 className="text-xl font-bold flex items-center gap-2">
-          <Sparkles className="w-5 h-5" />
+    <Card className="w-full max-w-md mx-auto overflow-hidden shadow-md">
+      <div className="bg-gradient-to-r from-teal-500 to-emerald-500 p-3 text-white">
+        <h3 className="text-sm font-bold flex items-center gap-2">
+          <Sparkles className="w-4 h-4" />
           La tua trasformazione dopo {timeframe}
         </h3>
       </div>
       
-      <CardContent className="p-6">
+      <CardContent className="p-3">
         {/* View Toggle Buttons */}
-        <div className="flex gap-2 mb-6 justify-center">
+        <div className="flex gap-1 mb-3 justify-center">
           <Button
             variant={currentView === "before" ? "default" : "outline"}
             onClick={() => setCurrentView("before")}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 text-xs py-1 px-2 h-7"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3 h-3" />
             Prima
           </Button>
           <Button
             variant={currentView === "compare" ? "default" : "outline"}
             onClick={() => setCurrentView("compare")}
+            className="text-xs py-1 px-2 h-7"
           >
             Confronto
           </Button>
           <Button
             variant={currentView === "after" ? "default" : "outline"}
             onClick={() => setCurrentView("after")}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 text-xs py-1 px-2 h-7"
           >
             Dopo
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3 h-3" />
           </Button>
         </div>
 
         {/* Image Display */}
         <div className="relative">
           {currentView === "compare" ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2">
               <div className="relative">
-                <div className="absolute top-2 left-2 bg-gray-800/80 text-white px-3 py-1 rounded-full text-sm font-semibold z-10">
+                <div className="absolute top-1 left-1 bg-gray-800/80 text-white px-2 py-0.5 rounded-full text-xs font-semibold z-10">
                   PRIMA
                 </div>
                 <img
@@ -69,7 +70,7 @@ export function BeforeAfterImages({
                 />
               </div>
               <div className="relative">
-                <div className="absolute top-2 right-2 bg-teal-600/80 text-white px-3 py-1 rounded-full text-sm font-semibold z-10">
+                <div className="absolute top-1 right-1 bg-teal-600/80 text-white px-2 py-0.5 rounded-full text-xs font-semibold z-10">
                   DOPO
                 </div>
                 <img
@@ -81,7 +82,7 @@ export function BeforeAfterImages({
             </div>
           ) : currentView === "before" ? (
             <div className="relative">
-              <div className="absolute top-2 left-2 bg-gray-800/80 text-white px-3 py-1 rounded-full text-sm font-semibold z-10">
+              <div className="absolute top-1 left-1 bg-gray-800/80 text-white px-2 py-0.5 rounded-full text-xs font-semibold z-10">
                 PRIMA
               </div>
               <img
@@ -92,7 +93,7 @@ export function BeforeAfterImages({
             </div>
           ) : (
             <div className="relative">
-              <div className="absolute top-2 right-2 bg-teal-600/80 text-white px-3 py-1 rounded-full text-sm font-semibold z-10">
+              <div className="absolute top-1 right-1 bg-teal-600/80 text-white px-2 py-0.5 rounded-full text-xs font-semibold z-10">
                 DOPO {timeframe.toUpperCase()}
               </div>
               <img
@@ -106,15 +107,15 @@ export function BeforeAfterImages({
 
         {/* Ingredients Used */}
         {ingredients.length > 0 && (
-          <div className="mt-6 p-4 bg-teal-50 rounded-lg">
-            <h4 className="font-semibold text-teal-800 mb-2">
+          <div className="mt-3 p-2 bg-teal-50 rounded-lg">
+            <h4 className="font-semibold text-xs text-teal-800 mb-1">
               Ingredienti utilizzati nella simulazione:
             </h4>
             <div className="flex flex-wrap gap-2">
               {ingredients.map((ingredient, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1 bg-white text-teal-700 rounded-full text-sm shadow-sm"
+                  className="px-2 py-0.5 bg-white text-teal-700 rounded-full text-xs shadow-sm"
                 >
                   {ingredient}
                 </span>
@@ -124,7 +125,7 @@ export function BeforeAfterImages({
         )}
 
         {/* Disclaimer */}
-        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+        <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
           <p className="text-xs text-amber-800">
             <strong>Nota:</strong> Questa è una simulazione basata su AI che mostra i potenziali risultati. 
             I risultati effettivi possono variare da persona a persona in base a diversi fattori 
