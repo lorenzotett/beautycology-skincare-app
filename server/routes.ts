@@ -602,9 +602,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Wait for both analysis and images to complete, but prioritize images
       const [analysisResult, beforeAfterImages] = await Promise.all([analysisPromise, imagesPromise]);
       
+      console.log('📊 Analysis result ready:', !!analysisResult);
+      console.log('🎨 Before/after images ready:', !!beforeAfterImages);
+      
       // If we have images, send them first in a separate message
       if (beforeAfterImages) {
         console.log('🚀 Saving before/after images as separate message...');
+        console.log('🎨 Before image exists:', !!beforeAfterImages.beforeImage);
+        console.log('🎨 After image exists:', !!beforeAfterImages.afterImage);
         
         const beforeAfterMessage = {
           id: Date.now(),
@@ -624,6 +629,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         await storage.addChatMessage(beforeAfterMessage);
         console.log('✅ Before/after message saved to database');
+      } else {
+        console.log('⚠️ No before/after images generated');
       }
 
       const analysisMessage = message ? 
@@ -671,6 +678,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Send both messages if we have before/after images
         if (beforeAfterImages) {
+          console.log('📤 Sending response WITH before/after images');
           res.json({
             message: response,
             beforeAfterMessage: {
@@ -686,6 +694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
         } else {
+          console.log('📤 Sending response WITHOUT before/after images');
           res.json({
             message: response,
           });
