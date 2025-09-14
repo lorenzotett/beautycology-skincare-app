@@ -1,7 +1,14 @@
-# Skin Care AI Chat Assistant
+# Beautycology AI Chat Assistant
 
 ## Overview
-This is a full-stack web application providing AI-powered skin care consultation via a chat interface. The application features an AI assistant named "Bonnie" that analyzes skin conditions and offers personalized recommendations based on dermatological knowledge. It aims to streamline skin care consultations, offering a business vision focused on personalized beauty solutions and market potential in AI-driven health and beauty.
+This is a full-stack web application providing AI-powered beauty consultation via a chat interface for the Beautycology business. The application will be embedded on beautycology.it and features an AI assistant that analyzes beauty and skin care needs, offering personalized recommendations. This app is completely separate from AI-Dermasense/Bonnie and will have its own traffic, dashboard, and chat management system.
+
+## Project Requirements - Beautycology
+- **Embedding**: Chat interface will be embedded on beautycology.it
+- **Independence**: Completely separate from AI-Dermasense/Bonnie systems
+- **Dashboard**: Own dedicated dashboard for chat management
+- **Integrations**: Klaviyo and Excel integrations not needed initially
+- **Traffic**: Will handle its own traffic and create new chat sessions
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -45,9 +52,9 @@ Preferred communication style: Simple, everyday language.
 - **Environment Requirements**: Node.js (ES modules), PostgreSQL, Google Gemini API Keys.
 
 ### UI/UX Decisions
-- **Color Scheme**: Consistent with a beauty/skincare theme.
-- **Layout**: Responsive design adapting to mobile (compact) and desktop (full-width) views.
-- **Branding**: Minimalist header with Bonnie logo.
+- **Color Scheme**: Consistent with Beautycology brand and beauty/skincare theme.
+- **Layout**: Responsive design adapting to mobile (compact) and desktop (full-width) views, optimized for embedding on beautycology.it.
+- **Branding**: Minimalist header optimized for embedded chat interface.
 - **Accessibility**: Radix UI components ensure accessibility.
 
 ### Technical Implementations
