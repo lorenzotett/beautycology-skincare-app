@@ -326,34 +326,34 @@ body, html {
 
 /* Beautycology Brand Theme */
 .brand-beautycology {
-  --background: hsl(342, 47%, 97%);
-  --foreground: hsl(340, 15%, 25%);
-  --muted: hsl(340, 25%, 92%);
-  --muted-foreground: hsl(340, 8%, 55%);
-  --popover: hsl(340, 30%, 98%);
-  --popover-foreground: hsl(340, 15%, 25%);
-  --card: hsl(340, 35%, 99%);
-  --card-foreground: hsl(340, 15%, 25%);
-  --border: hsl(340, 20%, 85%);
-  --input: hsl(340, 30%, 98%);
-  --primary: hsl(340, 82%, 55%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(340, 25%, 92%);
-  --secondary-foreground: hsl(340, 15%, 25%);
-  --accent: hsl(340, 82%, 67%);
-  --accent-foreground: hsl(0, 0%, 100%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(340, 82%, 67%);
+  --background: hsl(330, 60%, 95%) !important;
+  --foreground: hsl(340, 15%, 25%) !important;
+  --muted: hsl(330, 40%, 90%) !important;
+  --muted-foreground: hsl(340, 8%, 55%) !important;
+  --popover: hsl(330, 60%, 98%) !important;
+  --popover-foreground: hsl(340, 15%, 25%) !important;
+  --card: hsl(330, 60%, 98%) !important;
+  --card-foreground: hsl(340, 15%, 25%) !important;
+  --border: hsl(330, 30%, 80%) !important;
+  --input: hsl(330, 60%, 98%) !important;
+  --primary: hsl(340, 82%, 55%) !important;
+  --primary-foreground: hsl(0, 0%, 100%) !important;
+  --secondary: hsl(330, 40%, 90%) !important;
+  --secondary-foreground: hsl(340, 15%, 25%) !important;
+  --accent: hsl(340, 82%, 67%) !important;
+  --accent-foreground: hsl(0, 0%, 100%) !important;
+  --destructive: hsl(0, 84%, 60%) !important;
+  --destructive-foreground: hsl(0, 0%, 100%) !important;
+  --ring: hsl(340, 82%, 67%) !important;
   --radius: 0.5rem;
 
   /* Custom beautycology variables */
-  --light-primary: hsl(342, 47%, 97%);
-  --light-secondary: hsl(340, 35%, 99%);
-  --light-accent: hsl(340, 25%, 92%);
-  --assistant-msg: hsl(340, 82%, 67%);
-  --user-msg: hsl(340, 25%, 92%);
-  --text-muted: hsl(340, 8%, 55%);
+  --light-primary: hsl(330, 60%, 95%) !important;
+  --light-secondary: hsl(330, 60%, 98%) !important;
+  --light-accent: hsl(330, 40%, 90%) !important;
+  --assistant-msg: hsl(340, 82%, 67%) !important;
+  --user-msg: hsl(330, 40%, 90%) !important;
+  --text-muted: hsl(340, 8%, 55%) !important;
 }
 
 /* Beautycology Dark Theme */
