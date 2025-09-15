@@ -85,13 +85,13 @@
 
   /* Ensure welcome screen covers entire viewport */
   .chat-container:not(.chat-mode) {
-    background-color: #E5F1F2 !important;
+    background-color: hsl(75, 85%, 88%) !important;
     padding: 0 !important;
     margin: 0 !important;
   }
 
   .chat-container:not(.chat-mode) > div {
-    background-color: #E5F1F2 !important;
+    background-color: hsl(75, 85%, 88%) !important;
     padding: 0 !important;
     margin: 0 !important;
     height: 100vh !important;
@@ -161,7 +161,7 @@ body, html {
   min-height: 100vh;
   width: 100vw;
   min-width: 100vw;
-  background-color: #E5F1F2;
+  background-color: hsl(75, 85%, 88%);
   overflow: hidden;
 }
 
@@ -170,7 +170,7 @@ body, html {
   min-height: 100vh;
   width: 100vw;
   min-width: 100vw;
-  background-color: #E5F1F2;
+  background-color: hsl(75, 85%, 88%);
   margin: 0;
   padding: 0;
 }
@@ -183,7 +183,7 @@ body, html {
   max-height: 100vh !important;
   margin: 0 !important;
   padding: 0 !important;
-  background-color: #E5F1F2 !important;
+  background-color: hsl(75, 85%, 88%) !important;
   display: flex !important;
   flex-direction: column !important;
 }
@@ -271,56 +271,56 @@ body, html {
 }
 
 :root {
-  --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(60, 4.8%, 95.9%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 90%);
-  --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(207, 90%, 54%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(60, 4.8%, 95.9%);
-  --secondary-foreground: hsl(24, 9.8%, 10%);
-  --accent: hsl(60, 4.8%, 95.9%);
-  --accent-foreground: hsl(24, 9.8%, 10%);
-  --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
+  --background: hsl(45, 100%, 97%);
+  --foreground: hsl(260, 40%, 15%);
+  --muted: hsl(180, 25%, 92%);
+  --muted-foreground: hsl(190, 15%, 45%);
+  --popover: hsl(50, 90%, 95%);
+  --popover-foreground: hsl(260, 40%, 15%);
+  --card: hsl(50, 80%, 96%);
+  --card-foreground: hsl(260, 35%, 20%);
+  --border: hsl(170, 30%, 80%);
+  --input: hsl(170, 25%, 85%);
+  --primary: hsl(340, 85%, 65%);
+  --primary-foreground: hsl(50, 100%, 98%);
+  --secondary: hsl(180, 40%, 88%);
+  --secondary-foreground: hsl(260, 30%, 25%);
+  --accent: hsl(75, 90%, 75%);
+  --accent-foreground: hsl(260, 40%, 20%);
+  --destructive: hsl(15, 90%, 65%);
+  --destructive-foreground: hsl(50, 100%, 95%);
+  --ring: hsl(340, 70%, 50%);
   --radius: 0.5rem;
 
   /* Dark theme custom properties */
-  --dark-primary: hsl(0, 0%, 10%);
-  --dark-secondary: hsl(0, 0%, 18%);
-  --dark-accent: hsl(0, 0%, 24%);
-  --assistant-msg: #DEEDE9;
-  --user-msg: #007381;
-  --text-muted: hsl(0, 0%, 62%);
+  --dark-primary: hsl(260, 50%, 8%);
+  --dark-secondary: hsl(250, 40%, 15%);
+  --dark-accent: hsl(240, 30%, 25%);
+  --assistant-msg: #B8E6D9;
+  --user-msg: #FF6B8A;
+  --text-muted: hsl(180, 15%, 60%);
 }
 
 .dark {
-  --background: hsl(240, 10%, 3.9%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 10%, 3.9%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 3.9%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 15.9%);
-  --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(207, 90%, 54%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(240, 3.7%, 15.9%);
-  --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(240, 3.7%, 15.9%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
+  --background: hsl(260, 50%, 8%);
+  --foreground: hsl(45, 90%, 92%);
+  --muted: hsl(250, 40%, 18%);
+  --muted-foreground: hsl(180, 20%, 65%);
+  --popover: hsl(260, 45%, 12%);
+  --popover-foreground: hsl(45, 85%, 90%);
+  --card: hsl(255, 40%, 10%);
+  --card-foreground: hsl(45, 80%, 88%);
+  --border: hsl(240, 30%, 25%);
+  --input: hsl(245, 35%, 20%);
+  --primary: hsl(340, 75%, 70%);
+  --primary-foreground: hsl(260, 50%, 8%);
+  --secondary: hsl(250, 30%, 22%);
+  --secondary-foreground: hsl(45, 85%, 85%);
+  --accent: hsl(75, 80%, 65%);
+  --accent-foreground: hsl(260, 45%, 12%);
+  --destructive: hsl(15, 80%, 60%);
+  --destructive-foreground: hsl(45, 90%, 90%);
+  --ring: hsl(340, 60%, 65%);
   --radius: 0.5rem;
 }
 
@@ -384,12 +384,12 @@ body, html {
   }
 
   .welcome-screen {
-    background-color: #E5F1F2;
+    background-color: hsl(75, 85%, 88%);
   }
 
   /* Ensure welcome screen takes full viewport */
   .chat-container:not(.chat-mode) {
-    background-color: #E5F1F2 !important;
+    background-color: hsl(75, 85%, 88%) !important;
     padding: 0 !important;
     margin: 0 !important;
     height: 100vh !important;
@@ -397,7 +397,7 @@ body, html {
   }
 
   .chat-container:not(.chat-mode) > div {
-    background-color: #E5F1F2 !important;
+    background-color: hsl(75, 85%, 88%) !important;
     padding: 0 !important;
     margin: 0 !important;
     height: 100vh !important;
@@ -512,7 +512,7 @@ body, html {
       left: 0 !important;
       right: 0 !important;
       z-index: 100 !important;
-      background-color: #E5F1F2 !important;
+      background-color: hsl(75, 85%, 88%) !important;
       width: 100% !important;
     }
 
@@ -522,7 +522,7 @@ body, html {
       position: sticky !important;
       top: 0 !important;
       z-index: 50 !important;
-      background-color: #E5F1F2 !important;
+      background-color: hsl(75, 85%, 88%) !important;
     }
   }
 }
