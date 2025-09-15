@@ -324,6 +324,61 @@ body, html {
   --radius: 0.5rem;
 }
 
+/* Beautycology Brand Theme */
+.brand-beautycology {
+  --background: hsl(342, 47%, 97%);
+  --foreground: hsl(340, 15%, 25%);
+  --muted: hsl(340, 25%, 92%);
+  --muted-foreground: hsl(340, 8%, 55%);
+  --popover: hsl(340, 30%, 98%);
+  --popover-foreground: hsl(340, 15%, 25%);
+  --card: hsl(340, 35%, 99%);
+  --card-foreground: hsl(340, 15%, 25%);
+  --border: hsl(340, 20%, 85%);
+  --input: hsl(340, 30%, 98%);
+  --primary: hsl(340, 82%, 55%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(340, 25%, 92%);
+  --secondary-foreground: hsl(340, 15%, 25%);
+  --accent: hsl(340, 82%, 67%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(340, 82%, 67%);
+  --radius: 0.5rem;
+
+  /* Custom beautycology variables */
+  --light-primary: hsl(342, 47%, 97%);
+  --light-secondary: hsl(340, 35%, 99%);
+  --light-accent: hsl(340, 25%, 92%);
+  --assistant-msg: hsl(340, 82%, 67%);
+  --user-msg: hsl(340, 25%, 92%);
+  --text-muted: hsl(340, 8%, 55%);
+}
+
+/* Beautycology Dark Theme */
+.brand-beautycology.dark {
+  --background: hsl(340, 30%, 8%);
+  --foreground: hsl(342, 47%, 92%);
+  --muted: hsl(340, 25%, 18%);
+  --muted-foreground: hsl(340, 8%, 65%);
+  --popover: hsl(340, 25%, 12%);
+  --popover-foreground: hsl(342, 40%, 90%);
+  --card: hsl(340, 30%, 10%);
+  --card-foreground: hsl(342, 35%, 88%);
+  --border: hsl(340, 20%, 25%);
+  --input: hsl(340, 25%, 20%);
+  --primary: hsl(340, 82%, 75%);
+  --primary-foreground: hsl(340, 30%, 8%);
+  --secondary: hsl(340, 20%, 22%);
+  --secondary-foreground: hsl(342, 40%, 85%);
+  --accent: hsl(340, 82%, 75%);
+  --accent-foreground: hsl(340, 25%, 12%);
+  --destructive: hsl(0, 80%, 65%);
+  --destructive-foreground: hsl(342, 47%, 92%);
+  --ring: hsl(340, 75%, 70%);
+}
+
 @layer base {
   * {
     @apply border-border;
