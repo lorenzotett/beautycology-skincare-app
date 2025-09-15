@@ -53,7 +53,7 @@ export default function Chat() {
   });
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen bg-light-primary">
       <ChatInterface startChatMutation={startChatMutation} sessionId={sessionId} messages={messages} setMessages={setMessages} isTyping={isTyping} setIsTyping={setIsTyping}/>
     </div>
   );
