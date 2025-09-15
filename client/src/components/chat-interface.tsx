@@ -272,15 +272,22 @@ export function ChatInterface() {
     if (!userName.trim()) return;
     
     // Instead of starting chat in current window, open new tab
-    const sessionParams = {
+    const sessionParams: any = {
       userName: userName.trim(),
       source: 'homepage_new_tab',
       timestamp: Date.now(),
       fingerprint: generateFingerprint()
     };
     
+    // Preserve brand parameter if it exists
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentBrand = urlParams.get('brand') || localStorage.getItem('brand-theme');
+    if (currentBrand) {
+      sessionParams.brand = currentBrand;
+    }
+    
     // Create URL for new tab with session parameters
-    const chatUrl = `${window.location.origin}/?${new URLSearchParams(sessionParams as any).toString()}`;
+    const chatUrl = `${window.location.origin}/?${new URLSearchParams(sessionParams).toString()}`;
     
     // Open chat in new tab
     const newWindow = window.open(chatUrl, '_blank');

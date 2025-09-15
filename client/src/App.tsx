@@ -32,7 +32,60 @@ function Router() {
   );
 }
 
+// Brand theming logic
+function useBrandTheming() {
+  useEffect(() => {
+    const applyBrandTheme = () => {
+      // Check URL parameter for brand
+      const urlParams = new URLSearchParams(window.location.search);
+      const brandParam = urlParams.get('brand');
+      
+      // Check localStorage for persisted brand
+      const storedBrand = localStorage.getItem('brand-theme');
+      
+      // Use URL param if available, otherwise use stored brand
+      const activeBrand = brandParam || storedBrand;
+      
+      // Remove any existing brand classes
+      const existingBrandClasses = Array.from(document.documentElement.classList).filter(className => 
+        className.startsWith('brand-')
+      );
+      document.documentElement.classList.remove(...existingBrandClasses);
+      
+      // Apply new brand theme if specified
+      if (activeBrand) {
+        const brandClass = `brand-${activeBrand}`;
+        document.documentElement.classList.add(brandClass);
+        
+        // Persist to localStorage if it came from URL
+        if (brandParam) {
+          localStorage.setItem('brand-theme', activeBrand);
+        }
+        
+        console.log(`🎨 Applied brand theme: ${brandClass}`);
+      }
+    };
+    
+    // Apply theme on mount
+    applyBrandTheme();
+    
+    // Listen for URL changes (for SPAs)
+    const handlePopState = () => {
+      applyBrandTheme();
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+}
+
 function App() {
+  // Apply brand theming
+  useBrandTheming();
+  
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
