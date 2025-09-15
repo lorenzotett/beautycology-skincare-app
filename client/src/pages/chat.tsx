@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Send, Upload, FileText, Brain } from "lucide-react";
 import { ChatInterface } from "@/components/chat-interface";
-import { RagUpload } from "@/components/rag-upload";
+// import { RagUpload } from "@/components/rag-upload";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { BrowserFingerprint } from "@/utils/fingerprint";
@@ -53,8 +53,8 @@ export default function Chat() {
   });
 
   return (
-    <div className="min-h-screen bg-light-primary">
-      <ChatInterface startChatMutation={startChatMutation} sessionId={sessionId} messages={messages} setMessages={setMessages} isTyping={isTyping} setIsTyping={setIsTyping}/>
+    <div className="min-h-screen bg-background">
+      <ChatInterface />
     </div>
   );
 }

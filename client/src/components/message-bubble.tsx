@@ -394,7 +394,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   }
 
   return (
-    <div className="message-bubble bg-assistant-msg rounded-lg p-3">
+    <div className="message-bubble bg-card text-foreground border border-border rounded-lg p-3">
       {skinAnalysis ? (
         <>
           {/* Show intro text if present */}
@@ -626,7 +626,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
 
         {/* Placeholder per file che non possono essere visualizzati */}
         <div 
-          className="max-w-48 h-32 bg-light-accent rounded-lg border border-light-accent flex flex-col items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
+          className="max-w-48 h-32 bg-card border border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
           style={{ display: ((metadata as any)?.image || (metadata as any)?.imageBase64) ? 'none' : 'flex' }}
         >
           <Upload size={24} className="text-text-muted mb-2" />
