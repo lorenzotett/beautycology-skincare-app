@@ -338,22 +338,22 @@ body, html {
   --card-foreground: hsl(340, 15%, 25%) !important;
   --border: hsl(330, 30%, 80%) !important;
   --input: hsl(330, 60%, 98%) !important;
-  --primary: hsl(340, 82%, 55%) !important;
+  --primary: hsl(225, 67%, 73%) !important;
   --primary-foreground: hsl(0, 0%, 100%) !important;
   --secondary: hsl(330, 40%, 90%) !important;
   --secondary-foreground: hsl(340, 15%, 25%) !important;
-  --accent: hsl(340, 82%, 67%) !important;
+  --accent: hsl(225, 67%, 73%) !important;
   --accent-foreground: hsl(0, 0%, 100%) !important;
   --destructive: hsl(0, 84%, 60%) !important;
   --destructive-foreground: hsl(0, 0%, 100%) !important;
-  --ring: hsl(340, 82%, 67%) !important;
+  --ring: hsl(225, 67%, 73%) !important;
   --radius: 0.5rem;
 
   /* Custom beautycology variables */
   --light-primary: hsl(330, 60%, 95%) !important;
   --light-secondary: hsl(330, 60%, 98%) !important;
   --light-accent: hsl(330, 40%, 90%) !important;
-  --assistant-msg: hsl(340, 82%, 67%) !important;
+  --assistant-msg: hsl(225, 67%, 73%) !important;
   --user-msg: hsl(330, 40%, 90%) !important;
   --text-muted: hsl(340, 8%, 55%) !important;
 }
@@ -370,15 +370,15 @@ body, html {
   --card-foreground: hsl(342, 35%, 88%);
   --border: hsl(340, 20%, 25%);
   --input: hsl(340, 25%, 20%);
-  --primary: hsl(340, 82%, 75%);
+  --primary: hsl(225, 67%, 80%);
   --primary-foreground: hsl(340, 30%, 8%);
   --secondary: hsl(340, 20%, 22%);
   --secondary-foreground: hsl(342, 40%, 85%);
-  --accent: hsl(340, 82%, 75%);
+  --accent: hsl(225, 67%, 80%);
   --accent-foreground: hsl(340, 25%, 12%);
   --destructive: hsl(0, 80%, 65%);
   --destructive-foreground: hsl(342, 47%, 92%);
-  --ring: hsl(340, 75%, 70%);
+  --ring: hsl(225, 67%, 80%);
 }
 
 @layer base {
