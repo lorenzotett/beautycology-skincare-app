@@ -950,10 +950,10 @@ export function ChatInterface() {
 
   if (!hasStarted) {
     return (
-      <div className="chat-container flex flex-col h-screen" style={{backgroundColor: '#E5F1F2'}}>
+      <div className="chat-container flex flex-col h-screen" style={{backgroundColor: '#F2F3F6'}}>
         {/* Welcome Screen */}
-        <div className="flex-1 flex items-center justify-center" style={{backgroundColor: '#E5F1F2', height: '100vh', minHeight: '100vh', width: '100vw', minWidth: '100vw', padding: '0', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0}}>
-          <div className="desktop-wide w-full flex flex-col justify-center text-center p-4 sm:p-6 md:p-8" style={{backgroundColor: '#E5F1F2', height: '100vh', minHeight: '100vh', width: '100vw', minWidth: '100vw'}}>
+        <div className="flex-1 flex items-center justify-center" style={{backgroundColor: '#F2F3F6', height: '100vh', minHeight: '100vh', width: '100vw', minWidth: '100vw', padding: '0', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0}}>
+          <div className="desktop-wide w-full flex flex-col justify-center text-center p-4 sm:p-6 md:p-8" style={{backgroundColor: '#F2F3F6', height: '100vh', minHeight: '100vh', width: '100vw', minWidth: '100vw'}}>
             {/* Logo Bonnie */}
             <div className="space-y-2 mb-6">
               <img 
@@ -1036,8 +1036,8 @@ export function ChatInterface() {
   return (
     <div className="chat-container chat-mode flex flex-col h-screen">
       {/* Chat Area Container - Responsive design */}
-      <div className="flex-1 flex items-center justify-center" style={{backgroundColor: '#E5F1F2', padding: '0', minHeight: '100vh'}}>
-        <div className="desktop-wide w-full flex flex-col" style={{height: "100vh", minHeight: "100vh", maxHeight: "100vh", backgroundColor: '#E5F1F2'}}>
+      <div className="flex-1 flex items-center justify-center" style={{backgroundColor: '#F2F3F6', padding: '0', minHeight: '100vh'}}>
+        <div className="desktop-wide w-full flex flex-col" style={{height: "100vh", minHeight: "100vh", maxHeight: "100vh", backgroundColor: '#F2F3F6'}}>
           {/* Header with Logo */}
           <div className="p-4 flex items-center justify-between">
             <img 

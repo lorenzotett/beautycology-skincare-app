@@ -1075,7 +1075,7 @@ export default function AdminDashboard() {
                 </Button>
               </div>
 
-              <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 chat-modal-content" style={{backgroundColor: '#E5F1F2'}}>
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 chat-modal-content" style={{backgroundColor: '#F2F3F6'}}>
                 <div className="space-y-4 w-full max-w-none">
                   {sessionDetails.messages.map((message) => (
                     <div key={message.id} className="w-full">
