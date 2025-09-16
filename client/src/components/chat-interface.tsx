@@ -957,9 +957,9 @@ export function ChatInterface() {
             {/* Logo Bonnie */}
             <div className="space-y-2 mb-6">
               <img 
-                src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
-                alt="Bonnie Logo" 
-                className="w-12 h-12 mx-auto object-contain"
+                src="/attached_assets/imgi_8_logo-beauticology-128d474a_1758034902550.png" 
+                alt="Beautycology Logo" 
+                className="w-32 h-12 mx-auto object-contain"
               />
             </div>
 
