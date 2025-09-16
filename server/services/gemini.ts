@@ -625,9 +625,7 @@ export class GeminiService implements AIService {
       // Let Gemini generate the initial message based on the system instruction
       const response = await this.callGeminiWithRetry({
         model: "gemini-2.5-flash",
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-        },
+        systemInstruction: SYSTEM_INSTRUCTION,
         contents: [
           {
             role: "user",
@@ -722,9 +720,7 @@ A te la scelta!`;
 
       const response = await this.callGeminiWithRetry({
         model: "gemini-2.5-flash",
-        config: {
-          systemInstruction: enhancedSystemInstruction,
-        },
+        systemInstruction: enhancedSystemInstruction,
         contents: contents
       });
 
@@ -853,9 +849,7 @@ A te la scelta!`;
 
       const response = await this.callGeminiWithRetry({
         model: "gemini-2.5-flash",
-        config: {
-          systemInstruction: enhancedSystemInstruction,
-        },
+        systemInstruction: enhancedSystemInstruction,
         contents: contents
       });
 

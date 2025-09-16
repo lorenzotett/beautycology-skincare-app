@@ -2,7 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { GeminiService } from "./services/gemini";
+import { AIServiceFactory } from "./services/ai-service-factory";
 import { SkinAnalysisService } from "./services/skin-analysis";
 import { imageGenerationService } from "./services/image-generation";
 import { KlaviyoService } from "./services/klaviyo";
@@ -24,29 +24,20 @@ import { ragService as vectorRagService } from './services/rag';
 import { autoLearningSystem } from './services/auto-learning-system';
 
 // Service management
-const MAX_SESSIONS_IN_MEMORY = 500; // Ridotto per evitare overflow memoria
-const geminiServices = new Map<string, GeminiService>();
+// AI services are now managed by AIServiceFactory - no need for session map
 
-// Add memory monitoring with aggressive cleanup
+// Add memory monitoring with garbage collection
 setInterval(() => {
   const memUsage = process.memoryUsage();
   const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
 
   if (memUsageMB > 350) { // Reduced threshold from 400MB to 350MB
-    console.warn(`⚠️ High memory usage: ${memUsageMB}MB, active sessions: ${geminiServices.size}`);
+    console.warn(`⚠️ High memory usage: ${memUsageMB}MB`);
 
-    // More aggressive cleanup
-    if (geminiServices.size > 50) { // If more than 50 sessions
-      const sessions = Array.from(geminiServices.keys());
-      const toDelete = sessions.slice(0, Math.floor(sessions.length / 2)); // Remove half
-      toDelete.forEach(sessionId => geminiServices.delete(sessionId));
-      console.log(`🧹 Emergency cleanup: removed ${toDelete.length} sessions`);
-
-      // Force garbage collection if available
-      if (global.gc) {
-        global.gc();
-        console.log('🗑️ Forced garbage collection');
-      }
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+      console.log('🗑️ Forced garbage collection');
     }
   }
 }, 1 * 60 * 1000); // Check every minute instead of 2
@@ -55,15 +46,7 @@ const integrationConfig = loadIntegrationConfig();
 // Initialize Klaviyo Lead Automation
 const klaviyoLeadAutomation = new KlaviyoLeadAutomation();
 
-// Auto-cleanup sessions
-setInterval(() => {
-  if (geminiServices.size > MAX_SESSIONS_IN_MEMORY) {
-    const sessions = Array.from(geminiServices.keys());
-    const toDelete = sessions.slice(0, sessions.length - MAX_SESSIONS_IN_MEMORY);
-    toDelete.forEach(sessionId => geminiServices.delete(sessionId));
-    console.log(`Cleaned up ${toDelete.length} old sessions`);
-  }
-}, 5 * 60 * 1000);
+// Session cleanup is now handled by AIServiceFactory - no manual cleanup needed
 
 // DISABLED: Auto-fix missing images - causing performance issues
 // This was causing slow requests (19+ seconds) and memory problems
@@ -295,7 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           results.push({ 
             filename: file.originalname, 
             success: false, 
-            reason: error.message 
+            reason: error instanceof Error ? error.message : String(error)
           });
         }
       }
@@ -410,10 +393,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         chatStartedAt: new Date()   // User submits name and starts chat
       });
 
-      const geminiService = new GeminiService();
-      geminiServices.set(sessionId, geminiService);
-
-      const initialResponse = await geminiService.initializeConversation(userName);
+      const aiService = await AIServiceFactory.getAIService();
+      
+      const initialResponse = await aiService.getWelcomeMessage();
 
       await storage.addChatMessage({
         sessionId,
@@ -450,23 +432,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Session not found" });
       }
 
-      let geminiService = geminiServices.get(sessionId);
-      if (!geminiService) {
-        // Recreate the Gemini service if it was removed from memory
-        console.log(`♻️ Recreating Gemini service for session ${sessionId} (image upload)`);
-        geminiService = new GeminiService();
-        
-        // Check if user had previously uploaded a photo
-        const messages = await storage.getChatMessages(sessionId);
-        for (const msg of messages) {
-          if (msg.metadata && (msg.metadata as any).hasImage) {
-            geminiService.hasUploadedPhoto = true;
-            console.log("✅ Restored hasUploadedPhoto flag for session", sessionId);
-            break;
-          }
+      const aiService = await AIServiceFactory.getAIService();
+      
+      // Check if user had previously uploaded a photo for this session
+      const messages = await storage.getChatMessages(sessionId);
+      let hasUploadedPhoto = false;
+      for (const msg of messages) {
+        if (msg.metadata && (msg.metadata as any).hasImage) {
+          hasUploadedPhoto = true;
+          console.log("✅ Found previous image upload for session", sessionId);
+          break;
         }
-        
-        geminiServices.set(sessionId, geminiService);
       }
 
       // CRITICAL: Immediate base64 conversion before any other operations
@@ -637,7 +613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `${message}\n\nAnalisi AI della pelle: ${JSON.stringify(analysisResult)}` : 
         `Analisi AI della pelle: ${JSON.stringify(analysisResult)}`;
 
-      let response;
+      let response: { content: string; hasChoices: boolean; choices?: string[] };
       try {
         console.log('🤖 Sending analysis to AI service...');
         // Increase timeout for AI service calls to 50 seconds
@@ -646,7 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
         response = await Promise.race([
-          geminiService.sendMessage(analysisMessage),
+          aiService.sendMessage(sessionId, analysisMessage, imageBase64 || undefined),
           timeoutPromise
         ]);
         console.log('✅ AI response received successfully');
@@ -759,23 +735,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Session not found" });
       }
 
-      let geminiService = geminiServices.get(sessionId);
-      if (!geminiService) {
-        // Recreate the Gemini service if it was removed from memory
-        console.log(`♻️ Recreating Gemini service for session ${sessionId}`);
-        geminiService = new GeminiService();
-        
-        // Check if user had previously uploaded a photo
-        const messages = await storage.getChatMessages(sessionId);
-        for (const msg of messages) {
-          if (msg.metadata && (msg.metadata as any).hasImage) {
-            geminiService.hasUploadedPhoto = true;
-            console.log("✅ Restored hasUploadedPhoto flag for session", sessionId);
-            break;
-          }
+      const aiService = await AIServiceFactory.getAIService();
+      
+      // Check if user had previously uploaded a photo for this session
+      const messages = await storage.getChatMessages(sessionId);
+      let hasUploadedPhoto = false;
+      for (const msg of messages) {
+        if (msg.metadata && (msg.metadata as any).hasImage) {
+          hasUploadedPhoto = true;
+          console.log("✅ Found previous image upload for session", sessionId);
+          break;
         }
-        
-        geminiServices.set(sessionId, geminiService);
       }
 
       await storage.addChatMessage({
@@ -786,7 +756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // FIRST: Generate AI response immediately
-      const response = await geminiService.sendMessage(message);
+      const response = await aiService.sendMessage(sessionId, message);
 
       // Save assistant message
       await storage.addChatMessage({
