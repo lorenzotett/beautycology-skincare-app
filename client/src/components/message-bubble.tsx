@@ -401,7 +401,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           {contentWithButtons.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim() && (
             <div
               className="text-sm leading-relaxed whitespace-pre-wrap mb-3"
-              style={{color: '#007381'}}
+              style={{color: '#7791DA'}}
               dangerouslySetInnerHTML={{ 
                 __html: formatMarkdown(contentWithButtons.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim()) 
               }}
@@ -419,7 +419,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           {skinAnalysis.remainingContent && (
             <div
               className="text-sm leading-relaxed whitespace-pre-wrap mt-3"
-              style={{color: '#007381'}}
+              style={{color: '#7791DA'}}
               dangerouslySetInnerHTML={{ 
                 __html: formatMarkdown('🔍 **PANORAMICA PROBLEMI PRINCIPALI:**' + skinAnalysis.remainingContent) 
               }}
@@ -429,7 +429,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       ) : (
         <div
           className="text-sm leading-relaxed whitespace-pre-wrap"
-          style={{color: '#007381'}}
+          style={{color: '#7791DA'}}
           dangerouslySetInnerHTML={{ __html: formatMarkdown(contentWithButtons.content) }}
         />
       )}
@@ -558,9 +558,9 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                 }}
                 className="w-full p-4 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer touch-manipulation relative z-20"
                 style={{
-                  backgroundColor: linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#007381',
+                  backgroundColor: linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#7791DA',
                   color: '#E5F1F2',
-                  border: `2px solid ${linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#007381'}`,
+                  border: `2px solid ${linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#7791DA'}`,
                   minHeight: '48px', // Ensure minimum touch target size for mobile
                   touchAction: 'manipulation', // Prevent zoom on double-tap
                   WebkitTapHighlightColor: 'transparent', // Remove iOS tap highlight
@@ -572,7 +572,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   e.currentTarget.style.borderColor = hoverColor;
                 }}
                 onMouseLeave={(e) => {
-                  const normalColor = linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#007381';
+                  const normalColor = linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#7791DA';
                   e.currentTarget.style.backgroundColor = normalColor;
                   e.currentTarget.style.borderColor = normalColor;
                 }}
@@ -583,7 +583,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   e.currentTarget.style.borderColor = hoverColor;
                 }}
                 onTouchEnd={(e) => {
-                  const normalColor = linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#007381';
+                  const normalColor = linkButton.text.toLowerCase().includes('whatsapp') ? '#25d366' : '#7791DA';
                   e.currentTarget.style.backgroundColor = normalColor;
                   e.currentTarget.style.borderColor = normalColor;
                 }}
@@ -652,7 +652,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
                   : 'cursor-pointer'
               }`}
               style={{
-                backgroundColor: isAnswered ? undefined : '#007381',
+                backgroundColor: isAnswered ? undefined : '#7791DA',
                 color: isAnswered ? undefined : '#E5F1F2'
               }}
               onMouseEnter={(e) => {
@@ -662,7 +662,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
               }}
               onMouseLeave={(e) => {
                 if (!isAnswered) {
-                  e.currentTarget.style.backgroundColor = '#007381';
+                  e.currentTarget.style.backgroundColor = '#7791DA';
                 }
               }}
             >

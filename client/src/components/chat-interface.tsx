@@ -1006,7 +1006,7 @@ export function ChatInterface() {
                     ? 'text-white shadow-lg scale-105 animate-pulse' 
                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:scale-95'
                 } ${isTyping || selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                style={isListening ? {backgroundColor: '#007381'} : {}}
+                style={isListening ? {backgroundColor: '#7791DA'} : {}}
                 title={isListening ? "Ferma registrazione" : "Inizia registrazione vocale"}
               >
                 {isListening ? (
@@ -1020,7 +1020,7 @@ export function ChatInterface() {
                 onClick={handleStartChat}
                 disabled={startChatMutation.isPending || !userName.trim()}
                 className="text-white p-1.5 rounded-md disabled:opacity-50"
-                style={{backgroundColor: '#007381'}}
+                style={{backgroundColor: '#7791DA'}}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z"/>
@@ -1154,7 +1154,7 @@ export function ChatInterface() {
                     ? 'text-white shadow-lg scale-105 animate-pulse' 
                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:scale-95'
                 } ${isTyping || selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                style={isListening ? {backgroundColor: '#007381'} : {}}
+                style={isListening ? {backgroundColor: '#7791DA'} : {}}
                 title={isListening ? "Ferma registrazione" : "Inizia registrazione vocale"}
               >
                 {isListening ? (
@@ -1168,7 +1168,7 @@ export function ChatInterface() {
                 onClick={handleSendMessage}
                 disabled={(!currentMessage.trim() && !selectedImage) || isTyping || (emailError !== null && isEmailContext())}
                 className="text-white p-1.5 rounded-md disabled:opacity-50"
-                style={{backgroundColor: '#007381'}}
+                style={{backgroundColor: '#7791DA'}}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z"/>
