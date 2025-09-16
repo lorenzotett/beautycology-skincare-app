@@ -979,7 +979,7 @@ export function ChatInterface() {
             {/* Welcome Text */}
             <div className="space-y-3 text-gray-700 px-2 mb-6">
               <p className="text-sm sm:text-base md:text-lg leading-relaxed">
-                Ciao! Sono la tua <strong>Skin Expert</strong> di <strong>Bonnie</strong>. 
+                Ciao! Sono la tua <strong>Skin Expert</strong> di <strong>Beautycology</strong>. 
                 Possiamo analizzare insieme la tua pelle per trovare la formula 
                 skincare perfetta per <strong>migliorarla</strong>!
               </p>
