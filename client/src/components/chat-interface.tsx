@@ -980,8 +980,8 @@ export function ChatInterface() {
             <div className="space-y-3 text-gray-700 px-2 mb-6">
               <p className="text-sm sm:text-base md:text-lg leading-relaxed">
                 Ciao! Sono la tua <strong>Skin Expert</strong> di <strong>Beautycology</strong>. 
-                Possiamo analizzare insieme la tua pelle per trovare la formula 
-                skincare perfetta per <strong>migliorarla</strong>!
+                Possiamo analizzare insieme la tua pelle per trovare la skincare 
+                routine perfetta per <strong>migliorarla</strong>!
               </p>
               <p className="text-sm sm:text-base md:text-lg font-medium">
                 Per iniziare, scrivi qui sotto il tuo nome.
