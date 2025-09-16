@@ -145,7 +145,8 @@ export class BeautycologyAIService {
       // Send message using generateContent API
       const result = await ai.models.generateContent({
         model: `models/${this.modelName}`,
-        contents
+        contents,
+        systemInstruction: BEAUTYCOLOGY_SYSTEM_INSTRUCTION
       });
 
       const responseText = result.text || "Scusa, non riesco a rispondere in questo momento.";

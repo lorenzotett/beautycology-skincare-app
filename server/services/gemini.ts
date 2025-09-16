@@ -558,10 +558,27 @@ export interface ChatResponse {
   isComplete?: boolean;
 }
 
+interface SessionState {
+  conversationHistory: Array<{ role: string; content: string }>;
+  askedQuestions: Set<string>;
+  lastQuestionAsked: string | null;
+  hasUploadedPhoto: boolean;
+}
+
 export class GeminiService implements AIService {
-  private conversationHistory: Array<{ role: string; content: string }> = [];
-  private askedQuestions: Set<string> = new Set();
-  private lastQuestionAsked: string | null = null;
+  private sessionStates: Map<string, SessionState> = new Map();
+
+  private getSessionState(sessionId: string): SessionState {
+    if (!this.sessionStates.has(sessionId)) {
+      this.sessionStates.set(sessionId, {
+        conversationHistory: [],
+        askedQuestions: new Set(),
+        lastQuestionAsked: null,
+        hasUploadedPhoto: false
+      });
+    }
+    return this.sessionStates.get(sessionId)!;
+  }
 
   private async callGeminiWithRetry(params: any, maxRetries: number = 5, baseDelay: number = 2000): Promise<any> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -593,14 +610,16 @@ export class GeminiService implements AIService {
     }
   }
 
-  private hasUploadedPhoto: boolean = false;
 
-  async initializeConversation(userName: string): Promise<ChatResponse> {
+  async initializeConversation(sessionId: string, userName: string): Promise<ChatResponse> {
+    // Get or create session state
+    const sessionState = this.getSessionState(sessionId);
+    
     // Start with the user's name
-    this.conversationHistory = [
+    sessionState.conversationHistory = [
       { role: "user", content: userName }
     ];
-    this.hasUploadedPhoto = false;
+    sessionState.hasUploadedPhoto = false;
 
     try {
       // Let Gemini generate the initial message based on the system instruction
@@ -620,7 +639,7 @@ export class GeminiService implements AIService {
       const content = response.text || "Ciao! Come posso aiutarti oggi?";
 
       // Add the generated message to conversation history
-      this.conversationHistory.push({ role: "assistant", content });
+      sessionState.conversationHistory.push({ role: "assistant", content });
 
       return {
         content,
@@ -638,7 +657,7 @@ Puoi iniziare l'analisi in due modi:
 
 A te la scelta!`;
 
-      this.conversationHistory.push({ role: "assistant", content: fallbackMessage });
+      sessionState.conversationHistory.push({ role: "assistant", content: fallbackMessage });
 
       return {
         content: fallbackMessage,
@@ -647,10 +666,13 @@ A te la scelta!`;
     }
   }
 
-  async sendMessageWithImage(imagePath: string, message?: string): Promise<ChatResponse> {
+  async sendMessageWithImage(sessionId: string, imagePath: string, message?: string): Promise<ChatResponse> {
     try {
+      // Get session state
+      const sessionState = this.getSessionState(sessionId);
+      
       // Mark that the user has uploaded a photo
-      this.hasUploadedPhoto = true;
+      sessionState.hasUploadedPhoto = true;
       
       // Read the image file
       const fs = await import('fs');
@@ -682,7 +704,7 @@ A te la scelta!`;
       }
 
       // Use conversation history for context
-      const contents = this.conversationHistory.map(msg => ({
+      const contents = sessionState.conversationHistory.map(msg => ({
         role: msg.role === "user" ? "user" : "model",
         parts: [{ text: msg.content }]
       }));
@@ -694,7 +716,7 @@ A te la scelta!`;
       });
 
       // Enhance system instruction to include photo upload status
-      const enhancedSystemInstruction = SYSTEM_INSTRUCTION + `\n\n**STATO FOTO UTENTE:** ${this.hasUploadedPhoto ? 
+      const enhancedSystemInstruction = SYSTEM_INSTRUCTION + `\n\n**STATO FOTO UTENTE:** ${sessionState.hasUploadedPhoto ? 
         'L\'utente HA caricato una foto iniziale. Puoi procedere con la generazione del prima/dopo se richiesto.' : 
         'L\'utente NON ha caricato una foto iniziale. NON generare mai il trigger GENERATE_BEFORE_AFTER_IMAGES e non chiedere del prima/dopo.'}`;
 
@@ -710,8 +732,8 @@ A te la scelta!`;
 
       // Add to conversation history
       const userMessage = message ? `${message} [Immagine analizzata]` : "[Immagine analizzata]";
-      this.conversationHistory.push({ role: "user", content: userMessage });
-      this.conversationHistory.push({ role: "assistant", content });
+      sessionState.conversationHistory.push({ role: "user", content: userMessage });
+      sessionState.conversationHistory.push({ role: "assistant", content });
 
       // Check if the response contains multiple choice options
       const hasChoices = this.detectMultipleChoice(content);
@@ -742,21 +764,24 @@ A te la scelta!`;
     hasChoices: boolean;
     choices?: string[];
   }> {
+    // Get or create session state
+    const sessionState = this.getSessionState(sessionId);
+    
     // For compatibility, use the existing message parameter
     const message = userMessage;
-    this.conversationHistory.push({ role: "user", content: message });
+    sessionState.conversationHistory.push({ role: "user", content: message });
 
     try {
       // Check if this is an email validation context
-      const isEmailRequest = this.isEmailValidationNeeded();
+      const isEmailRequest = this.isEmailValidationNeeded(sessionId);
 
       if (isEmailRequest) {
         const emailValidation = this.validateEmail(message);
         if (!emailValidation.isValid) {
           // Remove the invalid email from history and add validation error
-          this.conversationHistory.pop();
+          sessionState.conversationHistory.pop();
           const errorMessage = emailValidation.errorMessage || "Email non valida. Riprova.";
-          this.conversationHistory.push({ role: "assistant", content: errorMessage });
+          sessionState.conversationHistory.push({ role: "assistant", content: errorMessage });
 
           return {
             content: errorMessage,
@@ -764,17 +789,17 @@ A te la scelta!`;
           };
         } else {
           // Valid email received, clear the last question to avoid repetition
-          this.lastQuestionAsked = null;
+          sessionState.lastQuestionAsked = null;
         }
       }
 
       // Check if user is answering the last question - be more lenient
-      if (this.lastQuestionAsked) {
+      if (sessionState.lastQuestionAsked) {
         console.log('=== CHECKING ANSWER TO LAST QUESTION ===');
         console.log('User message:', message);
-        console.log('Last question asked (first 100 chars):', this.lastQuestionAsked?.substring(0, 100));
+        console.log('Last question asked (first 100 chars):', sessionState.lastQuestionAsked?.substring(0, 100));
         
-        const isValidAnswer = this.isValidAnswerToQuestion(message, this.lastQuestionAsked);
+        const isValidAnswer = this.isValidAnswerToQuestion(message, sessionState.lastQuestionAsked);
 
         // Only repeat if the answer is clearly invalid (very strict criteria)
         const isVeryShortAndMeaningless = message.trim().length < 1 || 
@@ -785,24 +810,24 @@ A te la scelta!`;
         if (isValidAnswer || !isVeryShortAndMeaningless) {
           // Accept the answer and let AI interpret it naturally
           console.log('Answer accepted, clearing lastQuestionAsked');
-          this.lastQuestionAsked = null;
+          sessionState.lastQuestionAsked = null;
         } else {
           // Only repeat for clearly meaningless responses
           console.log('Answer rejected as meaningless, repeating question');
-          this.conversationHistory.pop();
-          const repeatMessage = `Mi dispiace, non ho capito la tua risposta. ${this.lastQuestionAsked}`;
-          this.conversationHistory.push({ role: "assistant", content: repeatMessage });
+          sessionState.conversationHistory.pop();
+          const repeatMessage = `Mi dispiace, non ho capito la tua risposta. ${sessionState.lastQuestionAsked}`;
+          sessionState.conversationHistory.push({ role: "assistant", content: repeatMessage });
 
           return {
             content: repeatMessage,
-            hasChoices: this.extractChoicesFromQuestion(this.lastQuestionAsked).length > 0,
-            choices: this.extractChoicesFromQuestion(this.lastQuestionAsked)
+            hasChoices: this.extractChoicesFromQuestion(sessionState.lastQuestionAsked).length > 0,
+            choices: this.extractChoicesFromQuestion(sessionState.lastQuestionAsked)
           };
         }
       }
 
       // Enhance the message with RAG context
-      const conversationContext = this.conversationHistory
+      const conversationContext = sessionState.conversationHistory
         .slice(-5) // Get last 5 messages for context
         .map(msg => `${msg.role}: ${msg.content}`)
         .join('\n');
@@ -810,7 +835,7 @@ A te la scelta!`;
       const enhancedMessage = await ragService.enhanceQueryWithRAG(message, conversationContext);
 
       // Use the enhanced message for the AI request
-      const contents = this.conversationHistory.slice(0, -1).map(msg => ({
+      const contents = sessionState.conversationHistory.slice(0, -1).map(msg => ({
         role: msg.role === "user" ? "user" : "model",
         parts: [{ text: msg.content }]
       }));
@@ -822,7 +847,7 @@ A te la scelta!`;
       });
 
       // Enhance system instruction to include photo upload status
-      const enhancedSystemInstruction = SYSTEM_INSTRUCTION + `\n\n**STATO FOTO UTENTE:** ${this.hasUploadedPhoto ? 
+      const enhancedSystemInstruction = SYSTEM_INSTRUCTION + `\n\n**STATO FOTO UTENTE:** ${sessionState.hasUploadedPhoto ? 
         'L\'utente HA caricato una foto iniziale. Puoi procedere con la generazione del prima/dopo se richiesto.' : 
         'L\'utente NON ha caricato una foto iniziale. NON generare mai il trigger GENERATE_BEFORE_AFTER_IMAGES e non chiedere del prima/dopo.'}`;
 
@@ -835,8 +860,8 @@ A te la scelta!`;
       });
 
       const content = response.text || "Mi dispiace, non ho capito. Puoi ripetere?";
-      this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message }; // Keep original message in history
-      this.conversationHistory.push({ role: "assistant", content });
+      sessionState.conversationHistory[sessionState.conversationHistory.length - 1] = { role: "user", content: message }; // Keep original message in history
+      sessionState.conversationHistory.push({ role: "assistant", content });
 
       // Check if the response contains multiple choice options
       const hasChoices = this.detectMultipleChoice(content);
@@ -847,13 +872,13 @@ A te la scelta!`;
         if (hasChoices) {
           // For multiple choice questions, save the entire content including choices
           // Make sure to preserve the complete content without any truncation
-          this.lastQuestionAsked = content;
-          console.log('Saved complete question with choices:', this.lastQuestionAsked);
+          sessionState.lastQuestionAsked = content;
+          console.log('Saved complete question with choices:', sessionState.lastQuestionAsked);
         } else {
           // For simple questions, extract just the question
           const questionMatch = content.match(/([^.!?]*\?)/);
           if (questionMatch) {
-            this.lastQuestionAsked = questionMatch[1].trim();
+            sessionState.lastQuestionAsked = questionMatch[1].trim();
           }
         }
       }
@@ -877,13 +902,13 @@ A te la scelta!`;
       console.error("Error sending message:", error);
       
       // Only provide fallback for specific connection errors after email validation
-      const isEmailRequestFallback = this.isEmailValidationNeeded();
+      const isEmailRequestFallback = this.isEmailValidationNeeded(sessionId);
       if (isEmailRequestFallback && (error?.message?.includes('request aborted') || error?.message?.includes('timeout'))) {
         console.log('Using fallback response for email validation timeout');
         const fallbackContent = "Perfetto! Ho ricevuto la tua email. La tua routine personalizzata ti arriverà presto via email. Nel frattempo, puoi continuare a chattare con me!";
         
-        this.conversationHistory[this.conversationHistory.length - 1] = { role: "user", content: message };
-        this.conversationHistory.push({ role: "assistant", content: fallbackContent });
+        sessionState.conversationHistory[sessionState.conversationHistory.length - 1] = { role: "user", content: message };
+        sessionState.conversationHistory.push({ role: "assistant", content: fallbackContent });
         
         return {
           content: fallbackContent,
@@ -969,14 +994,16 @@ A te la scelta!`;
     return filteredLines.join('\n').trim();
   }
 
-  getConversationHistory(): Array<{ role: string; content: string }> {
-    return [...this.conversationHistory];
+  getConversationHistory(sessionId: string): Array<{ role: string; content: string }> {
+    const sessionState = this.getSessionState(sessionId);
+    return [...sessionState.conversationHistory];
   }
 
-  clearConversation(): void {
-    this.conversationHistory = [];
-    this.askedQuestions.clear();
-    this.lastQuestionAsked = null;
+  clearConversation(sessionId: string): void {
+    const sessionState = this.getSessionState(sessionId);
+    sessionState.conversationHistory = [];
+    sessionState.askedQuestions.clear();
+    sessionState.lastQuestionAsked = null;
   }
 
   private isConversationComplete(response: string): boolean {
@@ -985,9 +1012,11 @@ A te la scelta!`;
            response.toLowerCase().includes("routine personalizzata");
   }
 
-  private isEmailValidationNeeded(): boolean {
+  private isEmailValidationNeeded(sessionId: string): boolean {
+    const sessionState = this.getSessionState(sessionId);
+    
     // Check if the last assistant message asked for email
-    const lastAssistantMessage = this.conversationHistory
+    const lastAssistantMessage = sessionState.conversationHistory
       .slice()
       .reverse()
       .find(msg => msg.role === "assistant");
@@ -1007,7 +1036,7 @@ A te la scelta!`;
     if (!isEmailRequest) return false;
 
     // Look for the email request message
-    const emailRequestIndex = this.conversationHistory.findIndex(msg => 
+    const emailRequestIndex = sessionState.conversationHistory.findIndex(msg => 
       msg.role === "assistant" && 
       (msg.content.toLowerCase().includes("per inviarti la routine personalizzata") || 
        msg.content.toLowerCase().includes("potresti condividere la tua email") ||
@@ -1016,7 +1045,7 @@ A te la scelta!`;
 
     if (emailRequestIndex !== -1) {
       // Check user messages after the email request
-      const userMessagesAfterRequest = this.conversationHistory
+      const userMessagesAfterRequest = sessionState.conversationHistory
         .slice(emailRequestIndex + 1)
         .filter(msg => msg.role === "user");
 
@@ -1218,10 +1247,8 @@ Sono qui per te, scegli quello che ti fa sentire più a tuo agio! 😊`;
 
   // Implement clearSession for AIService interface
   clearSession(sessionId: string): void {
-    // Clear conversation history and reset state
-    this.conversationHistory = [];
-    this.askedQuestions = new Set();
-    this.lastQuestionAsked = null;
+    // Remove session state completely
+    this.sessionStates.delete(sessionId);
     console.log(`DermaSense session ${sessionId} cleared`);
   }
 }
