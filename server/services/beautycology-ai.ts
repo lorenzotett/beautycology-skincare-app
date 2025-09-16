@@ -212,30 +212,13 @@ export class BeautycologyAIService {
     hasChoices: boolean;
     choices?: string[];
   }> {
-    const welcomeMessage = `Ciao bella! 💄✨ Sono Bella, la tua consulente beauty AI di Beautycology! 
+    const welcomeMessage = `Ciao! Sono la tua Skin Expert di Beautycology. Possiamo analizzare insieme la tua pelle per trovare la formula skincare perfetta per migliorarla!
 
-Sono qui per aiutarti a scoprire i prodotti beauty perfetti per te e creare routine personalizzate che esalteranno la tua bellezza naturale! 🌟
-
-**Cosa posso fare per te:**
-💫 Consigli prodotti personalizzati dal catalogo Beautycology
-🎨 Routine beauty complete (skincare + makeup)
-✨ Tips e tecniche di applicazione
-🛍️ Suggerimenti basati su budget e lifestyle
-
-**Per iniziare, dimmi:**
-Qual è il tuo principale obiettivo beauty? Vuoi migliorare la skincare, trovare il makeup perfetto, o creare una routine completa? 
-
-Non vedo l'ora di aiutarti a sentirti ancora più bella! 💕`;
+Per iniziare, scrivi qui sotto il tuo nome.`;
 
     return {
       content: welcomeMessage,
-      hasChoices: true,
-      choices: [
-        "🧴 Migliorare la mia skincare routine",
-        "💄 Trovare il makeup perfetto",
-        "✨ Routine completa (skincare + makeup)",
-        "🛍️ Scoprire novità Beautycology"
-      ]
+      hasChoices: false
     };
   }
 
