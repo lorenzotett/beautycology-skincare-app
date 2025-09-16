@@ -10,7 +10,7 @@ import {
   type InsertChatMessage
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
 import { getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
@@ -35,6 +35,15 @@ export interface IStorage {
   // Admin methods
   getAllChatSessions(): Promise<ChatSession[]>;
   getAllChatMessages(): Promise<ChatMessage[]>;
+  
+  // Brand-filtered methods for admin dashboard
+  getChatSessionsByBrand(brand: string): Promise<ChatSession[]>;
+  getAdminStatsByBrand(brand: string, dateRange?: { from?: Date; to?: Date }): Promise<{
+    totalSessions: number;
+    activeSessions: number;
+    completedSessions: number;
+    totalMessages: number;
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -76,9 +85,19 @@ export class MemStorage implements IStorage {
     const session: ChatSession = {
       id,
       ...insertSession,
+      userEmail: null,
+      brand: insertSession.brand || "dermasense",
       createdAt: new Date(),
       updatedAt: new Date(),
       isActive: true,
+      finalButtonClicked: false,
+      finalButtonClickedAt: null,
+      whatsappButtonClicked: false,
+      whatsappButtonClickedAt: null,
+      firstViewedAt: null,
+      chatStartedAt: null,
+      klaviyoSynced: false,
+      googleSheetsSynced: false,
     };
     this.chatSessions.set(insertSession.sessionId, session);
     this.chatMessages.set(insertSession.sessionId, []);
@@ -146,8 +165,8 @@ export class MemStorage implements IStorage {
 
   async updateChatMessage(messageId: number, updates: Partial<ChatMessage>): Promise<ChatMessage | undefined> {
     // Find message across all sessions
-    for (const [sessionId, messages] of this.chatMessages.entries()) {
-      const messageIndex = messages.findIndex(msg => msg.id === messageId);
+    for (const [sessionId, messages] of Array.from(this.chatMessages.entries())) {
+      const messageIndex = messages.findIndex((msg: ChatMessage) => msg.id === messageId);
       if (messageIndex !== -1) {
         const updatedMessage = { ...messages[messageIndex], ...updates };
         messages[messageIndex] = updatedMessage;
@@ -164,10 +183,49 @@ export class MemStorage implements IStorage {
 
   async getAllChatMessages(): Promise<ChatMessage[]> {
     const allMessages: ChatMessage[] = [];
-    for (const messages of this.chatMessages.values()) {
+    for (const messages of Array.from(this.chatMessages.values())) {
       allMessages.push(...messages);
     }
     return allMessages;
+  }
+
+  async getChatSessionsByBrand(brand: string): Promise<ChatSession[]> {
+    return Array.from(this.chatSessions.values()).filter(session => session.brand === brand);
+  }
+
+  async getAdminStatsByBrand(brand: string, dateRange?: { from?: Date; to?: Date }): Promise<{
+    totalSessions: number;
+    activeSessions: number;
+    completedSessions: number;
+    totalMessages: number;
+  }> {
+    let sessions = Array.from(this.chatSessions.values()).filter(session => session.brand === brand);
+    
+    // Apply date filter if provided
+    if (dateRange?.from) {
+      sessions = sessions.filter(session => session.createdAt && session.createdAt >= dateRange.from!);
+    }
+    if (dateRange?.to) {
+      sessions = sessions.filter(session => session.createdAt && session.createdAt <= dateRange.to!);
+    }
+
+    const totalSessions = sessions.length;
+    const activeSessions = sessions.filter(session => session.isActive).length;
+    const completedSessions = sessions.filter(session => session.finalButtonClicked).length;
+    
+    // Count messages for sessions of this brand
+    let totalMessages = 0;
+    for (const session of sessions) {
+      const messages = this.chatMessages.get(session.sessionId) || [];
+      totalMessages += messages.length;
+    }
+
+    return {
+      totalSessions,
+      activeSessions,
+      completedSessions,
+      totalMessages
+    };
   }
 }
 
@@ -292,6 +350,53 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(chatMessages)
       .orderBy(chatMessages.createdAt);
+  }
+
+  async getChatSessionsByBrand(brand: string): Promise<ChatSession[]> {
+    return await db
+      .select()
+      .from(chatSessions)
+      .where(eq(chatSessions.brand, brand))
+      .orderBy(chatSessions.createdAt);
+  }
+
+  async getAdminStatsByBrand(brand: string, dateRange?: { from?: Date; to?: Date }): Promise<{
+    totalSessions: number;
+    activeSessions: number;
+    completedSessions: number;
+    totalMessages: number;
+  }> {
+    // Build where conditions for brand and date range
+    const predicates = [eq(chatSessions.brand, brand)];
+    if (dateRange?.from) {
+      predicates.push(gte(chatSessions.createdAt, dateRange.from));
+    }
+    if (dateRange?.to) {
+      predicates.push(lte(chatSessions.createdAt, dateRange.to));
+    }
+
+    const whereClause = predicates.length > 1 ? and(...predicates) : predicates[0];
+
+    // Get filtered sessions with message counts
+    const result = await db
+      .select({
+        ...getTableColumns(chatSessions),
+        messageCount: sql<number>`COALESCE((SELECT COUNT(*)::integer FROM chat_messages WHERE chat_messages.session_id = chat_sessions.session_id), 0)`.as('messageCount')
+      })
+      .from(chatSessions)
+      .where(whereClause);
+
+    const totalSessions = result.length;
+    const activeSessions = result.filter(session => session.isActive).length;
+    const completedSessions = result.filter(session => session.finalButtonClicked).length;
+    const totalMessages = result.reduce((sum, session) => sum + (session as any).messageCount, 0);
+
+    return {
+      totalSessions,
+      activeSessions,
+      completedSessions,
+      totalMessages
+    };
   }
 }
 
