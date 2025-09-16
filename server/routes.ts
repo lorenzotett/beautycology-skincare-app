@@ -22,6 +22,7 @@ import fs from "fs";
 import { ragService } from './services/rag-simple';
 import { ragService as vectorRagService } from './services/rag';
 import { autoLearningSystem } from './services/auto-learning-system';
+import { BrandResolver } from './utils/brand';
 
 // Service management
 // AI services are now managed by AIServiceFactory - no need for session map
@@ -130,6 +131,9 @@ const imageUpload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Apply brand resolution middleware to all requests
+  app.use(BrandResolver.attachBrand);
+  
   app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
 
   // Serve batch upload page for image replacement
@@ -315,6 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId,
           sessionId,
           userName: "View Only", // Temporary session, no real user name yet
+          brand: req.brand,
         });
 
         // Immediately mark it as viewed
@@ -385,6 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         sessionId,
         userName,
+        brand: req.brand,
       });
 
       // Track both view and chat start automatically when session is created
