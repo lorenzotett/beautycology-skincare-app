@@ -47,7 +47,11 @@ interface SessionWithMessages extends ChatSession {
 
 type PeriodType = "Tutto il tempo" | "Oggi" | "Ieri" | "Ultima settimana" | "Ultimo mese" | "Personalizzato";
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  brand?: "dermasense" | "beautycology";
+}
+
+export default function AdminDashboard({ brand = "dermasense" }: AdminDashboardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -366,10 +370,13 @@ export default function AdminDashboard() {
   });
 
   const { data: stats } = useQuery({
-    queryKey: ["admin-stats", selectedPeriod, customDateFrom, customDateTo, searchTerm],
+    queryKey: ["admin-stats", brand, selectedPeriod, customDateFrom, customDateTo, searchTerm],
     queryFn: async () => {
       const params = new URLSearchParams();
 
+      // Add brand filter
+      params.append("brand", brand);
+      
       // Add search filter to stats
       if (searchTerm) {
         params.append("search", searchTerm);
@@ -453,12 +460,13 @@ export default function AdminDashboard() {
   };
 
   const { data: sessionsData } = useQuery({
-    queryKey: ["admin-sessions", currentPage, searchTerm, selectedPeriod, customDateFrom, customDateTo],
+    queryKey: ["admin-sessions", brand, currentPage, searchTerm, selectedPeriod, customDateFrom, customDateTo],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: itemsPerPage.toString(),
-        search: searchTerm
+        search: searchTerm,
+        brand: brand
       });
 
       // Add date filters

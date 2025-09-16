@@ -18,9 +18,11 @@ function DermaSenseAdminDashboard() {
     if (url.href !== window.location.href) {
       window.history.replaceState({}, '', url.pathname + url.search);
     }
+    // Also set localStorage for immediate theme application
+    localStorage.setItem('brand-theme', 'dermasense');
   }, []);
   
-  return <AdminDashboard />;
+  return <AdminDashboard brand="dermasense" />;
 }
 
 function BeautycologyAdminDashboard() {
@@ -31,9 +33,11 @@ function BeautycologyAdminDashboard() {
     if (url.href !== window.location.href) {
       window.history.replaceState({}, '', url.pathname + url.search);
     }
+    // Also set localStorage for immediate theme application
+    localStorage.setItem('brand-theme', 'beautycology');
   }, []);
   
-  return <AdminDashboard />;
+  return <AdminDashboard brand="beautycology" />;
 }
 
 function Router() {
