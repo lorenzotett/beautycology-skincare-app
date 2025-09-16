@@ -966,7 +966,7 @@ export function ChatInterface() {
             {/* Hero Image */}
             <div className="relative mx-auto w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 rounded-2xl overflow-hidden shadow-lg mb-6">
               <img 
-                src="/attached_assets/Mockup image_1751894588863.png" 
+                src="/attached_assets/imgi_11_marilisa-franchini-beautycology-39a807c0_1758035903593.jpg" 
                 alt="Analizza la tua pelle" 
                 className="w-full h-full object-cover"
                 onError={(e) => {
