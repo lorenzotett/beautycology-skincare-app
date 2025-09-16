@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { ragService } from "./rag-simple";
+import type { AIService } from "./ai-service-factory";
 
 const ai = new GoogleGenAI({ 
   apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || ""
@@ -557,7 +558,7 @@ export interface ChatResponse {
   isComplete?: boolean;
 }
 
-export class GeminiService {
+export class GeminiService implements AIService {
   private conversationHistory: Array<{ role: string; content: string }> = [];
   private askedQuestions: Set<string> = new Set();
   private lastQuestionAsked: string | null = null;
@@ -736,7 +737,13 @@ A te la scelta!`;
     }
   }
 
-  async sendMessage(message: string): Promise<ChatResponse> {
+  async sendMessage(sessionId: string, userMessage: string, imageData?: string): Promise<{
+    content: string;
+    hasChoices: boolean;
+    choices?: string[];
+  }> {
+    // For compatibility, use the existing message parameter
+    const message = userMessage;
     this.conversationHistory.push({ role: "user", content: message });
 
     try {
@@ -1189,5 +1196,32 @@ A te la scelta!`;
     return this.extractChoices(question);
   }
 
+  // Implement getWelcomeMessage for AIService interface
+  async getWelcomeMessage(): Promise<{
+    content: string;
+    hasChoices: boolean;
+    choices?: string[];
+  }> {
+    const welcomeMessage = `Ciao! 🌟 Sono la tua **Skin Expert** di **Bonnie** e sono davvero felice di conoscerti! Possiamo analizzare insieme la tua pelle per trovare la formula skincare perfetta che la renderà **radiosa e bellissima**! ✨
 
+Puoi iniziare l'analisi in due modi:
+• **Carica una foto** del tuo viso (struccato e con buona luce naturale) per farla analizzare dalla mia tecnologia **skin specialist** AI 📸 
+• Oppure **raccontami della tua pelle**: come la vedi, cosa senti, che piccoli problemini hai notato e quali sono le tue abitudini di bellezza! 💕
+
+Sono qui per te, scegli quello che ti fa sentire più a tuo agio! 😊`;
+
+    return {
+      content: welcomeMessage,
+      hasChoices: false
+    };
+  }
+
+  // Implement clearSession for AIService interface
+  clearSession(sessionId: string): void {
+    // Clear conversation history and reset state
+    this.conversationHistory = [];
+    this.askedQuestions = new Set();
+    this.lastQuestionAsked = null;
+    console.log(`DermaSense session ${sessionId} cleared`);
+  }
 }
