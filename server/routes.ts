@@ -1046,9 +1046,8 @@ Ricorda che i risultati possono variare da persona a persona.`,
     }
   });
 
-  // OPTIMIZATION 8: ULTRA-FAST multi-layered cache system
-  let sessionsCache: any[] | null = null;
-  let cacheTimestamp = 0;
+  // OPTIMIZATION 8: ULTRA-FAST multi-layered cache system (brand-scoped)
+  let sessionsCacheByBrand: { [brand: string]: { data: any[]; timestamp: number } } = {};
   const CACHE_DURATION = 1800000; // 30 minutes cache for MAXIMUM speed
 
   // Pre-computed stats cache
@@ -1058,46 +1057,54 @@ Ricorda che i risultati possono variare da persona a persona.`,
       timestamp: number;
     };
   }
-  let statsCache: StatsCache = {};
+  let statsCacheByBrand: { [brand: string]: StatsCache } = {};
   const STATS_CACHE_DURATION = 300000; // 5 minutes for stats
 
   // Session details cache
   let sessionDetailsCache = new Map<string, { data: any; timestamp: number }>();
   const SESSION_DETAILS_CACHE_DURATION = 600000; // 10 minutes
 
-  const invalidateCache = () => {
-    sessionsCache = null;
-    cacheTimestamp = 0;
-    statsCache = {};
-    sessionDetailsCache.clear();
-    console.log(`🗑️  All caches invalidated`);
+  const invalidateCache = (brand?: string) => {
+    if (brand) {
+      delete sessionsCacheByBrand[brand];
+      delete statsCacheByBrand[brand];
+      console.log(`🗑️  Cache invalidated for brand: ${brand}`);
+    } else {
+      sessionsCacheByBrand = {};
+      statsCacheByBrand = {};
+      sessionDetailsCache.clear();
+      console.log(`🗑️  All caches invalidated`);
+    }
   };
 
-  const getCachedSessions = async () => {
+  const getCachedSessions = async (brand: string = 'dermasense') => {
     const now = Date.now();
-    if (sessionsCache && (now - cacheTimestamp) < CACHE_DURATION) {
-      console.log(`⚡ INSTANT Cache hit - ${sessionsCache.length} sessions (${Math.round((now - cacheTimestamp)/1000)}s old)`);
-      return sessionsCache;
+    const brandCache = sessionsCacheByBrand[brand];
+    
+    if (brandCache && (now - brandCache.timestamp) < CACHE_DURATION) {
+      console.log(`⚡ INSTANT Cache hit for ${brand} - ${brandCache.data.length} sessions (${Math.round((now - brandCache.timestamp)/1000)}s old)`);
+      return brandCache.data;
     }
 
     const startTime = Date.now();
-    console.log(`🔄 Loading sessions from database...`);
-    sessionsCache = await storage.getAllChatSessions();
-    cacheTimestamp = now;
+    console.log(`🔄 Loading sessions from database for brand: ${brand}...`);
+    const sessions = await storage.getChatSessionsByBrand(brand);
+    sessionsCacheByBrand[brand] = { data: sessions, timestamp: now };
     const loadTime = Date.now() - startTime;
-    console.log(`💾 Cached ${sessionsCache.length} sessions in ${loadTime}ms`);
+    console.log(`💾 Cached ${sessions.length} sessions for ${brand} in ${loadTime}ms`);
 
     // Pre-compute all stats for common periods after loading sessions
-    precomputeStats();
+    precomputeStats(brand);
 
-    return sessionsCache;
+    return sessions;
   };
 
   // Pre-compute stats for common time periods
-  const precomputeStats = async () => {
-    if (!sessionsCache) return;
+  const precomputeStats = async (brand: string) => {
+    const brandCache = sessionsCacheByBrand[brand];
+    if (!brandCache) return;
 
-    console.log('🔄 Pre-computing stats for common periods...');
+    console.log(`🔄 Pre-computing stats for common periods for brand: ${brand}...`);
     const periods = [
       { key: 'all', filter: null },
       { key: 'today', filter: { period: 'Oggi' } },
@@ -1106,17 +1113,21 @@ Ricorda che i risultati possono variare da persona a persona.`,
       { key: 'month', filter: { period: 'Ultimo mese' } }
     ];
 
-    for (const { key, filter } of periods) {
-      const stats = await computeStatsForPeriod(filter);
-      statsCache[key] = { data: stats, timestamp: Date.now() };
+    if (!statsCacheByBrand[brand]) {
+      statsCacheByBrand[brand] = {};
     }
 
-    console.log('✅ Pre-computed stats for all common periods');
+    for (const { key, filter } of periods) {
+      const stats = await computeStatsForPeriod(filter, brand);
+      statsCacheByBrand[brand][key] = { data: stats, timestamp: Date.now() };
+    }
+
+    console.log(`✅ Pre-computed stats for all common periods for brand: ${brand}`);
   };
 
   // Compute stats for a specific period
-  const computeStatsForPeriod = async (filter: any) => {
-    const allSessions = sessionsCache || [];
+  const computeStatsForPeriod = async (filter: any, brand: string) => {
+    const allSessions = sessionsCacheByBrand[brand]?.data || [];
     let filteredSessions = allSessions;
 
     // Apply search filter first if present
@@ -1262,8 +1273,11 @@ Ricorda che i risultati possono variare da persona a persona.`,
   };
 
   // PRELOAD cache at startup for instant first load
-  getCachedSessions().then(() => {
-    console.log(`🚀 PRELOADED sessions cache at startup for instant performance`);
+  Promise.all([
+    getCachedSessions('dermasense'),
+    getCachedSessions('beautycology')
+  ]).then(() => {
+    console.log(`🚀 PRELOADED sessions cache for both brands at startup for instant performance`);
   }).catch(console.error);
 
   // Add admin API status endpoint for deployment verification
@@ -1281,9 +1295,9 @@ Ricorda che i risultati possono variare da persona a persona.`,
           heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + "MB"
         },
         cache: {
-          active: !!sessionsCache,
-          timestamp: cacheTimestamp,
-          size: sessionsCache?.length || 0
+          active: Object.keys(sessionsCacheByBrand).length > 0,
+          brands: Object.keys(sessionsCacheByBrand),
+          totalSessions: Object.values(sessionsCacheByBrand).reduce((total, cache) => total + cache.data.length, 0)
         },
         environment: process.env.NODE_ENV,
         uptime: Math.round(process.uptime()) + "s"
@@ -1328,10 +1342,11 @@ Ricorda che i risultati possono variare da persona a persona.`,
 
         // Check for "all time" cache
         if (!from && !to && !period) {
-          if (statsCache['all']) {
-            const cached = statsCache['all'];
+          const brand = req.brand;
+          if (statsCacheByBrand[brand] && statsCacheByBrand[brand]['all']) {
+            const cached = statsCacheByBrand[brand]['all'];
             if (Date.now() - cached.timestamp < STATS_CACHE_DURATION) {
-              console.log(`⚡ INSTANT stats cache hit for all time`);
+              console.log(`⚡ INSTANT stats cache hit for all time (${brand})`);
               res.setHeader('Content-Type', 'application/json');
               res.setHeader('Cache-Control', 'public, max-age=60');
               res.setHeader('X-Cache', 'HIT');
@@ -1343,10 +1358,12 @@ Ricorda che i risultati possono variare da persona a persona.`,
 
       // If not in cache or custom date range, compute it
       console.log('🔄 Computing stats for custom period...');
-      await getCachedSessions(); // Ensure sessions are loaded
+      const brand = req.brand;
+      await getCachedSessions(brand); // Ensure sessions are loaded
 
       const stats = await computeStatsForPeriod(
-        from || to ? { from, to, search } : period ? { period, search } : { search }
+        from || to ? { from, to, search } : period ? { period, search } : { search },
+        brand
       );
 
       // Update cache if it's a common period without search
@@ -1359,10 +1376,12 @@ Ricorda che i risultati possono variare da persona a persona.`,
           case 'Ultimo mese': cacheKey = 'month'; break;
         }
         if (cacheKey) {
-          statsCache[cacheKey] = { data: stats, timestamp: Date.now() };
+          if (!statsCacheByBrand[brand]) statsCacheByBrand[brand] = {};
+          statsCacheByBrand[brand][cacheKey] = { data: stats, timestamp: Date.now() };
         }
       } else if (!search && !from && !to && !period) {
-        statsCache['all'] = { data: stats, timestamp: Date.now() };
+        if (!statsCacheByBrand[brand]) statsCacheByBrand[brand] = {};
+        statsCacheByBrand[brand]['all'] = { data: stats, timestamp: Date.now() };
       }
 
       res.setHeader('Content-Type', 'application/json');
@@ -1417,7 +1436,7 @@ Ricorda che i risultati possono variare da persona a persona.`,
         }
       }
 
-      const allSessions = await getCachedSessions();
+      const allSessions = await getCachedSessions(req.brand);
       // Exclude "View Only" sessions from the list
       let sessions = allSessions.filter((session: any) => session.userName !== "View Only");
 
