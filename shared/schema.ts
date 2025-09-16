@@ -60,6 +60,8 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
   metadata: z.unknown().optional(),
 });
 
+export type Brand = "dermasense" | "beautycology";
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type ChatSession = typeof chatSessions.$inferSelect;

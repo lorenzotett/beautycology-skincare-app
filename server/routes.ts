@@ -399,7 +399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         chatStartedAt: new Date()   // User submits name and starts chat
       });
 
-      const aiService = await AIServiceFactory.getAIService();
+      const aiService = await AIServiceFactory.getAIService(req.brand);
       
       const initialResponse = await aiService.getWelcomeMessage();
 
@@ -438,7 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Session not found" });
       }
 
-      const aiService = await AIServiceFactory.getAIService();
+      const aiService = await AIServiceFactory.getAIService(req.brand);
       
       // Check if user had previously uploaded a photo for this session
       const messages = await storage.getChatMessages(sessionId);
@@ -741,7 +741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Session not found" });
       }
 
-      const aiService = await AIServiceFactory.getAIService();
+      const aiService = await AIServiceFactory.getAIService(req.brand);
       
       // Check if user had previously uploaded a photo for this session
       const messages = await storage.getChatMessages(sessionId);
