@@ -9,6 +9,33 @@ import NotFound from "@/pages/not-found";
 import ErrorBoundary from "@/components/error-boundary";
 import { useEffect } from "react";
 
+// Brand-aware AdminDashboard wrapper components
+function DermaSenseAdminDashboard() {
+  useEffect(() => {
+    // Set brand parameter for DermaSense admin
+    const url = new URL(window.location.href);
+    url.searchParams.set('brand', 'dermasense');
+    if (url.href !== window.location.href) {
+      window.history.replaceState({}, '', url.pathname + url.search);
+    }
+  }, []);
+  
+  return <AdminDashboard />;
+}
+
+function BeautycologyAdminDashboard() {
+  useEffect(() => {
+    // Set brand parameter for Beautycology admin
+    const url = new URL(window.location.href);
+    url.searchParams.set('brand', 'beautycology');
+    if (url.href !== window.location.href) {
+      window.history.replaceState({}, '', url.pathname + url.search);
+    }
+  }, []);
+  
+  return <AdminDashboard />;
+}
+
 function Router() {
   const [location] = useLocation();
   
@@ -26,6 +53,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Chat} />
+      <Route path="/admin" component={DermaSenseAdminDashboard} />
+      <Route path="/admin/beautycology" component={BeautycologyAdminDashboard} />
       <Route path="/admin-dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>
