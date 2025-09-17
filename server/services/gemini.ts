@@ -889,8 +889,7 @@ A te la scelta!`;
       return {
         content: finalContent,
         hasChoices,
-        choices,
-        isComplete: this.isConversationComplete(content)
+        choices
       };
     } catch (error: any) {
       console.error("Error sending message:", error);
@@ -1243,6 +1242,6 @@ Sono qui per te, scegli quello che ti fa sentire più a tuo agio! 😊`;
   clearSession(sessionId: string): void {
     // Remove session state completely
     this.sessionStates.delete(sessionId);
-    console.log(`DermaSense session ${sessionId} cleared`);
+    console.log(`Beautycology session ${sessionId} cleared`);
   }
 }
