@@ -188,7 +188,7 @@ export class BeautycologyAIService {
         generationConfig: this.generationConfig
       } as any);
 
-      const responseText = response.text() || "Scusa, non riesco a rispondere in questo momento.";
+      const responseText = response.response.text() || "Scusa, non riesco a rispondere in questo momento.";
 
       // Add assistant response to history
       sessionHistory.push({
