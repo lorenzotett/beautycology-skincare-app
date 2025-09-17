@@ -48,10 +48,10 @@ interface SessionWithMessages extends ChatSession {
 type PeriodType = "Tutto il tempo" | "Oggi" | "Ieri" | "Ultima settimana" | "Ultimo mese" | "Personalizzato";
 
 interface AdminDashboardProps {
-  brand?: "dermasense" | "beautycology";
+  brand?: "beautycology";
 }
 
-export default function AdminDashboard({ brand = "dermasense" }: AdminDashboardProps) {
+export default function AdminDashboard({ brand = "beautycology" }: AdminDashboardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -223,7 +223,7 @@ export default function AdminDashboard({ brand = "dermasense" }: AdminDashboardP
       const contentDisposition = response.headers.get('content-disposition');
       const filename = contentDisposition
         ? contentDisposition.split('filename=')[1].replace(/"/g, '')
-        : 'ai-dermasense-export.csv';
+        : 'beautycology-ai-export.csv';
 
       // Create blob and download
       const blob = await response.blob();
@@ -651,7 +651,7 @@ export default function AdminDashboard({ brand = "dermasense" }: AdminDashboardP
         <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Login</h1>
-            <p className="text-gray-600">Access the AI DermoSense dashboard</p>
+            <p className="text-gray-600">Access the Beautycology AI dashboard</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -703,7 +703,7 @@ export default function AdminDashboard({ brand = "dermasense" }: AdminDashboardP
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600">AI DermoSense Conversation Management</p>
+            <p className="text-gray-600">Beautycology AI Conversation Management</p>
           </div>
           <div className="flex items-center space-x-4">
             {!isSelectionMode ? (
@@ -1137,7 +1137,7 @@ export default function AdminDashboard({ brand = "dermasense" }: AdminDashboardP
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">Conversazioni</h2>
-            <p className="text-sm text-gray-600">Tutte le conversazioni con AI DermoSense</p>
+            <p className="text-sm text-gray-600">Tutte le conversazioni con Beautycology AI</p>
           </div>
 
           <div className="p-6">
