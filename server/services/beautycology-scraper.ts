@@ -306,16 +306,32 @@ export class BeautycologyScraper {
       }
     });
 
-    return [...new Set(ingredients)]; // Rimuovi duplicati
+    // Rimuovi duplicati manualmente
+    const uniqueIngredients: string[] = [];
+    ingredients.forEach(ingredient => {
+      if (!uniqueIngredients.includes(ingredient)) {
+        uniqueIngredients.push(ingredient);
+      }
+    });
+    return uniqueIngredients;
   }
 
   private extractCategories(products: Product[], articles: BlogArticle[]): string[] {
-    const categories = new Set<string>();
+    const categories: string[] = [];
     
-    products.forEach(p => categories.add(p.category));
-    articles.forEach(a => categories.add(a.category));
+    products.forEach(p => {
+      if (!categories.includes(p.category)) {
+        categories.push(p.category);
+      }
+    });
     
-    return Array.from(categories).sort();
+    articles.forEach(a => {
+      if (!categories.includes(a.category)) {
+        categories.push(a.category);
+      }
+    });
+    
+    return categories.sort();
   }
 }
 

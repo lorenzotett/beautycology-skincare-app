@@ -145,6 +145,7 @@ export class BeautycologyAIService {
     maxOutputTokens: 1024,
   };
   private chatSessions: Map<string, any[]> = new Map();
+  private knowledgeBase: any = null;
 
   constructor() {
     // Configuration set up in constructor
@@ -159,22 +160,35 @@ export class BeautycologyAIService {
       // Get or create session history
       let sessionHistory = this.chatSessions.get(sessionId) || [];
 
-      // Build contents array for API
-      const contents = [...sessionHistory, {
-        role: "user",
-        parts: [{ text: userMessage }]
-      }];
+      // Build contents array - on first message, include system instruction
+      let contents: any[];
+      if (sessionHistory.length === 0) {
+        // First message: include system instruction + knowledge base + user message
+        const knowledgeSummary = this.getKnowledgeBaseSummary();
+        const fullPrompt = BEAUTYCOLOGY_SYSTEM_INSTRUCTION + 
+          (knowledgeSummary ? `\n\n# CATALOGO PRODOTTI AGGIORNATO:\n${knowledgeSummary}\n\n` : '\n\n') +
+          `Utente: ${userMessage}`;
+        
+        contents = [{
+          role: "user",
+          parts: [{ text: fullPrompt }]
+        }];
+      } else {
+        // Subsequent messages: use session history + new message
+        contents = [...sessionHistory, {
+          role: "user", 
+          parts: [{ text: userMessage }]
+        }];
+      }
 
       // Send message using generateContent API
-      const result = await ai.models.generateContent({
+      const { response } = await ai.models.generateContent({
         model: `models/${this.modelName}`,
         contents,
-        systemInstruction: {
-          parts: [{ text: BEAUTYCOLOGY_SYSTEM_INSTRUCTION }]
-        }
-      });
+        generationConfig: this.generationConfig
+      } as any);
 
-      const responseText = result.text || "Scusa, non riesco a rispondere in questo momento.";
+      const responseText = response.text() || "Scusa, non riesco a rispondere in questo momento.";
 
       // Add assistant response to history
       sessionHistory.push({
@@ -310,6 +324,32 @@ Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi 
   // Get session history for debugging
   getSessionHistory(sessionId: string): any[] {
     return this.chatSessions.get(sessionId) || [];
+  }
+
+  // Update knowledge base with scraped data
+  updateKnowledgeBase(knowledge: any): void {
+    console.log('📚 Aggiornamento knowledge base Beautycology...');
+    this.knowledgeBase = knowledge;
+    
+    console.log(`✅ Knowledge base aggiornata: ${knowledge.products?.length || 0} prodotti, ${knowledge.blogArticles?.length || 0} articoli`);
+  }
+
+  // Get summary of knowledge base for prompt injection
+  private getKnowledgeBaseSummary(maxItems: number = 10): string {
+    if (!this.knowledgeBase?.products) {
+      return '';
+    }
+
+    const topProducts = this.knowledgeBase.products
+      .slice(0, maxItems)
+      .map((p: any) => `- ${p.name} (${p.price}): ${p.description.substring(0, 80)}...`)
+      .join('\n');
+
+    return topProducts;
+  }
+
+  getKnowledgeBase(): any {
+    return this.knowledgeBase;
   }
 }
 
