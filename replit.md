@@ -44,6 +44,14 @@ Preferred communication style: Simple, everyday language.
 - **Production Configuration**: Express.js serving API and static files, PostgreSQL database, Google Gemini API, flexible port binding.
 - **Environment Requirements**: Node.js (ES modules), PostgreSQL, Google Gemini API Keys.
 
+### Multi-Brand Architecture
+- **Brand Separation**: Complete data isolation between Beautycology AI (beauty consultant) and AI-DermaSense (dermatological advisor) brands
+- **BrandResolver Security**: Hostname-first brand detection preventing cross-brand data spoofing (hostname > referer > query > body-dev > default)
+- **Brand-Scoped Storage**: All database operations filtered by brand with zero data leakage between brands
+- **Dedicated Admin Dashboards**: Separate routing (/admin for DermaSense, /admin/beautycology for Beautycology) with automatic brand theming
+- **AI Service Factory**: Dynamic AI service selection based on brand (Gemini for DermaSense, Beautycology AI for Beautycology)
+- **Complete Isolation**: API routes, caching, statistics, and session management are all brand-aware
+
 ### UI/UX Decisions
 - **Color Scheme**: Consistent with a beauty/skincare theme.
 - **Layout**: Responsive design adapting to mobile (compact) and desktop (full-width) views.
@@ -61,6 +69,7 @@ Preferred communication style: Simple, everyday language.
 - **Real-time Sync**: Email-triggered AI extraction and Google Sheets/Klaviyo sync, supplemented by a 5-minute backup sync.
 - **Session Recovery**: Automatic Gemini service recreation when sessions are removed from memory, ensuring chat continuity after email submission and preventing "Chat service not found" errors (July 2025).
 - **Automatic Image Import System**: Complete automation for converting Base64 images to public URLs and generating Google Sheets IMAGE formulas. Processes 205+ conversations with user-uploaded photos, providing direct image display in spreadsheet cells without manual intervention (August 2025).
+- **Multi-Brand Architecture**: Complete separation between Beautycology AI (beauty consultant) and AI-DermaSense (dermatological advisor) with brand-scoped data isolation, separate AI services, dedicated routing, and isolated admin dashboards (September 2025).
 
 ## External Dependencies
 - **@google/genai**: Google Gemini AI integration.
