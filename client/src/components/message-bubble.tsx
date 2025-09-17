@@ -429,7 +429,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       ) : (
         <div
           className="text-sm leading-relaxed whitespace-pre-wrap"
-          style={{color: '#7791DA'}}
+          style={{color: 'black'}}
           dangerouslySetInnerHTML={{ __html: formatMarkdown(contentWithButtons.content) }}
         />
       )}
