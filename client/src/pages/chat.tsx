@@ -10,6 +10,25 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { BrowserFingerprint } from "@/utils/fingerprint";
 
+// Helper function to get brand from URL or localStorage
+function getBrand(): "dermasense" | "beautycology" {
+  // Check URL parameter first
+  const urlParams = new URLSearchParams(window.location.search);
+  const brandParam = urlParams.get('brand');
+  if (brandParam === 'beautycology' || brandParam === 'dermasense') {
+    return brandParam;
+  }
+  
+  // Check localStorage as fallback
+  const storedBrand = localStorage.getItem('brand-theme');
+  if (storedBrand === 'beautycology' || storedBrand === 'dermasense') {
+    return storedBrand;
+  }
+  
+  // Default to dermasense
+  return 'dermasense';
+}
+
 export default function Chat() {
   const { toast } = useToast();
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -20,10 +39,14 @@ export default function Chat() {
     mutationFn: async (userName: string) => {
       // Generate or get existing fingerprint
       const fingerprint = await BrowserFingerprint.getOrCreateFingerprint();
+      
+      // Get current brand
+      const brand = getBrand();
 
       const response = await apiRequest("POST", "/api/chat/start", {
         userName,
         fingerprint,
+        brand,
       });
       return response.json();
     },

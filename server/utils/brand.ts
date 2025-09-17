@@ -10,18 +10,10 @@ const brandSchema = z.enum(['dermasense', 'beautycology']);
  */
 export class BrandResolver {
   /**
-   * Resolve brand from various sources
+   * Resolve brand from various sources (secure order)
    */
   static resolveBrand(req: Request): Brand {
-    // 1. Check query parameter first
-    if (req.query.brand) {
-      const result = brandSchema.safeParse(req.query.brand);
-      if (result.success) {
-        return result.data;
-      }
-    }
-
-    // 2. Check hostname
+    // 1. Check hostname first (most secure)
     const hostname = (req.hostname || req.get('host') || '').toLowerCase();
     if (hostname.includes('beautycology')) {
       return 'beautycology';
@@ -30,16 +22,33 @@ export class BrandResolver {
       return 'dermasense';
     }
 
-    // 3. Check referer as fallback
+    // 2. Check referer for brand hints
     const referer = (req.get('referer') || '').toLowerCase();
-    if (referer.includes('beautycology')) {
+    if (referer.includes('brand=beautycology')) {
       return 'beautycology';
     }
-    if (referer.includes('dermasense') || referer.includes('ai-dermasense') || referer.includes('aidermasense')) {
+    if (referer.includes('brand=dermasense')) {
       return 'dermasense';
     }
 
-    // 4. Default to dermasense
+    // 3. Check query parameter
+    if (req.query.brand) {
+      const result = brandSchema.safeParse(req.query.brand);
+      if (result.success) {
+        return result.data;
+      }
+    }
+
+    // 4. Check request body for POST requests (only for localhost/dev)
+    if (req.method !== 'GET' && req.body?.brand && 
+        (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.startsWith('replit'))) {
+      const result = brandSchema.safeParse(req.body.brand);
+      if (result.success) {
+        return result.data;
+      }
+    }
+
+    // 5. Default to dermasense
     return 'dermasense';
   }
 
