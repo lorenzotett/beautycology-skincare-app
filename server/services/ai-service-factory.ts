@@ -31,7 +31,7 @@ export class AIServiceFactory {
   private static dermasenseService: AIService | null = null;
   private static beautycologyService: AIService | null = null;
 
-  static async getAIService(brand: Brand = 'dermasense'): Promise<AIService> {
+  static async getAIService(brand: Brand = 'beautycology'): Promise<AIService> {
     switch (brand) {
       case 'dermasense':
         if (!this.dermasenseService) {
@@ -55,7 +55,7 @@ export class AIServiceFactory {
     return getAppConfig().appType;
   }
 
-  static getAppBranding(brand: Brand = 'dermasense') {
+  static getAppBranding(brand: Brand = 'beautycology') {
     // Return branding based on brand instead of global config
     switch (brand) {
       case 'dermasense':

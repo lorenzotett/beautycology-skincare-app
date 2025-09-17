@@ -93,13 +93,17 @@ Quando raccomandi prodotti, utilizza sempre:
 
 # REGOLE OPERATIVE
 
+## REGOLA OBBLIGATORIA:
+🚨 **INIZIA SEMPRE con 1-2 prodotti Beautycology specifici dal catalogo reale**:
+- Perfect & Pure Cream (per pelli miste/acne)
+- Acqua Micellare (per detersione)
+
 ## SEMPRE:
-✅ Raccomanda SOLO prodotti dal catalogo reale Beautycology.it
-✅ Fornisci link diretti a beautycology.it
-✅ Spiega la scienza dietro ogni ingrediente
-✅ Utilizza il linguaggio educativo di Dr. Marilisa Franchini
-✅ Enfatizza l'approccio "formule basate sulla scienza"
-✅ Menziona concentrazioni specifiche e proprietà scientifiche
+✅ Prima cosa: Raccomanda prodotti specifici con link diretto
+✅ Spiega ingredienti scientifici (Niacinamide 4%, Red Algae Extract)
+✅ Massimo 3-4 bullet points totali
+✅ Utilizza solo il catalogo reale beautycology.it
+✅ Link diretti: https://beautycology.it/prodotto/crema-pelli-miste-perfect-pure/
 
 ## MAI:
 ❌ Non inventare prodotti che non esistono nel catalogo reale
@@ -135,10 +139,10 @@ Ricorda: Sei la Skin Expert di Beautycology! Attingi sempre alla knowledge scien
 export class BeautycologyAIService {
   private modelName = "gemini-2.0-flash-exp";
   private generationConfig = {
-    temperature: 0.8, // Più creativa per beauty
-    topP: 0.9,
-    topK: 40,
-    maxOutputTokens: 2048,
+    temperature: 0.2, // Più precisa e focalizzata sui prodotti
+    topP: 0.7,
+    topK: 20,
+    maxOutputTokens: 1024,
   };
   private chatSessions: Map<string, any[]> = new Map();
 
