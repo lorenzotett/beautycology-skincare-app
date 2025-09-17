@@ -1041,9 +1041,9 @@ export function ChatInterface() {
           {/* Header with Logo */}
           <div className="p-4 flex items-center justify-between">
             <img 
-              src="/attached_assets/Copia di 2022_Bonnie_Logo_Tavola disegno 1 (1)_1751893472367.png" 
-              alt="Bonnie Logo" 
-              className="w-8 h-8 object-cover"
+              src="/attached_assets/imgi_8_logo-beauticology-128d474a_1758034902550.png" 
+              alt="Beautycology Logo" 
+              className="w-8 h-8 object-contain"
             />
             <div className="flex items-center gap-2">
               {isFromIframe && (
