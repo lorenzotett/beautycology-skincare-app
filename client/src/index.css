@@ -426,7 +426,7 @@ body, html {
   }
 
   .text-user-msg {
-    color: var(--foreground);
+    color: black;
   }
 
   .text-text-muted {

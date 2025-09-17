@@ -382,11 +382,11 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           )}
           {/* Show message content if present */}
           {message.content && (
-            <p className="text-sm leading-relaxed" style={{color: '#E5F1F2'}}>{message.content}</p>
+            <p className="text-sm leading-relaxed" style={{color: 'black'}}>{message.content}</p>
           )}
           {/* Show "Immagine" as fallback if no content but has image */}
           {!message.content && (metadata?.image || metadata?.imageBase64) && (
-            <p className="text-sm leading-relaxed italic" style={{color: '#E5F1F2'}}>Immagine</p>
+            <p className="text-sm leading-relaxed italic" style={{color: 'black'}}>Immagine</p>
           )}
         </div>
       </div>
