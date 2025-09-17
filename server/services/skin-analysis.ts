@@ -353,7 +353,7 @@ export class SkinAnalysisService {
           }]
         }),
         timeoutPromise
-      ]);
+      ]) as any;
       
       const elapsedTime = Date.now() - startTime;
       console.log(`✅ Risposta ricevuta da Gemini in ${elapsedTime}ms`);
