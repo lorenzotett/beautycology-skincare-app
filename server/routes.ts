@@ -3143,6 +3143,92 @@ ${imageFormulas.map(item =>
     }
   });
 
+  // Beautycology Web Scraping Routes
+  app.post("/api/admin/beautycology/scrape", async (req, res) => {
+    try {
+      console.log('🔄 Avvio scraping beautycology.it...');
+      
+      const { beautycologyScraper } = await import('./services/beautycology-scraper');
+      const knowledge = await beautycologyScraper.scrapeAllData();
+      
+      // Aggiorna la knowledge base del servizio AI
+      const { beautycologyAI } = await import('./services/beautycology-ai');
+      beautycologyAI.updateKnowledgeBase(knowledge);
+      
+      // Salva la knowledge base su file per persistenza (opzionale)
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        const knowledgeDir = 'knowledge-base';
+        if (!fs.existsSync(knowledgeDir)) {
+          fs.mkdirSync(knowledgeDir, { recursive: true });
+        }
+        
+        const filePath = path.join(knowledgeDir, 'beautycology.json');
+        fs.writeFileSync(filePath, JSON.stringify(knowledge, null, 2));
+        console.log(`💾 Knowledge base salvata in: ${filePath}`);
+      } catch (saveError) {
+        console.warn('⚠️ Errore salvataggio file knowledge base:', saveError);
+      }
+      
+      res.json({
+        success: true,
+        summary: {
+          productsCount: knowledge.products.length,
+          articlesCount: knowledge.blogArticles.length,
+          categoriesCount: knowledge.categories.length,
+          lastUpdated: knowledge.lastUpdated
+        },
+        message: `Scraping completato: ${knowledge.products.length} prodotti e ${knowledge.blogArticles.length} articoli acquisiti`,
+        knowledge
+      });
+      
+    } catch (error) {
+      console.error('❌ Errore scraping beautycology:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Errore durante lo scraping',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Get current knowledge base
+  app.get("/api/admin/beautycology/knowledge", async (req, res) => {
+    try {
+      const { beautycologyAI } = await import('./services/beautycology-ai');
+      const knowledge = beautycologyAI.getKnowledgeBase();
+      
+      if (!knowledge) {
+        return res.json({
+          success: true,
+          message: "Knowledge base non ancora inizializzata. Esegui il scraping prima.",
+          knowledge: null
+        });
+      }
+      
+      res.json({
+        success: true,
+        summary: {
+          productsCount: knowledge.products?.length || 0,
+          articlesCount: knowledge.blogArticles?.length || 0,
+          categoriesCount: knowledge.categories?.length || 0,
+          lastUpdated: knowledge.lastUpdated
+        },
+        knowledge
+      });
+      
+    } catch (error) {
+      console.error('❌ Errore lettura knowledge base:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Errore durante la lettura della knowledge base',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const server = createServer(app);
   return server;
 }
