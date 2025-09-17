@@ -146,7 +146,9 @@ export class BeautycologyAIService {
       const result = await ai.models.generateContent({
         model: `models/${this.modelName}`,
         contents,
-        systemInstruction: BEAUTYCOLOGY_SYSTEM_INSTRUCTION
+        systemInstruction: {
+          parts: [{ text: BEAUTYCOLOGY_SYSTEM_INSTRUCTION }]
+        }
       });
 
       const responseText = result.text || "Scusa, non riesco a rispondere in questo momento.";
@@ -220,6 +222,61 @@ Per iniziare, scrivi qui sotto il tuo nome.`;
       content: welcomeMessage,
       hasChoices: false
     };
+  }
+
+  // Initialize conversation after user provides their name
+  async initializeConversation(userName: string): Promise<{
+    content: string;
+    hasChoices: boolean;
+    choices?: string[];
+  }> {
+    try {
+      // Custom welcome message after user provides name
+      const personalizedMessage = `Ciao ${userName}! 🌟 Sono la tua Skin Expert di Beautycology e sono davvero felice di conoscerti! Possiamo analizzare insieme la tua pelle per trovare la skincare routine perfetta che la renderà radiosa e bellissima! ✨
+
+Puoi iniziare l'analisi in due modi:
+• Carica una foto del tuo viso (struccato e con buona luce naturale) per farla analizzare dalla mia tecnologia skin specialist AI 📸 
+
+• Oppure raccontami della tua pelle: come la vedi, cosa senti, che piccoli problemini hai notato e quali sono le tue abitudini di bellezza! 💕
+
+Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi pure. Sono qui per te! 😊`;
+
+      // Initialize session history with the user's name and the welcome response
+      let sessionHistory = this.chatSessions.get('temp') || [];
+      sessionHistory.push(
+        {
+          role: "user",
+          parts: [{ text: userName }]
+        },
+        {
+          role: "model", 
+          parts: [{ text: personalizedMessage }]
+        }
+      );
+
+      return {
+        content: personalizedMessage,
+        hasChoices: false
+      };
+
+    } catch (error) {
+      console.error("Error initializing Beautycology conversation:", error);
+      
+      // Fallback message if something goes wrong
+      const fallbackMessage = `Ciao ${userName}! 🌟 Sono la tua Skin Expert di Beautycology e sono davvero felice di conoscerti! Possiamo analizzare insieme la tua pelle per trovare la skincare routine perfetta che la renderà radiosa e bellissima! ✨
+
+Puoi iniziare l'analisi in due modi:
+• Carica una foto del tuo viso (struccato e con buona luce naturale) per farla analizzare dalla mia tecnologia skin specialist AI 📸 
+
+• Oppure raccontami della tua pelle: come la vedi, cosa senti, che piccoli problemini hai notato e quali sono le tue abitudini di bellezza! 💕
+
+Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi pure. Sono qui per te! 😊`;
+
+      return {
+        content: fallbackMessage,
+        hasChoices: false
+      };
+    }
   }
 
   // Clear session when needed
