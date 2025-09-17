@@ -1044,6 +1044,7 @@ export function ChatInterface() {
               src="/attached_assets/Beautycology Logo definitivo_1758128066560.jpg" 
               alt="Beautycology Logo" 
               className="h-10 w-auto object-contain"
+              style={{ mixBlendMode: 'multiply', backgroundColor: 'transparent' }}
             />
             <div className="flex items-center gap-2">
               {isFromIframe && (
