@@ -403,8 +403,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Use initializeConversation if available (for personalized welcome with user name)
       // Otherwise fallback to getWelcomeMessage
-      const initialResponse = (aiService as any).initializeConversation
-        ? await (aiService as any).initializeConversation(userName)
+      const initialResponse = aiService.initializeConversation
+        ? await aiService.initializeConversation(userName)
         : await aiService.getWelcomeMessage();
 
       await storage.addChatMessage({

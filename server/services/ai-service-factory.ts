@@ -17,6 +17,12 @@ export interface AIService {
     hasChoices: boolean;
     choices?: string[];
   }>;
+
+  initializeConversation?(userName: string): Promise<{
+    content: string;
+    hasChoices: boolean;
+    choices?: string[];
+  }>;
   
   clearSession(sessionId: string): void;
 }
