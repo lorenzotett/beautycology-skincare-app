@@ -63,39 +63,45 @@ export class BeautycologyScraper {
       const response = await axios.get(`${this.baseUrl}/shop/`);
       const $ = cheerio.load(response.data);
 
-      // Estrai tutti i prodotti dalla griglia
-      $('.uk-grid-medium .uk-width-1-1').each((index, element) => {
+      // Estrai tutti i prodotti usando i selettori corretti identificati dal debug
+      $('li.product.type-product').each((index, element) => {
         try {
           const $product = $(element);
+          const fullText = $product.text();
           
-          const name = $product.find('h3 a').text().trim();
-          const url = $product.find('h3 a').attr('href') || '';
+          // Estrai nome del prodotto - è la prima parte del testo prima del rating
+          const textParts = fullText.split('Valutato');
+          const name = textParts[0].trim();
+          
+          // Estrai URL del prodotto dal link interno
+          const $productLink = $product.find('a[href*="/prodotto/"]').first();
+          const url = $productLink.attr('href') || '';
+          
+          // Estrai immagine
           const image = $product.find('img').first().attr('src') || '';
           
-          // Estrai prezzi (gestisce sia prezzi singoli che range)
-          const priceText = $product.find('.price').text().trim();
+          // Estrai prezzo con regex più preciso
           let price = '';
           let originalPrice: string | undefined;
           
-          if (priceText.includes('€')) {
-            if (priceText.includes('Il prezzo originale era')) {
-              // Prodotto in offerta
-              const priceMatch = priceText.match(/€([\d,]+)/g);
-              if (priceMatch && priceMatch.length >= 2) {
-                originalPrice = priceMatch[0];
-                price = priceMatch[1];
-              }
-            } else if (priceText.includes('–')) {
-              // Range di prezzi
-              price = priceText.match(/€[\d,]+–€[\d,]+/)?.[0] || priceText;
-            } else {
-              // Prezzo singolo
-              price = priceText.match(/€[\d,]+/)?.[0] || priceText;
-            }
+          // Cerca tutti i prezzi nel testo
+          const priceMatches = fullText.match(/€[\d,]+(?:,\d{2})?/g);
+          
+          if (fullText.includes('Il prezzo originale era') && priceMatches && priceMatches.length >= 2) {
+            // Prodotto in offerta - primo prezzo è originale, ultimo è attuale
+            originalPrice = priceMatches[0];
+            price = priceMatches[priceMatches.length - 1];
+          } else if (fullText.includes('–') && priceMatches && priceMatches.length >= 2) {
+            // Range di prezzi
+            price = `${priceMatches[0]}–${priceMatches[1]}`;
+          } else if (priceMatches && priceMatches.length > 0) {
+            // Prezzo singolo
+            price = priceMatches[0];
           }
 
           // Estrai rating se presente
-          const rating = $product.find('.star-rating').attr('title') || undefined;
+          const ratingMatch = fullText.match(/Valutato ([\d,]+) su 5/);
+          const rating = ratingMatch ? `${ratingMatch[1]} su 5` : undefined;
           
           // Determina categoria dal nome/URL
           const category = this.determineProductCategory(name, url);
@@ -135,23 +141,55 @@ export class BeautycologyScraper {
       const response = await axios.get(`${this.baseUrl}/blog/`);
       const $ = cheerio.load(response.data);
 
-      // Estrai tutti gli articoli dalla griglia del blog
-      $('.uk-grid-medium .uk-width-1-1').each((index, element) => {
+      // Estrai articoli del blog - cerca elementi con pattern specifici
+      // Prima cerchiamo elementi che contengano data + Marilisa Franchini + link
+      $('*').filter((i, element) => {
+        const $el = $(element);
+        const text = $el.text();
+        
+        // Deve contenere una data, l'autore, e avere dimensione ragionevole
+        const hasDate = /\d{1,2}\s+\w+\s+\d{4}/.test(text);
+        const hasAuthor = text.includes('Marilisa Franchini');
+        const hasLink = $el.find('a').length > 0;
+        const textLength = text.replace(/\s+/g, ' ').trim().length;
+        const isSizeReasonable = textLength > 50 && textLength < 1500;
+        
+        return hasDate && hasAuthor && hasLink && isSizeReasonable;
+      }).each((index, element) => {
         try {
           const $article = $(element);
+          const fullText = $article.text().replace(/\s+/g, ' ').trim();
           
-          const title = $article.find('h3 a, h2 a').text().trim();
-          const url = $article.find('h3 a, h2 a').attr('href') || '';
+          // Trova il link principale (probabilmente il primo link non-anchor)
+          const $titleLink = $article.find('a').filter((i, el) => {
+            const href = $(el).attr('href') || '';
+            return href.includes('/') && !href.includes('#') && href.length > 20;
+          }).first();
+          
+          if (!$titleLink.length) return;
+          
+          // Estrai titolo - prima parte del testo o dal link
+          const title = $article.find('h1, h2, h3, h4, strong, b').first().text().trim() ||
+                       $titleLink.text().trim();
+          
+          const url = $titleLink.attr('href') || '';
           const image = $article.find('img').first().attr('src') || '';
           
           // Estrai data e autore
-          const metaText = $article.find('.uk-text-meta').text();
-          const dateMatch = metaText.match(/(\d{1,2}\s+\w+\s+\d{4})/);
+          const dateMatch = fullText.match(/(\d{1,2}\s+\w+\s+\d{4})/);
           const date = dateMatch ? dateMatch[1] : '';
-          const author = metaText.includes('Marilisa Franchini') ? 'Marilisa Franchini' : '';
+          const author = fullText.includes('Marilisa Franchini') ? 'Marilisa Franchini' : '';
           
-          // Estrai excerpt
-          const excerpt = $article.find('p').not('.uk-text-meta').first().text().trim();
+          // Estrai excerpt - cerca testo dopo data e autore
+          const lines = fullText.split(/\s{3,}|\n/).filter(l => l.trim().length > 20);
+          let excerpt = '';
+          for (const line of lines) {
+            if (!line.includes(date) && !line.includes('Marilisa Franchini') && 
+                !line.includes('Leggi') && line.length > 30) {
+              excerpt = line.substring(0, 200);
+              break;
+            }
+          }
           
           // Determina categoria
           const category = this.determineBlogCategory(title, excerpt);
