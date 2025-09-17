@@ -1041,9 +1041,9 @@ export function ChatInterface() {
           {/* Header with Logo */}
           <div className="p-4 flex items-center justify-between">
             <img 
-              src="/attached_assets/imgi_8_logo-beauticology-128d474a_1758034902550.png" 
+              src="/attached_assets/Beautycology Logo definitivo_1758128066560.jpg" 
               alt="Beautycology Logo" 
-              className="w-8 h-8 object-contain"
+              className="h-10 w-auto object-contain"
             />
             <div className="flex items-center gap-2">
               {isFromIframe && (
