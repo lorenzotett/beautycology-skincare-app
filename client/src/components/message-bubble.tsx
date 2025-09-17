@@ -401,7 +401,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           {contentWithButtons.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim() && (
             <div
               className="text-sm leading-relaxed whitespace-pre-wrap mb-3"
-              style={{color: '#7791DA'}}
+              style={{color: 'black'}}
               dangerouslySetInnerHTML={{ 
                 __html: formatMarkdown(contentWithButtons.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim()) 
               }}
@@ -419,7 +419,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
           {skinAnalysis.remainingContent && (
             <div
               className="text-sm leading-relaxed whitespace-pre-wrap mt-3"
-              style={{color: '#7791DA'}}
+              style={{color: 'black'}}
               dangerouslySetInnerHTML={{ 
                 __html: formatMarkdown('🔍 **PANORAMICA PROBLEMI PRINCIPALI:**' + skinAnalysis.remainingContent) 
               }}
