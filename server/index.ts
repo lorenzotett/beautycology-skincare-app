@@ -464,7 +464,7 @@ process.on('SIGINT', () => {
       }
 
       // Send CSV file
-      const filename = `ai-dermasense-export-${new Date().toISOString().split('T')[0]}.csv`;
+      const filename = `beautycology-ai-export-${new Date().toISOString().split('T')[0]}.csv`;
       
       // Ensure CSV response before Vite can intercept
       res.writeHead(200, {
@@ -575,7 +575,7 @@ process.on('SIGINT', () => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - AI DermaSense</title>
+    <title>Admin Dashboard - Beautycology AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -635,7 +635,7 @@ process.on('SIGINT', () => {
 <body>
     <div class="admin-container">
         <div class="admin-header">
-            <h1 class="text-3xl font-bold mb-2">🔐 AI-DermaSense Admin</h1>
+            <h1 class="text-3xl font-bold mb-2">🔐 Beautycology AI Admin</h1>
             <p class="text-lg opacity-90">Dashboard Amministrativa</p>
         </div>
         
@@ -757,7 +757,7 @@ process.on('SIGINT', () => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - AI DermaSense</title>
+    <title>Admin Dashboard - Beautycology AI</title>
     <style>
         body {
             margin: 0;
@@ -799,7 +799,7 @@ process.on('SIGINT', () => {
 </head>
 <body>
     <div class="loading">
-        <div class="logo">AI-DermaSense</div>
+        <div class="logo">Beautycology AI</div>
         <div class="spinner"></div>
         <div class="subtitle">Caricamento Dashboard Admin...</div>
     </div>
@@ -817,7 +817,7 @@ process.on('SIGINT', () => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - AI DermaSense</title>
+    <title>Dashboard Admin - Beautycology AI</title>
     <style>
         * {
             margin: 0;
@@ -894,7 +894,7 @@ process.on('SIGINT', () => {
 </head>
 <body>
     <div class="container">
-        <div class="logo">🔐 AI-DermaSense</div>
+        <div class="logo">🔐 Beautycology AI</div>
         <div class="subtitle">Dashboard Amministrativa</div>
         <div class="spinner"></div>
         <div class="status">Caricamento in corso...</div>
