@@ -299,7 +299,7 @@ body, html {
   --light-secondary: hsl(0, 0%, 100%);
   --light-accent: hsl(0, 0%, 95%);
   --assistant-msg: hsl(214, 84%, 56%);
-  --user-msg: hsl(214, 84%, 56%);
+  --user-msg: hsl(0, 0%, 100%);
   --text-muted: hsl(0, 0%, 45%);
 }
 
