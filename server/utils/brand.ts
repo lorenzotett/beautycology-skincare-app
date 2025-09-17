@@ -48,8 +48,8 @@ export class BrandResolver {
       }
     }
 
-    // 5. Default to dermasense
-    return 'dermasense';
+    // 5. Default to beautycology (since this is now an independent Beautycology app)
+    return 'beautycology';
   }
 
   /**
