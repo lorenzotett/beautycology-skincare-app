@@ -336,9 +336,7 @@ export class BeautycologyAIService {
       const response = await ai.models.generateContent({
         model: this.modelName,
         contents,
-        config: {
-          generationConfig: this.generationConfig
-        }
+        generationConfig: this.generationConfig
       });
 
       const responseText = response.text || "Scusa, non riesco a rispondere in questo momento.";
@@ -368,9 +366,19 @@ export class BeautycologyAIService {
       // Update session history
       this.chatSessions.set(sessionId, sessionHistory);
 
-      // Parse for choices (if any)
-      const hasChoices = this.containsChoices(responseText);
-      const choices = hasChoices ? this.extractChoices(responseText) : undefined;
+      // Check if user described their skin issues and force structured flow
+      const shouldStartStructuredFlow = this.shouldStartStructuredQuestions(userMessage, sessionHistory);
+      let hasChoices = this.containsChoices(responseText);
+      let choices = hasChoices ? this.extractChoices(responseText) : undefined;
+
+      // Force structured questions with appropriate buttons
+      if (!hasChoices) {
+        const forcedChoice = this.getForcedChoiceForQuestion(responseText);
+        if (forcedChoice) {
+          hasChoices = true;
+          choices = forcedChoice;
+        }
+      }
 
       return {
         content: responseText,
@@ -382,6 +390,73 @@ export class BeautycologyAIService {
       console.error("Beautycology AI error:", error);
       throw new Error("Bella non è disponibile al momento. Riprova più tardi! 💄");
     }
+  }
+
+  private getForcedChoiceForQuestion(responseText: string): string[] | null {
+    const text = responseText.toLowerCase();
+    
+    // Map specific questions to their buttons
+    if (text.includes('che tipo di pelle hai') || text.includes('tipo di pelle')) {
+      return ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
+    }
+    
+    if (text.includes('quanti anni hai') || text.includes('età')) {
+      return ["18-25", "26-35", "36-45", "46-55", "Oltre 55"];
+    }
+    
+    if (text.includes('routine attuale') || text.includes('cosa usi attualmente')) {
+      return ["Solo acqua", "Detergente base", "Routine completa", "Prodotti naturali", "Non ho una routine"];
+    }
+    
+    if (text.includes('problemi principali') || text.includes('problema principale')) {
+      return ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Pelle grassa", "Pelle secca", "Pori dilatati"];
+    }
+    
+    if (text.includes('prodotti attualmente') || text.includes('cosa stai usando')) {
+      return ["Nessun prodotto", "Solo detergente", "Crema idratante", "Siero", "Routine completa"];
+    }
+    
+    return null;
+  }
+
+  private shouldStartStructuredQuestions(userMessage: string, sessionHistory: any[]): boolean {
+    // Check if this looks like the user describing skin issues (triggers structured flow)
+    const skinDescriptionPatterns = [
+      /acne/i,
+      /brufoli/i,
+      /punti neri/i,
+      /pelle grassa/i,
+      /pelle secca/i,
+      /rughe/i,
+      /macchie/i,
+      /rossori/i,
+      /irritazioni/i,
+      /dermatite/i,
+      /eczema/i,
+      /pori dilatati/i,
+      /comedoni/i,
+      /impurità/i,
+      /problemi.*pelle/i,
+      /pelle.*problema/i,
+      /analisi.*pelle/i,
+      /skincare/i,
+      /routine/i
+    ];
+
+    // Also check if user explicitly asks for skin analysis
+    const analysisRequests = [
+      /analizza.*pelle/i,
+      /analisi/i,
+      /help.*skin/i,
+      /problemi.*viso/i
+    ];
+
+    // Check if this is after the welcome message and user is describing skin
+    const isAfterWelcome = sessionHistory.length >= 2; // At least name + welcome
+    const matchesSkinDescription = skinDescriptionPatterns.some(pattern => pattern.test(userMessage));
+    const matchesAnalysisRequest = analysisRequests.some(pattern => pattern.test(userMessage));
+
+    return isAfterWelcome && (matchesSkinDescription || matchesAnalysisRequest);
   }
 
   private containsChoices(text: string): boolean {
