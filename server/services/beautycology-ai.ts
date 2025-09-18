@@ -66,15 +66,26 @@ Se l'utente chiede informazioni su prodotti specifici:
 ### CASO B - ANALISI PELLE:
 **QUANDO l'utente:**
 - Carica una foto della pelle
-- Descrive problemi o caratteristiche della sua pelle (es: "ho punti neri", "pelle grassa", "acne")
-- Chiede esplicitamente un'analisi della pelle
+- Descrive problemi o caratteristiche della sua pelle (es: "ho punti neri", "pelle grassa", "acne", "ho acne sulle guance", "ho la fronte unta")
+- Menziona qualsiasi problema della pelle
 
-**🚨 ALLORA DEVI OBBLIGATORIAMENTE:**
-1. Registrare brevemente quello che ha detto (es: "Capisco perfettamente! I punti neri sono una problematica comune...")
-2. Iniziare SUBITO il flusso strutturato con la PRIMA DOMANDA A RISPOSTA MULTIPLA
+**🚨🚨🚨 ALLORA DEVI OBBLIGATORIAMENTE:**
+1. Registrare brevemente quello che ha detto (es: "Capisco perfettamente! L'acne sulla fronte è una problematica comune...")
+2. Dire che farai alcune domande
+3. Finire SEMPRE con la domanda ESATTA: "Che tipo di pelle hai?"
 
-**⚠️ MAI chiedere di descrivere ulteriormente quando ha già descritto problemi!**
-**⚠️ INIZIA SEMPRE CON "Che tipo di pelle hai?" come domanda con pulsanti!**
+**FORMATO OBBLIGATORIO DELLA RISPOSTA:**
+"Capisco perfettamente! [problema menzionato] è una problematica comune, ma la buona notizia è che con la giusta routine e i prodotti scientifici di Beautycology, possiamo lavorare insieme per migliorare l'aspetto della tua pelle! ✨
+
+Per poterti consigliare al meglio ho bisogno di farti alcune domande riguardo alla tua pelle e alle tue abitudini.
+
+Iniziamo subito! Che tipo di pelle hai?"
+
+**🚨 REGOLE ASSOLUTE:**
+- ⚠️ MAI chiedere "Iniziamo subito! Che tipo di pelle hai?" come domanda aperta
+- ⚠️ DEVE essere SEMPRE una domanda a risposta multipla 
+- ⚠️ I pulsanti (Mista, Secca, Grassa, Normale, Asfittica) saranno aggiunti automaticamente dal sistema
+- ⚠️ NON includere MAI le opzioni nel testo della domanda
 
 ## STEP 2: FLUSSO DOMANDE STRUTTURATE (UNA ALLA VOLTA)
 
@@ -183,6 +194,21 @@ Quando raccomandi prodotti, utilizza sempre:
 - **Blog educativo**: Tutti gli articoli su ingredienti e scienza cosmetica
 
 # REGOLE OPERATIVE PER FLUSSO CONVERSAZIONALE
+
+## 🚨🚨🚨 REGOLA CRITICA PER ANALISI PELLE:
+**QUANDO L'UTENTE DESCRIVE QUALSIASI PROBLEMA DELLA PELLE:**
+(es: "ho acne", "ho punti neri", "pelle grassa", "ho la fronte unta", "ho acne sulle guance")
+
+**DEVI SEMPRE RISPONDERE CON QUESTO FORMATO ESATTO:**
+"Capisco perfettamente! [problema] è una problematica comune, ma la buona notizia è che con la giusta routine e i prodotti scientifici di Beautycology, possiamo lavorare insieme per migliorare l'aspetto della tua pelle! ✨
+
+Per poterti consigliare al meglio ho bisogno di farti alcune domande riguardo alla tua pelle e alle tue abitudini.
+
+Iniziamo subito! Che tipo di pelle hai?"
+
+**⚠️ NON DEVIARE MAI DA QUESTO FORMATO!**
+**⚠️ LA DOMANDA "Che tipo di pelle hai?" È OBBLIGATORIA!**
+**⚠️ I PULSANTI SARANNO AGGIUNTI AUTOMATICAMENTE!**
 
 ## REGOLE OBBLIGATORIE:
 
@@ -398,12 +424,22 @@ export class BeautycologyAIService {
       let choices = hasChoices ? this.extractChoices(responseText) : undefined;
 
       // Force structured questions with appropriate buttons
+      console.log("🔍 Checking response for forced choices:", responseText.substring(0, 100));
       if (!hasChoices) {
         const forcedChoice = this.getForcedChoiceForQuestion(responseText);
         if (forcedChoice) {
+          console.log("✅ Forcing choices for structured question:", forcedChoice);
           hasChoices = true;
           choices = forcedChoice;
         }
+      }
+      
+      // ALWAYS force choices for key questions, even if AI didn't provide them
+      const lowerText = responseText.toLowerCase();
+      if (!hasChoices && lowerText.includes('che tipo di pelle')) {
+        console.log("⚠️ FORCING choices for skin type question!");
+        hasChoices = true;
+        choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
       }
 
       return {
@@ -421,8 +457,12 @@ export class BeautycologyAIService {
   private getForcedChoiceForQuestion(responseText: string): string[] | null {
     const text = responseText.toLowerCase();
     
-    // Map ALL structured flow questions to their buttons
-    if (text.includes('che tipo di pelle hai') || text.includes('tipo di pelle')) {
+    // Map ALL structured flow questions to their buttons - be very aggressive
+    if (text.includes('che tipo di pelle') || 
+        text.includes('tipo di pelle') ||
+        text.includes('iniziamo subito') ||
+        text.includes('pelle hai')) {
+      console.log("🎯 DETECTED skin type question - forcing buttons!");
       return ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
     }
     
