@@ -2,7 +2,6 @@ import { Button } from "./ui/button";
 import { Upload } from "lucide-react";
 import { ChatMessage } from "@shared/schema";
 import { SkinAnalysisTable } from "./skin-analysis-table";
-import { BeforeAfterImages } from "./before-after-images";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -592,17 +591,6 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
               </button>
             </div>
           ))}
-        </div>
-      )}
-      {/* Before/After Images display */}
-      {metadata?.hasBeforeAfterImages && (
-        <div className="mt-4">
-          <BeforeAfterImages 
-            beforeImage={metadata.beforeImage as string}
-            afterImage={metadata.afterImage as string}
-            ingredients={metadata.ingredients as string[]}
-            timeframe="4 settimane"
-          />
         </div>
       )}
       {/* Image display */}

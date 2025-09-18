@@ -45,7 +45,6 @@ export function ChatInterface() {
   const [isListening, setIsListening] = useState(false);
   const recognition = useRef<any>(null);
   const [isFromIframe, setIsFromIframe] = useState(false);
-  const [beforeAfterImages, setBeforeAfterImages] = useState<{beforeImage: string; afterImage: string; ingredients: string[]} | null>(null);
   const [pendingIngredients, setPendingIngredients] = useState<string[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -561,18 +560,6 @@ export function ChatInterface() {
       // Check if we have a before/after message to add first
       const messagesToAdd: ChatMessage[] = [];
       
-      if ((data as any).beforeAfterMessage) {
-        const beforeAfterMessage: ChatMessage = {
-          id: Date.now(),
-          sessionId: sessionId!,
-          role: "assistant",
-          content: (data as any).beforeAfterMessage.content,
-          metadata: (data as any).beforeAfterMessage.metadata,
-          createdAt: new Date(),
-        };
-        messagesToAdd.push(beforeAfterMessage);
-        console.log('🎨 Adding before/after message first');
-      }
 
       // Add main assistant response
       const assistantMessage: ChatMessage = {
