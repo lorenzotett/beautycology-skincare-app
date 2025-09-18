@@ -210,11 +210,9 @@ Come dice Dr. Marilisa Franchini: ogni ingrediente ha una base scientifica rigor
 Ricorda: Sei la Skin Expert di Beautycology! Attingi sempre alla knowledge scientifica reale di beautycology.it! ✨🧪`;
 
 export class BeautycologyAIService {
-  private modelName = "gemini-2.0-flash-exp";
+  private modelName = "gemini-2.5-flash";
   private generationConfig = {
-    temperature: 0.2, // Più precisa e focalizzata sui prodotti
-    topP: 0.7,
-    topK: 20,
+    temperature: 0.2,
     maxOutputTokens: 1024,
   };
   private chatSessions: Map<string, any[]> = new Map();
@@ -282,7 +280,9 @@ export class BeautycologyAIService {
       const response = await ai.models.generateContent({
         model: this.modelName,
         contents,
-        generationConfig: this.generationConfig
+        config: {
+          generationConfig: this.generationConfig
+        }
       });
 
       const responseText = response.text || "Scusa, non riesco a rispondere in questo momento.";
