@@ -56,11 +56,40 @@ export class BeautycologyScraper {
   }
 
   private async scrapeProducts(): Promise<Product[]> {
-    console.log('📦 Scraping prodotti...');
+    console.log('📦 Scraping TUTTI i prodotti dalla pagina shop principale...');
     const products: Product[] = [];
+    const allProducts = new Set<string>(); // Per evitare duplicati
 
+    // Focus sulla pagina principale con paginazione completa
+    const shopUrl = `${this.baseUrl}/shop/`;
+    
     try {
-      const response = await axios.get(`${this.baseUrl}/shop/`);
+      console.log(`🔍 Scraping da pagina principale: ${shopUrl}`);
+      
+      // Scrapa la prima pagina
+      const firstPageProducts = await this.scrapeProductsFromPage(shopUrl, allProducts);
+      products.push(...firstPageProducts);
+      console.log(`📄 Pagina 1: trovati ${firstPageProducts.length} prodotti`);
+      
+      // Ora scrapa TUTTE le pagine successive con paginazione robusta
+      await this.scrapeAllPaginatedPages(shopUrl, products, allProducts);
+      
+    } catch (error) {
+      console.error(`Errore scraping pagina principale:`, error);
+    }
+
+    // Ottieni dettagli aggiuntivi per prodotti principali
+    await this.enrichProductDetails(products);
+
+    console.log(`✅ Scraping completato: ${products.length} prodotti TOTALI dalla pagina shop`);
+    return products;
+  }
+
+  private async scrapeProductsFromPage(url: string, allProducts: Set<string>): Promise<Product[]> {
+    const products: Product[] = [];
+    
+    try {
+      const response = await axios.get(url);
       const $ = cheerio.load(response.data);
 
       // Estrai tutti i prodotti usando i selettori corretti identificati dal debug
@@ -76,6 +105,13 @@ export class BeautycologyScraper {
           // Estrai URL del prodotto dal link interno
           const $productLink = $product.find('a[href*="/prodotto/"]').first();
           const url = $productLink.attr('href') || '';
+          
+          // Evita duplicati usando l'URL come identificatore unico
+          const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
+          if (allProducts.has(fullUrl)) {
+            return; // Salta se già processato
+          }
+          allProducts.add(fullUrl);
           
           // Estrai immagine
           const image = $product.find('img').first().attr('src') || '';
@@ -112,7 +148,7 @@ export class BeautycologyScraper {
               price,
               originalPrice,
               description: name, // Per ora usiamo il nome, aggiungeremo dettagli dopo
-              url: url.startsWith('http') ? url : `${this.baseUrl}${url}`,
+              url: fullUrl,
               image: image.startsWith('http') ? image : `${this.baseUrl}${image}`,
               rating,
               category
@@ -123,14 +159,75 @@ export class BeautycologyScraper {
         }
       });
 
-      // Ottieni dettagli aggiuntivi per prodotti principali
-      await this.enrichProductDetails(products);
-
     } catch (error) {
-      console.error('Errore scraping prodotti:', error);
+      console.error(`Errore scraping da ${url}:`, error);
     }
 
     return products;
+  }
+
+  private async scrapeAllPaginatedPages(baseUrl: string, products: Product[], allProducts: Set<string>): Promise<void> {
+    console.log('📚 Iniziando scraping paginazione completa...');
+    let currentPage = 2;
+    let hasNextPage = true;
+    let consecutiveErrors = 0;
+
+    while (hasNextPage && currentPage <= 20 && consecutiveErrors < 3) { // Massimo 20 pagine, massimo 3 errori consecutivi
+      try {
+        const paginatedUrl = `${baseUrl}page/${currentPage}/`;
+        console.log(`🔍 Controllo pagina ${currentPage}: ${paginatedUrl}`);
+        
+        const response = await axios.get(paginatedUrl);
+        const $ = cheerio.load(response.data);
+        
+        // Verifica se ci sono prodotti in questa pagina
+        const productsOnPage = $('li.product.type-product').length;
+        console.log(`📊 Pagina ${currentPage}: trovati ${productsOnPage} elementi prodotto`);
+        
+        if (productsOnPage === 0) {
+          console.log(`⚠️ Pagina ${currentPage} senza prodotti - fine paginazione`);
+          hasNextPage = false;
+          break;
+        }
+
+        // Scrapa i prodotti da questa pagina
+        const scraped = await this.scrapeProductsFromPage(paginatedUrl, allProducts);
+        
+        if (scraped.length === 0) {
+          console.log(`⚠️ Pagina ${currentPage} non ha prodotti validi - fine paginazione`);
+          hasNextPage = false;
+          break;
+        }
+        
+        products.push(...scraped);
+        console.log(`📄 Pagina ${currentPage}: aggiunti ${scraped.length} prodotti (totale: ${products.length})`);
+        
+        // Reset errori consecutivi se tutto va bene
+        consecutiveErrors = 0;
+        currentPage++;
+        
+        // Pausa per evitare rate limiting
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+      } catch (error: any) {
+        consecutiveErrors++;
+        console.warn(`❌ Errore pagina ${currentPage} (errori consecutivi: ${consecutiveErrors}):`, error.response?.status || error.message);
+        
+        if (error.response?.status === 404) {
+          console.log(`🔚 Pagina ${currentPage} non esiste (404) - fine paginazione naturale`);
+          hasNextPage = false;
+        } else if (consecutiveErrors >= 3) {
+          console.log(`🛑 Troppi errori consecutivi (${consecutiveErrors}) - stop paginazione`);
+          hasNextPage = false;
+        } else {
+          currentPage++;
+          // Pausa più lunga dopo errore
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
+    }
+    
+    console.log(`✅ Paginazione completata: esplorate ${currentPage-1} pagine totali`);
   }
 
   private async scrapeBlogArticles(): Promise<BlogArticle[]> {

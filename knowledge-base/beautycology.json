@@ -21,6 +21,7 @@
         "acido grasso",
         "Acido Linoleinico",
         "acido linoleico",
+        "acido 22",
         "Panthenol"
       ]
     },
@@ -83,8 +84,6 @@
         "Acido Ferulico",
         "acido Ascorbico",
         "acido ascorbico",
-        "ACIDO GLICOLICOValutato",
-        "ACIDO GLICOLICO",
         "Panthenol"
       ]
     },
@@ -160,8 +159,7 @@
         "Acido Mandelico",
         "acido pi",
         "acido fitico",
-        "acido 22",
-        "PEPTIDE"
+        "acido 22"
       ]
     },
     {
@@ -315,7 +313,6 @@
       "ingredients": [
         "Niacinamide",
         "niacinamide",
-        "RETINOL",
         "Acido Ialuronico",
         "Acido Lattobionico",
         "Acido Salicilico",
@@ -370,7 +367,8 @@
         "Acido Azelaico",
         "Acido Tranexamico",
         "acido nicotinico",
-        "acido essenziale"
+        "acido essenziale",
+        "acido 22"
       ]
     },
     {
@@ -792,5 +790,5 @@
     "Sieri",
     "Skincare Routine"
   ],
-  "lastUpdated": "2025-09-17T21:29:02.942Z"
+  "lastUpdated": "2025-09-18T10:06:46.823Z"
 }
