@@ -290,19 +290,19 @@ export class SkinAnalysisService {
     const imageHash = imageData ? imageData.substring(0, 50) : Date.now().toString();
     const seed = imageHash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     
-    // Use seed to create "different" but realistic parameters for different images
+    // TEST: Use seed to create "different" but realistic parameters for different images
     const analysisResult = {
-      rossori: generateRandomParameter(15, 45) + (seed % 20),           // 15-65 range
-      acne: generateRandomParameter(10, 40) + (seed % 15),              // 10-55 range  
-      rughe: generateRandomParameter(10, 30) + (seed % 25),             // 10-55 range
-      pigmentazione: generateRandomParameter(20, 50) + (seed % 25),     // 20-75 range
-      pori_dilatati: generateRandomParameter(25, 55) + (seed % 20),     // 25-75 range
-      oleosita: generateRandomParameter(20, 60) + (seed % 25),          // 20-85 range
-      danni_solari: generateRandomParameter(15, 35) + (seed % 20),      // 15-55 range
-      occhiaie: generateRandomParameter(20, 50) + (seed % 25),          // 20-75 range
-      idratazione: generateRandomParameter(30, 60) + (seed % 25),       // 30-85 range  
-      elasticita: 15 + (seed % 25),                                     // Conservative 15-40 range for elasticity
-      texture_uniforme: generateRandomParameter(25, 55) + (seed % 25)   // 25-80 range
+      rossori: 80 + (seed % 10),           // TESTING - very high values to verify code is running
+      acne: 70 + (seed % 15),              // TESTING - different from old hardcoded values  
+      rughe: 60 + (seed % 20),             // TESTING - completely different
+      pigmentazione: 85 + (seed % 10),     // TESTING - high values for testing
+      pori_dilatati: 75 + (seed % 15),     // TESTING - high values
+      oleosita: 90 + (seed % 5),           // TESTING - very high for testing
+      danni_solari: 65 + (seed % 20),      // TESTING - different values
+      occhiaie: 78 + (seed % 15),          // TESTING - high values
+      idratazione: 82 + (seed % 10),       // TESTING - high for testing  
+      elasticita: 88 + (seed % 8),         // TESTING - high values (will be corrected by validation)
+      texture_uniforme: 77 + (seed % 18)   // TESTING - high values
     };
     
     // Ensure all values stay within 0-100 range
