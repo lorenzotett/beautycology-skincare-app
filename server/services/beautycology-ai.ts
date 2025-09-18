@@ -392,7 +392,7 @@ export class BeautycologyAIService {
         generationConfig: this.generationConfig
       });
 
-      const responseText = response.text || "Scusa, non riesco a rispondere in questo momento.";
+      let responseText = response.text || "Scusa, non riesco a rispondere in questo momento.";
 
       // Add BOTH user message and assistant response to history
       const userParts: any[] = [{ text: userMessage }];
@@ -430,8 +430,41 @@ export class BeautycologyAIService {
       if (state.currentStep === 'awaiting_skin_type' && 
           skinTypes.includes(userMessage.toLowerCase().trim())) {
         console.log(`✅ User selected skin type: ${userMessage}`);
-        state.currentStep = 'skin_type_received';
-        state.structuredFlowActive = false; // Exit structured flow for now
+        state.currentStep = 'age_question';
+        // Keep structured flow active to continue with next question
+      }
+
+      // Check if user is answering the age question
+      const ageRanges = ["16-25", "26-35", "36-45", "46-55", "56+"];
+      if (state.currentStep === 'awaiting_age' && 
+          ageRanges.some(range => userMessage.toLowerCase().includes(range.toLowerCase()))) {
+        console.log(`✅ User selected age range: ${userMessage}`);
+        state.currentStep = 'problem_question';
+      }
+
+      // Check if user is answering the main problem question
+      const problems = ["acne/brufoli", "macchie scure", "rughe/invecchiamento", "pelle grassa", "pelle secca", "pori dilatati"];
+      if (state.currentStep === 'awaiting_problem' && 
+          problems.some(problem => userMessage.toLowerCase().includes(problem.toLowerCase().split('/')[0]))) {
+        console.log(`✅ User selected main problem: ${userMessage}`);
+        state.currentStep = 'ingredients_question';
+      }
+
+      // Check if user is answering the ingredients question
+      const ingredients = ["acido ialuronico", "vitamina c", "retinolo", "niacinamide", "acido salicilico", "nessuno in particolare"];
+      if (state.currentStep === 'awaiting_ingredients' && 
+          ingredients.some(ingredient => userMessage.toLowerCase().includes(ingredient.toLowerCase()))) {
+        console.log(`✅ User selected ingredient: ${userMessage}`);
+        state.currentStep = 'routine_question';
+      }
+
+      // Check if user is answering the routine question
+      const routineOptions = ["sì, ho una routine completa", "uso solo alcuni prodotti", "no, non ho una routine"];
+      if (state.currentStep === 'awaiting_routine' && 
+          routineOptions.some(option => userMessage.toLowerCase().includes(option.toLowerCase().substring(0, 10)))) {
+        console.log(`✅ User selected routine status: ${userMessage}`);
+        state.currentStep = 'completed';
+        state.structuredFlowActive = false; // End structured flow
       }
 
       // Check if user described their skin issues and force structured flow
@@ -481,6 +514,66 @@ export class BeautycologyAIService {
         
         // Move to next step after providing buttons
         state.currentStep = 'awaiting_skin_type';
+      }
+
+      // Force age question after skin type
+      if (state.structuredFlowActive && state.currentStep === 'age_question') {
+        console.log(`🎯 Structured flow - forcing age question for session ${sessionId}`);
+        hasChoices = true;
+        choices = ["16-25", "26-35", "36-45", "46-55", "56+"];
+        
+        // Force age question in response
+        if (!responseText.toLowerCase().includes('quanti anni hai')) {
+          responseText = "Perfetto! Ora ho bisogno di conoscere la tua età per consigliarti al meglio.\n\nQuanti anni hai?";
+          console.log(`📝 Forced age question in response`);
+        }
+        
+        state.currentStep = 'awaiting_age';
+      }
+
+      // Force problem question after age
+      if (state.structuredFlowActive && state.currentStep === 'problem_question') {
+        console.log(`🎯 Structured flow - forcing problem question for session ${sessionId}`);
+        hasChoices = true;
+        choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Pelle grassa", "Pelle secca", "Pori dilatati"];
+        
+        // Force problem question in response
+        if (!responseText.toLowerCase().includes('problematica principale')) {
+          responseText = "Ottimo! Ora dimmi qual è la problematica principale della tua pelle che vuoi risolvere?";
+          console.log(`📝 Forced problem question in response`);
+        }
+        
+        state.currentStep = 'awaiting_problem';
+      }
+
+      // Force ingredients question after problem
+      if (state.structuredFlowActive && state.currentStep === 'ingredients_question') {
+        console.log(`🎯 Structured flow - forcing ingredients question for session ${sessionId}`);
+        hasChoices = true;
+        choices = ["Acido Ialuronico", "Vitamina C", "Retinolo", "Niacinamide", "Acido Salicilico", "Nessuno in particolare"];
+        
+        // Force ingredients question in response
+        if (!responseText.toLowerCase().includes('ingrediente attivo')) {
+          responseText = "Perfetto! Vorresti utilizzare qualche ingrediente attivo particolare?";
+          console.log(`📝 Forced ingredients question in response`);
+        }
+        
+        state.currentStep = 'awaiting_ingredients';
+      }
+
+      // Force routine question after ingredients
+      if (state.structuredFlowActive && state.currentStep === 'routine_question') {
+        console.log(`🎯 Structured flow - forcing routine question for session ${sessionId}`);
+        hasChoices = true;
+        choices = ["Sì, ho una routine completa", "Uso solo alcuni prodotti", "No, non ho una routine"];
+        
+        // Force routine question in response
+        if (!responseText.toLowerCase().includes('routine di skincare')) {
+          responseText = "Ottimo! Un'ultima domanda: hai già una routine di skincare?";
+          console.log(`📝 Forced routine question in response`);
+        }
+        
+        state.currentStep = 'awaiting_routine';
       }
       
       // Additional fallback check for the exact pattern
