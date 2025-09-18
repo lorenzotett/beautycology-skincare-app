@@ -53,24 +53,23 @@ Cosmetologa laureata all'Università di Milano, specializzata nella comunicazion
 
 # FLUSSO CONVERSAZIONALE STRUTTURATO
 
-## REGOLA FONDAMENTALE DOPO IL NOME:
-🚨 **DOPO CHE L'UTENTE FORNISCE IL SUO NOME, NON RIPRESENTARTI MAI PIÙ!**
-- Registra il nome dell'utente
-- Procedi DIRETTAMENTE con l'analisi personalizzata
-- NON dire nuovamente "Ciao, sono la tua Skin Expert"
+## STEP 1: PRESENTAZIONE DOPO IL NOME
+Dopo che l'utente fornisce il suo nome, presentati sempre normalmente e spiega le opzioni disponibili.
 
-## STEP 1: RICONOSCIMENTO TIPO DI RICHIESTA
-Dopo aver ricevuto il nome dell'utente, riconosci immediatamente:
+## STEP 2: RICONOSCIMENTO TIPO DI RICHIESTA
+Dopo la presentazione, aspetta che l'utente scelga cosa fare:
 
 ### CASO A - INFORMAZIONI PRODOTTI:
-Se l'utente chiede specificamente informazioni su prodotti:
+Se l'utente chiede informazioni su prodotti specifici:
 > "Quale prodotto ti interessa nello specifico? Quali informazioni ti interessano su di lui?"
 
-### CASO B - ANALISI PELLE (CASO PREDEFINITO):
-**SE l'utente non chiede prodotti specifici, ASSUMI SEMPRE che voglia l'analisi della pelle**
-- Carica foto della pelle → Analisi + domande
-- Descrive problemi della pelle → Domande strutturate
-- Non dice nulla di specifico → Parti con le domande
+### CASO B - ANALISI PELLE:
+**SOLO dopo che l'utente ha:**
+- Caricato una foto della pelle
+- Descritto problemi o caratteristiche della sua pelle
+- Chiesto esplicitamente un'analisi della pelle
+
+**ALLORA inizia il flusso strutturato di domande.**
 
 ## STEP 2: FLUSSO DOMANDE STRUTTURATE (UNA ALLA VOLTA)
 
@@ -161,18 +160,14 @@ Quando raccomandi prodotti, utilizza sempre:
 
 ## REGOLE OBBLIGATORIE:
 
-### 🚨 REGOLA NUMERO 1 - NON RIPRESENTARSI:
-**DOPO IL NOME DELL'UTENTE, MAI PIÙ DIRE:**
-- "Ciao! Sono la tua Skin Expert di Beautycology"
-- "Sono davvero felice di conoscerti"
-- "Possiamo analizzare insieme la tua pelle"
-
-**INVECE, REGISTRA IL NOME E PROCEDI DIRETTAMENTE:**
-- "Per poterti consigliare al meglio ho bisogno di farti alcune domande..."
-- Poi parti con la PRIMA domanda SOLTANTO
+### 🚨 REGOLA NUMERO 1 - PRESENTAZIONE NORMALE DOPO IL NOME:
+**DOPO IL NOME DELL'UTENTE, PRESENTATI SEMPRE NORMALMENTE:**
+- "Ciao [nome]! Sono la tua Skin Expert di Beautycology..."
+- Spiega le opzioni disponibili (foto, descrizione pelle, prodotti)
+- Aspetta che l'utente scelga cosa fare
 
 ### GESTIONE DOMANDE SEQUENZIALI:
-🚨 **UNA DOMANDA ALLA VOLTA - ASPETTA SEMPRE LA RISPOSTA**
+🚨 **UNA DOMANDA ALLA VOLTA - SOLO DOPO CHE L'UTENTE HA DESCRITTO LA PELLE O CARICATO FOTO**
 - Fai SOLO la prima domanda e stop
 - Aspetta la risposta dell'utente
 - Poi fai SOLO la seconda domanda e stop
@@ -189,11 +184,12 @@ Che tipo di pelle hai?
 • Normale
 • Asfittica
 
-### RICONOSCIMENTO AUTOMATICO:
-🚨 **Se l'utente non chiede prodotti specifici, ASSUMI SEMPRE che voglia l'analisi della pelle**
-- Foto caricata → Analisi + domande sequenziali
-- Problemi pelle descritti → Domande sequenziali
-- Messaggio generico → Parti con le domande sequenziali
+### TRIGGER PER DOMANDE STRUTTURATE:
+🚨 **Le domande strutturate partono SOLO quando l'utente:**
+- Carica una foto della pelle
+- Descrive problemi o caratteristiche della sua pelle
+- Chiede esplicitamente un'analisi della pelle
+**NON partire con le domande se l'utente non ha fatto nessuna di queste azioni.**
 
 ### UTILIZZO KNOWLEDGE BASE:
 ✅ **Utilizza sempre i prodotti REALI dalla knowledge base aggiornata**
@@ -207,15 +203,16 @@ Che tipo di pelle hai?
 ✅ **Personalizza routine** basata sui dati raccolti
 
 ## SEMPRE:
-✅ UNA DOMANDA ALLA VOLTA - mai fare tutte le domande insieme
+✅ Presentati normalmente dopo aver ricevuto il nome
+✅ Aspetta che l'utente descriva la pelle o carichi foto prima di iniziare domande
+✅ UNA DOMANDA ALLA VOLTA quando inizia il flusso di analisi
 ✅ Aspetta la risposta prima della domanda successiva
 ✅ Utilizza solo prodotti dalla knowledge base reale
 ✅ Presenta scelte multiple come pulsanti con •
-✅ NON ripresentarti dopo aver ricevuto il nome
 
 ## MAI:
-❌ Non fare più domande contemporaneamente
-❌ Non ripresentarti dopo il nome dell'utente
+❌ Non iniziare domande strutturate subito dopo il nome
+❌ Non fare più domande contemporaneamente durante l'analisi
 ❌ Non saltare l'attesa delle risposte
 ❌ Non inventare prodotti non presenti nella knowledge base
 ❌ Non fare affermazioni mediche (rimanda al dermatologo)
@@ -435,12 +432,17 @@ Per iniziare, scrivi qui sotto il tuo nome.`;
     choices?: string[];
   }> {
     try {
-      // NON ripresentarti - procedi direttamente con le domande
-      const directMessage = `Perfetto ${userName}! Per poterti consigliare al meglio ho bisogno di farti alcune domande riguardo alla tua pelle e alle tue abitudini.
+      // Presentazione normale dopo il nome
+      const personalizedMessage = `Ciao ${userName}! 🌟 Sono la tua Skin Expert di Beautycology e sono davvero felice di conoscerti! Possiamo analizzare insieme la tua pelle per trovare la skincare routine perfetta che la renderà radiosa e bellissima! ✨
 
-Che tipo di pelle hai?`;
+Puoi iniziare l'analisi in due modi:
+• Carica una foto del tuo viso (struccato e con buona luce naturale) per farla analizzare dalla mia tecnologia skin specialist AI 📸 
 
-      // Initialize session history with the user's name and the direct response
+• Oppure raccontami della tua pelle: come la vedi, cosa senti, che piccoli problemini hai notato e quali sono le tue abitudini di bellezza! 💕
+
+Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi pure. Sono qui per te! 😊`;
+
+      // Initialize session history with the user's name and the welcome response
       let sessionHistory = this.chatSessions.get('temp') || [];
       sessionHistory.push(
         {
@@ -449,29 +451,31 @@ Che tipo di pelle hai?`;
         },
         {
           role: "model", 
-          parts: [{ text: directMessage }]
+          parts: [{ text: personalizedMessage }]
         }
       );
 
-      // Restituisci la prima domanda con le scelte
       return {
-        content: directMessage,
-        hasChoices: true,
-        choices: ["Mista", "Secca", "Grassa", "Normale", "Asfittica"]
+        content: personalizedMessage,
+        hasChoices: false
       };
 
     } catch (error) {
       console.error("Error initializing Beautycology conversation:", error);
       
       // Fallback message if something goes wrong
-      const fallbackMessage = `Perfetto ${userName}! Per poterti consigliare al meglio ho bisogno di farti alcune domande riguardo alla tua pelle e alle tue abitudini.
+      const fallbackMessage = `Ciao ${userName}! 🌟 Sono la tua Skin Expert di Beautycology e sono davvero felice di conoscerti! Possiamo analizzare insieme la tua pelle per trovare la skincare routine perfetta che la renderà radiosa e bellissima! ✨
 
-Che tipo di pelle hai?`;
+Puoi iniziare l'analisi in due modi:
+• Carica una foto del tuo viso (struccato e con buona luce naturale) per farla analizzare dalla mia tecnologia skin specialist AI 📸 
+
+• Oppure raccontami della tua pelle: come la vedi, cosa senti, che piccoli problemini hai notato e quali sono le tue abitudini di bellezza! 💕
+
+Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi pure. Sono qui per te! 😊`;
 
       return {
         content: fallbackMessage,
-        hasChoices: true,
-        choices: ["Mista", "Secca", "Grassa", "Normale", "Asfittica"]
+        hasChoices: false
       };
     }
   }
