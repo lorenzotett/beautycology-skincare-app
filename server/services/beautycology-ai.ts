@@ -239,18 +239,42 @@ export class BeautycologyAIService {
         // First message: include system instruction + knowledge base + user message
         const knowledgeSummary = this.getKnowledgeBaseSummary();
         const fullPrompt = BEAUTYCOLOGY_SYSTEM_INSTRUCTION + 
-          (knowledgeSummary ? `\n\n# CATALOGO PRODOTTI AGGIORNATO:\n${knowledgeSummary}\n\n` : '\n\n') +
+          (knowledgeSummary ? `\n\n# CATALOGO PRODOTTI E ARTICOLI AGGIORNATO:\n${knowledgeSummary}\n\n` : '\n\n') +
           `Utente: ${userMessage}`;
+        
+        // Prepare message parts (text + optional image)
+        const parts: any[] = [{ text: fullPrompt }];
+        if (imageData) {
+          // Add image for skin analysis
+          const mimeType = imageData.startsWith('/9j') ? 'image/jpeg' : 'image/png';
+          parts.push({
+            inlineData: {
+              mimeType,
+              data: imageData
+            }
+          });
+        }
         
         contents = [{
           role: "user",
-          parts: [{ text: fullPrompt }]
+          parts
         }];
       } else {
-        // Subsequent messages: use session history + new message
+        // Subsequent messages: use session history + new message  
+        const parts: any[] = [{ text: userMessage }];
+        if (imageData) {
+          const mimeType = imageData.startsWith('/9j') ? 'image/jpeg' : 'image/png';
+          parts.push({
+            inlineData: {
+              mimeType,
+              data: imageData
+            }
+          });
+        }
+        
         contents = [...sessionHistory, {
           role: "user", 
-          parts: [{ text: userMessage }]
+          parts
         }];
       }
 
@@ -263,7 +287,23 @@ export class BeautycologyAIService {
 
       const responseText = response.response.text() || "Scusa, non riesco a rispondere in questo momento.";
 
-      // Add assistant response to history
+      // Add BOTH user message and assistant response to history
+      const userParts: any[] = [{ text: userMessage }];
+      if (imageData) {
+        const mimeType = imageData.startsWith('/9j') ? 'image/jpeg' : 'image/png';
+        userParts.push({
+          inlineData: {
+            mimeType,
+            data: imageData
+          }
+        });
+      }
+      
+      sessionHistory.push({
+        role: "user",
+        parts: userParts
+      });
+      
       sessionHistory.push({
         role: "model",
         parts: [{ text: responseText }]
@@ -289,16 +329,24 @@ export class BeautycologyAIService {
   }
 
   private containsChoices(text: string): boolean {
-    // Look for choice patterns in beauty context
+    // Look for choice patterns - detect bullet lists and multiple choice questions
     const choicePatterns = [
       /scegli tra:/i,
       /opzioni:/i,
       /preferisci:/i,
       /quale prodotto:/i,
+      /che tipo di pelle hai\?/i,
+      /quanti anni hai\?/i,
+      /routine attuale/i,
       /tipo di pelle:/i
     ];
     
-    return choicePatterns.some(pattern => pattern.test(text));
+    // Also detect bullet point lists (multiple consecutive lines starting with • or -)
+    const bulletPattern = /(^|\n)\s*[•\-\*]\s+.+/gm;
+    const bulletMatches = text.match(bulletPattern);
+    
+    return choicePatterns.some(pattern => pattern.test(text)) || 
+           (bulletMatches && bulletMatches.length >= 2);
   }
 
   private extractChoices(text: string): string[] {
@@ -408,17 +456,34 @@ Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi 
   }
 
   // Get summary of knowledge base for prompt injection
-  private getKnowledgeBaseSummary(maxItems: number = 10): string {
-    if (!this.knowledgeBase?.products) {
+  private getKnowledgeBaseSummary(maxItems: number = 15): string {
+    if (!this.knowledgeBase) {
       return '';
     }
 
-    const topProducts = this.knowledgeBase.products
-      .slice(0, maxItems)
-      .map((p: any) => `- ${p.name} (${p.price}): ${p.description.substring(0, 80)}...`)
-      .join('\n');
+    let summary = '';
+    
+    // Add products section
+    if (this.knowledgeBase.products?.length > 0) {
+      const topProducts = this.knowledgeBase.products
+        .slice(0, maxItems)
+        .map((p: any) => `- **${p.name}** (${p.price}): ${p.description.substring(0, 100)}... 
+  Link: ${p.url}`)
+        .join('\n');
+      summary += `## PRODOTTI BEAUTYCOLOGY:\n${topProducts}\n\n`;
+    }
+    
+    // Add blog articles section
+    if (this.knowledgeBase.blogArticles?.length > 0) {
+      const topArticles = this.knowledgeBase.blogArticles
+        .slice(0, 8)
+        .map((a: any) => `- **${a.title}**: ${a.excerpt.substring(0, 80)}...
+  Link: ${a.url}`)
+        .join('\n');
+      summary += `## ARTICOLI SCIENTIFICI BLOG:\n${topArticles}`;
+    }
 
-    return topProducts;
+    return summary;
   }
 
   getKnowledgeBase(): any {
