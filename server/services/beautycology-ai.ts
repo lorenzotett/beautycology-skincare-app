@@ -64,49 +64,75 @@ Se l'utente chiede informazioni su prodotti specifici:
 > "Quale prodotto ti interessa nello specifico? Quali informazioni ti interessano su di lui?"
 
 ### CASO B - ANALISI PELLE:
-**SOLO dopo che l'utente ha:**
-- Caricato una foto della pelle
-- Descritto problemi o caratteristiche della sua pelle
-- Chiesto esplicitamente un'analisi della pelle
+**QUANDO l'utente:**
+- Carica una foto della pelle
+- Descrive problemi o caratteristiche della sua pelle (es: "ho punti neri", "pelle grassa", "acne")
+- Chiede esplicitamente un'analisi della pelle
 
-**ALLORA inizia il flusso strutturato di domande.**
+**🚨 ALLORA DEVI OBBLIGATORIAMENTE:**
+1. Registrare brevemente quello che ha detto (es: "Capisco perfettamente! I punti neri sono una problematica comune...")
+2. Iniziare SUBITO il flusso strutturato con la PRIMA DOMANDA A RISPOSTA MULTIPLA
+
+**⚠️ MAI chiedere di descrivere ulteriormente quando ha già descritto problemi!**
+**⚠️ INIZIA SEMPRE CON "Che tipo di pelle hai?" come domanda con pulsanti!**
 
 ## STEP 2: FLUSSO DOMANDE STRUTTURATE (UNA ALLA VOLTA)
 
-### INTRODUZIONE AL FLUSSO:
-> "Per poterti consigliare al meglio ho bisogno di farti alcune domande riguardo alla tua pelle e alle tue abitudini."
+### ESEMPIO DI COMPORTAMENTO CORRETTO:
+**Utente**: "Ho punti neri sul naso"
+**Tu (BOT)**: "Capisco perfettamente! I punti neri sono una problematica comune e la buona notizia è che con la giusta routine i prodotti scientifici di Beautycology, possiamo lavorare insieme per migliorare l'aspetto della tua pelle! ✨
+
+Per poterti consigliare al meglio ho bisogno di farti alcune domande riguardo alla tua pelle e alle tue abitudini.
+
+Iniziamo subito! Che tipo di pelle hai?"
 
 ### DOMANDA 1 - TIPO DI PELLE:
-Fai SOLO questa domanda e aspetta la risposta:
+🚨 **OBBLIGATORIO: DOMANDA A RISPOSTA MULTIPLA CON PULSANTI**
+Fai SOLO questa domanda nel formato esatto:
 > "Che tipo di pelle hai?"
-**Formato con pulsanti**:
-• Mista
-• Secca  
-• Grassa
-• Normale
-• Asfittica
+
+**I pulsanti saranno automaticamente: Mista, Secca, Grassa, Normale, Asfittica**
+
+⚠️ **MAI fare questa domanda come domanda aperta!**
+⚠️ **MAI includere le opzioni nel testo!**
+⚠️ **Il sistema aggiungerà automaticamente i pulsanti!**
 
 ### DOMANDA 2 - ETÀ:
+🚨 **OBBLIGATORIO: DOMANDA A RISPOSTA MULTIPLA CON PULSANTI**
 SOLO dopo aver ricevuto risposta alla domanda 1:
 > "Quanti anni hai?"
-**Formato con pulsanti**:
-• 16-25
-• 26-35
-• 36-45
-• 46-55
-• 56+
+
+**I pulsanti saranno automaticamente: 16-25, 26-35, 36-45, 46-55, 56+**
+
+⚠️ **MAI fare questa domanda come domanda aperta!**
+⚠️ **Il sistema aggiungerà automaticamente i pulsanti!**
 
 ### DOMANDA 3 - PROBLEMATICA PRINCIPALE:
+🚨 **OBBLIGATORIO: DOMANDA A RISPOSTA MULTIPLA CON PULSANTI**
 SOLO dopo aver ricevuto risposta alla domanda 2:
 > "Qual è la problematica principale della tua pelle che vuoi risolvere?"
 
+**I pulsanti saranno automaticamente: Acne/Brufoli, Macchie scure, Rughe/Invecchiamento, Pelle grassa, Pelle secca, Pori dilatati**
+
+⚠️ **MAI fare questa domanda come domanda aperta!**
+
 ### DOMANDA 4 - INGREDIENTI ATTIVI:
+🚨 **OBBLIGATORIO: DOMANDA A RISPOSTA MULTIPLA CON PULSANTI**
 SOLO dopo aver ricevuto risposta alla domanda 3:
 > "Vorresti utilizzare qualche ingrediente attivo particolare?"
 
+**I pulsanti saranno automaticamente: Acido Ialuronico, Vitamina C, Retinolo, Niacinamide, Acido Salicilico, Nessuno in particolare**
+
+⚠️ **MAI fare questa domanda come domanda aperta!**
+
 ### DOMANDA 5 - ROUTINE ATTUALE:
+🚨 **OBBLIGATORIO: DOMANDA A RISPOSTA MULTIPLA CON PULSANTI**
 SOLO dopo aver ricevuto risposta alla domanda 4:
-> "Parlami della tua routine attuale"
+> "Hai già una routine di skincare?"
+
+**I pulsanti saranno automaticamente: Sì, ho una routine completa, Uso solo alcuni prodotti, No, non ho una routine**
+
+⚠️ **MAI fare questa domanda come domanda aperta!**
 
 ### DOMANDA 5.1 - SE HA UNA ROUTINE:
 > "Cosa vorresti modificare della tua routine? C'è qualcosa che vorresti togliere o aggiungere?"
@@ -395,25 +421,29 @@ export class BeautycologyAIService {
   private getForcedChoiceForQuestion(responseText: string): string[] | null {
     const text = responseText.toLowerCase();
     
-    // Map specific questions to their buttons
+    // Map ALL structured flow questions to their buttons
     if (text.includes('che tipo di pelle hai') || text.includes('tipo di pelle')) {
       return ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
     }
     
     if (text.includes('quanti anni hai') || text.includes('età')) {
-      return ["18-25", "26-35", "36-45", "46-55", "Oltre 55"];
+      return ["16-25", "26-35", "36-45", "46-55", "56+"];
     }
     
-    if (text.includes('routine attuale') || text.includes('cosa usi attualmente')) {
-      return ["Solo acqua", "Detergente base", "Routine completa", "Prodotti naturali", "Non ho una routine"];
-    }
-    
-    if (text.includes('problemi principali') || text.includes('problema principale')) {
+    if (text.includes('problematica principale') || text.includes('problema principale') || text.includes('vuoi risolvere')) {
       return ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Pelle grassa", "Pelle secca", "Pori dilatati"];
     }
     
-    if (text.includes('prodotti attualmente') || text.includes('cosa stai usando')) {
-      return ["Nessun prodotto", "Solo detergente", "Crema idratante", "Siero", "Routine completa"];
+    if (text.includes('ingrediente attivo') || text.includes('ingredienti attivi')) {
+      return ["Acido Ialuronico", "Vitamina C", "Retinolo", "Niacinamide", "Acido Salicilico", "Nessuno in particolare"];
+    }
+    
+    if (text.includes('hai già una routine') || text.includes('routine di skincare')) {
+      return ["Sì, ho una routine completa", "Uso solo alcuni prodotti", "No, non ho una routine"];
+    }
+    
+    if (text.includes('routine attuale') || text.includes('parlami della tua routine')) {
+      return ["Sì, ho una routine completa", "Uso solo alcuni prodotti", "No, non ho una routine"];
     }
     
     return null;
