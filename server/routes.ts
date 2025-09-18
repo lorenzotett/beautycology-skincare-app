@@ -571,7 +571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         else if (overallScore > 20) overallDescription = "Condizioni buone";
         else overallDescription = "Condizioni ottime";
         
-        const analysisMessage = {
+        const skinAnalysisMessage = {
           id: Math.floor(Math.random() * 2000000000),
           sessionId,
           role: "assistant" as const,
@@ -579,27 +579,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 **Punteggio Generale:** ${overallScore}/100 - ${overallDescription}
 
-**Rossori:** ${analysisResult.rossori}/100
-**Acne:** ${analysisResult.acne}/100  
-**Rughe:** ${analysisResult.rughe}/100
-**Pigmentazione:** ${analysisResult.pigmentazione}/100
-**Pori Dilatati:** ${analysisResult.pori_dilatati}/100
-**Oleosità:** ${analysisResult.oleosita}/100
-**Danni Solari:** ${analysisResult.danni_solari}/100
-**Occhiaie:** ${analysisResult.occhiaie}/100
-**Idratazione:** ${analysisResult.idratazione}/100
-**Elasticità:** ${analysisResult.elasticita}/100
-**Texture Uniforme:** ${analysisResult.texture_uniforme}/100
-
-🔍 **PANORAMICA PROBLEMI PRINCIPALI:**`,
+Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
           metadata: {
             hasChoices: false,
             choices: [],
+            skinAnalysis: analysisResult,
           },
           createdAt: new Date(),
         };
 
-        await storage.addChatMessage(analysisMessage);
+        await storage.addChatMessage(skinAnalysisMessage);
         console.log('✅ Skin analysis message saved to database');
       } else {
         console.log('⚠️ No skin analysis generated');

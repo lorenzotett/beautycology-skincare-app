@@ -327,8 +327,20 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
   const hasChoices = metadata?.hasChoices || false;
   const choices = metadata?.choices || [];
 
-  // Parse skin analysis data if present
-  const skinAnalysis = !isUser ? parseSkinAnalysis(cleanedContent) : null;
+  // Parse skin analysis data if present - check metadata first, then fallback to content parsing
+  const skinAnalysis = !isUser ? 
+    (metadata?.skinAnalysis ? {
+      metrics: metadata.skinAnalysis,
+      overallScore: Math.round(Object.values(metadata.skinAnalysis).reduce((sum: number, val: any) => sum + val, 0) / Object.keys(metadata.skinAnalysis).length),
+      overallDescription: (() => {
+        const score = Math.round(Object.values(metadata.skinAnalysis).reduce((sum: number, val: any) => sum + val, 0) / Object.keys(metadata.skinAnalysis).length);
+        if (score > 60) return "Condizioni critiche";
+        else if (score > 40) return "Condizioni moderate";
+        else if (score > 20) return "Condizioni buone";
+        else return "Condizioni ottime";
+      })(),
+      remainingContent: null
+    } : parseSkinAnalysis(cleanedContent)) : null;
 
   // Parse link buttons from content
   const contentWithButtons = !isUser ? parseContentWithLinkButtons(cleanedContent) : { content: cleanedContent, linkButtons: [] };
