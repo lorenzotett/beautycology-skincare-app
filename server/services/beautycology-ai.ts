@@ -279,11 +279,14 @@ export class BeautycologyAIService {
       }
 
       // Send message using generateContent API
-      const { response } = await ai.models.generateContent({
-        model: `models/${this.modelName}`,
-        contents,
+      const model = ai.getGenerativeModel({ 
+        model: this.modelName,
         generationConfig: this.generationConfig
-      } as any);
+      });
+      
+      const response = await model.generateContent({
+        contents
+      });
 
       const responseText = response.response.text() || "Scusa, non riesco a rispondere in questo momento.";
 
