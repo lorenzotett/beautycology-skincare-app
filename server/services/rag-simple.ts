@@ -182,28 +182,41 @@ Rispondi utilizzando sia le informazioni dalla knowledge base che il contesto de
   }
 
   private calculateSimilarity(str1: string, str2: string): number {
-    // Improved similarity for Italian text
+    // Improved similarity for Italian text and product names
     const normalize = (text: string) => text
-      .toLowerCase()
+      .toLowerCase() // Convert to lowercase FIRST
       .replace(/[àáâãäå]/g, 'a')
       .replace(/[èéêë]/g, 'e')
       .replace(/[ìíîï]/g, 'i')
       .replace(/[òóôõö]/g, 'o')
       .replace(/[ùúûü]/g, 'u')
       .replace(/[ç]/g, 'c')
-      .replace(/[^a-z\s]/g, ' ')
+      .replace(/[-_]/g, ' ') // Replace hyphens and underscores with spaces
+      .replace(/[^a-z\s]/g, ' ') // Remove other non-alphabetic characters
       .split(/\s+/)
-      .filter(word => word.length > 2); // Filter out very short words
+      .filter(word => word.length > 1); // Allow 2+ character words (for product codes like "M")
     
     const words1 = new Set(normalize(str1));
     const words2 = new Set(normalize(str2));
     
     if (words1.size === 0 || words2.size === 0) return 0;
     
+    // Calculate Jaccard similarity
     const intersection = new Set(Array.from(words1).filter(x => words2.has(x)));
     const union = new Set([...Array.from(words1), ...Array.from(words2)]);
     
-    return intersection.size / union.size;
+    const jaccardSimilarity = intersection.size / union.size;
+    
+    // Boost similarity if there's an exact substring match (case-insensitive)
+    const text1Normalized = str1.toLowerCase().replace(/[-_\s]/g, '');
+    const text2Normalized = str2.toLowerCase().replace(/[-_\s]/g, '');
+    
+    let substringBoost = 0;
+    if (text1Normalized.includes(text2Normalized) || text2Normalized.includes(text1Normalized)) {
+      substringBoost = 0.3; // Add 30% boost for substring matches
+    }
+    
+    return Math.min(1.0, jaccardSimilarity + substringBoost);
   }
 
   private getFileType(fileName: string): string {
