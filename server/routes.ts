@@ -630,7 +630,7 @@ Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
         response = await Promise.race([
           aiService.sendMessage(sessionId, analysisMessage, imageBase64 || undefined),
           timeoutPromise
-        ]);
+        ]) as { content: string; hasChoices: boolean; choices?: string[] };
         console.log('✅ AI response received successfully');
       } catch (aiError) {
         console.error('AI service error:', aiError);
@@ -727,6 +727,9 @@ Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
 
   // Send regular message
   app.post("/api/chat/message", async (req, res) => {
+    const startTime = performance.now();
+    let phase = "initialization";
+    
     try {
       const { sessionId, message } = req.body;
 
@@ -734,6 +737,10 @@ Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
         return res.status(400).json({ error: "Session ID and message are required" });
       }
 
+      // Phase 1: Database operations
+      phase = "database_lookup";
+      const dbLookupStart = performance.now();
+      
       const session = await storage.getChatSession(sessionId);
       if (!session) {
         return res.status(404).json({ error: "Session not found" });
@@ -759,8 +766,26 @@ Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
         metadata: null,
       });
 
-      // FIRST: Generate AI response immediately
-      const response = await aiService.sendMessage(sessionId, message);
+      const dbLookupTime = performance.now() - dbLookupStart;
+      console.log(`⏱️ Database operations took: ${dbLookupTime.toFixed(2)}ms`);
+
+      // Phase 2: AI Service Call with improved timeout and monitoring
+      phase = "ai_service_call";
+      const aiCallStart = performance.now();
+      console.log(`🤖 Starting AI service call for session ${sessionId}...`);
+      
+      // Reduce timeout from 50s to 15s as recommended by architect
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('AI service timeout after 15s')), 15000)
+      );
+
+      const response = await Promise.race([
+        aiService.sendMessage(sessionId, message),
+        timeoutPromise
+      ]) as { content: string; hasChoices: boolean; choices?: string[] };
+      
+      const aiCallTime = performance.now() - aiCallStart;
+      console.log(`⏱️ AI service call took: ${aiCallTime.toFixed(2)}ms`);
 
       // Save assistant message
       await storage.addChatMessage({
@@ -773,10 +798,23 @@ Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
         },
       });
 
-      // IMPORTANT: Send response to client immediately before any email processing
+      // Phase 3: Send response immediately 
+      phase = "send_response";
+      const responseStart = performance.now();
+      
       res.json({
         message: response,
       });
+      
+      const responseTime = performance.now() - responseStart;
+      const totalTime = performance.now() - startTime;
+      
+      console.log(`⏱️ Response sent in: ${responseTime.toFixed(2)}ms`);
+      console.log(`⏱️ TOTAL request time: ${totalTime.toFixed(2)}ms`);
+      
+      if (totalTime > 5000) {
+        console.warn(`🐌 SLOW REQUEST DETECTED: ${totalTime.toFixed(2)}ms for session ${sessionId}`);
+      }
 
       // NOW process email in the background AFTER response is sent
       const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
@@ -3017,7 +3055,7 @@ ${imageFormulas.map(item =>
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const sessions = await storage.getAllSessions();
+      const sessions = await storage.getAllChatSessions();
       const recentSessions = sessions.filter(s => 
         new Date(s.createdAt) > thirtyDaysAgo
       );
