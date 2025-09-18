@@ -1,6 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { getAppConfig } from "../config/app-config";
 import { ragService } from "./rag-simple";
+import fs from 'fs';
+import path from 'path';
 
 const ai = new GoogleGenAI({ 
   apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || ""
@@ -301,7 +303,7 @@ Esempio CORRETTO:
 
 ## ESEMPIO A - RICHIESTA INFORMAZIONI PRODOTTI:
 Utente: "Vorrei sapere di più sulla Perfect & Pure Cream"
-Risposta: "Quale prodotto ti interessa nello specifico? Quali informazioni ti interessano su di lui? ✨"
+Risposta: "Perfect & Pure Cream è la nostra crema specifica per pelli miste! 🌟 Contiene Niacinamide al 4% con proprietà sebo-regolatrici e lenitive, e Red Algae Extract che protegge dall'inquinamento. È perfetta per minimizzare i pori, opacizzare la zona T e combattere le imperfezioni. Prezzo: €30. Vuoi sapere come usarla nella tua routine o hai altre domande? ✨"
 
 ## ESEMPIO B - FLUSSO ANALISI PELLE:
 Utente: "Ho la pelle che mi si infiamma spesso e vorrei una routine"
@@ -338,13 +340,13 @@ export class BeautycologyAIService {
     maxOutputTokens: 1024,
   };
   private chatSessions: Map<string, any[]> = new Map();
-  private sessionState: Map<string, { currentStep: string | null, structuredFlowActive: boolean }> = new Map();
+  private sessionState: Map<string, { currentStep: string | null, structuredFlowActive: boolean, hasIntroduced?: boolean }> = new Map();
   private knowledgeBase: any = null;
 
   constructor() {
     // Configuration set up in constructor
+    this.loadKnowledgeBaseSync();
     this.initializeRAG();
-    this.loadKnowledgeBase();
   }
 
   private async initializeRAG(): Promise<void> {
@@ -362,16 +364,22 @@ export class BeautycologyAIService {
     }
   }
 
-  private async loadKnowledgeBase(): Promise<void> {
+  private loadKnowledgeBaseSync(): void {
     try {
-      const fs = await import('fs');
-      const path = await import('path');
-      const knowledgePath = path.default.join(process.cwd(), 'knowledge-base', 'beautycology.json');
+      const knowledgePath = path.join(process.cwd(), 'knowledge-base', 'beautycology.json');
       
-      if (fs.default.existsSync(knowledgePath)) {
-        const data = fs.default.readFileSync(knowledgePath, 'utf-8');
+      if (fs.existsSync(knowledgePath)) {
+        const data = fs.readFileSync(knowledgePath, 'utf-8');
         this.knowledgeBase = JSON.parse(data);
         console.log(`✅ Loaded ${this.knowledgeBase.products?.length || 0} products from beautycology.json`);
+        
+        // Verify M-Eye Secret is present
+        const hasMyEyeSecret = this.knowledgeBase.products?.some((p: any) => 
+          p.name?.toLowerCase().includes('m-eye') || p.name?.toLowerCase().includes('m eye')
+        );
+        if (hasMyEyeSecret) {
+          console.log('✅ M-Eye Secret product found in catalog');
+        }
       } else {
         console.warn('⚠️ beautycology.json not found in knowledge-base directory');
       }
@@ -388,6 +396,12 @@ export class BeautycologyAIService {
     try {
       // Get or create session history
       let sessionHistory = this.chatSessions.get(sessionId) || [];
+      
+      // Initialize or get session state EARLY
+      if (!this.sessionState.has(sessionId)) {
+        this.sessionState.set(sessionId, { currentStep: null, structuredFlowActive: false, hasIntroduced: false });
+      }
+      const state = this.sessionState.get(sessionId)!;
 
       // Build contents array - on first message, include system instruction
       let contents: any[];
@@ -395,7 +409,13 @@ export class BeautycologyAIService {
         // First message: include system instruction + knowledge base + RAG knowledge + user message
         const knowledgeSummary = this.getKnowledgeBaseSummary();
         const ragInfo = await this.getRAGContext(userMessage);
+        
+        // Check if session has already introduced the bot
+        const antiRepeatInstruction = state.hasIntroduced ? 
+          "\n\n🔴 IMPORTANTE: Ti sei già presentata all'utente. NON RIPRESENTARTI. Rispondi DIRETTAMENTE alla domanda.\n\n" : '';
+        
         const fullPrompt = BEAUTYCOLOGY_SYSTEM_INSTRUCTION + 
+          antiRepeatInstruction +
           (knowledgeSummary ? `\n\n# CATALOGO PRODOTTI E ARTICOLI AGGIORNATO:\n${knowledgeSummary}\n\n` : '\n\n') +
           (ragInfo ? `\n\n# INFORMAZIONI DETTAGLIATE PRODOTTI BEAUTYCOLOGY:\n${ragInfo}\n\n` : '') +
           `Utente: ${userMessage}`;
@@ -420,9 +440,14 @@ export class BeautycologyAIService {
       } else {
         // Subsequent messages: use session history + RAG context + new message
         const ragInfo = await this.getRAGContext(userMessage);
-        let messageText = userMessage;
+        
+        // Always remind not to re-introduce after the first message
+        const antiRepeatReminder = state.hasIntroduced ? 
+          "Ricorda: NON ripresentarti, rispondi direttamente.\n\n" : '';
+        
+        let messageText = antiRepeatReminder + userMessage;
         if (ragInfo) {
-          messageText = `Contesto prodotti rilevanti:\n${ragInfo}\n\nDomanda utente: ${userMessage}`;
+          messageText = antiRepeatReminder + `Contesto prodotti rilevanti:\n${ragInfo}\n\nDomanda utente: ${userMessage}`;
         }
         
         const parts: any[] = [{ text: messageText }];
@@ -475,12 +500,11 @@ export class BeautycologyAIService {
 
       // Update session history
       this.chatSessions.set(sessionId, sessionHistory);
-
-      // Initialize or get session state
-      if (!this.sessionState.has(sessionId)) {
-        this.sessionState.set(sessionId, { currentStep: null, structuredFlowActive: false });
+      
+      // Mark that the bot has introduced itself after the first response
+      if (!state.hasIntroduced && sessionHistory.length > 0) {
+        state.hasIntroduced = true;
       }
-      const state = this.sessionState.get(sessionId)!;
       
       // Check if user is answering the skin type question
       const skinTypes = ["mista", "secca", "grassa", "normale", "asfittica"];
@@ -803,12 +827,20 @@ Per iniziare, scrivi qui sotto il tuo nome.`;
   }
 
   // Initialize conversation after user provides their name
-  async initializeConversation(userName: string): Promise<{
+  async initializeConversation(userName: string, sessionId: string = 'temp'): Promise<{
     content: string;
     hasChoices: boolean;
     choices?: string[];
   }> {
     try {
+      // Mark that bot has introduced itself
+      if (!this.sessionState.has(sessionId)) {
+        this.sessionState.set(sessionId, { currentStep: null, structuredFlowActive: false, hasIntroduced: true });
+      } else {
+        const state = this.sessionState.get(sessionId)!;
+        state.hasIntroduced = true;
+      }
+      
       // Presentazione normale dopo il nome
       const personalizedMessage = `Ciao ${userName}! 🌟 Sono la tua Skin Expert di Beautycology e sono davvero felice di conoscerti! Possiamo analizzare insieme la tua pelle per trovare la skincare routine perfetta che la renderà radiosa e bellissima! ✨
 
@@ -820,7 +852,7 @@ Puoi iniziare l'analisi in due modi:
 Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi pure. Sono qui per te! 😊`;
 
       // Initialize session history with the user's name and the welcome response
-      let sessionHistory = this.chatSessions.get('temp') || [];
+      let sessionHistory = this.chatSessions.get(sessionId) || [];
       sessionHistory.push(
         {
           role: "user",
