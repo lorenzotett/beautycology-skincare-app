@@ -389,7 +389,7 @@ export class BeautycologyAIService {
       const response = await ai.models.generateContent({
         model: this.modelName,
         contents,
-        generationConfig: this.generationConfig
+        config: this.generationConfig
       });
 
       let responseText = response.text || "Scusa, non riesco a rispondere in questo momento.";
@@ -709,7 +709,7 @@ export class BeautycologyAIService {
     const bulletMatches = text.match(bulletPattern);
     
     return choicePatterns.some(pattern => pattern.test(text)) || 
-           (bulletMatches && bulletMatches.length >= 2);
+           (bulletMatches !== null && bulletMatches.length >= 2);
   }
 
   private extractChoices(text: string): string[] {
