@@ -637,11 +637,27 @@ Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
 
       // Ensure response is sent before any potential connection issues
       try {
-        // Send response with analysis data
+        // Send response with analysis data - include both analysis message and AI response
         console.log('📤 Sending response');
-        res.json({
-          message: response,
-        });
+        
+        if (analysisResult) {
+          // Send both the analysis message and the AI response
+          res.json({
+            message: response,
+            analysisMessage: {
+              content: `📊 **ANALISI COMPLETA DELLA PELLE:**\n\n**Punteggio Generale:** ${Math.round(Object.values(analysisResult).reduce((sum: number, val: any) => sum + val, 0) / Object.keys(analysisResult).length)}/100\n\nEcco la tua analisi dettagliata con tutti i parametri della pelle:`,
+              hasChoices: false,
+              choices: [],
+              metadata: {
+                skinAnalysis: analysisResult
+              }
+            }
+          });
+        } else {
+          res.json({
+            message: response,
+          });
+        }
         console.log('✅ Response sent successfully');
       } catch (sendError) {
         console.error('❌ Error sending response:', sendError);

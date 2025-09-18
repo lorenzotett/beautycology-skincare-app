@@ -25,6 +25,14 @@ interface ChatStartResponse {
 
 interface ChatMessageResponse {
   message: ChatResponse;
+  analysisMessage?: {
+    content: string;
+    hasChoices: boolean;
+    choices?: string[];
+    metadata?: {
+      skinAnalysis?: any;
+    };
+  };
 }
 
 export function ChatInterface() {
@@ -557,9 +565,26 @@ export function ChatInterface() {
         throw new Error('Invalid response format from server');
       }
 
-      // Check if we have a before/after message to add first
+      // Check if we have an analysis message to add first
       const messagesToAdd: ChatMessage[] = [];
       
+      // Add analysis message if present
+      if (data.analysisMessage) {
+        const analysisMessage: ChatMessage = {
+          id: Date.now(),
+          sessionId: sessionId!,
+          role: "assistant",
+          content: data.analysisMessage.content,
+          metadata: {
+            hasChoices: data.analysisMessage.hasChoices || false,
+            choices: data.analysisMessage.choices || [],
+            skinAnalysis: data.analysisMessage.metadata?.skinAnalysis,
+          },
+          createdAt: new Date(),
+        };
+        messagesToAdd.push(analysisMessage);
+        console.log('Added analysis message with skinAnalysis:', data.analysisMessage.metadata?.skinAnalysis);
+      }
 
       // Add main assistant response
       const assistantMessage: ChatMessage = {
