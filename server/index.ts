@@ -935,6 +935,17 @@ process.on('SIGINT', () => {
   }, () => {
     log(`serving on port ${port}`);
     
+    // Load RAG knowledge base on server startup
+    import('./utils/rag-loader').then(async ({ RAGLoader }) => {
+      console.log('📚 Loading RAG knowledge base at startup...');
+      try {
+        await RAGLoader.loadDocumentsFromDirectory('./knowledge-base');
+        console.log('✅ RAG knowledge base loaded successfully');
+      } catch (error) {
+        console.error('⚠️ Error loading RAG knowledge base:', error);
+      }
+    });
+    
     // Start automatic backup sync every 5 minutes for new conversations
     console.log('🤖 Setting up automatic backup sync every 5 minutes...');
     setInterval(async () => {

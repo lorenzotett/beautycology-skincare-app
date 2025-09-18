@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { getAppConfig } from "../config/app-config";
+import { ragService } from "./rag-simple";
 
 const ai = new GoogleGenAI({ 
   apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || ""
@@ -329,6 +330,22 @@ export class BeautycologyAIService {
 
   constructor() {
     // Configuration set up in constructor
+    this.initializeRAG();
+  }
+
+  private async initializeRAG(): Promise<void> {
+    try {
+      // Load documents into RAG service if not already loaded
+      const stats = ragService.getKnowledgeBaseStats();
+      if (stats.totalDocuments === 0) {
+        console.log('📚 Loading Beautycology knowledge base...');
+        const { RAGLoader } = await import('../utils/rag-loader');
+        await RAGLoader.loadDocumentsFromDirectory('./knowledge-base');
+        console.log('✅ Beautycology knowledge base loaded successfully');
+      }
+    } catch (error) {
+      console.error('⚠️ Error loading Beautycology knowledge base:', error);
+    }
   }
 
   async sendMessage(sessionId: string, userMessage: string, imageData?: string): Promise<{
@@ -343,10 +360,12 @@ export class BeautycologyAIService {
       // Build contents array - on first message, include system instruction
       let contents: any[];
       if (sessionHistory.length === 0) {
-        // First message: include system instruction + knowledge base + user message
+        // First message: include system instruction + knowledge base + RAG knowledge + user message
         const knowledgeSummary = this.getKnowledgeBaseSummary();
+        const ragInfo = await this.getRAGContext(userMessage);
         const fullPrompt = BEAUTYCOLOGY_SYSTEM_INSTRUCTION + 
           (knowledgeSummary ? `\n\n# CATALOGO PRODOTTI E ARTICOLI AGGIORNATO:\n${knowledgeSummary}\n\n` : '\n\n') +
+          (ragInfo ? `\n\n# INFORMAZIONI DETTAGLIATE PRODOTTI BEAUTYCOLOGY:\n${ragInfo}\n\n` : '') +
           `Utente: ${userMessage}`;
         
         // Prepare message parts (text + optional image)
@@ -367,8 +386,14 @@ export class BeautycologyAIService {
           parts
         }];
       } else {
-        // Subsequent messages: use session history + new message  
-        const parts: any[] = [{ text: userMessage }];
+        // Subsequent messages: use session history + RAG context + new message
+        const ragInfo = await this.getRAGContext(userMessage);
+        let messageText = userMessage;
+        if (ragInfo) {
+          messageText = `Contesto prodotti rilevanti:\n${ragInfo}\n\nDomanda utente: ${userMessage}`;
+        }
+        
+        const parts: any[] = [{ text: messageText }];
         if (imageData) {
           const mimeType = imageData.startsWith('/9j') ? 'image/jpeg' : 'image/png';
           parts.push({
@@ -851,6 +876,33 @@ Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi 
 
   getKnowledgeBase(): any {
     return this.knowledgeBase;
+  }
+
+  // Get RAG context for user query
+  private async getRAGContext(userMessage: string): Promise<string> {
+    try {
+      const ragResult = await ragService.searchSimilar(userMessage, 3);
+      
+      if (ragResult.content && ragResult.content.trim()) {
+        // Filter and format the content for better context
+        const relevantInfo = ragResult.sources
+          .filter(source => source.similarity > 0.1)
+          .map(source => {
+            // Extract product information if present
+            const content = source.content.substring(0, 300);
+            const sourceFile = source.metadata.source;
+            return `[Da ${sourceFile}]: ${content}...`;
+          })
+          .join('\n\n');
+          
+        return relevantInfo;
+      }
+      
+      return '';
+    } catch (error) {
+      console.error('Error getting RAG context:', error);
+      return '';
+    }
   }
 }
 
