@@ -278,18 +278,14 @@ export class BeautycologyAIService {
         }];
       }
 
-      // Send message using generateContent API
-      const model = ai.getGenerativeModel({ 
+      // Send message using generateContent API (same syntax as other services)
+      const response = await ai.models.generateContent({
         model: this.modelName,
+        contents,
         generationConfig: this.generationConfig
       });
-      
-      const result = await model.generateContent({
-        contents
-      });
-      
-      const response = await result.response;
-      const responseText = response.text() || "Scusa, non riesco a rispondere in questo momento.";
+
+      const responseText = response.text || "Scusa, non riesco a rispondere in questo momento.";
 
       // Add BOTH user message and assistant response to history
       const userParts: any[] = [{ text: userMessage }];
