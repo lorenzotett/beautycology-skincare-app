@@ -38,7 +38,7 @@ export class BeautycologyScraper {
     console.log('🔄 Iniziando scraping completo di beautycology.it...');
     
     const [products, blogArticles] = await Promise.all([
-      this.scrapeProducts(),
+      this.scrapeAllProducts(),
       this.scrapeBlogArticles()
     ]);
 
@@ -55,10 +55,143 @@ export class BeautycologyScraper {
     return knowledge;
   }
 
-  private async scrapeProducts(): Promise<Product[]> {
-    console.log('📦 Scraping TUTTI i prodotti dalla pagina shop principale...');
-    const products: Product[] = [];
+  private async scrapeAllProducts(): Promise<Product[]> {
+    console.log('🚀 NUOVO SISTEMA: Scraping COMPLETO da sitemap + pagine shop...');
     const allProducts = new Set<string>(); // Per evitare duplicati
+    const products: Product[] = [];
+
+    try {
+      // 1. Scrapa TUTTI i prodotti dalla sitemap
+      console.log('🗺️ STEP 1: Scraping da sitemap completa...');
+      const sitemapProducts = await this.scrapeProductsFromSitemap(allProducts);
+      products.push(...sitemapProducts);
+      console.log(`✅ Sitemap: ${sitemapProducts.length} prodotti catturati`);
+
+      // 2. Scrapa anche dalle pagine shop per backup/completezza
+      console.log('🏪 STEP 2: Scraping backup da pagine shop...');
+      const shopProducts = await this.scrapeProductsFromShop(allProducts);
+      products.push(...shopProducts);
+      console.log(`✅ Shop pages: ${shopProducts.length} prodotti aggiuntivi`);
+
+    } catch (error) {
+      console.error('❌ Errore scraping completo:', error);
+    }
+
+    // Ottieni dettagli aggiuntivi per prodotti principali
+    await this.enrichProductDetails(products);
+
+    console.log(`🎯 TOTALE FINALE: ${products.length} prodotti UNICI catturati!`);
+    return products;
+  }
+
+  private async scrapeProductsFromSitemap(allProducts: Set<string>): Promise<Product[]> {
+    const products: Product[] = [];
+    
+    try {
+      // Ottieni sitemap dei prodotti
+      console.log('📋 Caricamento sitemap prodotti...');
+      const sitemapResponse = await axios.get(`${this.baseUrl}/product-sitemap1.xml`);
+      const sitemapHtml = sitemapResponse.data;
+      
+      // Estrai TUTTI gli URL /prodotto/
+      const productUrls = sitemapHtml.match(/https:\/\/beautycology\.it\/prodotto\/[^<]+/g) || [];
+      console.log(`🔍 Trovati ${productUrls.length} URL prodotto nella sitemap`);
+      
+      // Scrapa ogni singola pagina prodotto
+      for (let i = 0; i < productUrls.length; i++) {
+        const productUrl = productUrls[i];
+        
+        // Evita duplicati
+        if (allProducts.has(productUrl)) {
+          console.log(`⏭️ URL già processato: ${productUrl}`);
+          continue;
+        }
+        
+        console.log(`🔍 Scraping prodotto ${i+1}/${productUrls.length}: ${productUrl}`);
+        
+        try {
+          const product = await this.scrapeIndividualProduct(productUrl);
+          if (product) {
+            allProducts.add(productUrl);
+            products.push(product);
+            console.log(`✅ Prodotto catturato: ${product.name}`);
+          }
+        } catch (error: any) {
+          console.warn(`⚠️ Errore scraping ${productUrl}:`, error.response?.status || error.message);
+        }
+        
+        // Pausa per evitare rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+    } catch (error) {
+      console.error('❌ Errore accesso sitemap:', error);
+    }
+    
+    return products;
+  }
+
+  private async scrapeIndividualProduct(url: string): Promise<Product | null> {
+    try {
+      const response = await axios.get(url);
+      const $ = cheerio.load(response.data);
+      
+      // Estrai nome prodotto
+      const name = $('h1.entry-title, h1.product_title, .product-title').first().text().trim() ||
+                   $('.woocommerce-loop-product__title').first().text().trim() ||
+                   $('title').text().split(' - ')[0].trim();
+      
+      if (!name) {
+        console.warn(`⚠️ Nome prodotto non trovato per ${url}`);
+        return null;
+      }
+      
+      // Estrai prezzo
+      let price = '';
+      let originalPrice: string | undefined;
+      
+      const priceElement = $('.price, .woocommerce-Price-amount, .amount').first();
+      const priceText = priceElement.text();
+      
+      const priceMatches = priceText.match(/€[\d,]+(?:,\d{2})?/g);
+      if (priceMatches) {
+        if (priceText.includes('–') && priceMatches.length >= 2) {
+          price = `${priceMatches[0]}–${priceMatches[priceMatches.length - 1]}`;
+        } else {
+          price = priceMatches[0];
+        }
+      }
+      
+      // Estrai descrizione
+      const description = $('.woocommerce-product-details__short-description, .entry-content, .product-summary')
+        .first().text().trim().substring(0, 500) || name;
+      
+      // Estrai immagine
+      const image = $('.woocommerce-product-gallery__image img, .wp-post-image, .product-image img')
+        .first().attr('src') || '';
+      
+      // Determina categoria
+      const category = this.determineProductCategory(name, url);
+      
+      return {
+        name,
+        price,
+        originalPrice,
+        description,
+        url,
+        image: image.startsWith('http') ? image : `${this.baseUrl}${image}`,
+        category
+      };
+      
+    } catch (error) {
+      console.error(`Errore scraping prodotto individuale ${url}:`, error);
+      return null;
+    }
+  }
+
+  private async scrapeProductsFromShop(allProducts: Set<string>): Promise<Product[]> {
+    console.log('📦 Scraping backup da pagine shop...');
+    const products: Product[] = [];
 
     // Focus sulla pagina principale con paginazione completa
     const shopUrl = `${this.baseUrl}/shop/`;
@@ -78,10 +211,7 @@ export class BeautycologyScraper {
       console.error(`Errore scraping pagina principale:`, error);
     }
 
-    // Ottieni dettagli aggiuntivi per prodotti principali
-    await this.enrichProductDetails(products);
-
-    console.log(`✅ Scraping completato: ${products.length} prodotti TOTALI dalla pagina shop`);
+    console.log(`✅ Shop scraping completato: ${products.length} prodotti dalle pagine shop`);
     return products;
   }
 

@@ -1,74 +1,67 @@
 {
   "products": [
     {
-      "name": "Barrier Hero",
-      "price": "€40,00",
-      "description": "Barrier Hero crema barriera protettiva che grazie ai suoi attivi promuove il ripristino della barriera cutanea e la rigenerazione della pelle è una crema multiuso adatta a tutti: adulti, bambini e neonati.\n\nUna crema barriera protettiva Barrier Hero da 50 ml\nAdulti, bambini, neonati\nPantenolo 5%\nCeramidi, cera d’api, acidi grassi essenziali omega 6 e 3, prebiotici\nAdatto alle pelli sensibili e delicate (può essere usato anche nelle zone intime)\nNickel Tested <1 PPM\n\nAnche Barrier Hero segue la f",
-      "url": "https://beautycology.it/prodotto/barrier-hero-crema-barriera/",
-      "image": "https://beautycology.it/wp-content/uploads/2024/03/barrier-hero-barriera-cutanea-300x300.png",
-      "category": "Altri Prodotti",
-      "ingredients": [
-        "Niacinamide",
-        "RETINOL",
-        "Acido Ialuronico",
-        "Acido Lattobionico",
-        "Acido Salicilico",
-        "Acido azelaico",
-        "Acido Azelaico",
-        "Acido Tranexamico",
-        "acido pantotenico",
-        "Acido Linoleico",
-        "acido grasso",
-        "Acido Linoleinico",
-        "acido linoleico",
-        "acido 22",
-        "Panthenol"
-      ]
+      "name": "Invisible Shield – Crema viso SPF 30",
+      "price": "€15,00",
+      "description": "Invisible Shield SPF 30 è una crema viso quotidiana leggerissima, invisibile, uniforma il colorito della pelle con protezione SPF 30\nContenuto della confezione e caratteristiche:\n\nUna crema viso Invisible Shield\nNiacinamide 4%, Vitamina E, Peptide Carnosine, Betaina, Burro di Karitè\nProtegge dai raggi UVB, UVA e UVA lunghi e ultra lunghi (oltre 380 nm) garantendo una protezione ad ampio spettro\nAlta Protezione dai raggi UV grazie al suo SPF 30\nProtezione estremamente efficace ai raggi UVA grazie",
+      "url": "https://beautycology.it/prodotto/invisible-shield-crema-viso-spf-uva/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/07/invisible-shield-crema-viso-spf-30-600x600.png",
+      "category": "Creme"
     },
     {
-      "name": "Better With Age – Crema viso antirughe",
-      "price": "€22,00–€70,00",
-      "description": "Better With Age – Crema viso antirughe",
-      "url": "https://beautycology.it/prodotto/better-with-age-crema-viso-antirughe/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/06/better-with-age-crema-antirughe-300x300.png",
-      "category": "Creme"
+      "name": "Combo Macchie",
+      "price": "€80,00",
+      "description": "Contenuto e caratteristiche:\n\n\nMultipod Gel – trattamento viso con Acido Azelaico al 15% e Niacinamide al 4% (30 ml)➝ I suoi attivi agiscono su macchie, rossori, grana irregolare e imperfezioni\n\n\nInvisible Shield SPF 30 – crema viso con altissima protezione UVA (UVAP 27,66), Niacinamide al 4%, filtri per luce blu e infrarossi (50 ml)➝ Per proteggere ogni giorno la pelle dai raggi responsabili della formazione e del peggioramento delle macchie",
+      "url": "https://beautycology.it/prodotto/combo-macchie/",
+      "image": "https://beautycology.it/wp-content/uploads/2025/08/untitled-design-600x600.jpg",
+      "category": "Altri Prodotti"
+    },
+    {
+      "name": "Cleaning Me Softly",
+      "price": "€25,00",
+      "description": "Cleaning me Softly è un olio detergente a base di oli che deterge la pelle per affinità. Questo tipo di detersione è perfetta per le pelli secche, desquamate, sensibili o delicate, irritate o soggette a dermatite atopica. Adatto a neonati, bambini e adulti.\nGrazie alla sua formulazione detta oil-to-milk, a contatto con l’acqua, si trasforma immediatamente da olio in latte, lasciando la pelle dopo la detersione, pulita, morbida ma non unta.\nLa formula è arricchita da olio di mandorla, cera d’api,",
+      "url": "https://beautycology.it/prodotto/cleaning-me-softly-detergente-oleoso-doccia-bagno/",
+      "image": "https://beautycology.it/wp-content/uploads/2024/03/cleaning-me-softly-cosmetico-600x600.png",
+      "category": "Altri Prodotti"
+    },
+    {
+      "name": "Multitasking Oil – Detergente oleoso",
+      "price": "€12,00",
+      "description": "Prova Multitasking Oil, olio detergente, struccante ed emolliente, ma con tanti altri usi.\nContenuto della confezione e caratteristiche:\n\nUn detergente oleoso Multitasking Oil\nUtilizzabile come detergente, struccante o emolliente\nCon Olio di cocco e Olio di mandorla\nCon Oleoliti di Calendula, Camomilla e Bisabololo\nDermatologicamente Testato su Pelli Sensibili | Oftalmologicamente Testato | Nickel Tested <1 PPM | Profumazione Ipoallergenica | Efficacia Struccante su Trucco Waterproof Testata\n\nLe",
+      "url": "https://beautycology.it/prodotto/multitasking-oil-detergente-oleoso/",
+      "image": "https://beautycology.it/wp-content/uploads/2020/09/multitasking-oil-detergente-struccante-oleoso-600x600.png",
+      "category": "Detergenti"
+    },
+    {
+      "name": "Skin Reset – Trattamento Riequilibrante Pelli sensibili",
+      "price": "€40,00",
+      "description": "Trattamento riequilibrante adatto alle pelli sensibili. Nasce come sleeping mask, ma puoi usarla come crema giorno, crema notte e tutte le volte che senti il bisogno di “schiacciare il tasto RESET della tua pelle”.\n\nUna crema barriera, con focus su attivi idratanti e lenitivi, che ti aiuterà a ritrovare il corretto equilibrio della tua pelle.\nContenuto della confezione e caratteristiche:\n\nUn trattamento Skin Reset da 50 ml\nUrea 5%, Glicerina 5%\nCeramidi, Niacinamide, Vitamina E, Pantenolo (Vitam",
+      "url": "https://beautycology.it/prodotto/skin-reset-trattamento-riequilibrante-pelli-sensibili-reattive-fragilizzate/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/01/skin-reset-crema-pelli-sensibili-600x600.png",
+      "category": "Altri Prodotti"
     },
     {
       "name": "Bionic HydraLift – Siero con Acido Lattobionico 8%",
       "price": "€50,00",
-      "description": "Bionic HydraLift – Siero con Acido Lattobionico 8%",
+      "description": "Bionic Hydralift è un siero in crema con attivi ad azione idratante, lenitiva, antiossidante e pro-age.\nContenuto della confezione e caratteristiche:\n\nUn siero viso Bionic Hydralift da 30 ml\nAcido Lattobionico 8%, Niacinamide, Vitamina E, Prebiotici\n6 attivi idratanti con diverso peso molecolare e diverse caratteristiche, per un’idratazione completa e duratura (fino a 72 ore)\nUn pool di attivi che aiutano il ripristino della barriera e del microbiota cutaneo\nAttivi lenitivi che agiscono sui neur",
       "url": "https://beautycology.it/prodotto/bionic-hydralift-siero-acido-lattobionico/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/09/bionic-hydralift-acido-lattobionico-300x300.png",
+      "image": "https://beautycology.it/wp-content/uploads/2022/09/bionic-hydralift-acido-lattobionico-600x600.png",
       "category": "Sieri"
     },
     {
-      "name": "BODYLICIOUS – EMULSIONE CORPO CON RETINOLO",
-      "price": "€45,00",
-      "description": "Emulsione corpo intensiva e a rapido assorbimento al Retinolo, Niacinamide e Urea.\nContenuto della confezione e caratteristiche:\n\nUna crema corpo Bodylicious da 150 ml\nRetinolo allo 0,05%, Urea al 10%, Niacinamide al 5%, Glicerina al 5% e un pool di Ceramidi\nFormula arricchita con olio di ricino\nTestato su Pelli Sensibili | Oftalmologicamente testato | Nickel Tested <1 PPM | Senza Profumo\nGender Neutral\nMade in Italy\n\nLeggi di più su come usarlo, ingredienti e caratteristiche.\n\n\t\t\t\t\n\nEmulsione c",
-      "url": "https://beautycology.it/prodotto/bodylicious-emulsione-corpo-con-retinolo/",
-      "image": "https://beautycology.it/wp-content/uploads/2025/05/bodylicious-beautycology-300x300.png",
-      "category": "Corpo",
-      "ingredients": [
-        "Niacinamide",
-        "niacinamide",
-        "RETINOL",
-        "Retinol",
-        "retinol",
-        "Acido Ialuronico",
-        "Acido Lattobionico",
-        "Acido Salicilico",
-        "Acido azelaico",
-        "Acido Azelaico",
-        "Acido Tranexamico",
-        "acido nicotinico"
-      ]
+      "name": "Multipod Gel",
+      "price": "€35,00",
+      "description": "Trattemento in Gel con Azelaico e Niacinamide: potenti antiossidanti che agiscono contemporaneamente su invecchiamento cutaneo precoce, macchie, imperfezioni e tendenza acneica e rosacea.\nContenuto della confezione e caratteristiche:\n\nUn trattamento Multipod Gel da 30 ml\nAcido Azelaico 15%\nNiacinamide 4%\nSymcalmin Green®, SymSitive® (leniscono la pelle agendo sui suoi neurotrasmettitori)\nTestato su Pelli Sensibili | Nickel Tested <1 PPM | Senza Profumo\nGender Neutral\nMade in Italy\n\nLeggi di più ",
+      "url": "https://beautycology.it/prodotto/multipod-gel-acido-azelaico/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/05/multipod-gel-beautycology-acido-azelaico-600x600.png",
+      "category": "Altri Prodotti"
     },
     {
       "name": "C-Boost – Siero alla Vitamina C",
       "price": "€55,00",
       "description": "C-Boost è un siero viso alla Vitamina C nella sua forma più pura ed efficace: l’Acido Ascorbico. La sua formula mantiene ultra stabile ed efficace la Vitamina C ed è dermatologicamente testata su Pelli Sensibili.\nContenuto della confezione e caratteristiche:\n\nUn siero C-Boost da 30 ml\nAcido Ascorbico 5% stabilizzato in formula\nSymcalmin Green®, SymSitive®, Zanthalene, Pantenolo\nAcido Ferulico\nTexture leggerissima, fresca e non appiccicosa\nTestato su Pelli Sensibili | Nickel Tested <1 PPM | Senza",
       "url": "https://beautycology.it/prodotto/c-boost-siero-viso-vitamina-c-acido-ascorbico/",
-      "image": "https://beautycology.it/wp-content/uploads/2023/04/siero-vitamina-c-boost-300x300.png",
+      "image": "https://beautycology.it/wp-content/uploads/2023/04/siero-vitamina-c-boost-600x600.png",
       "category": "Sieri",
       "ingredients": [
         "Niacinamide",
@@ -88,60 +81,98 @@
       ]
     },
     {
-      "name": "Clay Rehab – Maschera viso Purificante all’argilla",
-      "price": "€35,00",
-      "description": "Clay Rehab – Maschera viso Purificante all’argilla",
-      "url": "https://beautycology.it/prodotto/maschera-argilla-clay-rehab/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/10/clay-rehab-maschera-viso-purificante-300x300.png",
-      "category": "Maschere"
+      "name": "Let’s Glow – Peeling esfoliante Multiacido 22% (AHA-PHA)",
+      "price": "€50,00",
+      "description": "Let’s Glow è un peeling esfoliante multiacido in gel che contiene un complesso di acidi AHA e PHA (alfa e poli idrossiacidi) alla concentrazione del 22%.\nContenuto della confezione e caratteristiche:\n\nUn siero viso esfoliante in gel da 30 ml\nAcido Mandelico 10%, Gluconolattone 10%, Acido Fitico 2%\nUsalo tutto l’anno, non contiene attivi fotosensibilizzanti\npH 3,5 per garantire al meglio l’efficacia esfoliante degli acidi\nFormula arricchita con Pantenolo, Arginina, Allantoina, Sodium PCA\nTestato ",
+      "url": "https://beautycology.it/prodotto/lets-glow-peeling-esfoliante-multi-acido-22-aha-pha/",
+      "image": "https://beautycology.it/wp-content/uploads/2023/10/lets-glow-esfoliante-aha-600x600.png",
+      "category": "Esfolianti"
     },
     {
-      "name": "Cleaning Me Softly\n\t€25,00\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != C-M-S-250){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"C-M-S-250\",\"item_name\":\"Cleaning Me Softly\",\"list_name\":\"Cleaning Me Softly\",\"quantity\":1,\"price\":25,\"item_category\":\"Bimbi\",\"item_category_2\":\"Corpo\",\"item_category_3\":\"Detergenti &amp; Struccanti\"} ]});\n                })\n\n            });",
-      "price": "€25,00",
-      "description": "Cleaning Me Softly\n\t€25,00\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != C-M-S-250){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"C-M-S-250\",\"item_name\":\"Cleaning Me Softly\",\"list_name\":\"Cleaning Me Softly\",\"quantity\":1,\"price\":25,\"item_category\":\"Bimbi\",\"item_category_2\":\"Corpo\",\"item_category_3\":\"Detergenti &amp; Struccanti\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/cleaning-me-softly-detergente-oleoso-doccia-bagno/",
-      "image": "https://beautycology.it/wp-content/uploads/2024/03/cleaning-me-softly-cosmetico-300x300.png",
-      "category": "Corpo"
-    },
-    {
-      "name": "In offerta!\n\tCombo Macchie\n\t€80,00 Il prezzo originale era: €80,00.€64,00Il prezzo attuale è: €64,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != C-M-MG-IS30){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"C-M-MG-IS30\",\"item_name\":\"Combo Macchie\",\"list_name\":\"Combo Macchie\",\"quantity\":1,\"price\":64,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€64,00",
-      "originalPrice": "€80,00",
-      "description": "In offerta!\n\tCombo Macchie\n\t€80,00 Il prezzo originale era: €80,00.€64,00Il prezzo attuale è: €64,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != C-M-MG-IS30){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"C-M-MG-IS30\",\"item_name\":\"Combo Macchie\",\"list_name\":\"Combo Macchie\",\"quantity\":1,\"price\":64,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/combo-macchie/",
-      "image": "https://beautycology.it/wp-content/uploads/2025/08/untitled-design-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "Eye-Light – Contorno Occhi",
-      "price": "€45,00",
-      "description": "Eye-Light – Contorno Occhi",
-      "url": "https://beautycology.it/prodotto/eye-light-contorno-occhi-anti-occhiaie/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/10/eye-light-contorno-occhi-300x300.png",
-      "category": "Contorno Occhi"
-    },
-    {
-      "name": "Gift Card\n\t€20,00 – €300,00Fascia di prezzo: da €20,00 a €300,00\nAcquista la gift card\t\n\t\tQuesto prodotto ha più varianti. Le opzioni possono essere scelte nella pagina del prodotto\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != GIFT){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"GIFT\",\"item_name\":\"Gift Card\",\"list_name\":\"Gift Card\",\"quantity\":1,\"price\":20,\"item_category\":\"Gift Card\"} ]});\n                })\n\n            });",
-      "price": "€20,00–€300,00",
-      "description": "Gift Card\n\t€20,00 – €300,00Fascia di prezzo: da €20,00 a €300,00\nAcquista la gift card\t\n\t\tQuesto prodotto ha più varianti. Le opzioni possono essere scelte nella pagina del prodotto\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != GIFT){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"GIFT\",\"item_name\":\"Gift Card\",\"list_name\":\"Gift Card\",\"quantity\":1,\"price\":20,\"item_category\":\"Gift Card\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/gift-card/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/12/black-and-red-modern-black-friday-instagram-post-5-300x300.jpg",
+      "name": "Retinal bomb",
+      "price": "€55,00",
+      "description": "Siero viso in crema con lo 0,1% di retinaldeide, la “sorella maggiore” del retinolo, e il 4% di Niacinamide.\nContenuto della confezione e caratteristiche:\n\nUn siero in crema Retinal Bomb da 30 ml\nRetinaldeide 0,1%\nNiacinamide al 4%\nSymsitive Green, estratto del pepe di Sishuan, Vitamina E, Ceramidi, Allantoina, Betaina, Burro di Karité, Olio di Jojoba, Squalane\nTestato su Pelli Sensibili | Nickel Tested <1 PPM | Senza Profumo\nGender Neutral\nMade in Italy\n\nLeggi di più su come usarlo, ingredienti",
+      "url": "https://beautycology.it/prodotto/retinal-bomb-siero-retinaldeide/",
+      "image": "https://beautycology.it/wp-content/uploads/2023/08/retinal-bomb-siero-retinaldeide-600x600.png",
       "category": "Altri Prodotti"
     },
     {
-      "name": "Guess My Age – Crema Preventiva Rughe",
-      "price": "€16,50–€50,00",
-      "description": "Guess My Age – Crema Preventiva Rughe",
-      "url": "https://beautycology.it/prodotto/guess-my-age-prevenzione-antiage/",
-      "image": "https://beautycology.it/wp-content/uploads/2020/09/crema-guess-my-age-preventiva-300x300.png",
+      "name": "BODYLICIOUS – EMULSIONE CORPO CON RETINOLO",
+      "price": "€45,00",
+      "description": "Emulsione corpo intensiva e a rapido assorbimento al Retinolo, Niacinamide e Urea.\nContenuto della confezione e caratteristiche:\n\nUna crema corpo Bodylicious da 150 ml\nRetinolo allo 0,05%, Urea al 10%, Niacinamide al 5%, Glicerina al 5% e un pool di Ceramidi\nFormula arricchita con olio di ricino\nTestato su Pelli Sensibili | Oftalmologicamente testato | Nickel Tested <1 PPM | Senza Profumo\nGender Neutral\nMade in Italy\n\nLeggi di più su come usarlo, ingredienti e caratteristiche.\n\n\t\t\t\t\n\nEmulsione c",
+      "url": "https://beautycology.it/prodotto/bodylicious-emulsione-corpo-con-retinolo/",
+      "image": "https://beautycology.it/wp-content/uploads/2025/05/bodylicious-beautycology-600x600.png",
+      "category": "Corpo",
+      "ingredients": [
+        "Niacinamide",
+        "niacinamide",
+        "RETINOL",
+        "Retinol",
+        "retinol",
+        "Acido Ialuronico",
+        "Acido Lattobionico",
+        "Acido Salicilico",
+        "Acido azelaico",
+        "Acido Azelaico",
+        "Acido Tranexamico",
+        "acido nicotinico"
+      ]
+    },
+    {
+      "name": "Mousse Away – Detergente viso",
+      "price": "€8,00",
+      "description": "Mousse Away è la soluzione ideale per detergere tutti i tipi di pelle, anche quelle più sensibili, con una formula unica realizzata da Beautycology®.\nContenuto della confezione e caratteristiche:\n\nUn Detergente viso Mousse Away\nMai più sensazione “pelle che tira”\nTestato su Pelli Sensibili | Nickel Tested <1 PPM | Profumo Ipoallergenico\n\nLeggi di più su come usarlo, ingredienti e caratteristiche.",
+      "url": "https://beautycology.it/prodotto/detergente-viso-mousse-away/",
+      "image": "https://beautycology.it/wp-content/uploads/2020/09/mousse-away-detergente-viso-schiumogeno-600x600.png",
+      "category": "Detergenti"
+    },
+    {
+      "name": "Better With Age – Crema viso antirughe",
+      "price": "€22,00",
+      "description": "Better with Age è una crema antirughe adatta alle pelli secche o tendenti al secco.\nContenuto della confezione e caratteristiche:\n\nUna crema viso antirughe Better with Age\nVitamina C, Vitamina E ed Acido Ferulico\nNiacinamide al 4%, di-peptide Carnosine, Estratto di Radice di Peonia Bianca, Ceramidi\nTestato su Pelli Sensibili | Nickel Tested <1 PPM | Profumo Ipoallergenico | Efficacia Testata sull’Attività Antirughe con test in vivo (su volontari).\n\nLeggi di più su come usarlo, ingredienti e cara",
+      "url": "https://beautycology.it/prodotto/better-with-age-crema-viso-antirughe/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/06/better-with-age-crema-antirughe-600x600.png",
       "category": "Creme"
+    },
+    {
+      "name": "Retinal Eye & Lip",
+      "price": "€50,00",
+      "description": "Siero in crema adatto al contorno occhi ed al contorno labbra (ma si può usare su tutto il viso)\ncon lo 0,05% di retinaldeide, 4% di Niacinamide e un pool di attivi lenitivi e idratanti.\nContenuto della confezione e caratteristiche:\n\nUn siero in crema Retinal Eye & Lip da 30 ml\nRetinaldeide pura allo 0,05%\nNiacinamide al 4%\n\nSymsitive Green, estratto del pepe di Sishuan, Vitamina E, Ceramidi, Allantoina,\nBetaina, Burro di Karité, Olio di Jojoba, Squalane\n\n\nTestato su Pelli Sensibili | Oftalmolog",
+      "url": "https://beautycology.it/prodotto/retinal-eye-and-lip-siero-retinaldeide-occhi-labbra/",
+      "image": "https://beautycology.it/wp-content/uploads/2023/08/retinal-eye-lip-retinaldeide-600x600.png",
+      "category": "Contorno Occhi"
+    },
+    {
+      "name": "M-EYE SECRET – CREMA CONTORNO OCCHI MULTIPEPTIDE",
+      "price": "€50,00",
+      "description": "Crema contorno occhi multi-peptide dalla texture ricca e cremosa a base di burro di Karitè e olio di avocado che si assorbe subito dopo l’applicazione.\nContenuto della confezione e caratteristiche:\n\nUna crema contorno occhi M-Eye Secret da 15 ml\nComplesso Multipeptide – Palmitoyl Tripeptide-1, Palmitoyl Tetrapeptide-7 e Acetyl Tetrapeptide-5 (Marixyl 3000, Eyeseril)\nNiacinamide 5%\nFormula arricchita con Ceramidi, Burro di Karitè, olio di Avocado, Vitamina E pura (tocoferolo), Allantoina\nTestato ",
+      "url": "https://beautycology.it/prodotto/m-eye-secret-crema-contorno-occhi-multipeptide/",
+      "image": "https://beautycology.it/wp-content/uploads/2025/05/m-eye-secret-beautycology-600x600.png",
+      "category": "Creme",
+      "ingredients": [
+        "Niacinamide",
+        "niacinamide",
+        "Acido Ialuronico",
+        "Acido Lattobionico",
+        "Acido Salicilico",
+        "Acido azelaico",
+        "Acido Azelaico",
+        "Acido Tranexamico",
+        "acido ialuronico",
+        "acido nicotinico",
+        "ACIDO GLICOLICOValutato",
+        "ACIDO GLICOLICO",
+        "PEPTIDE",
+        "peptide",
+        "Peptide"
+      ]
     },
     {
       "name": "I PEEL GOOD – CREMA ESFOLIANTE CON 10% ACIDO GLICOLICO",
       "price": "€50,00",
       "description": "Crema viso esfoliante con Acido Glicolico 10% e Acido Fitico 2% che promuovono il turnover cellulare, migliorano la texture della pelle e donano luminosità.\nContenuto della confezione e caratteristiche:\n\nUna crema viso esfoliante I Peel Good da 50 ml\nAcido Glicolico 10%\nAcido Fitico 2%\npH 3,5 per garantire al meglio l’efficacia esfoliante degli acidi\nFormula arricchita con Burro di Karité, Arginina, Symsitive, Pentavitin® (Saccharide Isomerate, che garantisce 72h di idratazione)\nTestato su Pelli",
       "url": "https://beautycology.it/prodotto/i-peel-good-crema-esfoliante-10-acido-glicolico/",
-      "image": "https://beautycology.it/wp-content/uploads/2024/07/i-peel-good-cosmetico-300x300.png",
+      "image": "https://beautycology.it/wp-content/uploads/2024/07/i-peel-good-cosmetico-600x600.png",
       "category": "Creme",
       "ingredients": [
         "Niacinamide",
@@ -163,395 +194,336 @@
       ]
     },
     {
-      "name": "Invisible Shield – Crema viso SPF 30",
-      "price": "€15,00–€45,00",
-      "description": "Invisible Shield – Crema viso SPF 30",
-      "url": "https://beautycology.it/prodotto/invisible-shield-crema-viso-spf-uva/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/07/invisible-shield-crema-viso-spf-30-300x300.png",
+      "name": "Ray of Light – Esfoliante salicilico",
+      "price": "€12,00",
+      "description": "Ray of Light è un perfezionatore cutaneo con Acido Salicilico, formulato per rendere la tua pelle più luminosa e senza difetti, ricco di ingredienti idratanti, come l’Aloe Vera.\nContenuto della confezione e caratteristiche:\n\nUn Esfoliante all’Acido Salicilico Ray of Light\nAcido Salicilico al 2%\nIlluminante, Esfoliante, Perfezionatore\nRicco di Sostanze Idratanti\nTestato su Pelli Sensibili | Nickel Tested <1 PPM | Senza Profumo\n\nLeggi di più su come usarlo, ingredienti e caratteristiche.",
+      "url": "https://beautycology.it/prodotto/esfoliante-salicilico-ray-of-light/",
+      "image": "https://beautycology.it/wp-content/uploads/2020/09/ray-of-light-beautycology-esfoliante-salicilico-600x600.png",
+      "category": "Esfolianti"
+    },
+    {
+      "name": "Barrier Hero",
+      "price": "€40,00",
+      "description": "Barrier Hero crema barriera protettiva che grazie ai suoi attivi promuove il ripristino della barriera cutanea e la rigenerazione della pelle è una crema multiuso adatta a tutti: adulti, bambini e neonati.\n\nUna crema barriera protettiva Barrier Hero da 50 ml\nAdulti, bambini, neonati\nPantenolo 5%\nCeramidi, cera d’api, acidi grassi essenziali omega 6 e 3, prebiotici\nAdatto alle pelli sensibili e delicate (può essere usato anche nelle zone intime)\nNickel Tested <1 PPM\n\nAnche Barrier Hero segue la f",
+      "url": "https://beautycology.it/prodotto/barrier-hero-crema-barriera/",
+      "image": "https://beautycology.it/wp-content/uploads/2024/03/barrier-hero-barriera-cutanea-600x600.png",
+      "category": "Altri Prodotti",
+      "ingredients": [
+        "Niacinamide",
+        "Acido Ialuronico",
+        "Acido Lattobionico",
+        "Acido Salicilico",
+        "Acido azelaico",
+        "Acido Azelaico",
+        "Acido Tranexamico",
+        "acido pantotenico",
+        "Acido Linoleico",
+        "acido grasso",
+        "Acido Linoleinico",
+        "acido linoleico",
+        "acido 22",
+        "Panthenol"
+      ]
+    },
+    {
+      "name": "Guess My Age – Crema Preventiva Rughe",
+      "price": "€16,50",
+      "description": "Guess My Age è una crema anti-age dalla texture leggera, adatta alle pelli miste, in grado di aiutarti a prevenire a 360° i segni del tempo.\nContenuto della confezione e caratteristiche:\n\nUna crema viso Guess My Age\nAumenta la compattezza della pelle\nNiacinamide al 5%\nContiene attivi: Antipollution, che contrastano macchie cutanee e formazione di rughe, con effetto Glass Skin\nTestato su Pelli Sensibili | Nickel Tested <1 PPM | Profumo Ipoallergenico | Efficacia Testata sul miglioramento della Co",
+      "url": "https://beautycology.it/prodotto/guess-my-age-prevenzione-antiage/",
+      "image": "https://beautycology.it/wp-content/uploads/2020/09/crema-guess-my-age-preventiva-600x600.png",
       "category": "Creme"
+    },
+    {
+      "name": "Eye-Light – Contorno Occhi",
+      "price": "€45,00",
+      "description": "Il contorno occhi Eye-Light è l’arma segreta per illuminare immediatamente il tuo sguardo.\nContenuto della confezione e caratteristiche:\n\nUn contorno occhi da 15 ml\nVitamina C, Niacinamide al 4%, Escina al 3%, Estratto di radice di Liquirizia, Symcalmin Green®, Acido Ialuronico a basso peso molecolare, Agente soft focus\nTestato su Pelli Sensibili | Oftalmologicamente testato | Nickel Tested <1 PPM | Senza Profumo.\n\nLeggi di più su come usarlo, ingredienti e caratteristiche.",
+      "url": "https://beautycology.it/prodotto/eye-light-contorno-occhi-anti-occhiaie/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/10/eye-light-contorno-occhi-600x600.png",
+      "category": "Contorno Occhi"
     },
     {
       "name": "Invisible Shield 50+ Crema viso SPF 50+",
-      "price": "€16,50–€50,00",
-      "description": "Invisible Shield 50+ Crema viso SPF 50+",
+      "price": "€16,50",
+      "description": "Invisible Shield 50+ è una crema viso protettiva quotidiana dal tocco secco e ultra asciutto, water resistant e in grado di uniformare il colorito della pelle pur rimanendo invisibile\nContenuto della confezione e caratteristiche:\n\nUna crema viso Invisible Shield 50+\nTexture invisibile dal tocco secco e ultra asciutto contiene attivi opacizzanti a effetto immediato\nAltissima Protezione dai raggi UV grazie al suo SPF 50+\nProtezione estremamente efficace ai raggi UVA grazie a un UVAPF di 38,92\nProt",
       "url": "https://beautycology.it/prodotto/invisible-shield-50piu-crema-viso-spf-50piu/",
-      "image": "https://beautycology.it/wp-content/uploads/2023/04/invisible-shield-crema-viso-protezione-50-300x300.png",
+      "image": "https://beautycology.it/wp-content/uploads/2023/04/invisible-shield-crema-viso-protezione-50-600x600.png",
       "category": "Creme"
     },
     {
-      "name": "In offerta!\n\tKit “doppia detersione”",
-      "price": "€18,00",
-      "originalPrice": "€20,00",
-      "description": "In offerta!\n\tKit “doppia detersione”",
-      "url": "https://beautycology.it/prodotto/kit-doppia-detersione/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/06/beautycology-kit-doppia-detersione-scaled-1-300x300.jpg",
+      "name": "Routine Estiva – Mare e Montagna",
+      "price": "€145,00",
+      "description": "La “Routine Estiva- Mare e Montagna ” Beautycology® è indicata per tutti i tipi di pelle comprese quelle sensibili.\nContenuto e caratteristiche:\n\nUn siero alla Vitamina C pura, C-Boost da 30 ml\nUna crema viso Invisible Shield 50+ con SPF, filtri UVA, luce blu e raggi infrarossi da 50 ml\nUn trattamento Skin Reset da 50 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nickel Tested <1 PPM | Profumazioni Ipoallergeniche (C-Boost e Skin Reset non con",
+      "url": "https://beautycology.it/prodotto/routine-estiva-mare-e-montagna/",
+      "image": "https://beautycology.it/wp-content/uploads/2023/07/kit-pochettec-boostinvisible50skin-reset-1-scaled-1-600x490.jpg",
       "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “Easy Skincare Routine” Antirughe",
-      "price": "€30,00",
-      "originalPrice": "€42,00",
-      "description": "In offerta!\n\tKit “Easy Skincare Routine” Antirughe",
-      "url": "https://beautycology.it/prodotto/kit-easy-skincare-routine-antirughe/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/07/easy-skincare-routine-antirughe-beautycology-1-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “Easy Skincare Routine” Invisible Shield\n\t€35,00 Il prezzo originale era: €35,00.€30,00Il prezzo attuale è: €30,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 003){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"003\",\"item_name\":\"Kit &quot;Easy Skincare Routine&quot; Invisible Shield\",\"list_name\":\"Kit &#8220;Easy Skincare Routine&#8221; Invisible Shield\",\"quantity\":1,\"price\":30,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "price": "€30,00",
-      "originalPrice": "€35,00",
-      "description": "In offerta!\n\tKit “Easy Skincare Routine” Invisible Shield\n\t€35,00 Il prezzo originale era: €35,00.€30,00Il prezzo attuale è: €30,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 003){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"003\",\"item_name\":\"Kit &quot;Easy Skincare Routine&quot; Invisible Shield\",\"list_name\":\"Kit &#8220;Easy Skincare Routine&#8221; Invisible Shield\",\"quantity\":1,\"price\":30,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/kit-easy-skincare-routine-invisible-shield/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/11/kit-easy-skincare-routine-invisible-shield-beautycology-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “Easy Skincare Routine” Pelle Mista",
-      "price": "€30,00",
-      "originalPrice": "€35,00",
-      "description": "In offerta!\n\tKit “Easy Skincare Routine” Pelle Mista",
-      "url": "https://beautycology.it/prodotto/kit-easy-skincare-routine-pelle-mista/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/06/kit-easy-skincare-routine-pelle-mista-beautycology-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “Easy Skincare Routine” Prevenzione Rughe\n\t€36,50 Il prezzo originale era: €36,50.€30,00Il prezzo attuale è: €30,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 010){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"010\",\"item_name\":\"Kit &quot;Easy Skincare Routine&quot; Prevenzione Rughe\",\"list_name\":\"Kit &#8220;Easy Skincare Routine&#8221; Prevenzione Rughe\",\"quantity\":1,\"price\":30,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "price": "€30,00",
-      "originalPrice": "€36,50",
-      "description": "In offerta!\n\tKit “Easy Skincare Routine” Prevenzione Rughe\n\t€36,50 Il prezzo originale era: €36,50.€30,00Il prezzo attuale è: €30,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 010){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"010\",\"item_name\":\"Kit &quot;Easy Skincare Routine&quot; Prevenzione Rughe\",\"list_name\":\"Kit &#8220;Easy Skincare Routine&#8221; Prevenzione Rughe\",\"quantity\":1,\"price\":30,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/kit-easy-skincare-routine-prevenzione-rughe-copia/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/06/kit-easy-skincare-routine-prevenzione-rughe-beautycology-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “My Skincare Routine” Antirughe",
-      "price": "€40,00",
-      "originalPrice": "€48,50",
-      "description": "In offerta!\n\tKit “My Skincare Routine” Antirughe",
-      "url": "https://beautycology.it/prodotto/kit-my-skincare-routine-antirughe/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/07/kit-my-skincare-routine-antirughe-beautycology-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “My Skincare Routine” Invisible Shield\n\t€47,00 Il prezzo originale era: €47,00.€40,00Il prezzo attuale è: €40,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 001){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"001\",\"item_name\":\"Kit &quot;My Skincare Routine&quot; Invisible Shield\",\"list_name\":\"Kit &#8220;My Skincare Routine&#8221; Invisible Shield\",\"quantity\":1,\"price\":40,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "price": "€40,00",
-      "originalPrice": "€47,00",
-      "description": "In offerta!\n\tKit “My Skincare Routine” Invisible Shield\n\t€47,00 Il prezzo originale era: €47,00.€40,00Il prezzo attuale è: €40,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 001){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"001\",\"item_name\":\"Kit &quot;My Skincare Routine&quot; Invisible Shield\",\"list_name\":\"Kit &#8220;My Skincare Routine&#8221; Invisible Shield\",\"quantity\":1,\"price\":40,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/kit-my-skincare-routine-invisible-shield/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-kit-my-skincare-routine-invisible-shield-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “My Skincare Routine” Pelle Mista",
-      "price": "€40,00",
-      "originalPrice": "€47,00",
-      "description": "In offerta!\n\tKit “My Skincare Routine” Pelle Mista",
-      "url": "https://beautycology.it/prodotto/kit-my-skincare-routine-pelle-mista/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/06/beautycology-kit-my-skincare-routine-pelle-mista-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “My Skincare Routine” Prevenzione Rughe\n\t€48,50 Il prezzo originale era: €48,50.€40,00Il prezzo attuale è: €40,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 014){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"014\",\"item_name\":\"Kit &quot;My Skincare Routine&quot; Prevenzione Rughe\",\"list_name\":\"Kit &#8220;My Skincare Routine&#8221; Prevenzione Rughe\",\"quantity\":1,\"price\":40,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "price": "€40,00",
-      "originalPrice": "€48,50",
-      "description": "In offerta!\n\tKit “My Skincare Routine” Prevenzione Rughe\n\t€48,50 Il prezzo originale era: €48,50.€40,00Il prezzo attuale è: €40,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 014){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"014\",\"item_name\":\"Kit &quot;My Skincare Routine&quot; Prevenzione Rughe\",\"list_name\":\"Kit &#8220;My Skincare Routine&#8221; Prevenzione Rughe\",\"quantity\":1,\"price\":40,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/kit-my-skincare-routine-prevenzione-rughe/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/06/kit-my-skincare-routine-prevenzione-rughe-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “Skincare Routine Illuminante” Antirughe\n\t€42,00 Il prezzo originale era: €42,00.€30,00Il prezzo attuale è: €30,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 008){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"008\",\"item_name\":\"Kit &quot;Skincare Routine Illuminante&quot; Antirughe\",\"list_name\":\"Kit &#8220;Skincare Routine Illuminante&#8221; Antirughe\",\"quantity\":1,\"price\":30,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "price": "€30,00",
-      "originalPrice": "€42,00",
-      "description": "In offerta!\n\tKit “Skincare Routine Illuminante” Antirughe\n\t€42,00 Il prezzo originale era: €42,00.€30,00Il prezzo attuale è: €30,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 008){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"008\",\"item_name\":\"Kit &quot;Skincare Routine Illuminante&quot; Antirughe\",\"list_name\":\"Kit &#8220;Skincare Routine Illuminante&#8221; Antirughe\",\"quantity\":1,\"price\":30,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/kit-skincare-routine-illuminante-antirughe/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/07/beautycology-kit-skincare-routine-illuminante-antirughe-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “Skincare Routine Illuminante” Invisible Shield\n\t€35,00 Il prezzo originale era: €35,00.€30,00Il prezzo attuale è: €30,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 002){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"002\",\"item_name\":\"Kit &quot;Skincare Routine Illuminante&quot; Invisible Shield\",\"list_name\":\"Kit &#8220;Skincare Routine Illuminante&#8221; Invisible Shield\",\"quantity\":1,\"price\":30,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "price": "€30,00",
-      "originalPrice": "€35,00",
-      "description": "In offerta!\n\tKit “Skincare Routine Illuminante” Invisible Shield\n\t€35,00 Il prezzo originale era: €35,00.€30,00Il prezzo attuale è: €30,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 002){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"002\",\"item_name\":\"Kit &quot;Skincare Routine Illuminante&quot; Invisible Shield\",\"list_name\":\"Kit &#8220;Skincare Routine Illuminante&#8221; Invisible Shield\",\"quantity\":1,\"price\":30,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/kit-skincare-routine-illuminante-shield/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-kit-skincare-routine-illuminante-invisible-shield-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “Skincare Routine Illuminante” Pelle Mista",
-      "price": "€30,00",
-      "originalPrice": "€35,00",
-      "description": "In offerta!\n\tKit “Skincare Routine Illuminante” Pelle Mista",
-      "url": "https://beautycology.it/prodotto/kit-skincare-routine-illuminante-pelle-mista/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/06/beautycology-kit-skincare-routine-illuminante-pelle-mista-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tKit “Skincare Routine Illuminante” Prevenzione Rughe\n\t€35,00 Il prezzo originale era: €35,00.€30,00Il prezzo attuale è: €30,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 009){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"009\",\"item_name\":\"Kit &quot;Skincare Routine Illuminante&quot; Prevenzione Rughe\",\"list_name\":\"Kit &#8220;Skincare Routine Illuminante&#8221; Prevenzione Rughe\",\"quantity\":1,\"price\":30,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "price": "€30,00",
-      "originalPrice": "€35,00",
-      "description": "In offerta!\n\tKit “Skincare Routine Illuminante” Prevenzione Rughe\n\t€35,00 Il prezzo originale era: €35,00.€30,00Il prezzo attuale è: €30,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 009){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"009\",\"item_name\":\"Kit &quot;Skincare Routine Illuminante&quot; Prevenzione Rughe\",\"list_name\":\"Kit &#8220;Skincare Routine Illuminante&#8221; Prevenzione Rughe\",\"quantity\":1,\"price\":30,\"item_category\":\"Kit Travel Size\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/kit-skincare-routine-illuminante-prevenzione-rughe/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/06/kit-beautycology-skincare-routine-illuminante-prevenzione-rughe-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "Let’s Glow – Peeling esfoliante Multiacido 22% (AHA-PHA)",
-      "price": "€50,00",
-      "description": "Let’s Glow – Peeling esfoliante Multiacido 22% (AHA-PHA)",
-      "url": "https://beautycology.it/prodotto/lets-glow-peeling-esfoliante-multi-acido-22-aha-pha/",
-      "image": "https://beautycology.it/wp-content/uploads/2023/10/lets-glow-esfoliante-aha-300x300.png",
-      "category": "Esfolianti"
-    },
-    {
-      "name": "M-EYE SECRET – CREMA CONTORNO OCCHI MULTIPEPTIDE\n\t€50,00\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != M-E-S-15){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"M-E-S-15\",\"item_name\":\"M-EYE SECRET \\u2013 CREMA CONTORNO OCCHI MULTIPEPTIDE\",\"list_name\":\"M-EYE SECRET \\u2013 CREMA CONTORNO OCCHI MULTIPEPTIDE\",\"quantity\":1,\"price\":50,\"item_category\":\"Contorno occhi\"} ]});\n                })\n\n            });",
-      "price": "€50,00",
-      "description": "Crema contorno occhi multi-peptide dalla texture ricca e cremosa a base di burro di Karitè e olio di avocado che si assorbe subito dopo l’applicazione.\nContenuto della confezione e caratteristiche:\n\nUna crema contorno occhi M-Eye Secret da 15 ml\nComplesso Multipeptide – Palmitoyl Tripeptide-1, Palmitoyl Tetrapeptide-7 e Acetyl Tetrapeptide-5 (Marixyl 3000, Eyeseril)\nNiacinamide 5%\nFormula arricchita con Ceramidi, Burro di Karitè, olio di Avocado, Vitamina E pura (tocoferolo), Allantoina\nTestato ",
-      "url": "https://beautycology.it/prodotto/m-eye-secret-crema-contorno-occhi-multipeptide/",
-      "image": "https://beautycology.it/wp-content/uploads/2025/05/m-eye-secret-beautycology-300x300.png",
-      "category": "Creme",
-      "ingredients": [
-        "Niacinamide",
-        "niacinamide",
-        "Acido Ialuronico",
-        "Acido Lattobionico",
-        "Acido Salicilico",
-        "Acido azelaico",
-        "Acido Azelaico",
-        "Acido Tranexamico",
-        "acido ialuronico",
-        "acido nicotinico",
-        "PEPTIDE",
-        "peptide",
-        "Peptide"
-      ]
-    },
-    {
-      "name": "Mousse Away – Detergente viso",
-      "price": "€8,00–€15,00",
-      "description": "Mousse Away – Detergente viso",
-      "url": "https://beautycology.it/prodotto/detergente-viso-mousse-away/",
-      "image": "https://beautycology.it/wp-content/uploads/2020/09/mousse-away-detergente-viso-schiumogeno-300x300.png",
-      "category": "Detergenti"
-    },
-    {
-      "name": "Multipod Gel",
-      "price": "€35,00",
-      "description": "Multipod Gel",
-      "url": "https://beautycology.it/prodotto/multipod-gel-acido-azelaico/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/05/multipod-gel-beautycology-acido-azelaico-300x300.png",
-      "category": "Altri Prodotti"
-    },
-    {
-      "name": "Multitasking Oil – Detergente oleoso",
-      "price": "€12,00–€20,00",
-      "description": "Multitasking Oil – Detergente oleoso",
-      "url": "https://beautycology.it/prodotto/multitasking-oil-detergente-oleoso/",
-      "image": "https://beautycology.it/wp-content/uploads/2020/09/multitasking-oil-detergente-struccante-oleoso-300x300.png",
-      "category": "Detergenti"
-    },
-    {
-      "name": "Perfect & Pure – Crema per pelli miste",
-      "price": "€15,00–€45,00",
-      "description": "Perfect & Pure crema anti-imperfezioni per pelli miste con attivi opacizzanti per donare alla tua pelle un aspetto meno lucido e con funzione seboregolatoria, per normalizzare la produzione di sebo.\nContenuto della confezione e caratteristiche:\n\nUna Crema viso pelle mista Perfect & Pure\nNiacinamide al 4%\nContiene attivi opacizzanti, seboregolatori, lenitivi e Antipollution\nTestato su Pelli Sensibili | Nickel Tested <1 PPM | Profumo Ipoallergenico\nGender Neutral\nMade in Italy\n\nLeggi di più su com",
-      "url": "https://beautycology.it/prodotto/crema-pelli-miste-perfect-pure/",
-      "image": "https://beautycology.it/wp-content/uploads/2020/09/perfect-pure-crema-purificante-pelli-miste-300x300.png",
-      "category": "Creme",
-      "ingredients": [
-        "Niacinamide",
-        "niacinamide",
-        "Acido Ialuronico",
-        "Acido Lattobionico",
-        "Acido Salicilico",
-        "Acido azelaico",
-        "Acido Azelaico",
-        "Acido Tranexamico",
-        "acido nicotinico",
-        "acido essenziale",
-        "acido 22"
-      ]
-    },
-    {
-      "name": "Ray of Light – Esfoliante salicilico",
-      "price": "€12,00–€20,00",
-      "description": "Ray of Light – Esfoliante salicilico",
-      "url": "https://beautycology.it/prodotto/esfoliante-salicilico-ray-of-light/",
-      "image": "https://beautycology.it/wp-content/uploads/2020/09/ray-of-light-beautycology-esfoliante-salicilico-300x300.png",
-      "category": "Esfolianti"
     },
     {
       "name": "Redless – crema anti-rossori",
       "price": "€55,00",
-      "description": "Redless – crema anti-rossori",
+      "description": "Redless è una crema anti-rossori dall’efficacia testata. Migliora i rossori, rende la pelle più idratata, più turgida e ne aumenta il volume cutaneo.\nContenuto della confezione e caratteristiche:\n\nUna crema antirossori Redless da 50 ml\nAcido Tranexamico 5%\nGluconolattone\nCeramidi e prebiotici per proteggere e rafforzare la barriera e il microbiota cutaneo\nFormula arricchita con Pantenolo, Vitamina E pura, Glicerina, Bisabololo, Arginina, Estratti di Centella Asiatica, Rusco, Calendula, Rucola, F",
       "url": "https://beautycology.it/prodotto/redless-crema-anti-rossori/",
-      "image": "https://beautycology.it/wp-content/uploads/2023/11/redless-crema-anti-rossore-tranexamico-300x300.png",
+      "image": "https://beautycology.it/wp-content/uploads/2023/11/redless-crema-anti-rossore-tranexamico-600x600.png",
       "category": "Creme"
     },
     {
-      "name": "Retinal bomb",
-      "price": "€55,00",
-      "description": "Retinal bomb",
-      "url": "https://beautycology.it/prodotto/retinal-bomb-siero-retinaldeide/",
-      "image": "https://beautycology.it/wp-content/uploads/2023/08/retinal-bomb-siero-retinaldeide-300x300.png",
-      "category": "Altri Prodotti"
+      "name": "Perfect & Pure – Crema per pelli miste",
+      "price": "€15,00",
+      "description": "Perfect & Pure crema anti-imperfezioni per pelli miste con attivi opacizzanti per donare alla tua pelle un aspetto meno lucido e con funzione seboregolatoria, per normalizzare la produzione di sebo.\nContenuto della confezione e caratteristiche:\n\nUna Crema viso pelle mista Perfect & Pure\nNiacinamide al 4%\nContiene attivi opacizzanti, seboregolatori, lenitivi e Antipollution\nTestato su Pelli Sensibili | Nickel Tested <1 PPM | Profumo Ipoallergenico\nGender Neutral\nMade in Italy\n\nLeggi di più su com",
+      "url": "https://beautycology.it/prodotto/crema-pelli-miste-perfect-pure/",
+      "image": "https://beautycology.it/wp-content/uploads/2020/09/perfect-pure-crema-purificante-pelli-miste-600x600.png",
+      "category": "Creme",
+      "ingredients": [
+        "Niacinamide",
+        "niacinamide",
+        "Acido Ialuronico",
+        "Acido Lattobionico",
+        "Acido Salicilico",
+        "Acido azelaico",
+        "Acido Azelaico",
+        "Acido Tranexamico",
+        "acido nicotinico",
+        "acido essenziale"
+      ]
     },
     {
-      "name": "Retinal Eye & Lip",
-      "price": "€50,00",
-      "description": "Retinal Eye & Lip",
-      "url": "https://beautycology.it/prodotto/retinal-eye-and-lip-siero-retinaldeide-occhi-labbra/",
-      "image": "https://beautycology.it/wp-content/uploads/2023/08/retinal-eye-lip-retinaldeide-300x300.png",
-      "category": "Contorno Occhi"
-    },
-    {
-      "name": "In offerta!\n\tRoutine Anti-Macchie\n\t€95,00 Il prezzo originale era: €95,00.€76,00Il prezzo attuale è: €76,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 024){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"024\",\"item_name\":\"Routine Anti-Macchie\",\"list_name\":\"Routine Anti-Macchie\",\"quantity\":1,\"price\":76,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€76,00",
-      "originalPrice": "€95,00",
-      "description": "In offerta!\n\tRoutine Anti-Macchie\n\t€95,00 Il prezzo originale era: €95,00.€76,00Il prezzo attuale è: €76,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 024){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"024\",\"item_name\":\"Routine Anti-Macchie\",\"list_name\":\"Routine Anti-Macchie\",\"quantity\":1,\"price\":76,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/routine-anti-macchie/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-routine-anti-macchie-scaled-1-300x300.jpg",
+      "name": "Skincare Starter Kit – Travel",
+      "price": "€38,00",
+      "description": "Skincare Starter Kit – travel Beautycology® è indicato per approcciarsi alla Skincare nel migliore dei modi.\nContenuto del Kit e caratteristiche:\n\nUn libro “Skincare – Verità e Falsi Miti” autografato dall’Autrice\nUn detergente oleoso Multitasking Oil Travel da 50 ml\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nI cosmetici del Kit sono Dermatologicamente Testati su Pelli Sensibili | Nickel Tested <1 PPM | Profumazione Ipoallergenica\nGender Neutral\nI Cosmetici del Kit sono Made in Italy",
+      "url": "https://beautycology.it/prodotto/skincare-starter-kit-travel-libro-marilisa-franchini-beautycologa/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/12/skincare-starter-kit-–-travel-beautycology-scaled-1-600x600.jpg",
       "category": "Kit & Routine"
     },
     {
-      "name": "In offerta!\n\tRoutine Antirughe\n\t€230,00 Il prezzo originale era: €230,00.€184,00Il prezzo attuale è: €184,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 019){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"019\",\"item_name\":\"Routine Antirughe\",\"list_name\":\"Routine Antirughe\",\"quantity\":1,\"price\":184,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€184,00",
-      "originalPrice": "€230,00",
-      "description": "In offerta!\n\tRoutine Antirughe\n\t€230,00 Il prezzo originale era: €230,00.€184,00Il prezzo attuale è: €184,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 019){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"019\",\"item_name\":\"Routine Antirughe\",\"list_name\":\"Routine Antirughe\",\"quantity\":1,\"price\":184,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/routine-antirughe/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-skincare-routine-antirughe-scaled-1-300x300.jpg",
+      "name": "Skincare Starter Kit",
+      "price": "€53,00",
+      "description": "Skincare Starter Kit – travel Beautycology® è indicato per approcciarsi alla Skincare nel migliore dei modi.\nContenuto del Kit e caratteristiche:\n\nUn libro “Skincare – Verità e Falsi Miti” autografato dall’Autrice\nUn detergente oleoso Multitasking Oil da 100 ml\nUn detergente Schiumogeno Mousse Away da 150 ml\nI cosmetici del Kit sono Dermatologicamente Testati su Pelli Sensibili | Nickel Tested <1 PPM | Profumazione Ipoallergenica\nGender Neutral\nI cosmetici del Kit sono Made in Italy",
+      "url": "https://beautycology.it/prodotto/skincare-starter-kit-skincare-verita-falsi-miti-marilisa-franchini-doppia-detersione/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/12/skincare-starter-kit-beautycology-scaled-1-600x600.jpg",
       "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tRoutine Estiva – Città\n\t€140,00 Il prezzo originale era: €140,00.€112,00Il prezzo attuale è: €112,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 056-1){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"056-1\",\"item_name\":\"Routine Estiva - Citt\\u00e0\",\"list_name\":\"Routine Estiva &#8211; Citt\\u00e0\",\"quantity\":1,\"price\":112,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€112,00",
-      "originalPrice": "€140,00",
-      "description": "In offerta!\n\tRoutine Estiva – Città\n\t€140,00 Il prezzo originale era: €140,00.€112,00Il prezzo attuale è: €112,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 056-1){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"056-1\",\"item_name\":\"Routine Estiva - Citt\\u00e0\",\"list_name\":\"Routine Estiva &#8211; Citt\\u00e0\",\"quantity\":1,\"price\":112,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/routine-estiva-citta/",
-      "image": "https://beautycology.it/wp-content/uploads/2023/07/kit-pochettec-boostinvisibleskin-reset-copy-1-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tRoutine Estiva – Mare e Montagna",
-      "price": "€116,00",
-      "originalPrice": "€145,00",
-      "description": "In offerta!\n\tRoutine Estiva – Mare e Montagna",
-      "url": "https://beautycology.it/prodotto/routine-estiva-mare-e-montagna/",
-      "image": "https://beautycology.it/wp-content/uploads/2023/07/kit-pochettec-boostinvisible50skin-reset-1-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tRoutine Pelle a Tendenza Acneica\n\t€195,00 Il prezzo originale era: €195,00.€156,00Il prezzo attuale è: €156,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 023){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"023\",\"item_name\":\"Routine Pelle a Tendenza Acneica\",\"list_name\":\"Routine Pelle a Tendenza Acneica\",\"quantity\":1,\"price\":156,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€156,00",
-      "originalPrice": "€195,00",
-      "description": "In offerta!\n\tRoutine Pelle a Tendenza Acneica\n\t€195,00 Il prezzo originale era: €195,00.€156,00Il prezzo attuale è: €156,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 023){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"023\",\"item_name\":\"Routine Pelle a Tendenza Acneica\",\"list_name\":\"Routine Pelle a Tendenza Acneica\",\"quantity\":1,\"price\":156,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/routine-pelle-tendenza-acneica/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-routine-pelle-a-tendenza-acneica-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tRoutine Pelle Grassa\n\t€155,00 Il prezzo originale era: €155,00.€124,00Il prezzo attuale è: €124,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 021){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"021\",\"item_name\":\"Routine Pelle Grassa\",\"list_name\":\"Routine Pelle Grassa\",\"quantity\":1,\"price\":124,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€124,00",
-      "originalPrice": "€155,00",
-      "description": "In offerta!\n\tRoutine Pelle Grassa\n\t€155,00 Il prezzo originale era: €155,00.€124,00Il prezzo attuale è: €124,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 021){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"021\",\"item_name\":\"Routine Pelle Grassa\",\"list_name\":\"Routine Pelle Grassa\",\"quantity\":1,\"price\":124,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/routine-pelle-grassa/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/11/skincare-routine-pelle-grassa-beautycology-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tRoutine Pelle Iper-reattiva o a tendenza Atopica\n\t€155,00 Il prezzo originale era: €155,00.€124,00Il prezzo attuale è: €124,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 025){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"025\",\"item_name\":\"Routine Pelle Iper-reattiva o a tendenza Atopica\",\"list_name\":\"Routine Pelle Iper-reattiva o a tendenza Atopica\",\"quantity\":1,\"price\":124,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€124,00",
-      "originalPrice": "€155,00",
-      "description": "In offerta!\n\tRoutine Pelle Iper-reattiva o a tendenza Atopica\n\t€155,00 Il prezzo originale era: €155,00.€124,00Il prezzo attuale è: €124,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 025){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"025\",\"item_name\":\"Routine Pelle Iper-reattiva o a tendenza Atopica\",\"list_name\":\"Routine Pelle Iper-reattiva o a tendenza Atopica\",\"quantity\":1,\"price\":124,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/routine-pelle-iper-reattiva-tendenza-atopica/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-routine-pelle-iper-reattiva-o-a-tendenza-atopica-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tRoutine Pelle Mista\n\t€160,00 Il prezzo originale era: €160,00.€128,00Il prezzo attuale è: €128,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 020){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"020\",\"item_name\":\"Routine Pelle Mista\",\"list_name\":\"Routine Pelle Mista\",\"quantity\":1,\"price\":128,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€128,00",
-      "originalPrice": "€160,00",
-      "description": "In offerta!\n\tRoutine Pelle Mista\n\t€160,00 Il prezzo originale era: €160,00.€128,00Il prezzo attuale è: €128,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 020){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"020\",\"item_name\":\"Routine Pelle Mista\",\"list_name\":\"Routine Pelle Mista\",\"quantity\":1,\"price\":128,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/routine-pelle-mista/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-routine-pelle-mista-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tRoutine Pelle Secca\n\t€225,00 Il prezzo originale era: €225,00.€180,00Il prezzo attuale è: €180,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 018){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"018\",\"item_name\":\"Routine Pelle Secca\",\"list_name\":\"Routine Pelle Secca\",\"quantity\":1,\"price\":180,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€180,00",
-      "originalPrice": "€225,00",
-      "description": "In offerta!\n\tRoutine Pelle Secca\n\t€225,00 Il prezzo originale era: €225,00.€180,00Il prezzo attuale è: €180,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 018){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"018\",\"item_name\":\"Routine Pelle Secca\",\"list_name\":\"Routine Pelle Secca\",\"quantity\":1,\"price\":180,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/routine-pelle-secca/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-skincare-routine-pelle-secca-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tRoutine Pelle Soggetta a Rosacea\n\t€190,00 Il prezzo originale era: €190,00.€152,00Il prezzo attuale è: €152,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 026){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"026\",\"item_name\":\"Routine Pelle Soggetta a Rosacea\",\"list_name\":\"Routine Pelle Soggetta a Rosacea\",\"quantity\":1,\"price\":152,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€152,00",
-      "originalPrice": "€190,00",
-      "description": "In offerta!\n\tRoutine Pelle Soggetta a Rosacea\n\t€190,00 Il prezzo originale era: €190,00.€152,00Il prezzo attuale è: €152,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 026){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"026\",\"item_name\":\"Routine Pelle Soggetta a Rosacea\",\"list_name\":\"Routine Pelle Soggetta a Rosacea\",\"quantity\":1,\"price\":152,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/routine-pelle-soggetta-rosacea/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/12/beautycology-routine-pelle-soggetta-rosacea-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tRoutine Pelle soggetta ad Acne Tardiva\n\t€200,00 Il prezzo originale era: €200,00.€160,00Il prezzo attuale è: €160,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 027){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"027\",\"item_name\":\"Routine Pelle soggetta ad Acne Tardiva\",\"list_name\":\"Routine Pelle soggetta ad Acne Tardiva\",\"quantity\":1,\"price\":160,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€160,00",
-      "originalPrice": "€200,00",
-      "description": "In offerta!\n\tRoutine Pelle soggetta ad Acne Tardiva\n\t€200,00 Il prezzo originale era: €200,00.€160,00Il prezzo attuale è: €160,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 027){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"027\",\"item_name\":\"Routine Pelle soggetta ad Acne Tardiva\",\"list_name\":\"Routine Pelle soggetta ad Acne Tardiva\",\"quantity\":1,\"price\":160,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/routine-pelle-acne-tardiva/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/12/beautycology-routine-pelle-soggetta-ad-acne-tardiva-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tRoutine Prime Rughe\n\t€210,00 Il prezzo originale era: €210,00.€168,00Il prezzo attuale è: €168,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 022){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"022\",\"item_name\":\"Routine Prime Rughe\",\"list_name\":\"Routine Prime Rughe\",\"quantity\":1,\"price\":168,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "price": "€168,00",
-      "originalPrice": "€210,00",
-      "description": "In offerta!\n\tRoutine Prime Rughe\n\t€210,00 Il prezzo originale era: €210,00.€168,00Il prezzo attuale è: €168,00.\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != 022){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"022\",\"item_name\":\"Routine Prime Rughe\",\"list_name\":\"Routine Prime Rughe\",\"quantity\":1,\"price\":168,\"item_category\":\"Skincare Routine\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/routine-prime-rughe/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-skincare-routine-prime-rughe-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "Skin Reset – Trattamento Riequilibrante Pelli sensibili",
-      "price": "€40,00",
-      "description": "Skin Reset – Trattamento Riequilibrante Pelli sensibili",
-      "url": "https://beautycology.it/prodotto/skin-reset-trattamento-riequilibrante-pelli-sensibili-reattive-fragilizzate/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/01/skin-reset-crema-pelli-sensibili-300x300.png",
-      "category": "Altri Prodotti"
     },
     {
       "name": "Skincare – Verità e Falsi Miti",
       "price": "€18,00",
-      "description": "Skincare – Verità e Falsi Miti",
+      "description": "Che tipo di pelle ho? Quali prodotti sono più adatti a me? Devo usare la protezione solare anche in inverno? La luce blu dei device può danneggiare la mia pelle?\nTutti i vostri dubbi troveranno una risposta nelle pagine di questo manuale che, con stile leggero e colloquiale, ma al contempo con grande rigore scientifico, sfata tanti falsi miti e informazioni non corrette.\nUna volta inquadrati i bisogni specifici della vostra pelle, organizzare una routine con i prodotti più indicati sarà un gioco",
       "url": "https://beautycology.it/prodotto/skincare-verita-e-falsi-miti/",
-      "image": "https://beautycology.it/wp-content/uploads/2022/02/skincare-verita-e-falsi-miti-libro-di-marilisa-franchini-la-beautycologa-scaled-1-300x300.jpg",
+      "image": "https://beautycology.it/wp-content/uploads/2022/02/skincare-verita-e-falsi-miti-libro-di-marilisa-franchini-la-beautycologa-scaled-1-600x600.jpg",
       "category": "Altri Prodotti"
     },
     {
-      "name": "In offerta!\n\tSkincare Starter Kit",
-      "price": "€45,00",
-      "originalPrice": "€53,00",
-      "description": "In offerta!\n\tSkincare Starter Kit",
-      "url": "https://beautycology.it/prodotto/skincare-starter-kit-skincare-verita-falsi-miti-marilisa-franchini-doppia-detersione/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/12/skincare-starter-kit-beautycology-scaled-1-300x300.jpg",
-      "category": "Kit & Routine"
-    },
-    {
-      "name": "In offerta!\n\tSkincare Starter Kit – Travel",
+      "name": "Clay Rehab – Maschera viso Purificante all’argilla",
       "price": "€35,00",
-      "originalPrice": "€38,00",
-      "description": "In offerta!\n\tSkincare Starter Kit – Travel",
-      "url": "https://beautycology.it/prodotto/skincare-starter-kit-travel-libro-marilisa-franchini-beautycologa/",
-      "image": "https://beautycology.it/wp-content/uploads/2021/12/skincare-starter-kit-–-travel-beautycology-scaled-1-300x300.jpg",
+      "description": "Maschera purificante viso Clay Rehab all’argilla verde che riequilibra la pelle liberandola efficacemente da punti neri e impurità e rendendola immediatamente luminosa.\nContenuto della confezione e caratteristiche:\n\nUna maschera purificante all’argilla verde da 100 ml\nNiacinamide al 4%, Zinco PCA, Allantoina, Bisabololo, Betaina\nMai più effetto “pelle che tira“\nTestata su Pelli Sensibili | Nickel Tested <1 PPM | Profumo ipo-allergenico\n\nLeggi di più su come usarlo, ingredienti e caratteristiche.",
+      "url": "https://beautycology.it/prodotto/maschera-argilla-clay-rehab/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/10/clay-rehab-maschera-viso-purificante-600x600.png",
+      "category": "Maschere"
+    },
+    {
+      "name": "SPF à PORTER – Stick Solare SPF 50+",
+      "price": "€27,00",
+      "description": "SPF à Porter è uno stick solare Maxi formato e dalla texture fresca e ultra-leggera, che protegge efficacemente sia dai raggi UVB che dai raggi UVA\nContenuto della confezione e caratteristiche:\n\nUno stick solare SPF à Porter da 25 gr (Maxi Formato)\nTexture fresca e ultra-leggera che non unge o appesantisce la pelle\nBetaina, Vitamina E\nProtegge dai raggi UVB, UVA e UVA lunghi garantendo una protezione ad ampio spettro\nProtezione Molto Alta dai raggi UV grazie al suo SPF 50+\nProtezione estremament",
+      "url": "https://beautycology.it/prodotto/spf-a-porter-stick-solare-spf-50/",
+      "image": "https://beautycology.it/wp-content/uploads/2024/07/spf-a-porter-cosmetico-600x600.png",
+      "category": "Protezione Solare"
+    },
+    {
+      "name": "Routine Pelle soggetta ad Acne Tardiva",
+      "price": "€200,00",
+      "description": "La “Routine Pelli Miste” Beautycology® è indicata per chi ha una pelle con tendenza acneica.\nContenuto e caratteristiche:\n\nUn detergente schiumogeno “Mousse Away” da 150 ml\nUn tonico esfoliante “Ray of Light” da 100 ml\nUna formula Multifunzione all’Acido Azelaico 15% “Multipod Gel” da 30 ml\nUna crema viso per pelli miste accompagnate dalle prime rughe “Guess My Age” da 50 ml\nUna maschera all’argilla “Clay Rehab” da 100 ml\nUna crema viso Invisible Shield con SPF, filtri UVA, luce blu e raggi infr",
+      "url": "https://beautycology.it/prodotto/routine-pelle-acne-tardiva/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/12/beautycology-routine-pelle-soggetta-ad-acne-tardiva-scaled-1-600x600.jpg",
       "category": "Kit & Routine"
     },
     {
-      "name": "SPF à PORTER – Stick Solare SPF 50+\n\t€27,00\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != SPF-A-P-25){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"SPF-A-P-25\",\"item_name\":\"SPF \\u00e0 PORTER - Stick Solare SPF 50+\",\"list_name\":\"SPF \\u00e0 PORTER &#8211; Stick Solare SPF 50+\",\"quantity\":1,\"price\":27,\"item_category\":\"Protezioni Solari\"} ]});\n                })\n\n            });",
-      "price": "€27,00",
-      "description": "SPF à PORTER – Stick Solare SPF 50+\n\t€27,00\nAggiungi al carrello\t\n\t\t\t\n\n        \n            document.addEventListener('DOMContentLoaded', function(){\n                function getParameterByName(name, url) {\n                    name = name.replace(/[\\[\\]]/g, '\\$&');\n                    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),\n                        results = regex.exec(url);\n                    if (!results) return null;\n                    if (!results[2]) return '';\n                    return decodeURIComponent(results[2].replace(/\\+/g, ' '));\n                }\n\n                document.addEventListener('click', function(event){\n                    const namedItem = event.target.attributes.getNamedItem('data-product_id')\n                    if(!event.target.matches('.ajax_add_to_cart')){\n                        return;\n                    }\n\n                    var item_id = null;\n\n                    if(!namedItem){\n                        try{\n                            item_id = getParameterByName('add-to-cart', new URL(event.target.href).search)\n                        }\n                        catch(e){}\n                    }\n                    else{\n                        item_id = namedItem.value\n                    }\n\n                    if(item_id != SPF-A-P-25){\n                        return;\n                    }\n\n                    gtag('event', 'add_to_cart', {'items': [ {\"item_id\":\"SPF-A-P-25\",\"item_name\":\"SPF \\u00e0 PORTER - Stick Solare SPF 50+\",\"list_name\":\"SPF \\u00e0 PORTER &#8211; Stick Solare SPF 50+\",\"quantity\":1,\"price\":27,\"item_category\":\"Protezioni Solari\"} ]});\n                })\n\n            });",
-      "url": "https://beautycology.it/prodotto/spf-a-porter-stick-solare-spf-50/",
-      "image": "https://beautycology.it/wp-content/uploads/2024/07/spf-a-porter-cosmetico-300x300.png",
-      "category": "Protezione Solare"
+      "name": "Kit “doppia detersione”",
+      "price": "€20,00",
+      "description": "Il Kit Doppia Detersione Beautycology® è indicato a chi ama una pelle pulita e idratata in profondità.\nContenuto del Kit e caratteristiche:\n\nUn detergente oleoso Multitasking Oil Travel da 50 ml\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nDermatologicamente Testato su Pelli Sensibili | Nickel Tested <1 PPM | Profumazione Ipoallergenica\nGender Neutral\nMade in Italy\n\nLeggi di più su come usarlo, ingredienti e caratteristiche.",
+      "url": "https://beautycology.it/prodotto/kit-doppia-detersione/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/06/beautycology-kit-doppia-detersione-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “My Skincare Routine” Prevenzione Rughe",
+      "price": "€48,50",
+      "description": "Il Kit “My Skincare Routine” Prevenzione Rughe Beautycology® è indicato per chi vuole combattere i segni del tempo a 360°, in un’ottica pro-age più che anti-age.\nContenuto del Kit e caratteristiche:\n\nUn detergente oleoso Multitasking Oil Travel da 50 ml\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUn esfoliante Ray of Light Travel da 50 ml\nUna crema preventiva rughe Guess My Age Travel da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili",
+      "url": "https://beautycology.it/prodotto/kit-my-skincare-routine-prevenzione-rughe/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/06/kit-my-skincare-routine-prevenzione-rughe-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “My Skincare Routine” Pelle Mista",
+      "price": "€47,00",
+      "description": "Il Kit “My Skincare Routine” Pelli Miste Beautycology® è indicato per chi ha una pelle con impurità e che tende a lucidarsi nella zona T.\nContenuto del Kit e caratteristiche:\n\nUn detergente oleoso Multitasking Oil Travel da 50 ml\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUn esfoliante Ray of Light Travel da 50 ml\nUna crema per pelli miste Perfect & Pure Travel da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nickel Tested <1 PPM",
+      "url": "https://beautycology.it/prodotto/kit-my-skincare-routine-pelle-mista/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/06/beautycology-kit-my-skincare-routine-pelle-mista-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “Skincare Routine Illuminante” Pelle Mista",
+      "price": "€35,00",
+      "description": "Il Kit “Skincare Routine Illuminante” per Pelli Miste Beautycology® è indicato per chi ha una pelle con impurità e che tende a lucidarsi nella zona T.\nContenuto del Kit e caratteristiche:\n\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUn esfoliante Ray of Light Travel da 50 ml\nUna crema per pelli miste Perfect & Pure Travel da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nickel Tested <1 PPM | Profumazioni Ipoallergeniche (Ray of L",
+      "url": "https://beautycology.it/prodotto/kit-skincare-routine-illuminante-pelle-mista/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/06/beautycology-kit-skincare-routine-illuminante-pelle-mista-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “Easy Skincare Routine” Pelle Mista",
+      "price": "€35,00",
+      "description": "Il Kit “Easy Skincare Routine” per Pelli Miste Beautycology® è indicato per chi ha una pelle con impurità e che tende a lucidarsi nella zona T.\nContenuto del Kit e caratteristiche:\n\nUn detergente oleoso Multitasking Oil Travel da 50 ml\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUna crema per pelli miste Perfect & Pure Travel da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nickel Tested <1 PPM | Profumazioni Ipoallergeniche\nGende",
+      "url": "https://beautycology.it/prodotto/kit-easy-skincare-routine-pelle-mista/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/06/kit-easy-skincare-routine-pelle-mista-beautycology-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “Easy Skincare Routine” Prevenzione Rughe",
+      "price": "€36,50",
+      "description": "Il Kit “Easy Skincare Routine” Prevenzione Rughe Beautycology® è indicato per chi vuole combattere i segni del tempo a 360°, in un’ottica pro-age più che anti-age.\nContenuto del Kit e caratteristiche:\n\nUn detergente oleoso Multitasking Oil Travel da 50 ml\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUna crema preventiva rughe Guess My Age Travel da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nickel Tested <1 PPM | Profumazioni Ip",
+      "url": "https://beautycology.it/prodotto/kit-easy-skincare-routine-prevenzione-rughe-copia/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/06/kit-easy-skincare-routine-prevenzione-rughe-beautycology-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “Skincare Routine Illuminante” Prevenzione Rughe",
+      "price": "€35,00",
+      "description": "Il Kit “Skincare Routine Illuminante” Prevenzione Rughe Beautycology® è indicato per chi vuole combattere i segni del tempo a 360°, in un’ottica pro-age più che anti-age.\nContenuto del Kit e caratteristiche:\n\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUn esfoliante Ray of Light Travel da 50 ml\nUna crema preventiva rughe Guess My Age Travel da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nickel Tested <1 PPM | Profumazioni Ipoall",
+      "url": "https://beautycology.it/prodotto/kit-skincare-routine-illuminante-prevenzione-rughe/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/06/kit-beautycology-skincare-routine-illuminante-prevenzione-rughe-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “Skincare Routine Illuminante” Antirughe",
+      "price": "€42,00",
+      "description": "Il Kit “Skincare Routine Illuminante” Anti Rughe Beautycology® è indicato per chi cerca una Routine in perfetto stile “slow aging”.\nContenuto del Kit e caratteristiche:\n\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUn esfoliante Ray of Light Travel da 50 ml\nUna crema anti rughe Better with Age Travel da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nickel Tested <1 PPM | Profumazioni Ipoallergeniche (Ray of Light non contiene profu",
+      "url": "https://beautycology.it/prodotto/kit-skincare-routine-illuminante-antirughe/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/07/beautycology-kit-skincare-routine-illuminante-antirughe-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “Easy Skincare Routine” Antirughe",
+      "price": "€42,00",
+      "description": "Il Kit “Easy Skincare Routine” Antirughe Beautycology® è indicato per chi vuole combattere i segni del tempo a 360°, in un’ottica pro-age più che anti-age.\nContenuto del Kit e caratteristiche:\n\nUn detergente oleoso Multitasking Oil Travel da 50 ml\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUna crema preventiva rughe Better with Age Travel da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nickel Tested <1 PPM | Profumazioni Ipoalle",
+      "url": "https://beautycology.it/prodotto/kit-easy-skincare-routine-antirughe/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/07/easy-skincare-routine-antirughe-beautycology-1-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “My Skincare Routine” Antirughe",
+      "price": "€48,50",
+      "description": "Il Kit “My Skincare Routine” Antirughe Beautycology® è indicato per chi vuole combattere i segni del tempo a 360°, in un’ottica pro-age più che anti-age.\nContenuto del Kit e caratteristiche:\n\nUn detergente oleoso Multitasking Oil Travel da 50 ml\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUn esfoliante Ray of Light Travel da 50 ml\nUna crema antirughe Better with Age Travel da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nickel Te",
+      "url": "https://beautycology.it/prodotto/kit-my-skincare-routine-antirughe/",
+      "image": "https://beautycology.it/wp-content/uploads/2021/07/kit-my-skincare-routine-antirughe-beautycology-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “Easy Skincare Routine” Invisible Shield",
+      "price": "€35,00",
+      "description": "Il Kit “Easy Skincare Routine” Invisible Shield Beautycology® è indicato per chi vuole combattere i segni del tempo a 360°, in un’ottica pro-age più che anti-age.\nContenuto del Kit e caratteristiche:\n\nUn detergente oleoso Multitasking Oil Travel da 50 ml\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUna crema viso Invisible Shield con SPF, filtri UVA, luce blu e raggi infrarossi da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nicke",
+      "url": "https://beautycology.it/prodotto/kit-easy-skincare-routine-invisible-shield/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/11/kit-easy-skincare-routine-invisible-shield-beautycology-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “Skincare Routine Illuminante” Invisible Shield",
+      "price": "€35,00",
+      "description": "Il Kit “Skincare Routine Illuminante” Invisible Shield Beautycology® è indicato per chi vuole combattere i segni del tempo a 360°, in un’ottica pro-age più che anti-age.\nContenuto del Kit e caratteristiche:\n\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUn esfoliante Ray of Light Travel da 50 ml\nUna crema viso Invisible Shield con SPF, filtri UVA, luce blu e raggi infrarossi da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nickel Te",
+      "url": "https://beautycology.it/prodotto/kit-skincare-routine-illuminante-shield/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-kit-skincare-routine-illuminante-invisible-shield-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Kit “My Skincare Routine” Invisible Shield",
+      "price": "€47,00",
+      "description": "Il Kit “My Skincare Routine” Invisible Shield Beautycology® è indicato per chi vuole combattere i segni del tempo a 360°, in un’ottica pro-age più che anti-age.\nContenuto del Kit e caratteristiche:\n\nUn detergente oleoso Multitasking Oil Travel da 50 ml\nUn detergente Schiumogeno Mousse Away Travel da 50 ml\nUn esfoliante Ray of Light Travel da 50 ml\nUna crema viso Invisible Shield con SPF, filtri UVA, luce blu e raggi infrarossi da 15 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologic",
+      "url": "https://beautycology.it/prodotto/kit-my-skincare-routine-invisible-shield/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-kit-my-skincare-routine-invisible-shield-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Routine Prime Rughe",
+      "price": "€210,00",
+      "description": "La “Routine Prime Rughe” Beautycology® è indicata per chi ha una pelle mista ma sente il bisogno di iniziare a contrastare i segni del tempo, quali rughe o macchie.\nContenuto e caratteristiche:\n\nUn detergente oleoso “Multitasking Oil” da 100 ml\nUn Siero Viso “Bionic Hydralift” da 30 ml\nUna crema viso “Guess My Age” da 50 ml\nUn contorno occhi “Eye-Light” da 15 ml\nUna crema viso “Invisible Shield” con SPF, filtri UVA, luce blu e raggi infrarossi da 50 ml\nUna pochette “Beautycology” in cotone ricic",
+      "url": "https://beautycology.it/prodotto/routine-prime-rughe/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-skincare-routine-prime-rughe-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Routine Pelle Secca",
+      "price": "€225,00",
+      "description": "La “Routine per Pelle Secca” Beautycology® è indicata per chi ha una pelle secca e vuole combattere i segni del tempo a 360°, in un’ottica pro-age più che anti-age.\nContenuto e caratteristiche:\n\nUn detergente oleoso Multitasking Oil da 100 ml\nUn Siero Viso Bionic Hydralift da 30 ml\nUna crema antirughe “Better with Age” da 50 ml\nUn trattamento riequilibrante “Skin Reset” da 50 ml\nUna crema viso Invisible Shield con SPF, filtri UVA, luce blu e raggi infrarossi da 50 ml\nUna pochette “Beautycology” ",
+      "url": "https://beautycology.it/prodotto/routine-pelle-secca/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-skincare-routine-pelle-secca-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Routine Pelle Mista",
+      "price": "€160,00",
+      "description": "La “Routine Pelli Miste” Beautycology® è indicata per chi ha una pelle mista poichè contiene prodotti ricchi di ingredienti purificanti, seboregolatori e opacizzanti\nContenuto e caratteristiche:\n\nUn detergente schiumogeno Mousse Away da 150 ml\nUn tonico esfoliante Ray of Light da 100 ml\nUna crema viso per pelli miste Perfect & Pure da 50 ml\nUna maschera all’argilla Clay Rehab da 100 ml\nUna crema viso Invisible Shield con SPF, filtri UVA, luce blu e raggi infrarossi da 50 ml\nUna pochette “Beautyc",
+      "url": "https://beautycology.it/prodotto/routine-pelle-mista/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-routine-pelle-mista-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Routine Pelle Iper-reattiva o a tendenza Atopica",
+      "price": "€155,00",
+      "description": "La “Routine Pelli iper-reattive e a tendenza atopica” Beautycology® è indicata per chi ha una pelle molto sensibile, ultra reattiva e con una barriera cutanea compromessa che la rende più soggetta a dermatosi di vario genere.\nContenuto e caratteristiche:\n\nUn detergente oleoso Multitasking Oil da 100 ml\nUn siero ” Bionic Hydralift” con l’8% di Acido Lattobionico da 30 ml\nUn trattamento per pelli sensibili Skin Reset da 50 ml \nUna crema viso Invisible Shield con SPF, filtri UVA, luce blu e raggi i",
+      "url": "https://beautycology.it/prodotto/routine-pelle-iper-reattiva-tendenza-atopica/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-routine-pelle-iper-reattiva-o-a-tendenza-atopica-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Routine Pelle Grassa",
+      "price": "€155,00",
+      "description": "La “Routine Pelli Grasse” Beautycology® è indicata per chi ha una pelle grassa e si ritrova la pelle costantemente lucida e untuosa.\nContenuto e caratteristiche:\n\nUn detergente schiumogeno Mousse Away da 150 ml\nUn tonico esfoliante Ray of Light da 100 ml\nUn siero ” Bionic Hydralift” con l’8% di Acido Lattobionico da 30 ml\nUna maschera all’argilla Clay Rehab da 100 ml\nUna crema viso Invisible Shield con SPF, filtri UVA, luce blu e raggi infrarossi da 50 ml\nUna pochette “Beautycology” in cotone ri",
+      "url": "https://beautycology.it/prodotto/routine-pelle-grassa/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/11/skincare-routine-pelle-grassa-beautycology-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Routine Estiva – Città",
+      "price": "€140,00",
+      "description": "La “Routine Estiva – Città” Beautycology® è indicata per tutti i tipi di pelle comprese quelle sensibili.\nContenuto e caratteristiche:\n\nUn siero alla Vitamina C pura, C-Boost da 30 ml\nUna crema viso Invisible Shield con SPF 30, filtri UVA, luce blu e raggi infrarossi da 50 ml\nUn trattamento Skin Reset da 50 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente Testati su Pelli Sensibili | Nickel Tested <1 PPM | Profumazioni Ipoallergeniche (C-Boost e Skin Reset non contengono pro",
+      "url": "https://beautycology.it/prodotto/routine-estiva-citta/",
+      "image": "https://beautycology.it/wp-content/uploads/2023/07/kit-pochettec-boostinvisibleskin-reset-copy-1-scaled-1-600x490.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Routine Antirughe",
+      "price": "€230,00",
+      "description": "La “Routine Antirughe” Beautycology® è indicata per chi ha una pelle secca o tendente al secco e vuole combattere i segni del tempo a 360°, poichè contiene prodotti che contengono numerosi ingredienti antirughe.\nContenuto e caratteristiche:\n\nUn detergente oleoso “Multitasking Oil” da 100 ml\nUn Siero Viso “Bionic Hydralift” da 30 ml\nUna crema antirughe “Better with Age” da 50 ml\nUn contorno occhi “Eye-Light” da 15 ml\nUna crema viso “Invisible Shield” con SPF, filtri UVA, luce blu e raggi infraros",
+      "url": "https://beautycology.it/prodotto/routine-antirughe/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-skincare-routine-antirughe-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Routine Anti-Macchie",
+      "price": "€95,00",
+      "description": "La Routine Pelli con Macchie Beautycology® è pensata per chi ha una pelle con macchie iperpigmentate e desidera schiarire quelle esistenti ed evitare la comparsa di nuove.\nContenuto e caratteristiche:\n\nUn detergente schiumogeno Mousse Away da 150 ml\nUna formula multifunzione con il 15% di Acido Azelaico “Multipod Gel” da 30 ml\nUna crema viso Invisible Shield con SPF, filtri UVA, luce blu e raggi infrarossi da 50 ml\nUna pochette “Beautycology” in cotone riciclato\nDermatologicamente testati su pel",
+      "url": "https://beautycology.it/prodotto/routine-anti-macchie/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-routine-anti-macchie-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Routine Pelle Soggetta a Rosacea",
+      "price": "€190,00",
+      "description": "La “Routine Pelli soggette a Rosacea” Beautycology® è indicata per chi ha una soffre di Rosacea e vuole tenerla il più possibile sotto controllo per diminuire recidive*.\nContenuto e caratteristiche:\n\nUn detergente oleoso “Multitasking Oil” da 100 ml\nUna formula multifunzione con il 15% di Acido Azelaico “Multipod Gel” da 30 ml\nUn siero ” Bionic Hydralift” con l’8% di Acido Lattobionico da 30 ml\nUna crema viso con SPF 30 Invisible Shield da 50 ml\nUn trattamento per pelli sensibili Skin Reset da 5",
+      "url": "https://beautycology.it/prodotto/routine-pelle-soggetta-rosacea/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/12/beautycology-routine-pelle-soggetta-rosacea-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Routine Pelle a Tendenza Acneica",
+      "price": "€195,00",
+      "description": "La “Routine Pelli a tendenza acneica” Beautycology® è indicata per chi ha una pelle con tendenza acneica, con presenza o meno di uno stato infiammatorio.\nContenuto e caratteristiche:\n\nUn detergente schiumogeno “Mousse Away” da 150 ml\nUn tonico esfoliante “Ray of Light” da 100 ml\nUna formula Multifunzione all’Acido Azelaico 15% “Multipod Gel” da 30 ml\nUna crema viso per pelli miste “Perfect & Pure” da 50 ml\nUna maschera all’argilla “Clay Rehab” da 100 ml\nUna crema viso Invisible Shield con SPF, f",
+      "url": "https://beautycology.it/prodotto/routine-pelle-tendenza-acneica/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/11/beautycology-routine-pelle-a-tendenza-acneica-scaled-1-600x600.jpg",
+      "category": "Kit & Routine"
+    },
+    {
+      "name": "Gift Card",
+      "price": "€20,00",
+      "description": "Vuoi far conoscere Beautycology a qualcuno ma non sai da dove iniziare? Vuoi fare una sorpresa ad una persona che già ama Beautycology? Questa è la soluzione giusta per te",
+      "url": "https://beautycology.it/prodotto/gift-card/",
+      "image": "https://beautycology.it/wp-content/uploads/2022/12/black-and-red-modern-black-friday-instagram-post-5-600x600.jpg",
+      "category": "Altri Prodotti"
     }
   ],
   "blogArticles": [
@@ -790,5 +762,5 @@
     "Sieri",
     "Skincare Routine"
   ],
-  "lastUpdated": "2025-09-18T10:06:46.823Z"
+  "lastUpdated": "2025-09-18T10:20:15.530Z"
 }
