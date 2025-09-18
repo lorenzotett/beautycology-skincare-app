@@ -350,9 +350,13 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
 
 
   // Debug log to check if choices are properly passed
-  console.log('Message metadata:', metadata);
-  console.log('Has choices:', hasChoices);
-  console.log('Choices:', choices);
+  console.log('📩 MessageBubble rendering:', {
+    role: message.role,
+    hasChoices,
+    choices,
+    metadata,
+    contentPreview: message.content.substring(0, 100)
+  });
 
   if (isUser) {
     return (

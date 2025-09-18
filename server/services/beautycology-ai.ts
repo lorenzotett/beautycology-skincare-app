@@ -324,6 +324,7 @@ export class BeautycologyAIService {
     maxOutputTokens: 1024,
   };
   private chatSessions: Map<string, any[]> = new Map();
+  private sessionState: Map<string, { currentStep: string | null, structuredFlowActive: boolean }> = new Map();
   private knowledgeBase: any = null;
 
   constructor() {
@@ -418,8 +419,31 @@ export class BeautycologyAIService {
       // Update session history
       this.chatSessions.set(sessionId, sessionHistory);
 
+      // Initialize or get session state
+      if (!this.sessionState.has(sessionId)) {
+        this.sessionState.set(sessionId, { currentStep: null, structuredFlowActive: false });
+      }
+      const state = this.sessionState.get(sessionId)!;
+      
+      // Check if user is answering the skin type question
+      const skinTypes = ["mista", "secca", "grassa", "normale", "asfittica"];
+      if (state.currentStep === 'awaiting_skin_type' && 
+          skinTypes.includes(userMessage.toLowerCase().trim())) {
+        console.log(`✅ User selected skin type: ${userMessage}`);
+        state.currentStep = 'skin_type_received';
+        state.structuredFlowActive = false; // Exit structured flow for now
+      }
+
       // Check if user described their skin issues and force structured flow
       const shouldStartStructuredFlow = this.shouldStartStructuredQuestions(userMessage, sessionHistory);
+      
+      // If we should start structured flow, activate it
+      if (shouldStartStructuredFlow && !state.structuredFlowActive) {
+        state.structuredFlowActive = true;
+        state.currentStep = 'skin_type';
+        console.log(`🚀 Starting structured flow for session ${sessionId}`);
+      }
+      
       let hasChoices = this.containsChoices(responseText);
       let choices = hasChoices ? this.extractChoices(responseText) : undefined;
 
@@ -441,6 +465,51 @@ export class BeautycologyAIService {
         hasChoices = true;
         choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
       }
+
+      // State-driven approach: Force buttons based on conversation state
+      if (state.structuredFlowActive && state.currentStep === 'skin_type') {
+        console.log(`🎯 Structured flow active - forcing skin type buttons for session ${sessionId}`);
+        hasChoices = true;
+        choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
+        
+        // Ensure the response ends with the skin type question
+        const skinTypeQuestion = "\n\nChe tipo di pelle hai?";
+        if (!responseText.toLowerCase().includes('che tipo di pelle')) {
+          responseText += skinTypeQuestion;
+          console.log(`📝 Appended skin type question to response`);
+        }
+        
+        // Move to next step after providing buttons
+        state.currentStep = 'awaiting_skin_type';
+      }
+      
+      // Additional fallback check for the exact pattern
+      if (!hasChoices && (
+        lowerText.includes('che tipo di pelle hai') ||
+        lowerText.includes('iniziamo subito! che tipo di pelle hai') ||
+        (lowerText.includes('iniziamo') && lowerText.includes('che tipo di pelle'))
+      )) {
+        console.log("🎯 DETECTED skin type question pattern - adding buttons!");
+        hasChoices = true;
+        choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
+        
+        // Set state for tracking
+        if (!state.structuredFlowActive) {
+          state.structuredFlowActive = true;
+          state.currentStep = 'awaiting_skin_type';
+        }
+      }
+
+      console.log(`📊 Response analysis:
+        - Session: ${sessionId}
+        - Structured flow: ${state.structuredFlowActive}
+        - Current step: ${state.currentStep}
+        - Has choices: ${hasChoices}
+        - Choices: ${choices ? JSON.stringify(choices) : 'none'}
+        - Response preview: ${responseText.substring(0, 150)}`);
+
+      // Update session state
+      this.sessionState.set(sessionId, state);
 
       return {
         content: responseText,
