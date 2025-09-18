@@ -3194,6 +3194,34 @@ ${imageFormulas.map(item =>
     }
   });
 
+  // Verify knowledge base completeness
+  app.post("/api/admin/beautycology/verify", async (req, res) => {
+    try {
+      console.log('🔍 Avvio verifica completezza knowledge base beautycology...');
+      
+      const { beautycologyScraper } = await import('./services/beautycology-scraper');
+      const knowledgePath = path.join(process.cwd(), 'knowledge-base', 'beautycology.json');
+      
+      const verification = await beautycologyScraper.verifyKnowledgeBaseCompleteness(knowledgePath);
+      
+      res.json({
+        success: true,
+        verification,
+        message: verification.isComplete 
+          ? `✅ Knowledge base completa: ${verification.totalKnowledgeBaseUrls}/${verification.totalSitemapUrls} prodotti`
+          : `⚠️ Knowledge base incompleta: mancano ${verification.missingUrls.length} prodotti`
+      });
+      
+    } catch (error) {
+      console.error('❌ Errore verifica knowledge base beautycology:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Errore durante la verifica della knowledge base',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Get current knowledge base
   app.get("/api/admin/beautycology/knowledge", async (req, res) => {
     try {

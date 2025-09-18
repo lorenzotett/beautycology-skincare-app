@@ -97,6 +97,11 @@ export class BeautycologyScraper {
       const productUrls = sitemapHtml.match(/https:\/\/beautycology\.it\/prodotto\/[^<]+/g) || [];
       console.log(`🔍 Trovati ${productUrls.length} URL prodotto nella sitemap`);
       
+      // Traccia i link per verifica finale
+      const totalSitemapUrls = productUrls.length;
+      const successfulScrapes: string[] = [];
+      const failedScrapes: string[] = [];
+      
       // Scrapa ogni singola pagina prodotto
       for (let i = 0; i < productUrls.length; i++) {
         const productUrl = productUrls[i];
@@ -104,6 +109,7 @@ export class BeautycologyScraper {
         // Evita duplicati
         if (allProducts.has(productUrl)) {
           console.log(`⏭️ URL già processato: ${productUrl}`);
+          successfulScrapes.push(productUrl);
           continue;
         }
         
@@ -114,15 +120,35 @@ export class BeautycologyScraper {
           if (product) {
             allProducts.add(productUrl);
             products.push(product);
+            successfulScrapes.push(productUrl);
             console.log(`✅ Prodotto catturato: ${product.name}`);
+          } else {
+            failedScrapes.push(productUrl);
+            console.warn(`⚠️ Prodotto non catturato (dati insufficienti): ${productUrl}`);
           }
         } catch (error: any) {
+          failedScrapes.push(productUrl);
           console.warn(`⚠️ Errore scraping ${productUrl}:`, error.response?.status || error.message);
         }
         
         // Pausa per evitare rate limiting
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
+      
+      // VERIFICA FINALE DELLA COMPLETEZZA
+      console.log('\n🔍 === VERIFICA COMPLETEZZA SITEMAP ===');
+      console.log(`📊 Totale URL nella sitemap: ${totalSitemapUrls}`);
+      console.log(`✅ Successi: ${successfulScrapes.length}`);
+      console.log(`❌ Fallimenti: ${failedScrapes.length}`);
+      console.log(`📈 Tasso di successo: ${Math.round((successfulScrapes.length / totalSitemapUrls) * 100)}%`);
+      
+      if (failedScrapes.length > 0) {
+        console.log('\n❌ URL NON PROCESSATI:');
+        failedScrapes.forEach(url => console.log(`   • ${url}`));
+      } else {
+        console.log('\n🎉 TUTTI I LINK DELLA SITEMAP SONO STATI PROCESSATI CORRETTAMENTE!');
+      }
+      console.log('=====================================\n');
       
     } catch (error) {
       console.error('❌ Errore accesso sitemap:', error);
@@ -597,6 +623,94 @@ export class BeautycologyScraper {
     });
     
     return categories.sort();
+  }
+
+  // METODO DI VERIFICA PER CONTROLLARE LA COMPLETEZZA DELLA KNOWLEDGE BASE
+  async verifyKnowledgeBaseCompleteness(knowledgeBasePath: string): Promise<{
+    isComplete: boolean;
+    totalSitemapUrls: number;
+    totalKnowledgeBaseUrls: number;
+    missingUrls: string[];
+    extraUrls: string[];
+    summary: string;
+  }> {
+    console.log('🔍 === VERIFICA COMPLETEZZA KNOWLEDGE BASE VS SITEMAP ===');
+    
+    try {
+      // 1. Ottieni tutti gli URL dalla sitemap
+      console.log('📋 Caricamento sitemap prodotti...');
+      const sitemapResponse = await axios.get(`${this.baseUrl}/product-sitemap1.xml`);
+      const sitemapHtml = sitemapResponse.data;
+      const sitemapUrls = new Set(sitemapHtml.match(/https:\/\/beautycology\.it\/prodotto\/[^<]+/g) || []);
+      
+      // 2. Leggi la knowledge base esistente
+      console.log('📖 Caricamento knowledge base...');
+      const fs = await import('fs/promises');
+      const knowledgeData = JSON.parse(await fs.readFile(knowledgeBasePath, 'utf8'));
+      const knowledgeUrls = new Set(knowledgeData.products.map((p: Product) => p.url));
+      
+      // 3. Confronta i due set
+      const missingUrls: string[] = [];
+      const extraUrls: string[] = [];
+      
+      // Trova URL mancanti (nella sitemap ma non nella knowledge base)
+      sitemapUrls.forEach((url: string) => {
+        if (!knowledgeUrls.has(url)) {
+          missingUrls.push(url);
+        }
+      });
+      
+      // Trova URL extra (nella knowledge base ma non nella sitemap)
+      knowledgeUrls.forEach((url: string) => {
+        if (!sitemapUrls.has(url)) {
+          extraUrls.push(url);
+        }
+      });
+      
+      const isComplete = missingUrls.length === 0;
+      
+      // 4. Report dettagliato
+      console.log(`📊 Totale URL nella sitemap: ${sitemapUrls.size}`);
+      console.log(`📚 Totale URL nella knowledge base: ${knowledgeUrls.size}`);
+      console.log(`❌ URL mancanti: ${missingUrls.length}`);
+      console.log(`➕ URL extra: ${extraUrls.length}`);
+      console.log(`📈 Completezza: ${Math.round((knowledgeUrls.size / sitemapUrls.size) * 100)}%`);
+      
+      if (missingUrls.length > 0) {
+        console.log('\n❌ URL MANCANTI DALLA KNOWLEDGE BASE:');
+        missingUrls.forEach(url => console.log(`   • ${url}`));
+      }
+      
+      if (extraUrls.length > 0) {
+        console.log('\n➕ URL EXTRA NELLA KNOWLEDGE BASE (non in sitemap):');
+        extraUrls.forEach(url => console.log(`   • ${url}`));
+      }
+      
+      if (isComplete) {
+        console.log('\n🎉 KNOWLEDGE BASE COMPLETA! Tutti i prodotti della sitemap sono presenti.');
+      } else {
+        console.log(`\n⚠️ KNOWLEDGE BASE INCOMPLETA: mancano ${missingUrls.length} prodotti.`);
+      }
+      
+      const summary = isComplete 
+        ? `✅ Knowledge base completa: ${knowledgeUrls.size}/${sitemapUrls.size} prodotti`
+        : `⚠️ Knowledge base incompleta: ${knowledgeUrls.size}/${sitemapUrls.size} prodotti (mancano ${missingUrls.length})`;
+      
+      console.log('=======================================================\n');
+      
+      return {
+        isComplete,
+        totalSitemapUrls: sitemapUrls.size,
+        totalKnowledgeBaseUrls: knowledgeUrls.size,
+        missingUrls,
+        extraUrls,
+        summary
+      };
+      
+    } catch (error) {
+      console.error('❌ Errore verifica completezza:', error);
+      throw error;
+    }
   }
 }
 
