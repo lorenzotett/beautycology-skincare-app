@@ -75,7 +75,7 @@ export class SimpleRAGService {
           ...doc,
           similarity: this.calculateSimilarity(query.toLowerCase(), doc.content.toLowerCase())
         }))
-        .filter(doc => doc.similarity > 0.1) // Minimum similarity threshold
+        .filter(doc => doc.similarity > 0.05) // Lowered minimum similarity threshold for Italian content
         .sort((a, b) => b.similarity - a.similarity)
         .slice(0, limit);
 
@@ -182,9 +182,23 @@ Rispondi utilizzando sia le informazioni dalla knowledge base che il contesto de
   }
 
   private calculateSimilarity(str1: string, str2: string): number {
-    // Simple Jaccard similarity
-    const words1 = new Set(str1.split(/\s+/));
-    const words2 = new Set(str2.split(/\s+/));
+    // Improved similarity for Italian text
+    const normalize = (text: string) => text
+      .toLowerCase()
+      .replace(/[àáâãäå]/g, 'a')
+      .replace(/[èéêë]/g, 'e')
+      .replace(/[ìíîï]/g, 'i')
+      .replace(/[òóôõö]/g, 'o')
+      .replace(/[ùúûü]/g, 'u')
+      .replace(/[ç]/g, 'c')
+      .replace(/[^a-z\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 2); // Filter out very short words
+    
+    const words1 = new Set(normalize(str1));
+    const words2 = new Set(normalize(str2));
+    
+    if (words1.size === 0 || words2.size === 0) return 0;
     
     const intersection = new Set(Array.from(words1).filter(x => words2.has(x)));
     const union = new Set([...Array.from(words1), ...Array.from(words2)]);
