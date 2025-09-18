@@ -284,11 +284,12 @@ export class BeautycologyAIService {
         generationConfig: this.generationConfig
       });
       
-      const response = await model.generateContent({
+      const result = await model.generateContent({
         contents
       });
-
-      const responseText = response.response.text() || "Scusa, non riesco a rispondere in questo momento.";
+      
+      const response = await result.response;
+      const responseText = response.text() || "Scusa, non riesco a rispondere in questo momento.";
 
       // Add BOTH user message and assistant response to history
       const userParts: any[] = [{ text: userMessage }];
