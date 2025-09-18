@@ -470,8 +470,8 @@ export class BeautycologyAIService {
       // Check if user described their skin issues and force structured flow
       const shouldStartStructuredFlow = this.shouldStartStructuredQuestions(userMessage, sessionHistory);
       
-      // If we should start structured flow, activate it
-      if (shouldStartStructuredFlow && !state.structuredFlowActive) {
+      // If we should start structured flow, activate it (but only if not already completed)
+      if (shouldStartStructuredFlow && !state.structuredFlowActive && state.currentStep !== 'completed') {
         state.structuredFlowActive = true;
         state.currentStep = 'skin_type';
         console.log(`🚀 Starting structured flow for session ${sessionId}`);
@@ -586,8 +586,8 @@ export class BeautycologyAIService {
         hasChoices = true;
         choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
         
-        // Set state for tracking
-        if (!state.structuredFlowActive) {
+        // Set state for tracking (but only if not already completed)
+        if (!state.structuredFlowActive && state.currentStep !== 'completed') {
           state.structuredFlowActive = true;
           state.currentStep = 'awaiting_skin_type';
         }
