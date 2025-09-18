@@ -554,69 +554,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return analysisResult;
       })();
 
-      // Promise for before/after generation (starts immediately)
-      const imagesPromise = (async () => {
-        try {
-          console.log('🎨 Starting before/after generation in parallel...');
-          if (cleanBase64 && !imageBase64?.includes('data:image/svg')) {
-            // Use a quick fallback analysis for immediate generation
-            const quickAnalysis = {
-              rossori: 25, acne: 20, rughe: 15, pigmentazione: 30,
-              pori_dilatati: 35, oleosita: 40, danni_solari: 20,
-              occhiaie: 25, idratazione: 45, elasticita: 20, texture_uniforme: 35
-            };
-            
-            const images = await imageGenerationService.generateBeforeAfterImagesFromUserPhoto(
-              cleanBase64,
-              quickAnalysis,
-              ['Bonnie AI'],
-              '4 settimane'
-            );
-            
-            if (images) {
-              console.log('✅ Before/after images generated successfully');
-              return images;
-            }
-          }
-          return null;
-        } catch (imageError) {
-          console.error('❌ Error generating before/after images:', imageError);
-          return null;
-        }
-      })();
-
-      // Wait for both analysis and images to complete, but prioritize images
-      const [analysisResult, beforeAfterImages] = await Promise.all([analysisPromise, imagesPromise]);
+      // Wait for analysis to complete
+      const analysisResult = await analysisPromise;
       
       console.log('📊 Analysis result ready:', !!analysisResult);
-      console.log('🎨 Before/after images ready:', !!beforeAfterImages);
       
-      // If we have images, send them first in a separate message
-      if (beforeAfterImages) {
-        console.log('🚀 Saving before/after images as separate message...');
-        console.log('🎨 Before image exists:', !!beforeAfterImages.beforeImage);
-        console.log('🎨 After image exists:', !!beforeAfterImages.afterImage);
+      // Generate skin analysis message if we have analysis results
+      if (analysisResult) {
+        console.log('🚀 Saving skin analysis as separate message...');
         
-        const beforeAfterMessage = {
-          id: Math.floor(Math.random() * 2000000000), // Use smaller ID to fit in integer
+        // Calculate overall score
+        const overallScore = Math.round(Object.values(analysisResult).reduce((sum: number, val: any) => sum + val, 0) / Object.keys(analysisResult).length);
+        let overallDescription = "Condizioni generali buone";
+        if (overallScore > 60) overallDescription = "Condizioni critiche";
+        else if (overallScore > 40) overallDescription = "Condizioni moderate";
+        else if (overallScore > 20) overallDescription = "Condizioni buone";
+        else overallDescription = "Condizioni ottime";
+        
+        const analysisMessage = {
+          id: Math.floor(Math.random() * 2000000000),
           sessionId,
           role: "assistant" as const,
-          content: "✨ Ecco come potrebbe apparire la tua pelle dopo il trattamento! 🎨",
+          content: `📊 **ANALISI COMPLETA DELLA PELLE:**
+
+**Punteggio Generale:** ${overallScore}/100 - ${overallDescription}
+
+**Rossori:** ${analysisResult.rossori}/100
+**Acne:** ${analysisResult.acne}/100  
+**Rughe:** ${analysisResult.rughe}/100
+**Pigmentazione:** ${analysisResult.pigmentazione}/100
+**Pori Dilatati:** ${analysisResult.pori_dilatati}/100
+**Oleosità:** ${analysisResult.oleosita}/100
+**Danni Solari:** ${analysisResult.danni_solari}/100
+**Occhiaie:** ${analysisResult.occhiaie}/100
+**Idratazione:** ${analysisResult.idratazione}/100
+**Elasticità:** ${analysisResult.elasticita}/100
+**Texture Uniforme:** ${analysisResult.texture_uniforme}/100
+
+🔍 **PANORAMICA PROBLEMI PRINCIPALI:**`,
           metadata: {
             hasChoices: false,
             choices: [],
-            hasBeforeAfterImages: true,
-            beforeImage: beforeAfterImages.beforeImage,
-            afterImage: beforeAfterImages.afterImage,
-            ingredients: ['Bonnie AI'],
           },
           createdAt: new Date(),
         };
 
-        await storage.addChatMessage(beforeAfterMessage);
-        console.log('✅ Before/after message saved to database');
+        await storage.addChatMessage(analysisMessage);
+        console.log('✅ Skin analysis message saved to database');
       } else {
-        console.log('⚠️ No before/after images generated');
+        console.log('⚠️ No skin analysis generated');
       }
 
       const analysisMessage = message ? 
@@ -662,29 +648,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ensure response is sent before any potential connection issues
       try {
-        // Send both messages if we have before/after images
-        if (beforeAfterImages) {
-          console.log('📤 Sending response WITH before/after images');
-          res.json({
-            message: response,
-            beforeAfterMessage: {
-              content: "✨ Ecco come potrebbe apparire la tua pelle dopo il trattamento! 🎨",
-              hasChoices: false,
-              choices: [],
-              metadata: {
-                hasBeforeAfterImages: true,
-                beforeImage: beforeAfterImages.beforeImage,
-                afterImage: beforeAfterImages.afterImage,
-                ingredients: ['Bonnie AI'],
-              }
-            }
-          });
-        } else {
-          console.log('📤 Sending response WITHOUT before/after images');
-          res.json({
-            message: response,
-          });
-        }
+        // Send response with analysis data
+        console.log('📤 Sending response');
+        res.json({
+          message: response,
+        });
         console.log('✅ Response sent successfully');
       } catch (sendError) {
         console.error('❌ Error sending response:', sendError);
