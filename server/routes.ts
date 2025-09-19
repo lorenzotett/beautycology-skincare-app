@@ -661,13 +661,13 @@ Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
           }
         }
         
-        // Prepara la prima domanda del questionario
-        const firstQuestion = "Ora che ho analizzato la tua pelle, ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche.\n\nUtilizzi scrub o peeling?\n\nA) Sì regolarmente\nB) Occasionalmente\nC) No";
+        // Prepara la prima domanda del questionario Beautycology
+        const firstQuestion = "Ora che ho analizzato la tua pelle, ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche.\n\nChe tipo di pelle hai?";
         
         response = {
           content: problemOverview + firstQuestion,
           hasChoices: true,
-          choices: ["Sì regolarmente", "Occasionalmente", "No"]
+          choices: ["Mista", "Secca", "Grassa", "Normale", "Asfittica"]
         };
       }
 
