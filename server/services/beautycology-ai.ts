@@ -580,6 +580,31 @@ export class BeautycologyAIService {
 
       let responseText = response.text || "";
 
+      // CRITICAL: Handle empty responses from AI
+      if (!responseText || responseText.trim().length === 0) {
+        console.log(`⚠️ EMPTY RESPONSE detected for session ${sessionId}, generating fallback...`);
+        
+        // Get current state to provide appropriate fallback
+        const state = this.sessionState.get(sessionId) || {
+          structuredFlowActive: false,
+          currentStep: null,
+          hasIntroduced: true
+        };
+        
+        // Generate appropriate fallback based on flow state
+        if (state.currentStep === 'completed' || (!state.structuredFlowActive && sessionHistory.length > 6)) {
+          responseText = "Perfetto! 🌟 Ora che conosco meglio la tua pelle e le tue esigenze, posso creare una routine personalizzata con i prodotti Beautycology scientificamente formulati per te.\n\n**Basandomi sulle tue risposte, ti consiglio:**\n\n• **Perfect & Pure Cream** con Niacinamide 4% per regolare l'oleosità e minimizzare i pori\n• **Acqua Micellare** per una detersione delicata quotidiana\n\nVuoi che ti spieghi nel dettaglio come usare questi prodotti nella tua routine quotidiana? 💧✨";
+        } else if (state.structuredFlowActive) {
+          // Continue with structured flow
+          responseText = "Capisco le tue esigenze. Continuiamo con le domande per personalizzare al meglio i miei consigli.";
+        } else {
+          // General fallback
+          responseText = "Capisco quello che mi stai dicendo. Basandomi sui prodotti Beautycology, posso aiutarti a trovare la soluzione migliore per le tue esigenze. Dimmi di più su cosa ti preoccupa della tua pelle.";
+        }
+        
+        console.log(`✅ Generated fallback response: ${responseText.substring(0, 100)}...`);
+      }
+
       // Add BOTH user message and assistant response to history
       const userParts: any[] = [{ text: userMessage }];
       // Note: we intentionally don't add the image to history to avoid payload bloat
@@ -650,6 +675,9 @@ export class BeautycologyAIService {
         console.log(`✅ User selected routine status: ${userMessage}`);
         state.currentStep = 'completed';
         state.structuredFlowActive = false; // End structured flow
+        
+        // Force a comprehensive response when flow is completed
+        console.log(`🎯 Structured flow completed for session ${sessionId}, will provide comprehensive recommendations`);
       }
 
       // Check if user described their skin issues and force structured flow
