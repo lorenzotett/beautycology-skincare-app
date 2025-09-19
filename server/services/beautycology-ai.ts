@@ -459,12 +459,13 @@ export class BeautycologyAIService {
         if (userMessage.includes("Analisi AI della pelle:")) {
           // Extract and parse skin analysis data
           try {
-            // Improved JSON extraction - find the complete JSON object
+            // Find JSON in the message - look for first { to last }
             const startIdx = userMessage.indexOf('{');
             const endIdx = userMessage.lastIndexOf('}');
             
             if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
               const jsonStr = userMessage.substring(startIdx, endIdx + 1);
+              console.log("🔍 Attempting to parse JSON:", jsonStr.substring(0, 100) + "...");
               const analysisData = JSON.parse(jsonStr);
               
               // Build panorama of problems with multiple severity levels
@@ -649,7 +650,10 @@ export class BeautycologyAIService {
       if (shouldStartStructuredFlow && !state.structuredFlowActive && state.currentStep !== 'completed') {
         state.structuredFlowActive = true;
         state.currentStep = 'awaiting_skin_type';
-        console.log(`🚀 Starting structured flow for session ${sessionId}`);
+        console.log(`🚀 Starting structured flow for session ${sessionId} - User described skin issues`);
+        console.log(`📝 Current step set to: ${state.currentStep}`);
+      } else if (shouldStartStructuredFlow) {
+        console.log(`ℹ️ Structured flow already active or completed for session ${sessionId}`);
       }
       
       let hasChoices = this.containsChoices(responseText);
