@@ -544,7 +544,7 @@ export class BeautycologyAIService {
         config: this.generationConfig
       });
 
-      let responseText = response.text || "Scusa, non riesco a rispondere in questo momento.";
+      let responseText = response.text || "";
 
       // Add BOTH user message and assistant response to history
       const userParts: any[] = [{ text: userMessage }];
@@ -760,7 +760,58 @@ export class BeautycologyAIService {
 
     } catch (error) {
       console.error("Beautycology AI error:", error);
-      throw new Error("Bella non è disponibile al momento. Riprova più tardi! 💄");
+      // Instead of throwing an error, return a helpful response
+      // Check if we're in structured flow and continue with appropriate question
+      const state = this.sessionState.get(sessionId) || {
+        structuredFlowActive: false,
+        currentStep: null,
+        hasIntroduced: true
+      };
+      
+      let fallbackResponse = "";
+      let hasChoices = false;
+      let choices: string[] = [];
+      
+      if (state.structuredFlowActive || state.currentStep) {
+        // Continue with structured flow
+        if (state.currentStep === 'awaiting_skin_type' || !state.currentStep) {
+          fallbackResponse = "Capisco che stai avendo alcune preoccupazioni per la pelle. Per aiutarti al meglio, iniziamo con alcune domande specifiche.\n\nChe tipo di pelle hai?";
+          hasChoices = true;
+          choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
+          state.currentStep = 'awaiting_skin_type';
+        } else if (state.currentStep === 'age_question') {
+          fallbackResponse = "Perfetto! Ora dimmi, quanti anni hai?";
+          hasChoices = true;
+          choices = ["16-25", "26-35", "36-45", "46-55", "56+"];
+        } else if (state.currentStep === 'main_concern') {
+          fallbackResponse = "Qual è la tua problematica principale che vorresti risolvere?";
+          hasChoices = true;
+          choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Pelle grassa", "Pelle secca", "Pori dilatati"];
+        } else if (state.currentStep === 'active_ingredient') {
+          fallbackResponse = "C'è un ingrediente attivo specifico che preferisci o che hai già provato con successo?";
+          hasChoices = true;
+          choices = ["Acido Ialuronico", "Vitamina C", "Retinolo", "Niacinamide", "Acido Salicilico", "Nessuno in particolare"];
+        } else if (state.currentStep === 'routine_question') {
+          fallbackResponse = "Hai già una routine di skincare stabilita?";
+          hasChoices = true;
+          choices = ["Sì, ho una routine completa", "Uso solo alcuni prodotti", "No, non ho una routine"];
+        } else if (state.currentStep === 'additional_info') {
+          fallbackResponse = "C'è qualcos'altro che dovrei sapere sulla tua pelle o sulle tue esigenze specifiche?";
+          hasChoices = false;
+        }
+      } else {
+        // Generic helpful response
+        fallbackResponse = "Capisco le tue esigenze! Basandomi su quello che mi hai detto, posso consigliarti una routine personalizzata. Dimmi di più sui tuoi obiettivi specifici per la pelle, così posso suggerirti i prodotti più adatti del nostro catalogo Beautycology.";
+      }
+      
+      // Update state
+      this.sessionState.set(sessionId, state);
+      
+      return {
+        content: fallbackResponse,
+        hasChoices,
+        choices
+      };
     }
   }
 
@@ -800,6 +851,23 @@ export class BeautycologyAIService {
   }
 
   private shouldStartStructuredQuestions(userMessage: string, sessionHistory: any[]): boolean {
+    // IMPORTANT: Don't trigger structured flow if we're already in a conversation
+    // Check if the last message from the model contains a question that expects a specific answer
+    const lastModelMessage = sessionHistory.filter(m => m.role === "model").pop();
+    if (lastModelMessage && lastModelMessage.parts && lastModelMessage.parts.length > 0) {
+      const lastText = lastModelMessage.parts[0].text || '';
+      // If the bot just asked a question about age, routine, concerns, etc., don't restart the flow
+      if (lastText.includes('Quanti anni hai') || 
+          lastText.includes('routine attuale') ||
+          lastText.includes('preoccupazioni per la pelle') ||
+          lastText.includes('problematica principale') ||
+          lastText.includes('ingrediente attivo') ||
+          lastText.includes('Che tipo di pelle hai')) {
+        console.log("🛑 Not starting structured flow - already in conversation flow");
+        return false;
+      }
+    }
+    
     // Check if this looks like the user describing skin issues (triggers structured flow)
     const skinDescriptionPatterns = [
       /acne/i,
