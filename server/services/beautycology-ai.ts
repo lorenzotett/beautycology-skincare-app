@@ -340,10 +340,22 @@ export class BeautycologyAIService {
   private modelName = "gemini-2.5-flash";
   private generationConfig = {
     temperature: 0.2,
-    maxOutputTokens: 1024,
+    maxOutputTokens: 2048, // Increased for comprehensive recommendations
   };
   private chatSessions: Map<string, any[]> = new Map();
-  private sessionState: Map<string, { currentStep: string | null, structuredFlowActive: boolean, hasIntroduced?: boolean }> = new Map();
+  private sessionState: Map<string, { 
+    currentStep: string | null, 
+    structuredFlowActive: boolean, 
+    hasIntroduced?: boolean,
+    structuredFlowAnswers?: {
+      skinType?: string;
+      age?: string;
+      mainIssue?: string;
+      activesPreference?: string;
+      routineStatus?: string;
+      additionalInfo?: string;
+    };
+  }> = new Map();
   private knowledgeBase: any = null;
 
   constructor() {
@@ -643,8 +655,9 @@ export class BeautycologyAIService {
         };
         
         // Generate appropriate fallback based on flow state
-        if (state.currentStep === 'completed' || (!state.structuredFlowActive && sessionHistory.length > 6)) {
-          responseText = "Perfetto! 🌟 Ora che conosco meglio la tua pelle e le tue esigenze, posso creare una routine personalizzata con i prodotti Beautycology scientificamente formulati per te.\n\n**Basandomi sulle tue risposte, ti consiglio:**\n\n• **Perfect & Pure Cream** con Niacinamide 4% per regolare l'oleosità e minimizzare i pori\n• **Acqua Micellare** per una detersione delicata quotidiana\n\nVuoi che ti spieghi nel dettaglio come usare questi prodotti nella tua routine quotidiana? 💧✨";
+        if (state.currentStep === 'completed') {
+          // If flow is completed but we have an empty response, generate final recommendations
+          responseText = await this.generateFinalRecommendations(sessionId, state);
         } else if (state.structuredFlowActive) {
           // Continue with structured flow
           responseText = "Capisco le tue esigenze. Continuiamo con le domande per personalizzare al meglio i miei consigli.";
@@ -684,6 +697,9 @@ export class BeautycologyAIService {
       if (state.currentStep === 'awaiting_skin_type' && 
           skinTypes.includes(userMessage.toLowerCase().trim())) {
         console.log(`✅ User selected skin type: ${userMessage}`);
+        // Save the answer
+        if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
+        state.structuredFlowAnswers.skinType = userMessage;
         state.currentStep = 'age_question';
         // Keep structured flow active to continue with next question
       }
@@ -693,6 +709,9 @@ export class BeautycologyAIService {
       if (state.currentStep === 'awaiting_age' && 
           ageRanges.some(range => userMessage.toLowerCase().includes(range.toLowerCase()))) {
         console.log(`✅ User selected age range: ${userMessage}`);
+        // Save the answer
+        if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
+        state.structuredFlowAnswers.age = userMessage;
         state.currentStep = 'problem_question';
       }
 
@@ -707,6 +726,9 @@ export class BeautycologyAIService {
         
         if (selectedPredefinedProblem || hasCustomDescription) {
           console.log(`✅ User described problem: ${userMessage}`);
+          // Save the answer
+          if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
+          state.structuredFlowAnswers.mainIssue = userMessage;
           state.currentStep = 'ingredients_question';
         }
       }
@@ -716,7 +738,11 @@ export class BeautycologyAIService {
       if (state.currentStep === 'awaiting_ingredients' && 
           ingredients.some(ingredient => userMessage.toLowerCase().includes(ingredient.toLowerCase()))) {
         console.log(`✅ User selected ingredient: ${userMessage}`);
+        // Save the answer
+        if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
+        state.structuredFlowAnswers.activesPreference = userMessage;
         state.currentStep = 'routine_question';
+        state.structuredFlowActive = true; // Keep flow active for next question
       }
 
       // Check if user is answering the routine question
@@ -724,11 +750,25 @@ export class BeautycologyAIService {
       if (state.currentStep === 'awaiting_routine' && 
           routineOptions.some(option => userMessage.toLowerCase().includes(option.toLowerCase().substring(0, 10)))) {
         console.log(`✅ User selected routine status: ${userMessage}`);
+        // Save the answer
+        if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
+        state.structuredFlowAnswers.routineStatus = userMessage;
         state.currentStep = 'completed';
         state.structuredFlowActive = false; // End structured flow
         
         // Force a comprehensive response when flow is completed
         console.log(`🎯 Structured flow completed for session ${sessionId}, will provide comprehensive recommendations`);
+        
+        // Generate final recommendations immediately
+        responseText = await this.generateFinalRecommendations(sessionId, state);
+        
+        // Update history with the recommendations
+        sessionHistory.pop(); // Remove the last model response placeholder
+        sessionHistory.push({
+          role: "model",
+          parts: [{ text: responseText }]
+        });
+        this.chatSessions.set(sessionId, sessionHistory);
       }
 
       // Check if user described their skin issues and force structured flow
@@ -1250,6 +1290,131 @@ Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi 
       console.error('Error getting RAG context:', error);
       return '';
     }
+  }
+
+  // Generate final recommendations when structured flow is completed
+  private async generateFinalRecommendations(sessionId: string, state: any): Promise<string> {
+    console.log(`🎯 Generating final recommendations for session ${sessionId}`);
+    
+    const answers = state.structuredFlowAnswers || {};
+    const sessionHistory = this.chatSessions.get(sessionId) || [];
+    
+    // Get RAG context based on user's main issue
+    const ragContext = await this.getRAGContext(answers.mainIssue || 'routine skincare');
+    
+    // Build a comprehensive prompt for final recommendations
+    const finalPrompt = `
+**STEP 3: RACCOMANDAZIONI FINALI OBBLIGATORIE**
+
+🚨 DEVI GENERARE RACCOMANDAZIONI COMPLETE E DETTAGLIATE!
+
+Dati raccolti dall'utente:
+- Tipo di pelle: ${answers.skinType || 'non specificato'}
+- Età: ${answers.age || 'non specificata'}
+- Problematica principale: ${answers.mainIssue || 'non specificata'}
+- Ingrediente preferito: ${answers.activesPreference || 'nessuno'}
+- Routine attuale: ${answers.routineStatus || 'non specificata'}
+
+${ragContext ? `Informazioni prodotti rilevanti:\n${ragContext}\n` : ''}
+
+DEVI OBBLIGATORIAMENTE fornire:
+
+1. **ROUTINE PERSONALIZZATA COMPLETA**:
+   - Routine MATTINA con prodotti specifici e ordine di applicazione
+   - Routine SERA con prodotti specifici e ordine di applicazione
+   - Usa SOLO prodotti Beautycology dal catalogo reale
+
+2. **PRODOTTI CONSIGLIATI** (minimo 3-4 prodotti):
+   Per ogni prodotto indica:
+   - Nome esatto del prodotto
+   - Prezzo
+   - Principi attivi chiave e percentuali
+   - Come agisce sulla problematica specifica dell'utente
+   - Link diretto al prodotto (usa i link reali dal catalogo)
+
+3. **SPIEGAZIONE SCIENTIFICA**:
+   - Spiega COME gli ingredienti risolvono il problema specifico
+   - Usa linguaggio accessibile ma scientifico
+   - Cita studi o evidenze quando possibile
+
+4. **CONSIGLI DI APPLICAZIONE**:
+   - Tecniche specifiche per massimizzare l'efficacia
+   - Tempi di attesa tra prodotti
+   - Frequenza d'uso per ogni prodotto
+
+5. **TIMELINE DEI RISULTATI**:
+   - Cosa aspettarsi dopo 2 settimane
+   - Risultati dopo 1 mese
+   - Risultati dopo 3 mesi
+
+6. **LINK E RISORSE**:
+   - Link alla pagina routine: https://beautycology.it/skincare-routine/
+   - Articoli del blog pertinenti alla problematica
+   - Link diretti ai prodotti consigliati
+
+NON fare altre domande! Fornisci SOLO le raccomandazioni complete e dettagliate.
+Usa emoji appropriati ✨🌟💧 per rendere il testo più engaging.
+Inizia con: "Perfetto! 🌟 Ora che conosco meglio la tua pelle..."`;
+
+    try {
+      // Send the final prompt to Gemini with increased token limit
+      const response = await ai.models.generateContent({
+        model: this.modelName,
+        contents: [{
+          role: "user",
+          parts: [{ text: finalPrompt }]
+        }],
+        config: {
+          ...this.generationConfig,
+          maxOutputTokens: 2048, // Increase token limit for comprehensive recommendations
+          temperature: 0.3 // Lower temperature for more focused recommendations
+        }
+      });
+
+      const text = response.text || "";
+
+      if (!text || text.trim().length === 0) {
+        console.log('⚠️ Empty response from AI, using fallback recommendations');
+        return this.getFallbackRecommendations(answers);
+      }
+
+      console.log('✅ Generated comprehensive recommendations successfully');
+      return text;
+    } catch (error) {
+      console.error('Error generating final recommendations:', error);
+      return this.getFallbackRecommendations(answers);
+    }
+  }
+
+  // Fallback recommendations if AI fails
+  private getFallbackRecommendations(answers: any): string {
+    const skinTypeProducts: any = {
+      'grassa': {
+        cleanser: 'Acqua Micellare',
+        treatment: 'Perfect & Pure Cream con Niacinamide 4%',
+        serum: 'Serum con Acido Salicilico'
+      },
+      'secca': {
+        cleanser: 'Latte Detergente Delicato',
+        treatment: 'Crema Idratante Intensiva',
+        serum: 'Serum Acido Ialuronico'
+      },
+      'mista': {
+        cleanser: 'Gel Detergente Purificante',
+        treatment: 'Perfect & Pure Cream',
+        serum: 'Serum Niacinamide'
+      },
+      'normale': {
+        cleanser: 'Acqua Micellare',
+        treatment: 'Crema Viso Giorno',
+        serum: 'Serum Vitamina C'
+      }
+    };
+
+    const skinType = answers.skinType?.toLowerCase() || 'mista';
+    const products = skinTypeProducts[skinType] || skinTypeProducts['mista'];
+
+    return `Perfetto! 🌟 Ora che conosco meglio la tua pelle e le tue esigenze, ecco la routine personalizzata che ho creato per te:\n\n**🌅 ROUTINE MATTINA:**\n1. **Detersione**: ${products.cleanser}\n2. **Trattamento**: ${products.serum}\n3. **Idratazione**: ${products.treatment}\n4. **Protezione solare**: SPF 50+ (sempre!)\n\n**🌙 ROUTINE SERA:**\n1. **Detersione**: ${products.cleanser}\n2. **Tonico**: Tonico Riequilibrante\n3. **Trattamento**: ${products.serum}\n4. **Idratazione**: ${products.treatment}\n\nI prodotti Beautycology sono formulati con ingredienti scientificamente testati per garantire risultati visibili.\n\n💡 **Consiglio**: Inizia gradualmente introducendo un prodotto alla volta per permettere alla pelle di adattarsi.\n\nVuoi che ti spieghi nel dettaglio come usare questi prodotti? ✨`;
   }
 }
 
