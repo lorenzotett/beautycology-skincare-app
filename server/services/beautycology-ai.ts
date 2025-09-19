@@ -169,14 +169,47 @@ Passa direttamente alla domanda 6.
 ### DOMANDA 6 - INFORMAZIONI AGGIUNTIVE:
 > "Hai altre informazioni che vorresti darmi in modo da poterti aiutare al meglio?"
 
-## STEP 3: RACCOMANDAZIONI FINALI
-Dopo aver raccolto tutte le informazioni:
-1. **Registra tutti i dati** dell'utente nella conversazione
-2. **Consiglia routine personalizzata** usando i prodotti reali della knowledge base
-3. **Fornisci informazioni scientifiche** sui principi attivi
-4. **Aggiungi articoli del blog** per approfondire
-5. **Riferisci alle routine** su https://beautycology.it/skincare-routine/ quando utile
-6. **Includi link diretti** ai prodotti raccomandati
+## STEP 3: RACCOMANDAZIONI FINALI E RIEPILOGO COMPLETO
+🚨 **REGOLE ASSOLUTE PER IL MESSAGGIO FINALE:**
+
+Dopo aver raccolto tutte le informazioni, DEVI SEMPRE:
+
+1. **REGISTRARE E RIEPILOGARE TUTTE LE INFORMAZIONI** fornite dall'utente:
+   - Tipo di pelle dichiarato
+   - Età
+   - Problematiche principali rilevate
+   - Ingredienti preferiti o evitati
+   - Routine attuale
+   - Qualsiasi altra informazione fornita durante la conversazione
+
+2. **FORNIRE UN RIEPILOGO PRECISO E PUNTUALE** delle problematiche rilevate:
+   - Analisi dettagliata di ogni problema identificato
+   - Spiegazione scientifica delle cause
+   - Come ogni problema impatta la salute della pelle
+
+3. **RACCOMANDAZIONI PRECISE E PERSONALIZZATE**:
+   - Routine personalizzata COMPLETA (mattina e sera)
+   - Prodotti SPECIFICI dal catalogo Beautycology con spiegazione del perché
+   - Ordine esatto di applicazione
+   - Tecniche di applicazione specifiche
+   - Tempi tra un prodotto e l'altro
+
+4. **CONSIGLI SCIENTIFICI DETTAGLIATI**:
+   - Spiegazione di COME ogni ingrediente agisce sul problema specifico
+   - Percentuali degli ingredienti attivi
+   - Evidenze scientifiche a supporto
+   - Timeline realistica dei risultati attesi
+
+5. **SKINCARE ROUTINE COMPLETA E DETTAGLIATA**:
+   - Passaggi precisi per mattina e sera
+   - Frequenza di utilizzo di ogni prodotto
+   - Consigli per massimizzare l'efficacia
+   - Errori comuni da evitare
+
+6. **MAI INCLUDERE PULSANTI O SCELTE** nel messaggio finale
+
+7. **CONCLUDI SEMPRE** con la frase ESATTA:
+   "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
 
 ## FONTI EDUCATIVE DA UTILIZZARE:
 - **Articoli blog scientifici** dalla knowledge base
@@ -495,21 +528,28 @@ export class BeautycologyAIService {
           !sessionHistory.some(m => m.role === 'model' && m.parts?.[0]?.text?.includes('routine personalizzata'));
         
         if (isRoutineAnswer || isCompletedWithoutRecommendations) {
+          // Store additional info if this is the last question
+          if (state.structuredFlowAnswers) {
+            state.structuredFlowAnswers.additionalInfo = userMessage;
+          }
+          
           // Add explicit instructions for the AI to generate comprehensive recommendations
           const comprehensivePrompt = `L'utente ha risposto: "${userMessage}"\n\n` +
             `IMPORTANTE: Hai raccolto tutte le informazioni necessarie dal questionario strutturato:\n` +
-            `1. Tipo di pelle\n` +
-            `2. Età\n` +
-            `3. Problematica principale\n` +
-            `4. Ingredienti preferiti\n` +
-            `5. Routine attuale\n\n` +
-            `ORA DEVI FORNIRE UNA ROUTINE PERSONALIZZATA COMPLETA con i prodotti Beautycology più adatti.\n` +
-            `Includi:\n` +
-            `- Almeno 3-4 prodotti specifici del catalogo Beautycology\n` +
-            `- Spiegazione del perché ogni prodotto è adatto al suo caso\n` +
-            `- Come usare i prodotti nella routine quotidiana (mattina/sera)\n` +
-            `- Consigli personalizzati basati sulle sue risposte\n\n` +
-            `Inizia con: "Perfetto! 🌟 Ora che conosco meglio la tua pelle e le tue esigenze..."`;
+            `1. Tipo di pelle: ${state.structuredFlowAnswers?.skinType || 'non specificato'}\n` +
+            `2. Età: ${state.structuredFlowAnswers?.age || 'non specificata'}\n` +
+            `3. Problematica principale: ${state.structuredFlowAnswers?.mainIssue || 'non specificata'}\n` +
+            `4. Ingredienti preferiti: ${state.structuredFlowAnswers?.activesPreference || 'nessuno'}\n` +
+            `5. Routine attuale: ${state.structuredFlowAnswers?.routineStatus || 'non specificata'}\n` +
+            `6. Informazioni aggiuntive: ${userMessage}\n\n` +
+            `🚨 ORA DEVI FORNIRE IL MESSAGGIO FINALE CON:\n` +
+            `- RIEPILOGO COMPLETO delle informazioni registrate\n` +
+            `- ANALISI DETTAGLIATA delle problematiche\n` +
+            `- ROUTINE PERSONALIZZATA COMPLETA con prodotti Beautycology\n` +
+            `- CONSIGLI SCIENTIFICI dettagliati\n` +
+            `- MAI includere pulsanti o scelte\n` +
+            `- CONCLUDI SEMPRE con: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"\n\n` +
+            `Segui ESATTAMENTE le regole del STEP 3: RACCOMANDAZIONI FINALI E RIEPILOGO COMPLETO.`;
           
           // Include RAG context for product grounding
           if (ragInfo) {
@@ -517,6 +557,9 @@ export class BeautycologyAIService {
           } else {
             messageText = antiRepeatReminder + comprehensivePrompt;
           }
+          
+          // Set flag to prevent buttons in final message
+          state.currentStep = 'providing_final_recommendations';
         } else {
           // Check if message contains skin analysis data
           messageText = antiRepeatReminder + userMessage;
@@ -907,6 +950,18 @@ export class BeautycologyAIService {
           state.structuredFlowActive = true;
           state.currentStep = 'awaiting_skin_type';
         }
+      }
+
+      // NEVER include choices in final recommendations
+      if (state.currentStep === 'providing_final_recommendations' || 
+          state.currentStep === 'completed' ||
+          responseText.includes("Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!") ||
+          responseText.includes("RIEPILOGO COMPLETO DELLE INFORMAZIONI REGISTRATE") ||
+          responseText.includes("PROBLEMATICHE RILEVATE E ANALISI")) {
+        hasChoices = false;
+        choices = undefined;
+        console.log(`🚫 Final recommendations detected - no buttons will be shown`);
+        state.currentStep = 'completed';
       }
 
       console.log(`📊 Response analysis:
@@ -1304,57 +1359,73 @@ Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi 
     
     // Build a comprehensive prompt for final recommendations
     const finalPrompt = `
-**STEP 3: RACCOMANDAZIONI FINALI OBBLIGATORIE**
+**STEP 3: RACCOMANDAZIONI FINALI E RIEPILOGO COMPLETO**
 
-🚨 DEVI GENERARE RACCOMANDAZIONI COMPLETE E DETTAGLIATE!
+🚨 REGOLE ASSOLUTE PER IL MESSAGGIO FINALE - DEVI SEGUIRE TUTTE QUESTE REGOLE:
 
-Dati raccolti dall'utente:
+Dati raccolti dall'utente durante la conversazione:
 - Tipo di pelle: ${answers.skinType || 'non specificato'}
 - Età: ${answers.age || 'non specificata'}
 - Problematica principale: ${answers.mainIssue || 'non specificata'}
 - Ingrediente preferito: ${answers.activesPreference || 'nessuno'}
 - Routine attuale: ${answers.routineStatus || 'non specificata'}
+- Informazioni aggiuntive: ${answers.additionalInfo || 'non fornite'}
 
 ${ragContext ? `Informazioni prodotti rilevanti:\n${ragContext}\n` : ''}
 
-DEVI OBBLIGATORIAMENTE fornire:
+DEVI OBBLIGATORIAMENTE fornire NELL'ORDINE:
 
-1. **ROUTINE PERSONALIZZATA COMPLETA**:
-   - Routine MATTINA con prodotti specifici e ordine di applicazione
-   - Routine SERA con prodotti specifici e ordine di applicazione
-   - Usa SOLO prodotti Beautycology dal catalogo reale
+1. **RIEPILOGO COMPLETO DELLE INFORMAZIONI REGISTRATE**:
+   Inizia con: "Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:"
+   - Elenca TUTTE le informazioni raccolte dall'utente
+   - Conferma ogni dato fornito
 
-2. **PRODOTTI CONSIGLIATI** (minimo 3-4 prodotti):
-   Per ogni prodotto indica:
-   - Nome esatto del prodotto
-   - Prezzo
-   - Principi attivi chiave e percentuali
-   - Come agisce sulla problematica specifica dell'utente
-   - Link diretto al prodotto (usa i link reali dal catalogo)
+2. **ANALISI DETTAGLIATA DELLE PROBLEMATICHE RILEVATE**:
+   Titolo: "📋 PROBLEMATICHE RILEVATE E ANALISI:"
+   - Analisi dettagliata di ogni problema identificato
+   - Spiegazione scientifica delle cause
+   - Come ogni problema impatta la salute della pelle
 
-3. **SPIEGAZIONE SCIENTIFICA**:
-   - Spiega COME gli ingredienti risolvono il problema specifico
-   - Usa linguaggio accessibile ma scientifico
-   - Cita studi o evidenze quando possibile
+3. **RACCOMANDAZIONI PRECISE E PERSONALIZZATE**:
+   Titolo: "💫 RACCOMANDAZIONI PERSONALIZZATE:"
+   - Routine COMPLETA mattina e sera
+   - Prodotti SPECIFICI Beautycology con spiegazione del perché
+   - Ordine esatto di applicazione
+   - Tecniche di applicazione
+   - Tempi tra prodotti
 
-4. **CONSIGLI DI APPLICAZIONE**:
-   - Tecniche specifiche per massimizzare l'efficacia
-   - Tempi di attesa tra prodotti
-   - Frequenza d'uso per ogni prodotto
+4. **SKINCARE ROUTINE DETTAGLIATA**:
+   Titolo: "🌅 ROUTINE MATTINA:" e "🌙 ROUTINE SERA:"
+   - Passaggi numerati e precisi
+   - Nome prodotto + come applicarlo
+   - Frequenza di utilizzo
+   - Quantità da utilizzare
 
-5. **TIMELINE DEI RISULTATI**:
-   - Cosa aspettarsi dopo 2 settimane
-   - Risultati dopo 1 mese
-   - Risultati dopo 3 mesi
+5. **CONSIGLI SCIENTIFICI**:
+   Titolo: "🧪 SPIEGAZIONE SCIENTIFICA:"
+   - Come ogni ingrediente agisce sul problema
+   - Percentuali ingredienti attivi
+   - Timeline risultati (2 settimane, 1 mese, 3 mesi)
 
-6. **LINK E RISORSE**:
-   - Link alla pagina routine: https://beautycology.it/skincare-routine/
-   - Articoli del blog pertinenti alla problematica
-   - Link diretti ai prodotti consigliati
+6. **PRODOTTI CONSIGLIATI** (minimo 3-4):
+   Titolo: "📦 I PRODOTTI BEAUTYCOLOGY PER TE:"
+   Per ogni prodotto:
+   - Nome esatto e prezzo
+   - Principi attivi e percentuali
+   - Benefici specifici per il tuo caso
+   - Link al prodotto
 
-NON fare altre domande! Fornisci SOLO le raccomandazioni complete e dettagliate.
-Usa emoji appropriati ✨🌟💧 per rendere il testo più engaging.
-Inizia con: "Perfetto! 🌟 Ora che conosco meglio la tua pelle..."`;
+7. **CONSIGLI FINALI**:
+   - Errori comuni da evitare
+   - Tips per massimizzare i risultati
+   - Link utili (blog, routine complete)
+
+⚠️ IMPORTANTISSIMO:
+- NON includere MAI pulsanti o scelte multiple nel messaggio finale
+- NON fare domande all'utente
+- CONCLUDI SEMPRE con la frase ESATTA: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
+
+Usa emoji appropriati ✨🌟💧 per rendere il testo engaging ma professionale.`;
 
     try {
       // Send the final prompt to Gemini with increased token limit
@@ -1414,7 +1485,53 @@ Inizia con: "Perfetto! 🌟 Ora che conosco meglio la tua pelle..."`;
     const skinType = answers.skinType?.toLowerCase() || 'mista';
     const products = skinTypeProducts[skinType] || skinTypeProducts['mista'];
 
-    return `Perfetto! 🌟 Ora che conosco meglio la tua pelle e le tue esigenze, ecco la routine personalizzata che ho creato per te:\n\n**🌅 ROUTINE MATTINA:**\n1. **Detersione**: ${products.cleanser}\n2. **Trattamento**: ${products.serum}\n3. **Idratazione**: ${products.treatment}\n4. **Protezione solare**: SPF 50+ (sempre!)\n\n**🌙 ROUTINE SERA:**\n1. **Detersione**: ${products.cleanser}\n2. **Tonico**: Tonico Riequilibrante\n3. **Trattamento**: ${products.serum}\n4. **Idratazione**: ${products.treatment}\n\nI prodotti Beautycology sono formulati con ingredienti scientificamente testati per garantire risultati visibili.\n\n💡 **Consiglio**: Inizia gradualmente introducendo un prodotto alla volta per permettere alla pelle di adattarsi.\n\nVuoi che ti spieghi nel dettaglio come usare questi prodotti? ✨`;
+    return `Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
+
+📋 **INFORMAZIONI REGISTRATE:**
+- Tipo di pelle: ${answers.skinType || 'non specificato'}
+- Età: ${answers.age || 'non specificata'}
+- Problematica principale: ${answers.mainIssue || 'non specificata'}
+- Ingredienti preferiti: ${answers.activesPreference || 'nessuno in particolare'}
+- Routine attuale: ${answers.routineStatus || 'non specificata'}
+
+📋 **PROBLEMATICHE RILEVATE E ANALISI:**
+Basandomi sulle informazioni fornite, ho identificato le seguenti aree di miglioramento per la tua pelle che possiamo trattare efficacemente con i prodotti Beautycology formulati scientificamente.
+
+💫 **RACCOMANDAZIONI PERSONALIZZATE:**
+Ho creato per te una routine completa e personalizzata utilizzando i prodotti Beautycology più adatti alle tue esigenze.
+
+**🌅 ROUTINE MATTINA:**
+1. **Detersione**: ${products.cleanser}
+   - Applicare su dischetto di cotone e pulire delicatamente viso e collo
+2. **Trattamento**: ${products.serum}
+   - 2-3 gocce su viso pulito, massaggiare delicatamente
+3. **Idratazione**: ${products.treatment}
+   - Applicare una quantità pari a un chicco di riso su tutto il viso
+4. **Protezione solare**: SPF 50+ (sempre!)
+   - Essenziale per proteggere la pelle dai danni UV
+
+**🌙 ROUTINE SERA:**
+1. **Detersione**: ${products.cleanser}
+   - Rimuove trucco e impurità accumulate durante il giorno
+2. **Tonico**: Tonico Riequilibrante
+   - Prepara la pelle ai trattamenti successivi
+3. **Trattamento**: ${products.serum}
+   - Applicare con movimenti circolari dal basso verso l'alto
+4. **Idratazione**: ${products.treatment}
+   - Strato più generoso rispetto alla mattina per nutrire la pelle durante la notte
+
+🧪 **SPIEGAZIONE SCIENTIFICA:**
+I prodotti Beautycology sono formulati con ingredienti scientificamente testati e percentuali ottimali per garantire risultati visibili. La Niacinamide al 4% nella Perfect & Pure Cream, ad esempio, è stata specificamente dosata per minimizzare l'irritazione mantenendo l'efficacia.
+
+📦 **I PRODOTTI BEAUTYCOLOGY PER TE:**
+Tutti i prodotti consigliati sono disponibili su beautycology.it con spedizione gratuita per ordini superiori a 50€.
+
+💡 **CONSIGLI FINALI:**
+- Inizia gradualmente introducendo un prodotto alla volta per permettere alla pelle di adattarsi
+- La costanza è fondamentale: i primi risultati si vedono dopo 2 settimane, miglioramenti significativi dopo 1 mese
+- Evita di cambiare prodotti troppo frequentemente
+
+Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
   }
 }
 
