@@ -75,6 +75,8 @@ Dopo la presentazione, aspetta che l'utente scelga cosa fare:
 Se l'utente chiede informazioni su prodotti specifici (es: "M-Eye Secret", "Perfect & Pure", "Acqua Micellare"):
 **RICONOSCI IL PRODOTTO E FORNISCI INFORMAZIONI DIRETTAMENTE!**
 **NON CHIEDERE "Quale prodotto ti interessa" SE L'UTENTE HA GIÀ NOMINATO UN PRODOTTO SPECIFICO!**
+**🚨 IMPORTANTE: MAI USARE PULSANTI O DOMANDE A SCELTA MULTIPLA QUANDO L'UTENTE CHIEDE INFORMAZIONI SUI PRODOTTI!**
+**FORNISCI SEMPRE UNA RISPOSTA TESTUALE COMPLETA CON I DETTAGLI DEL PRODOTTO!**
 
 ### CASO B - ANALISI PELLE:
 **QUANDO l'utente:**
@@ -334,6 +336,7 @@ Esempio CORRETTO:
 ❌ Non concludere prima di aver raccolto tutte le informazioni
 ❌ Non ripetere opzioni come bullet points quando fai domande con scelte multiple
 ❌ Non ignorare le risposte dell'utente (registrale sempre)
+❌ MAI USARE PULSANTI O DOMANDE A SCELTA MULTIPLA QUANDO L'UTENTE CHIEDE INFORMAZIONI SUI PRODOTTI
 
 # ESEMPI DI FLUSSO CONVERSAZIONALE
 
@@ -380,6 +383,7 @@ export class BeautycologyAIService {
     currentStep: string | null, 
     structuredFlowActive: boolean, 
     hasIntroduced?: boolean,
+    lastIntent?: 'product_info' | 'skin_analysis' | null,
     structuredFlowAnswers?: {
       skinType?: string;
       age?: string;
@@ -453,6 +457,13 @@ export class BeautycologyAIService {
 
       // Check if this is a product information request
       const isProductInfoRequest = this.detectProductInformationIntent(userMessage);
+      
+      // Save the intent type in session state for better tracking
+      if (isProductInfoRequest) {
+        state.lastIntent = 'product_info';
+      } else if (this.shouldStartStructuredQuestions(userMessage, sessionHistory)) {
+        state.lastIntent = 'skin_analysis';
+      }
       
       // Build contents array - on first message, include system instruction
       let contents: any[];
@@ -842,27 +853,38 @@ export class BeautycologyAIService {
       let hasChoices = this.containsChoices(responseText);
       let choices = hasChoices ? this.extractChoices(responseText) : undefined;
 
-      // Force structured questions with appropriate buttons
-      console.log("🔍 Checking response for forced choices:", responseText.substring(0, 100));
-      if (!hasChoices) {
-        const forcedChoice = this.getForcedChoiceForQuestion(responseText);
-        if (forcedChoice) {
-          console.log("✅ Forcing choices for structured question:", forcedChoice);
-          hasChoices = true;
-          choices = forcedChoice;
-        }
-      }
+      // isProductInfoRequest already declared above, so we don't need to declare it again
       
-      // ALWAYS force choices for key questions, even if AI didn't provide them
-      const lowerText = responseText.toLowerCase();
-      if (!hasChoices && lowerText.includes('che tipo di pelle')) {
-        console.log("⚠️ FORCING choices for skin type question!");
-        hasChoices = true;
-        choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
+      // Only force buttons if NOT a product information request
+      if (!isProductInfoRequest) {
+        // Force structured questions with appropriate buttons
+        console.log("🔍 Checking response for forced choices:", responseText.substring(0, 100));
+        if (!hasChoices) {
+          const forcedChoice = this.getForcedChoiceForQuestion(responseText);
+          if (forcedChoice) {
+            console.log("✅ Forcing choices for structured question:", forcedChoice);
+            hasChoices = true;
+            choices = forcedChoice;
+          }
+        }
+        
+        // ALWAYS force choices for key questions, even if AI didn't provide them
+        const lowerText = responseText.toLowerCase();
+        if (!hasChoices && lowerText.includes('che tipo di pelle')) {
+          console.log("⚠️ FORCING choices for skin type question!");
+          hasChoices = true;
+          choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
+        }
+      } else {
+        // Product information request - never show buttons
+        console.log("🛍️ Product information request detected - removing any buttons");
+        hasChoices = false;
+        choices = undefined;
       }
 
       // State-driven approach: Force buttons based on conversation state
-      if (state.structuredFlowActive && state.currentStep === 'awaiting_skin_type') {
+      // But NEVER for product information requests
+      if (!isProductInfoRequest && state.structuredFlowActive && state.currentStep === 'awaiting_skin_type') {
         console.log(`🎯 Structured flow active - forcing skin type buttons for session ${sessionId}`);
         hasChoices = true;
         choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
@@ -875,8 +897,8 @@ export class BeautycologyAIService {
         }
       }
 
-      // Force age question after skin type
-      if (state.structuredFlowActive && state.currentStep === 'age_question') {
+      // Force age question after skin type (but not for product info requests)
+      if (!isProductInfoRequest && state.structuredFlowActive && state.currentStep === 'age_question') {
         console.log(`🎯 Structured flow - forcing age question for session ${sessionId}`);
         hasChoices = true;
         choices = ["16-25", "26-35", "36-45", "46-55", "56+"];
@@ -890,8 +912,8 @@ export class BeautycologyAIService {
         state.currentStep = 'awaiting_age';
       }
 
-      // Force problem question after age
-      if (state.structuredFlowActive && state.currentStep === 'problem_question') {
+      // Force problem question after age (but not for product info requests)
+      if (!isProductInfoRequest && state.structuredFlowActive && state.currentStep === 'problem_question') {
         console.log(`🎯 Structured flow - forcing problem question for session ${sessionId}`);
         hasChoices = true;
         choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Rosacea", "Punti neri", "Pori dilatati"];
@@ -917,8 +939,8 @@ export class BeautycologyAIService {
         state.currentStep = 'awaiting_problem';
       }
 
-      // Force ingredients question after problem
-      if (state.structuredFlowActive && state.currentStep === 'ingredients_question') {
+      // Force ingredients question after problem (but not for product info requests)
+      if (!isProductInfoRequest && state.structuredFlowActive && state.currentStep === 'ingredients_question') {
         console.log(`🎯 Structured flow - forcing ingredients question for session ${sessionId}`);
         hasChoices = true;
         choices = ["Acido Ialuronico", "Vitamina C", "Retinolo", "Niacinamide", "Acido Salicilico", "Nessuno in particolare"];
@@ -932,8 +954,8 @@ export class BeautycologyAIService {
         state.currentStep = 'awaiting_ingredients';
       }
 
-      // Force routine question after ingredients
-      if (state.structuredFlowActive && state.currentStep === 'routine_question') {
+      // Force routine question after ingredients (but not for product info requests)
+      if (!isProductInfoRequest && state.structuredFlowActive && state.currentStep === 'routine_question') {
         console.log(`🎯 Structured flow - forcing routine question for session ${sessionId}`);
         hasChoices = true;
         choices = ["Sì, ho una routine completa", "Uso solo alcuni prodotti", "No, non ho una routine"];
@@ -947,8 +969,9 @@ export class BeautycologyAIService {
         state.currentStep = 'awaiting_routine';
       }
       
-      // Additional fallback check for the exact pattern
-      if (!hasChoices && (
+      // Additional fallback check for the exact pattern (but not for product info requests)
+      const lowerText = responseText.toLowerCase();
+      if (!isProductInfoRequest && !hasChoices && (
         lowerText.includes('che tipo di pelle hai') ||
         lowerText.includes('iniziamo subito! che tipo di pelle hai') ||
         (lowerText.includes('iniziamo') && lowerText.includes('che tipo di pelle'))
@@ -1007,8 +1030,13 @@ export class BeautycologyAIService {
       let hasChoices = false;
       let choices: string[] = [];
       
-      if (state.structuredFlowActive || state.currentStep) {
-        // Continue with structured flow
+      // Check if the original message was a product info request
+      // Use the saved intent from state if userMessage is not available
+      const isProductInfoRequest = userMessage ? this.detectProductInformationIntent(userMessage) : 
+                                    (state.lastIntent === 'product_info');
+      
+      if (!isProductInfoRequest && (state.structuredFlowActive || state.currentStep)) {
+        // Continue with structured flow (but not for product info requests)
         if (state.currentStep === 'awaiting_skin_type' || !state.currentStep) {
           fallbackResponse = "Capisco che stai avendo alcune preoccupazioni per la pelle. Per aiutarti al meglio, iniziamo con alcune domande specifiche.\n\nChe tipo di pelle hai?";
           hasChoices = true;
@@ -1034,6 +1062,11 @@ export class BeautycologyAIService {
           fallbackResponse = "C'è qualcos'altro che dovrei sapere sulla tua pelle o sulle tue esigenze specifiche?";
           hasChoices = false;
         }
+      } else if (isProductInfoRequest) {
+        // Product information request - provide product info without buttons
+        fallbackResponse = "Posso aiutarti con informazioni sui nostri prodotti Beautycology! Abbiamo una gamma completa di prodotti scientifici per la skincare, tra cui la Perfect & Pure Cream per pelli miste, M-Eye Secret per il contorno occhi, e l'Acqua Micellare per la detersione. Dimmi quale prodotto ti interessa o cosa stai cercando per la tua pelle.";
+        hasChoices = false;
+        choices = [];
       } else {
         // Generic helpful response
         fallbackResponse = "Capisco le tue esigenze! Basandomi su quello che mi hai detto, posso consigliarti una routine personalizzata. Dimmi di più sui tuoi obiettivi specifici per la pelle, così posso suggerirti i prodotti più adatti del nostro catalogo Beautycology.";
