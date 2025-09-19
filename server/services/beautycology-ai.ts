@@ -134,7 +134,9 @@ SOLO dopo aver ricevuto risposta alla domanda 1:
 ### DOMANDA 3 - PROBLEMATICA PRINCIPALE:
 🚨 **OBBLIGATORIO: DOMANDA A RISPOSTA MULTIPLA CON PULSANTI**
 SOLO dopo aver ricevuto risposta alla domanda 2:
-> "Qual è la problematica principale della tua pelle che vuoi risolvere?"
+> "Qual è la problematica principale della tua pelle che vuoi risolvere?
+
+Se la problematica che vuoi risolvere non è presente tra le opzioni, puoi scriverla qui in chat"
 
 **I pulsanti saranno automaticamente: Acne/Brufoli, Macchie scure, Rughe/Invecchiamento, Pelle grassa, Pelle secca, Pori dilatati**
 
@@ -713,10 +715,22 @@ export class BeautycologyAIService {
         hasChoices = true;
         choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Pelle grassa", "Pelle secca", "Pori dilatati"];
         
-        // Force problem question in response
-        if (!responseText.toLowerCase().includes('problematica principale')) {
-          responseText = "Ottimo! Ora dimmi qual è la problematica principale della tua pelle che vuoi risolvere?\n\nSe la problematica che vuoi risolvere non è presente tra le opzioni, puoi scriverla qui in chat";
-          console.log(`📝 Forced problem question in response`);
+        // Define the hint text that should always be present
+        const hintText = "Se la problematica che vuoi risolvere non è presente tra le opzioni, puoi scriverla qui in chat";
+        
+        // Check if response already has the problem question
+        const asksProblem = responseText.toLowerCase().includes('problematica principale');
+        
+        if (asksProblem) {
+          // If the response already asks about the problem but doesn't have the hint, add it
+          if (!responseText.includes(hintText)) {
+            responseText = responseText.trim() + "\n\n" + hintText;
+            console.log(`📝 Added hint text to existing problem question`);
+          }
+        } else {
+          // If the response doesn't ask about the problem, replace with the full question + hint
+          responseText = "Ottimo! Ora dimmi qual è la problematica principale della tua pelle che vuoi risolvere?\n\n" + hintText;
+          console.log(`📝 Forced problem question with hint in response`);
         }
         
         state.currentStep = 'awaiting_problem';
