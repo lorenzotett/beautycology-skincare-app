@@ -764,12 +764,25 @@ export class BeautycologyAIService {
       /problemi.*viso/i
     ];
 
+    // Check if the message contains skin analysis JSON data (from photo upload)
+    const hasSkinAnalysisData = userMessage.includes("Analisi AI della pelle:") || 
+                                userMessage.includes("rossori") || 
+                                userMessage.includes("texture_uniforme") ||
+                                (userMessage.includes("{") && userMessage.includes("pori_dilatati"));
+
     // Check if this is after the welcome message and user is describing skin
     const isAfterWelcome = sessionHistory.length >= 2; // At least name + welcome
     const matchesSkinDescription = skinDescriptionPatterns.some(pattern => pattern.test(userMessage));
     const matchesAnalysisRequest = analysisRequests.some(pattern => pattern.test(userMessage));
 
-    return isAfterWelcome && (matchesSkinDescription || matchesAnalysisRequest);
+    console.log(`🔍 Structured questions trigger check:
+    - isAfterWelcome: ${isAfterWelcome}
+    - matchesSkinDescription: ${matchesSkinDescription}
+    - matchesAnalysisRequest: ${matchesAnalysisRequest}
+    - hasSkinAnalysisData: ${hasSkinAnalysisData}
+    - userMessage preview: ${userMessage.substring(0, 100)}...`);
+
+    return isAfterWelcome && (matchesSkinDescription || matchesAnalysisRequest || hasSkinAnalysisData);
   }
 
   private containsChoices(text: string): boolean {
