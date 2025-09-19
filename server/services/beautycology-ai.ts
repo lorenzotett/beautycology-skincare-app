@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { getAppConfig } from "../config/app-config";
 import { ragService } from "./rag-simple";
+import { ImagePreprocessor } from "./image-preprocessor";
 import fs from 'fs';
 import path from 'path';
 
@@ -423,14 +424,22 @@ export class BeautycologyAIService {
         // Prepare message parts (text + optional image)
         const parts: any[] = [{ text: fullPrompt }];
         if (imageData) {
-          // Add image for skin analysis
-          const mimeType = imageData.startsWith('/9j') ? 'image/jpeg' : 'image/png';
-          parts.push({
-            inlineData: {
-              mimeType,
-              data: imageData
-            }
-          });
+          try {
+            // Preprocess image to ensure it's within size limits
+            const preprocessor = new ImagePreprocessor();
+            const processedImage = await preprocessor.preprocessForGemini(imageData);
+            
+            // Add preprocessed image for skin analysis
+            parts.push({
+              inlineData: {
+                mimeType: processedImage.mimeType,
+                data: processedImage.base64
+              }
+            });
+          } catch (imageError) {
+            console.error("⚠️ Could not process image, continuing without it:", imageError);
+            // Continue without the image rather than failing completely
+          }
         }
         
         contents = [{
@@ -857,14 +866,21 @@ export class BeautycologyAIService {
     if (lastModelMessage && lastModelMessage.parts && lastModelMessage.parts.length > 0) {
       const lastText = lastModelMessage.parts[0].text || '';
       // If the bot just asked a question about age, routine, concerns, etc., don't restart the flow
-      if (lastText.includes('Quanti anni hai') || 
+      // BUT allow it if the bot just asked the skin type question as part of initial response
+      if ((lastText.includes('Quanti anni hai') || 
           lastText.includes('routine attuale') ||
           lastText.includes('preoccupazioni per la pelle') ||
           lastText.includes('problematica principale') ||
-          lastText.includes('ingrediente attivo') ||
-          lastText.includes('Che tipo di pelle hai')) {
+          lastText.includes('ingrediente attivo')) &&
+          !lastText.includes('Capisco perfettamente!')) {
         console.log("🛑 Not starting structured flow - already in conversation flow");
         return false;
+      }
+      // Special case: if the bot said "Capisco perfettamente" and asked about skin type, 
+      // this IS the start of the structured flow
+      if (lastText.includes('Capisco perfettamente!') && lastText.includes('Che tipo di pelle hai')) {
+        console.log("✅ Allowing structured flow to start - initial skin type question detected");
+        return true;
       }
     }
     
