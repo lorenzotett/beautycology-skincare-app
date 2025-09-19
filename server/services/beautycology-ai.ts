@@ -456,8 +456,59 @@ export class BeautycologyAIService {
         const antiRepeatReminder = state.hasIntroduced ? 
           "Ricorda: NON ripresentarti, rispondi direttamente.\n\n" : '';
         
-        // Check if message contains skin analysis data
+        // Special handling for when structured flow is completed
         let messageText = antiRepeatReminder + userMessage;
+        
+        // Normalize user message for robust matching
+        const normalizedMessage = userMessage.toLowerCase()
+          .trim()
+          .replace(/[.,!?;:'"]/g, '') // Remove punctuation
+          .replace(/à/g, 'a')
+          .replace(/è|é/g, 'e')
+          .replace(/ì|í/g, 'i')
+          .replace(/ò|ó/g, 'o')
+          .replace(/ù|ú/g, 'u');
+        
+        // Check if this is a routine answer (last step) - be more flexible in matching
+        const isRoutineAnswer = state.currentStep === 'awaiting_routine' && 
+          (normalizedMessage.includes('routine') ||
+           normalizedMessage.includes('si') ||
+           normalizedMessage.includes('no') ||
+           normalizedMessage.includes('solo alcuni') ||
+           normalizedMessage.includes('prodotti') ||
+           normalizedMessage.length > 0); // Accept any response at this step
+        
+        // Also check if we're in completed state but haven't provided recommendations yet
+        const isCompletedWithoutRecommendations = state.currentStep === 'completed' && 
+          !sessionHistory.some(m => m.role === 'model' && m.parts?.[0]?.text?.includes('routine personalizzata'));
+        
+        if (isRoutineAnswer || isCompletedWithoutRecommendations) {
+          // Add explicit instructions for the AI to generate comprehensive recommendations
+          const comprehensivePrompt = `L'utente ha risposto: "${userMessage}"\n\n` +
+            `IMPORTANTE: Hai raccolto tutte le informazioni necessarie dal questionario strutturato:\n` +
+            `1. Tipo di pelle\n` +
+            `2. Età\n` +
+            `3. Problematica principale\n` +
+            `4. Ingredienti preferiti\n` +
+            `5. Routine attuale\n\n` +
+            `ORA DEVI FORNIRE UNA ROUTINE PERSONALIZZATA COMPLETA con i prodotti Beautycology più adatti.\n` +
+            `Includi:\n` +
+            `- Almeno 3-4 prodotti specifici del catalogo Beautycology\n` +
+            `- Spiegazione del perché ogni prodotto è adatto al suo caso\n` +
+            `- Come usare i prodotti nella routine quotidiana (mattina/sera)\n` +
+            `- Consigli personalizzati basati sulle sue risposte\n\n` +
+            `Inizia con: "Perfetto! 🌟 Ora che conosco meglio la tua pelle e le tue esigenze..."`;
+          
+          // Include RAG context for product grounding
+          if (ragInfo) {
+            messageText = antiRepeatReminder + comprehensivePrompt + `\n\nContesto prodotti rilevanti:\n${ragInfo}`;
+          } else {
+            messageText = antiRepeatReminder + comprehensivePrompt;
+          }
+        } else {
+          // Check if message contains skin analysis data
+          messageText = antiRepeatReminder + userMessage;
+        }
         if (userMessage.includes("Analisi AI della pelle:")) {
           // Extract and parse skin analysis data
           try {
