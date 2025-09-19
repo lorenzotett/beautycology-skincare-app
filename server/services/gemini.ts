@@ -64,6 +64,13 @@ C) Terza opzione
 
 NON aggiungere spiegazioni dopo le opzioni. Le opzioni devono essere le ultime righe del messaggio. Questo permette all'interfaccia di creare pulsanti cliccabili automaticamente.
 
+**REGOLA FONDAMENTALE PER I CONSIGLI:** 
+QUANDO DAI CONSIGLI O RACCOMANDAZIONI, NON USARE MAI IL FORMATO A), B), C) PER LE SCELTE.
+- Per i consigli sui prodotti: usa solo link diretti o descrizioni testuali
+- Per le routine: presenta i passaggi come elenco puntato o numerato normale (1., 2., 3. o • )
+- Per le alternative: usa frasi come "oppure", "in alternativa", "puoi scegliere tra"
+- Il formato A), B), C) è riservato ESCLUSIVAMENTE alle domande di raccolta dati
+
 **REGOLA CRITICA:** TUTTE le seguenti domande DEVONO sempre includere le loro opzioni multiple choice quando vengono fatte:
 - "Hai una pelle sensibile?" → SEMPRE con A) Sì, B) No, C) Solo con alcuni prodotti
 - "Hai punti neri?" → SEMPRE con A) Sì, molti, B) Sì, alcuni, C) No, pochi o nessuno  
@@ -570,6 +577,8 @@ Questo garantisce che l'utente veda che tutte le sue risposte sono state conside
 ✗ Iniziare una nuova analisi
 ✗ Richiedere altre foto
 ✗ Fare domande con scelte multiple
+✗ Usare il formato A), B), C) per presentare opzioni (usa elenchi puntati o link diretti)
+✗ Creare pulsanti di scelta nei consigli (solo link quando parli di prodotti)
 
 **ESEMPI DI RISPOSTE POST-COMPLETAMENTO:**
 - "Un consiglio extra: applica sempre la crema con movimenti circolari dal basso verso l'alto per stimolare la circolazione!"
@@ -949,9 +958,43 @@ A te la scelta!`;
   }
 
   private detectMultipleChoice(content: string): boolean {
-    // Rimuovo solo i log di debug per pulizia del codice
-    // console.log('=== CHOICE DETECTION DEBUG ===');
-    // console.log('Content:', content);
+    // IMPORTANTE: Mai mostrare pulsanti di scelta quando si danno consigli
+    // Solo mostrare pulsanti durante la fase di raccolta dati (domande)
+    
+    // Check if this is advice/recommendation content - NO BUTTONS for advice
+    const isAdviceContent = 
+      content.toLowerCase().includes('consiglio') || 
+      content.toLowerCase().includes('consigli') ||
+      content.toLowerCase().includes('ti consiglio') ||
+      content.toLowerCase().includes('suggerisco') ||
+      content.toLowerCase().includes('routine') ||
+      content.toLowerCase().includes('skincare') ||
+      content.toLowerCase().includes('applicare') ||
+      content.toLowerCase().includes('utilizzare') ||
+      content.toLowerCase().includes('prodotto') ||
+      content.toLowerCase().includes('prodotti') ||
+      content.toLowerCase().includes('crema') ||
+      content.toLowerCase().includes('siero') ||
+      content.toLowerCase().includes('detergente') ||
+      content.toLowerCase().includes('idratante') ||
+      content.toLowerCase().includes('protezione solare') ||
+      content.toLowerCase().includes('spf') ||
+      content.toLowerCase().includes('retinol') ||
+      content.toLowerCase().includes('vitamina') ||
+      content.toLowerCase().includes('acido') ||
+      content.toLowerCase().includes('ingredienti') ||
+      content.toLowerCase().includes('**solo la sera**') ||
+      content.toLowerCase().includes('**solo la mattina**') ||
+      content.toLowerCase().includes('**esclusivamente nella routine serale**') ||
+      content.toLowerCase().includes('formulabonnie') ||
+      content.toLowerCase().includes('analisi completa della pelle') ||
+      content.toLowerCase().includes('resoconto finale');
+    
+    // If this is advice content, NEVER show choice buttons
+    if (isAdviceContent) {
+      console.log('Detected advice content - no choice buttons will be shown');
+      return false;
+    }
 
     // Look for pattern like "A) option" or "A. option" (allowing leading whitespace)
     const multipleChoicePattern = /^\s*[A-E]\)\s+.+$/gm;
@@ -963,7 +1006,7 @@ A te la scelta!`;
       return false;
     }
 
-    // More relaxed detection - check for common question patterns
+    // For data collection questions - check for common question patterns
     const hasQuestion = content.includes('?');
     const hasChoiceIndicator = content.toLowerCase().includes('scegli') || 
                               content.toLowerCase().includes('seleziona') ||
@@ -972,12 +1015,12 @@ A te la scelta!`;
                               content.toLowerCase().includes('derivano da') ||
                               content.toLowerCase().includes('derivano principalmente da') ||
                               content.toLowerCase().includes('secondo te') ||
-                              content.toLowerCase().includes('metti la crema') ||
+                              content.toLowerCase().includes('metti la crema solare') ||
                               content.toLowerCase().includes('genere') ||
                               content.toLowerCase().includes('tipologia') ||
                               content.toLowerCase().includes('tipo di pelle') ||
                               content.toLowerCase().includes('sensibile') ||
-                              content.toLowerCase().includes('utilizzi') ||
+                              content.toLowerCase().includes('utilizzi scrub') ||
                               content.toLowerCase().includes('punti neri') ||
                               content.toLowerCase().includes('quanti anni') ||
                               content.toLowerCase().includes('ore dormi') ||
@@ -992,13 +1035,11 @@ A te la scelta!`;
 
     console.log('Choice detection:', { matches: matches.length, hasQuestion, hasChoiceIndicator });
 
-    // Accept if it has choices and either a question mark or choice indicators
-    // Special case: if we have A) B) C) pattern with 2+ matches, accept even without explicit indicators
+    // Only show choice buttons for actual data collection questions, not advice
     const hasValidPattern = matches.length >= 2 && matches.length <= 6;
     const hasQuestionOrIndicator = hasQuestion || hasChoiceIndicator;
 
-    // More flexible approach: if we have valid A) B) C) pattern, accept it
-    return hasValidPattern && (hasQuestionOrIndicator || matches.length >= 2);
+    return hasValidPattern && hasQuestionOrIndicator;
   }
 
   private extractChoices(content: string): string[] {
