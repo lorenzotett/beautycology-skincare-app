@@ -635,11 +635,39 @@ Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
       } catch (aiError) {
         console.error('AI service error:', aiError);
 
-        // Fallback response in caso di errore AI
+        // Fallback response in caso di errore AI - seguiamo il flusso corretto
+        // Costruiamo la panoramica basata sui risultati dell'analisi
+        let problemOverview = "";
+        const problems: string[] = [];
+        
+        if (analysisResult) {
+          // Trova i problemi principali (punteggio >= 61)
+          if (analysisResult.rossori >= 61) problems.push(`rossori (${analysisResult.rossori}/100)`);
+          if (analysisResult.acne >= 61) problems.push(`acne (${analysisResult.acne}/100)`);
+          if (analysisResult.rughe >= 61) problems.push(`rughe (${analysisResult.rughe}/100)`);
+          if (analysisResult.pigmentazione >= 61) problems.push(`pigmentazione (${analysisResult.pigmentazione}/100)`);
+          if (analysisResult.pori_dilatati >= 61) problems.push(`pori dilatati (${analysisResult.pori_dilatati}/100)`);
+          if (analysisResult.oleosita >= 61) problems.push(`oleosità (${analysisResult.oleosita}/100)`);
+          if (analysisResult.danni_solari >= 61) problems.push(`danni solari (${analysisResult.danni_solari}/100)`);
+          if (analysisResult.occhiaie >= 61) problems.push(`occhiaie (${analysisResult.occhiaie}/100)`);
+          if (analysisResult.idratazione >= 61) problems.push(`scarsa idratazione (${analysisResult.idratazione}/100)`);
+          if (analysisResult.elasticita >= 85) problems.push(`elasticità compromessa (${analysisResult.elasticita}/100)`);
+          if (analysisResult.texture_uniforme >= 61) problems.push(`texture irregolare (${analysisResult.texture_uniforme}/100)`);
+          
+          if (problems.length > 0) {
+            problemOverview = `🔍 **PANORAMICA PROBLEMI PRINCIPALI:**\nL'analisi ha rilevato alcune aree su cui possiamo lavorare insieme: ${problems.slice(0, 3).join(', ')}. Non preoccuparti, sono tutte condizioni assolutamente normali e gestibili! Con i prodotti giusti possiamo migliorare visibilmente questi aspetti. 💪\n\n`;
+          } else {
+            problemOverview = `🔍 **PANORAMICA PROBLEMI PRINCIPALI:**\nChe belle notizie! 🌟 La tua pelle mostra complessivamente un ottimo stato di salute. Anche se non ci sono problematiche critiche, possiamo sempre ottimizzare la tua routine per mantenere e migliorare ulteriormente la luminosità e la salute della tua pelle.\n\n`;
+          }
+        }
+        
+        // Prepara la prima domanda del questionario
+        const firstQuestion = "Ora che ho analizzato la tua pelle, ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche.\n\nUtilizzi scrub o peeling?\n\nA) Sì regolarmente\nB) Occasionalmente\nC) No";
+        
         response = {
-          content: "Analisi dell'immagine completata. Ti fornirò una consulenza personalizzata per la tua pelle.",
-          hasChoices: false,
-          choices: []
+          content: problemOverview + firstQuestion,
+          hasChoices: true,
+          choices: ["Sì regolarmente", "Occasionalmente", "No"]
         };
       }
 
