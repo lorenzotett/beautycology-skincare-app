@@ -1091,7 +1091,8 @@ export class BeautycologyAIService {
       /qual[ie]?\s+(prodott[oi]|crem[ae]|sier[ou]m)/i,
       /cosa\s+(avete|vendete|proponete)/i,
       /che\s+prodott[oi]\s+(avete|vendete|proponete)/i,
-      /vorrei\s+(informazioni|sapere|conoscere)\s+(su|dei|i)\s+prodott/i,
+      /vorrei\s+(informazioni|sapere|conoscere)\s+(su[il]?\s+|dei?\s+|[ai]\s+)?(vostri\s+)?prodott/i,
+      /informazioni\s+(su[il]?\s+|dei?\s+)?(vostri\s+)?prodott/i,
       /parlami\s+(dei|di)\s+(vostri\s+)?prodott/i,
       /mi\s+(puoi|può)\s+(consigliare|suggerire)\s+un\s+prodott/i,
       /cercavo?\s+un\s+(prodotto|crema|siero)/i,
@@ -1113,7 +1114,9 @@ export class BeautycologyAIService {
       /linea\s+(di\s+)?prodott/i,
       /novità/i,
       /best\s*seller/i,
-      /più\s+vendu/i
+      /più\s+vendu/i,
+      /vostri\s+prodott/i,
+      /i\s+prodott[oi]\s+(che\s+)?avete/i
     ];
 
     // Check if message mentions specific product names from knowledge base
@@ -1144,8 +1147,14 @@ export class BeautycologyAIService {
   }
 
   private shouldStartStructuredQuestions(userMessage: string, sessionHistory: any[]): boolean {
+    // Debug logging
+    console.log(`🔍 Checking message for intent: "${userMessage}"`);
+    
     // IMPORTANT: First check if this is a product information request
-    if (this.detectProductInformationIntent(userMessage)) {
+    const isProductInfo = this.detectProductInformationIntent(userMessage);
+    console.log(`🛍️ Product info intent check: ${isProductInfo}`);
+    
+    if (isProductInfo) {
       console.log("🛍️ Product information intent detected - NOT starting structured flow");
       return false;
     }
