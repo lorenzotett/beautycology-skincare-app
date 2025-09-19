@@ -1169,11 +1169,19 @@ export class BeautycologyAIService {
       /anti[\s-]?age/i,
       /anti[\s-]?rughe/i,
       /antimacchie/i,
-      /sebo[\s-]?regola/i
+      /sebo[\s-]?regola/i,
+      /bionic\s*hydra/i,
+      /hydralift/i,
+      /acqua\s*micellare/i
     ];
 
     const hasProductInfoIntent = productInformationPatterns.some(pattern => pattern.test(userMessage));
     const mentionsProductName = productNamePatterns.some(pattern => pattern.test(userMessage));
+    
+    // Log for debugging
+    if (hasProductInfoIntent || mentionsProductName) {
+      console.log(`🛍️ Product information intent detected in message: "${userMessage}"`);
+    }
     
     // If the message contains product info patterns or mentions specific products, it's likely informational
     return hasProductInfoIntent || mentionsProductName;
