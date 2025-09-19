@@ -638,26 +638,50 @@ Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
         // Fallback response in caso di errore AI - seguiamo il flusso corretto
         // Costruiamo la panoramica basata sui risultati dell'analisi
         let problemOverview = "";
-        const problems: string[] = [];
+        const criticalProblems: string[] = [];
+        const moderateProblems: string[] = [];
         
         if (analysisResult) {
-          // Trova i problemi principali (punteggio >= 61)
-          if (analysisResult.rossori >= 61) problems.push(`rossori (${analysisResult.rossori}/100)`);
-          if (analysisResult.acne >= 61) problems.push(`acne (${analysisResult.acne}/100)`);
-          if (analysisResult.rughe >= 61) problems.push(`rughe (${analysisResult.rughe}/100)`);
-          if (analysisResult.pigmentazione >= 61) problems.push(`pigmentazione (${analysisResult.pigmentazione}/100)`);
-          if (analysisResult.pori_dilatati >= 61) problems.push(`pori dilatati (${analysisResult.pori_dilatati}/100)`);
-          if (analysisResult.oleosita >= 61) problems.push(`oleosità (${analysisResult.oleosita}/100)`);
-          if (analysisResult.danni_solari >= 61) problems.push(`danni solari (${analysisResult.danni_solari}/100)`);
-          if (analysisResult.occhiaie >= 61) problems.push(`occhiaie (${analysisResult.occhiaie}/100)`);
-          if (analysisResult.idratazione >= 61) problems.push(`scarsa idratazione (${analysisResult.idratazione}/100)`);
-          if (analysisResult.elasticita >= 85) problems.push(`elasticità compromessa (${analysisResult.elasticita}/100)`);
-          if (analysisResult.texture_uniforme >= 61) problems.push(`texture irregolare (${analysisResult.texture_uniforme}/100)`);
+          // Helper function to categorize problems by severity
+          const addProblem = (score: number, criticalText: string, moderateText: string, criticalMin = 61, moderateMin = 41) => {
+            if (score >= criticalMin) {
+              criticalProblems.push(`${criticalText} (${score}/100)`);
+            } else if (score >= moderateMin) {
+              moderateProblems.push(`${moderateText} (${score}/100)`);
+            }
+          };
           
-          if (problems.length > 0) {
-            problemOverview = `🔍 **PANORAMICA PROBLEMI PRINCIPALI:**\nL'analisi ha rilevato alcune aree su cui possiamo lavorare insieme: ${problems.slice(0, 3).join(', ')}. Non preoccuparti, sono tutte condizioni assolutamente normali e gestibili! Con i prodotti giusti possiamo migliorare visibilmente questi aspetti. 💪\n\n`;
+          // Analyze each parameter with proper thresholds
+          addProblem(analysisResult.rossori, 'rossori elevati', 'rossori moderati');
+          addProblem(analysisResult.acne, 'acne evidente', 'acne lieve');
+          addProblem(analysisResult.rughe, 'rughe pronunciate', 'rughe leggere');
+          addProblem(analysisResult.pigmentazione, 'iperpigmentazione evidente', 'iperpigmentazione moderata');
+          addProblem(analysisResult.pori_dilatati, 'pori molto dilatati', 'pori moderatamente dilatati');
+          addProblem(analysisResult.oleosita, 'oleosità elevata', 'oleosità moderata');
+          addProblem(analysisResult.danni_solari, 'danni solari significativi', 'danni solari moderati');
+          addProblem(analysisResult.occhiaie, 'occhiaie marcate', 'occhiaie moderate');
+          addProblem(analysisResult.idratazione, 'scarsa idratazione', 'idratazione insufficiente');
+          
+          // Special handling for elasticity (higher threshold for critical)
+          if (analysisResult.elasticita >= 85) {
+            criticalProblems.push(`elasticità gravemente compromessa (${analysisResult.elasticita}/100)`);
+          } else if (analysisResult.elasticita >= 61) {
+            moderateProblems.push(`elasticità leggermente compromessa (${analysisResult.elasticita}/100)`);
+          }
+          
+          addProblem(analysisResult.texture_uniforme, 'texture molto irregolare', 'texture non uniforme');
+          
+          // Build the panorama message based on detected problems
+          if (criticalProblems.length > 0) {
+            problemOverview = `🔍 **PANORAMICA ANALISI PELLE:**\nL'analisi ha rilevato alcune aree prioritarie su cui lavorare: ${criticalProblems.slice(0, 3).join(', ')}. `;
+            if (moderateProblems.length > 0) {
+              problemOverview += `Inoltre, ci sono alcune aree da ottimizzare: ${moderateProblems.slice(0, 3).join(', ')}. `;
+            }
+            problemOverview += `Non preoccuparti, sono tutte condizioni normali e gestibili! Con i prodotti giusti possiamo migliorare visibilmente questi aspetti. 💪\n\n`;
+          } else if (moderateProblems.length > 0) {
+            problemOverview = `🔍 **PANORAMICA ANALISI PELLE:**\nLa tua pelle è in buone condizioni generali, con alcune aree che possiamo ottimizzare: ${moderateProblems.slice(0, 3).join(', ')}. Con la giusta routine e i prodotti scientifici di Beautycology, possiamo perfezionare questi aspetti per ottenere risultati ancora migliori! ✨\n\n`;
           } else {
-            problemOverview = `🔍 **PANORAMICA PROBLEMI PRINCIPALI:**\nChe belle notizie! 🌟 La tua pelle mostra complessivamente un ottimo stato di salute. Anche se non ci sono problematiche critiche, possiamo sempre ottimizzare la tua routine per mantenere e migliorare ulteriormente la luminosità e la salute della tua pelle.\n\n`;
+            problemOverview = `🔍 **PANORAMICA ANALISI PELLE:**\nChe belle notizie! 🌟 La tua pelle mostra complessivamente un ottimo stato di salute. Possiamo lavorare insieme per mantenere e migliorare ulteriormente la luminosità e la salute della tua pelle con una routine personalizzata.\n\n`;
           }
         }
         
