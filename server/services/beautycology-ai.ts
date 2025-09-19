@@ -454,31 +454,56 @@ export class BeautycologyAIService {
             if (jsonMatch) {
               const analysisData = JSON.parse(jsonMatch[1]);
               
-              // Build panorama of main problems
-              const problems: string[] = [];
-              if (analysisData.rossori >= 61) problems.push(`rossori (${analysisData.rossori}/100)`);
-              if (analysisData.acne >= 61) problems.push(`acne (${analysisData.acne}/100)`);
-              if (analysisData.rughe >= 61) problems.push(`rughe (${analysisData.rughe}/100)`);
-              if (analysisData.pigmentazione >= 61) problems.push(`pigmentazione (${analysisData.pigmentazione}/100)`);
-              if (analysisData.pori_dilatati >= 61) problems.push(`pori dilatati (${analysisData.pori_dilatati}/100)`);
-              if (analysisData.oleosita >= 61) problems.push(`oleosità (${analysisData.oleosita}/100)`);
-              if (analysisData.danni_solari >= 61) problems.push(`danni solari (${analysisData.danni_solari}/100)`);
-              if (analysisData.occhiaie >= 61) problems.push(`occhiaie (${analysisData.occhiaie}/100)`);
-              if (analysisData.idratazione >= 61) problems.push(`scarsa idratazione (${analysisData.idratazione}/100)`);
-              if (analysisData.elasticita >= 85) problems.push(`elasticità compromessa (${analysisData.elasticita}/100)`);
-              if (analysisData.texture_uniforme >= 61) problems.push(`texture irregolare (${analysisData.texture_uniforme}/100)`);
+              // Build panorama of problems with multiple severity levels
+              const criticalProblems: string[] = [];
+              const moderateProblems: string[] = [];
+              
+              // Helper function to categorize problems by severity
+              const addProblem = (score: number, criticalText: string, moderateText: string, criticalMin = 61, moderateMin = 41) => {
+                if (score >= criticalMin) {
+                  criticalProblems.push(`${criticalText} (${score}/100)`);
+                } else if (score >= moderateMin) {
+                  moderateProblems.push(`${moderateText} (${score}/100)`);
+                }
+              };
+              
+              // Analyze each parameter with proper thresholds
+              addProblem(analysisData.rossori, 'rossori elevati', 'rossori moderati');
+              addProblem(analysisData.acne, 'acne evidente', 'acne lieve');
+              addProblem(analysisData.rughe, 'rughe pronunciate', 'rughe leggere');
+              addProblem(analysisData.pigmentazione, 'iperpigmentazione evidente', 'iperpigmentazione moderata');
+              addProblem(analysisData.pori_dilatati, 'pori molto dilatati', 'pori moderatamente dilatati');
+              addProblem(analysisData.oleosita, 'oleosità elevata', 'oleosità moderata');
+              addProblem(analysisData.danni_solari, 'danni solari significativi', 'danni solari moderati');
+              addProblem(analysisData.occhiaie, 'occhiaie marcate', 'occhiaie moderate');
+              addProblem(analysisData.idratazione, 'scarsa idratazione', 'idratazione insufficiente');
+              
+              // Special handling for elasticity (higher threshold for critical)
+              if (analysisData.elasticita >= 85) {
+                criticalProblems.push(`elasticità gravemente compromessa (${analysisData.elasticita}/100)`);
+              } else if (analysisData.elasticita >= 61) {
+                moderateProblems.push(`elasticità leggermente compromessa (${analysisData.elasticita}/100)`);
+              }
+              
+              addProblem(analysisData.texture_uniforme, 'texture molto irregolare', 'texture non uniforme');
               
               // Build the message with panorama and instruction to start questionnaire
               let panorama = "";
-              if (problems.length > 0) {
-                panorama = `🔍 **PANORAMICA PROBLEMI PRINCIPALI:**\nL'analisi ha rilevato alcune aree su cui possiamo lavorare insieme: ${problems.slice(0, 3).join(', ')}. Non preoccuparti, sono tutte condizioni assolutamente normali e gestibili! Con i prodotti giusti possiamo migliorare visibilmente questi aspetti. 💪\n\n`;
+              if (criticalProblems.length > 0) {
+                panorama = `🔍 **PANORAMICA ANALISI PELLE:**\nL'analisi ha rilevato alcune aree prioritarie su cui lavorare: ${criticalProblems.slice(0, 3).join(', ')}. `;
+                if (moderateProblems.length > 0) {
+                  panorama += `Inoltre, ci sono alcune aree da ottimizzare: ${moderateProblems.slice(0, 3).join(', ')}. `;
+                }
+                panorama += `Non preoccuparti, sono tutte condizioni normali e gestibili! Con i prodotti giusti possiamo migliorare visibilmente questi aspetti. 💪\n\n`;
+              } else if (moderateProblems.length > 0) {
+                panorama = `🔍 **PANORAMICA ANALISI PELLE:**\nLa tua pelle è in buone condizioni generali, con alcune aree che possiamo ottimizzare: ${moderateProblems.slice(0, 3).join(', ')}. Con la giusta routine e i prodotti scientifici di Beautycology, possiamo perfezionare questi aspetti per ottenere risultati ancora migliori! ✨\n\n`;
               } else {
-                panorama = `🔍 **PANORAMICA PROBLEMI PRINCIPALI:**\nChe belle notizie! 🌟 La tua pelle mostra complessivamente un ottimo stato di salute. Anche se non ci sono problematiche critiche, possiamo sempre ottimizzare la tua routine per mantenere e migliorare ulteriormente la luminosità e la salute della tua pelle.\n\n`;
+                panorama = `🔍 **PANORAMICA ANALISI PELLE:**\nChe belle notizie! 🌟 La tua pelle mostra complessivamente un ottimo stato di salute. Possiamo lavorare insieme per mantenere e migliorare ulteriormente la luminosità e la salute della tua pelle con una routine personalizzata.\n\n`;
               }
               
               // Force the structured flow to start
               state.structuredFlowActive = true;
-              state.currentStep = 'skin_type';
+              state.currentStep = 'awaiting_skin_type';
               
               // Provide the message with the analysis data and instruction to start questionnaire
               messageText = antiRepeatReminder + 
@@ -599,7 +624,7 @@ export class BeautycologyAIService {
       // If we should start structured flow, activate it (but only if not already completed)
       if (shouldStartStructuredFlow && !state.structuredFlowActive && state.currentStep !== 'completed') {
         state.structuredFlowActive = true;
-        state.currentStep = 'skin_type';
+        state.currentStep = 'awaiting_skin_type';
         console.log(`🚀 Starting structured flow for session ${sessionId}`);
       }
       
@@ -626,7 +651,7 @@ export class BeautycologyAIService {
       }
 
       // State-driven approach: Force buttons based on conversation state
-      if (state.structuredFlowActive && state.currentStep === 'skin_type') {
+      if (state.structuredFlowActive && state.currentStep === 'awaiting_skin_type') {
         console.log(`🎯 Structured flow active - forcing skin type buttons for session ${sessionId}`);
         hasChoices = true;
         choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
@@ -637,9 +662,6 @@ export class BeautycologyAIService {
           responseText += skinTypeQuestion;
           console.log(`📝 Appended skin type question to response`);
         }
-        
-        // Move to next step after providing buttons
-        state.currentStep = 'awaiting_skin_type';
       }
 
       // Force age question after skin type
