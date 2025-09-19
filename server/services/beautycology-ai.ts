@@ -445,8 +445,53 @@ export class BeautycologyAIService {
         const antiRepeatReminder = state.hasIntroduced ? 
           "Ricorda: NON ripresentarti, rispondi direttamente.\n\n" : '';
         
+        // Check if message contains skin analysis data
         let messageText = antiRepeatReminder + userMessage;
-        if (ragInfo) {
+        if (userMessage.includes("Analisi AI della pelle:")) {
+          // Extract and parse skin analysis data
+          try {
+            const jsonMatch = userMessage.match(/Analisi AI della pelle:\s*({[^}]+})/);
+            if (jsonMatch) {
+              const analysisData = JSON.parse(jsonMatch[1]);
+              
+              // Build panorama of main problems
+              const problems: string[] = [];
+              if (analysisData.rossori >= 61) problems.push(`rossori (${analysisData.rossori}/100)`);
+              if (analysisData.acne >= 61) problems.push(`acne (${analysisData.acne}/100)`);
+              if (analysisData.rughe >= 61) problems.push(`rughe (${analysisData.rughe}/100)`);
+              if (analysisData.pigmentazione >= 61) problems.push(`pigmentazione (${analysisData.pigmentazione}/100)`);
+              if (analysisData.pori_dilatati >= 61) problems.push(`pori dilatati (${analysisData.pori_dilatati}/100)`);
+              if (analysisData.oleosita >= 61) problems.push(`oleosità (${analysisData.oleosita}/100)`);
+              if (analysisData.danni_solari >= 61) problems.push(`danni solari (${analysisData.danni_solari}/100)`);
+              if (analysisData.occhiaie >= 61) problems.push(`occhiaie (${analysisData.occhiaie}/100)`);
+              if (analysisData.idratazione >= 61) problems.push(`scarsa idratazione (${analysisData.idratazione}/100)`);
+              if (analysisData.elasticita >= 85) problems.push(`elasticità compromessa (${analysisData.elasticita}/100)`);
+              if (analysisData.texture_uniforme >= 61) problems.push(`texture irregolare (${analysisData.texture_uniforme}/100)`);
+              
+              // Build the message with panorama and instruction to start questionnaire
+              let panorama = "";
+              if (problems.length > 0) {
+                panorama = `🔍 **PANORAMICA PROBLEMI PRINCIPALI:**\nL'analisi ha rilevato alcune aree su cui possiamo lavorare insieme: ${problems.slice(0, 3).join(', ')}. Non preoccuparti, sono tutte condizioni assolutamente normali e gestibili! Con i prodotti giusti possiamo migliorare visibilmente questi aspetti. 💪\n\n`;
+              } else {
+                panorama = `🔍 **PANORAMICA PROBLEMI PRINCIPALI:**\nChe belle notizie! 🌟 La tua pelle mostra complessivamente un ottimo stato di salute. Anche se non ci sono problematiche critiche, possiamo sempre ottimizzare la tua routine per mantenere e migliorare ulteriormente la luminosità e la salute della tua pelle.\n\n`;
+              }
+              
+              // Force the structured flow to start
+              state.structuredFlowActive = true;
+              state.currentStep = 'skin_type';
+              
+              // Provide the message with the analysis data and instruction to start questionnaire
+              messageText = antiRepeatReminder + 
+                `L'utente ha caricato una foto e l'analisi AI ha rilevato i seguenti parametri: ${JSON.stringify(analysisData)}\n\n` +
+                `IMPORTANTE: Devi fornire il seguente contenuto:\n` +
+                panorama +
+                `Ora che ho analizzato la tua pelle, ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche.\n\n` +
+                `Che tipo di pelle hai?`;
+            }
+          } catch (e) {
+            console.error("Error parsing skin analysis data:", e);
+          }
+        } else if (ragInfo) {
           messageText = antiRepeatReminder + `Contesto prodotti rilevanti:\n${ragInfo}\n\nDomanda utente: ${userMessage}`;
         }
         
