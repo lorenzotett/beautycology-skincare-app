@@ -622,10 +622,17 @@ export class BeautycologyAIService {
 
       // Check if user is answering the main problem question
       const problems = ["acne/brufoli", "macchie scure", "rughe/invecchiamento", "pelle grassa", "pelle secca", "pori dilatati"];
-      if (state.currentStep === 'awaiting_problem' && 
-          problems.some(problem => userMessage.toLowerCase().includes(problem.toLowerCase().split('/')[0]))) {
-        console.log(`✅ User selected main problem: ${userMessage}`);
-        state.currentStep = 'ingredients_question';
+      if (state.currentStep === 'awaiting_problem') {
+        // Check if user selected a predefined problem OR wrote their own description
+        const selectedPredefinedProblem = problems.some(problem => userMessage.toLowerCase().includes(problem.toLowerCase().split('/')[0]));
+        
+        // Accept any answer that's more than just a few characters (to handle custom problem descriptions)
+        const hasCustomDescription = userMessage.trim().length > 3 && !userMessage.toLowerCase().includes('non so');
+        
+        if (selectedPredefinedProblem || hasCustomDescription) {
+          console.log(`✅ User described problem: ${userMessage}`);
+          state.currentStep = 'ingredients_question';
+        }
       }
 
       // Check if user is answering the ingredients question
