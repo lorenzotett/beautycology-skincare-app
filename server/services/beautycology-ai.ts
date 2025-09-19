@@ -459,9 +459,13 @@ export class BeautycologyAIService {
         if (userMessage.includes("Analisi AI della pelle:")) {
           // Extract and parse skin analysis data
           try {
-            const jsonMatch = userMessage.match(/Analisi AI della pelle:\s*({[^}]+})/);
-            if (jsonMatch) {
-              const analysisData = JSON.parse(jsonMatch[1]);
+            // Improved JSON extraction - find the complete JSON object
+            const startIdx = userMessage.indexOf('{');
+            const endIdx = userMessage.lastIndexOf('}');
+            
+            if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+              const jsonStr = userMessage.substring(startIdx, endIdx + 1);
+              const analysisData = JSON.parse(jsonStr);
               
               // Build panorama of problems with multiple severity levels
               const criticalProblems: string[] = [];
@@ -524,6 +528,15 @@ export class BeautycologyAIService {
             }
           } catch (e) {
             console.error("Error parsing skin analysis data:", e);
+            // Fallback: if we have analysis data but can't parse it, still trigger structured flow
+            if (userMessage.includes("Analisi AI della pelle:")) {
+              state.structuredFlowActive = true;
+              state.currentStep = 'awaiting_skin_type';
+              messageText = antiRepeatReminder + 
+                `L'utente ha caricato una foto per l'analisi della pelle. ` +
+                `Ho analizzato la tua pelle e ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine.\n\n` +
+                `Che tipo di pelle hai?`;
+            }
           }
         } else if (ragInfo) {
           messageText = antiRepeatReminder + `Contesto prodotti rilevanti:\n${ragInfo}\n\nDomanda utente: ${userMessage}`;
@@ -531,13 +544,22 @@ export class BeautycologyAIService {
         
         const parts: any[] = [{ text: messageText }];
         if (imageData) {
-          const mimeType = imageData.startsWith('/9j') ? 'image/jpeg' : 'image/png';
-          parts.push({
-            inlineData: {
-              mimeType,
-              data: imageData
-            }
-          });
+          try {
+            // Preprocess image to ensure it's within size limits
+            const preprocessor = new ImagePreprocessor();
+            const processedImage = await preprocessor.preprocessForGemini(imageData);
+            
+            // Add preprocessed image
+            parts.push({
+              inlineData: {
+                mimeType: processedImage.mimeType,
+                data: processedImage.base64
+              }
+            });
+          } catch (imageError) {
+            console.error("⚠️ Could not process image in subsequent message, continuing without it:", imageError);
+            // Continue without the image rather than failing completely
+          }
         }
         
         contents = [...sessionHistory, {
@@ -557,15 +579,8 @@ export class BeautycologyAIService {
 
       // Add BOTH user message and assistant response to history
       const userParts: any[] = [{ text: userMessage }];
-      if (imageData) {
-        const mimeType = imageData.startsWith('/9j') ? 'image/jpeg' : 'image/png';
-        userParts.push({
-          inlineData: {
-            mimeType,
-            data: imageData
-          }
-        });
-      }
+      // Note: we intentionally don't add the image to history to avoid payload bloat
+      // The image has already been processed and sent to Gemini for analysis
       
       sessionHistory.push({
         role: "user",
