@@ -138,7 +138,7 @@ SOLO dopo aver ricevuto risposta alla domanda 2:
 
 Se la problematica che vuoi risolvere non è presente tra le opzioni, puoi scriverla qui in chat"
 
-**I pulsanti saranno automaticamente: Acne/Brufoli, Macchie scure, Rughe/Invecchiamento, Pelle grassa, Pelle secca, Pori dilatati**
+**I pulsanti saranno automaticamente: Acne/Brufoli, Macchie scure, Rughe/Invecchiamento, Rosacea, Punti neri, Pori dilatati**
 
 ⚠️ **MAI fare questa domanda come domanda aperta!**
 
@@ -882,7 +882,7 @@ export class BeautycologyAIService {
       if (state.structuredFlowActive && state.currentStep === 'problem_question') {
         console.log(`🎯 Structured flow - forcing problem question for session ${sessionId}`);
         hasChoices = true;
-        choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Pelle grassa", "Pelle secca", "Pori dilatati"];
+        choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Rosacea", "Punti neri", "Pori dilatati"];
         
         // Define the hint text that should always be present
         const hintText = "Se la problematica che vuoi risolvere non è presente tra le opzioni, puoi scriverla qui in chat";
@@ -1009,7 +1009,7 @@ export class BeautycologyAIService {
         } else if (state.currentStep === 'main_concern') {
           fallbackResponse = "Qual è la tua problematica principale che vorresti risolvere?";
           hasChoices = true;
-          choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Pelle grassa", "Pelle secca", "Pori dilatati"];
+          choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Rosacea", "Punti neri", "Pori dilatati"];
         } else if (state.currentStep === 'active_ingredient') {
           fallbackResponse = "C'è un ingrediente attivo specifico che preferisci o che hai già provato con successo?";
           hasChoices = true;
@@ -1055,7 +1055,7 @@ export class BeautycologyAIService {
     }
     
     if (text.includes('problematica principale') || text.includes('problema principale') || text.includes('vuoi risolvere')) {
-      return ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Pelle grassa", "Pelle secca", "Pori dilatati"];
+      return ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Rosacea", "Punti neri", "Pori dilatati"];
     }
     
     if (text.includes('ingrediente attivo') || text.includes('ingredienti attivi')) {
