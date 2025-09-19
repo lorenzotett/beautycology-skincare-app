@@ -715,7 +715,7 @@ export class BeautycologyAIService {
         
         // Force problem question in response
         if (!responseText.toLowerCase().includes('problematica principale')) {
-          responseText = "Ottimo! Ora dimmi qual è la problematica principale della tua pelle che vuoi risolvere?";
+          responseText = "Ottimo! Ora dimmi qual è la problematica principale della tua pelle che vuoi risolvere?\n\nSe non è presente tra le opzioni, scrivi la problematica che vorresti risolvere";
           console.log(`📝 Forced problem question in response`);
         }
         
