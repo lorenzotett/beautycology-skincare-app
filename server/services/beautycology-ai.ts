@@ -451,6 +451,9 @@ export class BeautycologyAIService {
       }
       const state = this.sessionState.get(sessionId)!;
 
+      // Check if this is a product information request
+      const isProductInfoRequest = this.detectProductInformationIntent(userMessage);
+      
       // Build contents array - on first message, include system instruction
       let contents: any[];
       if (sessionHistory.length === 0) {
@@ -462,8 +465,13 @@ export class BeautycologyAIService {
         const antiRepeatInstruction = state.hasIntroduced ? 
           "\n\n🔴 IMPORTANTE: Ti sei già presentata all'utente. NON RIPRESENTARTI. Rispondi DIRETTAMENTE alla domanda.\n\n" : '';
         
+        // Add specific instruction for product information requests
+        const productInfoInstruction = isProductInfoRequest ? 
+          "\n\n🛍️ IMPORTANTE: L'utente sta chiedendo informazioni sui prodotti. NON INIZIARE IL FLUSSO DI DOMANDE STRUTTURATE. Fornisci invece informazioni dettagliate sui prodotti richiesti, inclusi prezzi, ingredienti, benefici e LINK DIRETTI ai prodotti su beautycology.it.\n\n" : '';
+        
         const fullPrompt = BEAUTYCOLOGY_SYSTEM_INSTRUCTION + 
           antiRepeatInstruction +
+          productInfoInstruction +
           (knowledgeSummary ? `\n\n# CATALOGO PRODOTTI E ARTICOLI AGGIORNATO:\n${knowledgeSummary}\n\n` : '\n\n') +
           (ragInfo ? `\n\n# INFORMAZIONI DETTAGLIATE PRODOTTI BEAUTYCOLOGY:\n${ragInfo}\n\n` : '') +
           `Utente: ${userMessage}`;
@@ -501,8 +509,12 @@ export class BeautycologyAIService {
         const antiRepeatReminder = state.hasIntroduced ? 
           "Ricorda: NON ripresentarti, rispondi direttamente.\n\n" : '';
         
+        // Add specific instruction for product information requests
+        const productInfoReminder = isProductInfoRequest ? 
+          "🛍️ IMPORTANTE: L'utente sta chiedendo informazioni sui prodotti. NON INIZIARE IL FLUSSO DI DOMANDE STRUTTURATE. Fornisci informazioni dettagliate sui prodotti richiesti, inclusi prezzi, ingredienti, benefici e LINK DIRETTI ai prodotti su beautycology.it.\n\n" : '';
+        
         // Special handling for when structured flow is completed
-        let messageText = antiRepeatReminder + userMessage;
+        let messageText = antiRepeatReminder + productInfoReminder + userMessage;
         
         // Normalize user message for robust matching
         const normalizedMessage = userMessage.toLowerCase()
@@ -1073,7 +1085,71 @@ export class BeautycologyAIService {
     return null;
   }
 
+  private detectProductInformationIntent(userMessage: string): boolean {
+    // Patterns that indicate the user wants information about products, not skin analysis
+    const productInformationPatterns = [
+      /qual[ie]?\s+(prodott[oi]|crem[ae]|sier[ou]m)/i,
+      /cosa\s+(avete|vendete|proponete)/i,
+      /che\s+prodott[oi]\s+(avete|vendete|proponete)/i,
+      /vorrei\s+(informazioni|sapere|conoscere)\s+(su|dei|i)\s+prodott/i,
+      /parlami\s+(dei|di)\s+(vostri\s+)?prodott/i,
+      /mi\s+(puoi|può)\s+(consigliare|suggerire)\s+un\s+prodott/i,
+      /cercavo?\s+un\s+(prodotto|crema|siero)/i,
+      /avete\s+(qualcosa|un prodotto|una crema)/i,
+      /quanto\s+cost/i,
+      /prezz[oi]/i,
+      /dove\s+(posso\s+)?comprar/i,
+      /link\s+(al|del)\s+prodott/i,
+      /maggiori\s+informazioni\s+su/i,
+      /come\s+funziona/i,
+      /ingredienti\s+d[ei]/i,
+      /proprietà\s+d[ei]/i,
+      /benefici\s+d[ei]/i,
+      /per\s+cosa\s+(serve|è indicato)/i,
+      /differenza\s+tra/i,
+      /quale\s+scegliere\s+tra/i,
+      /catalogo/i,
+      /gamma\s+(di\s+)?prodott/i,
+      /linea\s+(di\s+)?prodott/i,
+      /novità/i,
+      /best\s*seller/i,
+      /più\s+vendu/i
+    ];
+
+    // Check if message mentions specific product names from knowledge base
+    const productNamePatterns = [
+      /m[\s-]?eye/i,
+      /perfect\s*&?\s*pure/i,
+      /vitamin\s*c/i,
+      /retinol/i,
+      /niacinamide/i,
+      /acido\s+(ialuronico|salicilico)/i,
+      /siero/i,
+      /crema\s+(viso|notte|giorno)/i,
+      /detergente/i,
+      /tonico/i,
+      /maschera/i,
+      /contorno\s+occhi/i,
+      /anti[\s-]?age/i,
+      /anti[\s-]?rughe/i,
+      /antimacchie/i,
+      /sebo[\s-]?regola/i
+    ];
+
+    const hasProductInfoIntent = productInformationPatterns.some(pattern => pattern.test(userMessage));
+    const mentionsProductName = productNamePatterns.some(pattern => pattern.test(userMessage));
+    
+    // If the message contains product info patterns or mentions specific products, it's likely informational
+    return hasProductInfoIntent || mentionsProductName;
+  }
+
   private shouldStartStructuredQuestions(userMessage: string, sessionHistory: any[]): boolean {
+    // IMPORTANT: First check if this is a product information request
+    if (this.detectProductInformationIntent(userMessage)) {
+      console.log("🛍️ Product information intent detected - NOT starting structured flow");
+      return false;
+    }
+
     // IMPORTANT: Don't trigger structured flow if we're already in a conversation
     // Check if the last message from the model contains a question that expects a specific answer
     const lastModelMessage = sessionHistory.filter(m => m.role === "model").pop();
@@ -1098,35 +1174,36 @@ export class BeautycologyAIService {
       }
     }
     
-    // Check if this looks like the user describing skin issues (triggers structured flow)
-    const skinDescriptionPatterns = [
-      /acne/i,
-      /brufoli/i,
-      /punti neri/i,
-      /pelle grassa/i,
-      /pelle secca/i,
-      /rughe/i,
-      /macchie/i,
-      /rossori/i,
-      /irritazioni/i,
-      /dermatite/i,
-      /eczema/i,
-      /pori dilatati/i,
-      /comedoni/i,
-      /impurità/i,
-      /problemi.*pelle/i,
-      /pelle.*problema/i,
-      /analisi.*pelle/i,
-      /skincare/i,
-      /routine/i
+    // Check if this looks like the user describing THEIR OWN skin issues (triggers structured flow)
+    // More specific patterns that indicate personal skin issues, not general product inquiries
+    const personalSkinPatterns = [
+      /ho\s+(la\s+pelle|il\s+viso|acne|brufoli|rughe|macchie|punti\s+neri)/i,
+      /mi\s+(si\s+)?(arrossa|irrita|secca|unge)/i,
+      /soffro\s+di/i,
+      /la\s+mia\s+pelle/i,
+      /il\s+mio\s+viso/i,
+      /mi\s+(escono|vengono|compaiono)/i,
+      /ho\s+problemi\s+di/i,
+      /sono\s+uscit[ei]/i,
+      /mi\s+sono\s+comparse/i,
+      /da\s+quando\s+ho/i,
+      /ultimamente\s+ho/i,
+      /stamattina\s+mi/i,
+      /ogni\s+(mattina|sera|giorno)/i,
+      /quando\s+mi\s+(lavo|trucco|strucco)/i,
+      /dopo\s+(aver|che)/i,
+      /vorrei\s+(fare|un'?)\s+analisi/i,
+      /analizza\s+la\s+mia/i,
+      /puoi\s+analizzare/i
     ];
 
     // Also check if user explicitly asks for skin analysis
     const analysisRequests = [
-      /analizza.*pelle/i,
-      /analisi/i,
-      /help.*skin/i,
-      /problemi.*viso/i
+      /analizza.*mia.*pelle/i,
+      /fare\s+un'?\s*analisi/i,
+      /voglio\s+capire\s+(che\s+tipo|quali\s+problemi)/i,
+      /aiutami\s+a\s+capire/i,
+      /ho\s+bisogno\s+di\s+(capire|sapere)/i
     ];
 
     // Check if the message contains skin analysis JSON data (from photo upload)
@@ -1137,17 +1214,17 @@ export class BeautycologyAIService {
 
     // Check if this is after the welcome message and user is describing skin
     const isAfterWelcome = sessionHistory.length >= 2; // At least name + welcome
-    const matchesSkinDescription = skinDescriptionPatterns.some(pattern => pattern.test(userMessage));
+    const matchesPersonalSkinPattern = personalSkinPatterns.some(pattern => pattern.test(userMessage));
     const matchesAnalysisRequest = analysisRequests.some(pattern => pattern.test(userMessage));
 
     console.log(`🔍 Structured questions trigger check:
     - isAfterWelcome: ${isAfterWelcome}
-    - matchesSkinDescription: ${matchesSkinDescription}
+    - matchesPersonalSkinPattern: ${matchesPersonalSkinPattern}
     - matchesAnalysisRequest: ${matchesAnalysisRequest}
     - hasSkinAnalysisData: ${hasSkinAnalysisData}
     - userMessage preview: ${userMessage.substring(0, 100)}...`);
 
-    return isAfterWelcome && (matchesSkinDescription || matchesAnalysisRequest || hasSkinAnalysisData);
+    return isAfterWelcome && (matchesPersonalSkinPattern || matchesAnalysisRequest || hasSkinAnalysisData);
   }
 
   private containsChoices(text: string): boolean {

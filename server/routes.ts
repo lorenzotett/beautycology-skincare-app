@@ -826,9 +826,9 @@ Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
       const aiCallStart = performance.now();
       console.log(`🤖 Starting AI service call for session ${sessionId}...`);
       
-      // Reduce timeout from 50s to 15s as recommended by architect
+      // Increase timeout to 30s to handle complex AI responses
       const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('AI service timeout after 15s')), 15000)
+        setTimeout(() => reject(new Error('AI service timeout after 30s')), 30000)
       );
 
       const response = await Promise.race([
