@@ -28,6 +28,8 @@ interface ExtractedData {
     allergie: string | null;
     profumo_fiori: string | null;
     routine_attuale: string | null;
+    tipo_richiesta: string | null;
+    ingredienti_preferiti: string | null;
   };
   analisi_conversazione: {
     fase_completata: string | null;
@@ -87,7 +89,9 @@ Restituisci un JSON con i seguenti campi:
   "preferenze_prodotti": {
     "allergie": "lista ingredienti o 'Nessuna'",
     "profumo_fiori": "Sì/No",
-    "routine_attuale": "descrizione routine esistente"
+    "routine_attuale": "descrizione routine esistente (opzionale)",
+    "tipo_richiesta": "Routine completa/Detergente-struccante/Esfoliante/Siero/Trattamento Specifico/Creme viso/Protezioni Solari/Contorno Occhi/Maschere Viso/Prodotti Corpo",
+    "ingredienti_preferiti": "lista ingredienti attivi preferiti (opzionale)"
   },
   "analisi_conversazione": {
     "fase_completata": "consultazione_completa/parziale/solo_analisi",
@@ -207,27 +211,74 @@ Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantene
 
   // Convert extracted data to Google Sheets format
   convertToSheetsFormat(extractedData: ExtractedData): any {
-    const result = {
-      eta: extractedData.informazioni_base.eta || 'Non specificato',
-      sesso: extractedData.informazioni_base.sesso || 'Non specificato',
-      tipoPelle: extractedData.analisi_pelle.tipo_pelle || 'Non specificato',
-      problemiPelle: extractedData.analisi_pelle.problemi_principali?.length ? 
-        extractedData.analisi_pelle.problemi_principali.join(', ') : 'Non specificato',
-      punteggioPelle: extractedData.analisi_pelle.punteggio_generale || 'Non specificato',
-      routine: extractedData.preferenze_prodotti.routine_attuale || 'Non specificato',
-      prodotti: extractedData.preferenze_prodotti.routine_attuale || 'Non specificato',
-      allergie: extractedData.preferenze_prodotti.allergie || 'Non specificato',
-      profumo: extractedData.preferenze_prodotti.profumo_fiori || 'Non specificato',
-      sonno: extractedData.abitudini_lifestyle.ore_sonno || 'Non specificato',
-      stress: extractedData.abitudini_lifestyle.stress_level || 'Non specificato',
-      alimentazione: extractedData.abitudini_lifestyle.alimentazione || 'Non specificato',
-      fumo: extractedData.abitudini_lifestyle.fumo || 'Non specificato',
-      idratazione: extractedData.abitudini_lifestyle.idratazione_quotidiana || 'Non specificato',
-      protezioneSolare: extractedData.abitudini_lifestyle.protezione_solare || 'Non specificato',
-      qualitaDati: extractedData.analisi_conversazione.qualita_dati || 'Non specificato',
-      faseCompletata: extractedData.analisi_conversazione.fase_completata || 'Non specificato',
-      accessoProdotti: extractedData.analisi_conversazione.accesso_prodotti || 'Non specificato'
-    };
+    const result: any = {};
+    
+    // Informazioni base
+    if (extractedData.informazioni_base) {
+      result.eta = extractedData.informazioni_base.eta || 'Non specificato';
+      result.sesso = extractedData.informazioni_base.sesso || 'Non specificato';
+      result.email = extractedData.informazioni_base.email || 'Non specificato';
+    } else {
+      result.eta = 'Non specificato';
+      result.sesso = 'Non specificato';
+      result.email = 'Non specificato';
+    }
+
+    // Analisi pelle
+    if (extractedData.analisi_pelle) {
+      result.tipoPelle = extractedData.analisi_pelle.tipo_pelle || 'Non specificato';
+      result.problemiPelle = extractedData.analisi_pelle.problemi_principali?.length ? 
+        extractedData.analisi_pelle.problemi_principali.join(', ') : 'Non specificato';
+      result.punteggioPelle = extractedData.analisi_pelle.punteggio_generale || 'Non specificato';
+    } else {
+      result.tipoPelle = 'Non specificato';
+      result.problemiPelle = 'Non specificato';
+      result.punteggioPelle = 'Non specificato';
+    }
+
+    // Preferenze prodotti
+    if (extractedData.preferenze_prodotti) {
+      result.routine = extractedData.preferenze_prodotti.routine_attuale || 'Non specificato';
+      result.tipoRichiesta = extractedData.preferenze_prodotti.tipo_richiesta || 'Non specificato';
+      result.ingredientiPreferiti = extractedData.preferenze_prodotti.ingredienti_preferiti || 'Non specificato';
+      result.allergie = extractedData.preferenze_prodotti.allergie || 'Non specificato';
+      result.profumo = extractedData.preferenze_prodotti.profumo_fiori || 'Non specificato';
+    } else {
+      result.routine = 'Non specificato';
+      result.tipoRichiesta = 'Non specificato';
+      result.ingredientiPreferiti = 'Non specificato';
+      result.allergie = 'Non specificato';
+      result.profumo = 'Non specificato';
+    }
+
+    // Abitudini lifestyle
+    if (extractedData.abitudini_lifestyle) {
+      result.sonno = extractedData.abitudini_lifestyle.ore_sonno || 'Non specificato';
+      result.stress = extractedData.abitudini_lifestyle.stress_level || 'Non specificato';
+      result.alimentazione = extractedData.abitudini_lifestyle.alimentazione || 'Non specificato';
+      result.fumo = extractedData.abitudini_lifestyle.fumo || 'Non specificato';
+      result.idratazione = extractedData.abitudini_lifestyle.idratazione_quotidiana || 'Non specificato';
+      result.protezioneSolare = extractedData.abitudini_lifestyle.protezione_solare || 'Non specificato';
+    } else {
+      result.sonno = 'Non specificato';
+      result.stress = 'Non specificato';
+      result.alimentazione = 'Non specificato';
+      result.fumo = 'Non specificato';
+      result.idratazione = 'Non specificato';
+      result.protezioneSolare = 'Non specificato';
+    }
+
+    // Analisi conversazione
+    if (extractedData.analisi_conversazione) {
+      result.qualitaDati = extractedData.analisi_conversazione.qualita_dati || 'Non specificato';
+      result.faseCompletata = extractedData.analisi_conversazione.fase_completata || 'Non specificato';
+      result.accessoProdotti = extractedData.analisi_conversazione.accesso_prodotti || 'Non specificato';
+    } else {
+      result.qualitaDati = 'Non specificato';
+      result.faseCompletata = 'Non specificato';
+      result.accessoProdotti = 'Non specificato';
+    }
+
     return result;
   }
 }

@@ -15,18 +15,16 @@ export class ChatDataExtractor {
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{
-          role: "user",
-          parts: [{ text: conversationData }]
+          role: "user", 
+          parts: [{ text: `${this.getSystemInstruction()}\n\n${conversationData}` }]
         }],
-        systemInstruction: this.getSystemInstruction(),
         generationConfig: {
           temperature: 0.1, // Bassa temperatura per consistenza
-          maxOutputTokens: 2000,
-          responseMimeType: "text/plain"
+          maxOutputTokens: 2000
         }
       });
 
-      const result = response.text;
+      const result = response.response.text();
       
       // Estrai JSON dalla risposta
       const jsonMatch = result.match(/\{[\s\S]*\}/);
@@ -88,7 +86,9 @@ Restituisci un JSON con i seguenti campi:
   "preferenze_prodotti": {
     "allergie": "lista ingredienti o 'Nessuna'",
     "profumo_fiori": "Sì/No",
-    "routine_attuale": "descrizione routine esistente"
+    "routine_attuale": "descrizione routine esistente (opzionale)",
+    "tipo_richiesta": "Routine completa/Detergente-struccante/Esfoliante/Siero/Trattamento Specifico/Creme viso/Protezioni Solari/Contorno Occhi/Maschere Viso/Prodotti Corpo",
+    "ingredienti_preferiti": "lista ingredienti attivi preferiti (opzionale)"
   },
   "analisi_conversazione": {
     "fase_completata": "consultazione_completa/parziale/solo_analisi",
@@ -190,6 +190,8 @@ Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantene
       sheetsFormat.allergie = extractedData.preferenze_prodotti.allergie || 'Non specificato';
       sheetsFormat.profumo = extractedData.preferenze_prodotti.profumo_fiori || 'Non specificato';
       sheetsFormat.routine = extractedData.preferenze_prodotti.routine_attuale || 'Non specificato';
+      sheetsFormat.tipoRichiesta = extractedData.preferenze_prodotti.tipo_richiesta || 'Non specificato';
+      sheetsFormat.ingredientiPreferiti = extractedData.preferenze_prodotti.ingredienti_preferiti || 'Non specificato';
     }
 
     // Aggiungi campi aggiuntivi dal modello personalizzato
@@ -220,7 +222,8 @@ Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantene
     const expectedFields = [
       'eta', 'sesso', 'tipoPelle', 'problemiPelle', 'punteggioPelle',
       'allergie', 'profumo', 'protezioneSolare', 'sonno', 'stress',
-      'alimentazione', 'fumo', 'idratazione', 'utilizzaScrub', 'routine', 'email'
+      'routine', 'tipoRichiesta', 'ingredientiPreferiti',
+      'alimentazione', 'fumo', 'idratazione', 'utilizzaScrub', 'email'
     ];
 
     // Inizializza tutti i campi
