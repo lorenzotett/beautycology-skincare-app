@@ -144,31 +144,16 @@ Se la problematica che vuoi risolvere non è presente tra le opzioni, puoi scriv
 
 ⚠️ **MAI fare questa domanda come domanda aperta!**
 
-### DOMANDA 4 - INGREDIENTI ATTIVI:
+### DOMANDA 4 - TIPO DI CONSIGLIO:
 🚨 **OBBLIGATORIO: DOMANDA A RISPOSTA MULTIPLA CON PULSANTI**
 SOLO dopo aver ricevuto risposta alla domanda 3:
-> "Vorresti utilizzare qualche ingrediente attivo particolare?"
+> "Vuoi che ti consigli una routine completa o cerchi un tipo di prodotto in particolare?"
 
-**I pulsanti saranno automaticamente: Acido Ialuronico, Vitamina C, Retinolo, Niacinamide, Acido Salicilico, Nessuno in particolare**
-
-⚠️ **MAI fare questa domanda come domanda aperta!**
-
-### DOMANDA 5 - ROUTINE ATTUALE:
-🚨 **OBBLIGATORIO: DOMANDA A RISPOSTA MULTIPLA CON PULSANTI**
-SOLO dopo aver ricevuto risposta alla domanda 4:
-> "Hai già una routine di skincare?"
-
-**I pulsanti saranno automaticamente: Sì, ho una routine completa, Uso solo alcuni prodotti, No, non ho una routine**
+**I pulsanti saranno automaticamente: Routine completa, Detergente-struccante, Esfoliante, Siero/Trattamento Specifico, Creme viso, Protezioni Solari, Contorno Occhi, Maschere Viso, Prodotti Corpo**
 
 ⚠️ **MAI fare questa domanda come domanda aperta!**
 
-### DOMANDA 5.1 - SE HA UNA ROUTINE:
-> "Cosa vorresti modificare della tua routine? C'è qualcosa che vorresti togliere o aggiungere?"
-
-### DOMANDA 5.2 - SE NON HA ROUTINE:
-Passa direttamente alla domanda 6.
-
-### DOMANDA 6 - INFORMAZIONI AGGIUNTIVE:
+### DOMANDA 5 - INFORMAZIONI AGGIUNTIVE:
 > "Hai altre informazioni che vorresti darmi in modo da poterti aiutare al meglio?"
 
 ## STEP 3: RACCOMANDAZIONI FINALI E RIEPILOGO COMPLETO
@@ -388,8 +373,7 @@ export class BeautycologyAIService {
       skinType?: string;
       age?: string;
       mainIssue?: string;
-      activesPreference?: string;
-      routineStatus?: string;
+      adviceType?: string;
       additionalInfo?: string;
     };
   }> = new Map();
@@ -537,20 +521,14 @@ export class BeautycologyAIService {
           .replace(/ò|ó/g, 'o')
           .replace(/ù|ú/g, 'u');
         
-        // Check if this is a routine answer (last step) - be more flexible in matching
-        const isRoutineAnswer = state.currentStep === 'awaiting_routine' && 
-          (normalizedMessage.includes('routine') ||
-           normalizedMessage.includes('si') ||
-           normalizedMessage.includes('no') ||
-           normalizedMessage.includes('solo alcuni') ||
-           normalizedMessage.includes('prodotti') ||
-           normalizedMessage.length > 0); // Accept any response at this step
+        // Check if this is the final additional info answer (last step)
+        const isAdditionalInfoAnswer = state.currentStep === 'awaiting_additional_info' && normalizedMessage.length > 0;
         
         // Also check if we're in completed state but haven't provided recommendations yet
         const isCompletedWithoutRecommendations = state.currentStep === 'completed' && 
           !sessionHistory.some(m => m.role === 'model' && m.parts?.[0]?.text?.includes('routine personalizzata'));
         
-        if (isRoutineAnswer || isCompletedWithoutRecommendations) {
+        if (isAdditionalInfoAnswer || isCompletedWithoutRecommendations) {
           // Store additional info if this is the last question
           if (state.structuredFlowAnswers) {
             state.structuredFlowAnswers.additionalInfo = userMessage;
@@ -562,9 +540,8 @@ export class BeautycologyAIService {
             `1. Tipo di pelle: ${state.structuredFlowAnswers?.skinType || 'non specificato'}\n` +
             `2. Età: ${state.structuredFlowAnswers?.age || 'non specificata'}\n` +
             `3. Problematica principale: ${state.structuredFlowAnswers?.mainIssue || 'non specificata'}\n` +
-            `4. Ingredienti preferiti: ${state.structuredFlowAnswers?.activesPreference || 'nessuno'}\n` +
-            `5. Routine attuale: ${state.structuredFlowAnswers?.routineStatus || 'non specificata'}\n` +
-            `6. Informazioni aggiuntive: ${userMessage}\n\n` +
+            `4. Tipo di consiglio: ${state.structuredFlowAnswers?.adviceType || 'non specificato'}\n` +
+            `5. Informazioni aggiuntive: ${userMessage}\n\n` +
             `🚨 ORA DEVI FORNIRE IL MESSAGGIO FINALE CON:\n` +
             `- RIEPILOGO COMPLETO delle informazioni registrate\n` +
             `- ANALISI DETTAGLIATA delle problematiche\n` +
@@ -795,30 +772,28 @@ export class BeautycologyAIService {
           // Save the answer
           if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
           state.structuredFlowAnswers.mainIssue = userMessage;
-          state.currentStep = 'ingredients_question';
+          state.currentStep = 'advice_type_question';
         }
       }
 
-      // Check if user is answering the ingredients question
-      const ingredients = ["acido ialuronico", "vitamina c", "retinolo", "niacinamide", "acido salicilico", "nessuno in particolare"];
-      if (state.currentStep === 'awaiting_ingredients' && 
-          ingredients.some(ingredient => userMessage.toLowerCase().includes(ingredient.toLowerCase()))) {
-        console.log(`✅ User selected ingredient: ${userMessage}`);
+      // Check if user is answering the advice type question (new question 4)
+      const adviceTypes = ["routine completa", "detergente-struccante", "esfoliante", "siero/trattamento specifico", "creme viso", "protezioni solari", "contorno occhi", "maschere viso", "prodotti corpo"];
+      if (state.currentStep === 'awaiting_advice_type' && 
+          adviceTypes.some(type => userMessage.toLowerCase().includes(type.toLowerCase().substring(0, 8)))) {
+        console.log(`✅ User selected advice type: ${userMessage}`);
         // Save the answer
         if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
-        state.structuredFlowAnswers.activesPreference = userMessage;
-        state.currentStep = 'routine_question';
-        state.structuredFlowActive = true; // Keep flow active for next question
+        state.structuredFlowAnswers.adviceType = userMessage;
+        state.currentStep = 'additional_info_question';
+        state.structuredFlowActive = true; // Keep flow active for final question
       }
 
-      // Check if user is answering the routine question
-      const routineOptions = ["sì, ho una routine completa", "uso solo alcuni prodotti", "no, non ho una routine"];
-      if (state.currentStep === 'awaiting_routine' && 
-          routineOptions.some(option => userMessage.toLowerCase().includes(option.toLowerCase().substring(0, 10)))) {
-        console.log(`✅ User selected routine status: ${userMessage}`);
+      // Check if user is providing additional information (final step)
+      if (state.currentStep === 'awaiting_additional_info') {
+        console.log(`✅ User provided additional info: ${userMessage}`);
         // Save the answer
         if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
-        state.structuredFlowAnswers.routineStatus = userMessage;
+        state.structuredFlowAnswers.additionalInfo = userMessage;
         state.currentStep = 'completed';
         state.structuredFlowActive = false; // End structured flow
         
@@ -1050,14 +1025,10 @@ export class BeautycologyAIService {
           fallbackResponse = "Qual è la tua problematica principale che vorresti risolvere?";
           hasChoices = true;
           choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Rosacea", "Punti neri", "Pori dilatati"];
-        } else if (state.currentStep === 'active_ingredient') {
-          fallbackResponse = "C'è un ingrediente attivo specifico che preferisci o che hai già provato con successo?";
+        } else if (state.currentStep === 'advice_type') {
+          fallbackResponse = "Vuoi che ti consigli una routine completa o cerchi un tipo di prodotto in particolare?";
           hasChoices = true;
-          choices = ["Acido Ialuronico", "Vitamina C", "Retinolo", "Niacinamide", "Acido Salicilico", "Nessuno in particolare"];
-        } else if (state.currentStep === 'routine_question') {
-          fallbackResponse = "Hai già una routine di skincare stabilita?";
-          hasChoices = true;
-          choices = ["Sì, ho una routine completa", "Uso solo alcuni prodotti", "No, non ho una routine"];
+          choices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Maschere Viso", "Prodotti Corpo"];
         } else if (state.currentStep === 'additional_info') {
           fallbackResponse = "C'è qualcos'altro che dovrei sapere sulla tua pelle o sulle tue esigenze specifiche?";
           hasChoices = false;
@@ -1103,16 +1074,8 @@ export class BeautycologyAIService {
       return ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Rosacea", "Punti neri", "Pori dilatati"];
     }
     
-    if (text.includes('ingrediente attivo') || text.includes('ingredienti attivi')) {
-      return ["Acido Ialuronico", "Vitamina C", "Retinolo", "Niacinamide", "Acido Salicilico", "Nessuno in particolare"];
-    }
-    
-    if (text.includes('hai già una routine') || text.includes('routine di skincare')) {
-      return ["Sì, ho una routine completa", "Uso solo alcuni prodotti", "No, non ho una routine"];
-    }
-    
-    if (text.includes('routine attuale') || text.includes('parlami della tua routine')) {
-      return ["Sì, ho una routine completa", "Uso solo alcuni prodotti", "No, non ho una routine"];
+    if (text.includes('routine completa o cerchi') || text.includes('tipo di prodotto in particolare') || text.includes('consigli una routine completa')) {
+      return ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Maschere Viso", "Prodotti Corpo"];
     }
     
     return null;
@@ -1494,8 +1457,7 @@ Dati raccolti dall'utente durante la conversazione:
 - Tipo di pelle: ${answers.skinType || 'non specificato'}
 - Età: ${answers.age || 'non specificata'}
 - Problematica principale: ${answers.mainIssue || 'non specificata'}
-- Ingrediente preferito: ${answers.activesPreference || 'nessuno'}
-- Routine attuale: ${answers.routineStatus || 'non specificata'}
+- Tipo di consiglio richiesto: ${answers.adviceType || 'non specificato'}
 - Informazioni aggiuntive: ${answers.additionalInfo || 'non fornite'}
 
 ${ragContext ? `Informazioni prodotti rilevanti:\n${ragContext}\n` : ''}
