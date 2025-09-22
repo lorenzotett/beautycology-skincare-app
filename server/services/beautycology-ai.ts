@@ -755,7 +755,7 @@ export class BeautycologyAIService {
         // Save the answer
         if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
         state.structuredFlowAnswers.age = userMessage;
-        state.currentStep = 'problem_question';
+        state.currentStep = 'awaiting_problem';
       }
 
       // Check if user is answering the main problem question
@@ -772,7 +772,25 @@ export class BeautycologyAIService {
           // Save the answer
           if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
           state.structuredFlowAnswers.mainIssue = userMessage;
-          state.currentStep = 'advice_type_question';
+          state.currentStep = 'awaiting_advice_type';
+          
+          // Automatically ask the advice type question
+          const adviceResponse = "Vuoi che ti consigli una routine completa o cerchi un tipo di prodotto in particolare?";
+          const adviceChoices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Maschere Viso", "Prodotti Corpo"];
+          
+          // Update history immediately so this question appears
+          sessionHistory.push({
+            role: "model",
+            parts: [{ text: adviceResponse }]
+          });
+          this.chatSessions.set(sessionId, sessionHistory);
+          
+          // Return the response immediately to show the question
+          return {
+            content: adviceResponse,
+            hasChoices: true,
+            choices: adviceChoices
+          };
         }
       }
 
@@ -784,7 +802,7 @@ export class BeautycologyAIService {
         // Save the answer
         if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
         state.structuredFlowAnswers.adviceType = userMessage;
-        state.currentStep = 'additional_info_question';
+        state.currentStep = 'awaiting_additional_info';
         state.structuredFlowActive = true; // Keep flow active for final question
       }
 
@@ -1025,7 +1043,7 @@ export class BeautycologyAIService {
           fallbackResponse = "Qual è la tua problematica principale che vorresti risolvere?";
           hasChoices = true;
           choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Rosacea", "Punti neri", "Pori dilatati"];
-        } else if (state.currentStep === 'advice_type') {
+        } else if (state.currentStep === 'awaiting_advice_type') {
           fallbackResponse = "Vuoi che ti consigli una routine completa o cerchi un tipo di prodotto in particolare?";
           hasChoices = true;
           choices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Maschere Viso", "Prodotti Corpo"];
