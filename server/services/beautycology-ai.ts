@@ -546,7 +546,7 @@ export class BeautycologyAIService {
   private modelName = "gemini-2.5-flash";
   private generationConfig = {
     temperature: 0.2,
-    maxOutputTokens: 2048, // Increased for comprehensive recommendations
+    maxOutputTokens: 4096, // Significantly increased to prevent message truncation in final recommendations
   };
   private chatSessions: Map<string, any[]> = new Map();
   private sessionState: Map<string, { 
@@ -1864,11 +1864,34 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
     // Get RAG context based on user's main issue
     const ragContext = await this.getRAGContext(answers.mainIssue || 'routine skincare');
     
+    // ALWAYS include knowledge base of products to ensure complete catalog access
+    const knowledgeSummary = this.getKnowledgeBaseSummary();
+    
     // Build a comprehensive prompt for final recommendations
     const finalPrompt = `
 **STEP 3: RACCOMANDAZIONI FINALI E RIEPILOGO COMPLETO**
 
-🚨 REGOLE ASSOLUTE PER IL MESSAGGIO FINALE - DEVI SEGUIRE TUTTE QUESTE REGOLE:
+🚨🚨🚨 REGOLE ASSOLUTE OBBLIGATORIE - DEVI SEGUIRE TUTTE QUESTE REGOLE SENZA ECCEZIONI:
+
+🛑 **REGOLA CRITICA N.1 - USO OBBLIGATORIO PRODOTTI BEAUTYCOLOGY:**
+- DEVI SEMPRE INCLUDERE SOLO PRODOTTI BEAUTYCOLOGY SPECIFICI nelle routine
+- USA ESCLUSIVAMENTE i nomi ESATTI dei prodotti dal catalogo (es: "Perfect & Pure Cream", "M-Eye Secret", "Acqua Micellare")
+- OGNI PRODOTTO MENZIONATO DEVE AVERE IL SUO LINK COMPLETO https://beautycology.it/prodotto/...
+- VIETATO ASSOLUTAMENTE usare nomi generici come "detergente Beautycology", "crema Beautycology", "siero Beautycology"
+- FORMATO OBBLIGATORIO: **[Nome Esatto Prodotto](URL completo)** (prezzo)
+
+🛑 **REGOLA CRITICA N.2 - ROUTINE COMPLETA OBBLIGATORIA:**
+Quando l'utente ha richiesto una "routine completa", DEVI SEMPRE fornire:
+- Routine mattina completa con 4-5 prodotti Beautycology specifici
+- Routine sera completa con 4-5 prodotti Beautycology specifici  
+- Ogni passaggio deve includere un prodotto Beautycology reale del catalogo
+- Non limitarti a consigli generici, ma prodotti specifici acquistabili
+
+🛑 **REGOLA CRITICA N.3 - MESSAGGI COMPLETI:**
+- NON TRONCARE MAI il messaggio, completa SEMPRE tutte le sezioni
+- SCRIVI SEMPRE la frase finale completa: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
+- Se il messaggio è lungo, continua comunque fino alla fine senza interruzioni
+- OGNI sezione deve essere completa e dettagliata
 
 Dati raccolti dall'utente durante la conversazione:
 - Tipo di pelle: ${answers.skinType || 'non specificato'}
@@ -1877,9 +1900,12 @@ Dati raccolti dall'utente durante la conversazione:
 - Tipo di consiglio richiesto: ${answers.adviceType || 'non specificato'}
 - Informazioni aggiuntive: ${answers.additionalInfo || 'non fornite'}
 
-${ragContext ? `Informazioni prodotti rilevanti:\n${ragContext}\n` : ''}
+# CATALOGO COMPLETO PRODOTTI BEAUTYCOLOGY (USA SOLO QUESTI PRODOTTI REALI):
+${knowledgeSummary}
 
-DEVI OBBLIGATORIAMENTE fornire NELL'ORDINE:
+${ragContext ? `\n# INFORMAZIONI AGGIUNTIVE SPECIFICHE PER IL TUO CASO:\n${ragContext}\n` : ''}
+
+DEVI OBBLIGATORIAMENTE fornire NELL'ORDINE COMPLETO:
 
 1. **RIEPILOGO COMPLETO DELLE INFORMAZIONI REGISTRATE**:
    Inizia con: "Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:"
@@ -1894,42 +1920,49 @@ DEVI OBBLIGATORIAMENTE fornire NELL'ORDINE:
 
 3. **RACCOMANDAZIONI PRECISE E PERSONALIZZATE**:
    Titolo: "💫 RACCOMANDAZIONI PERSONALIZZATE:"
-   - Routine COMPLETA mattina e sera
-   - Prodotti SPECIFICI Beautycology con spiegazione del perché
+   - Routine COMPLETA mattina e sera con prodotti Beautycology specifici
+   - Prodotti REALI dal catalogo con nomi esatti e link obbligatori
    - Ordine esatto di applicazione
-   - Tecniche di applicazione
-   - Tempi tra prodotti
+   - Tecniche di applicazione specifiche per ogni prodotto
+   - Tempi tra un prodotto e l'altro
 
-4. **SKINCARE ROUTINE DETTAGLIATA**:
+4. **SKINCARE ROUTINE DETTAGLIATA CON PRODOTTI BEAUTYCOLOGY**:
    Titolo: "🌅 ROUTINE MATTINA:" e "🌙 ROUTINE SERA:"
    - Passaggi numerati e precisi
-   - Nome prodotto + come applicarlo
-   - Frequenza di utilizzo
-   - Quantità da utilizzare
-
-5. **CONSIGLI SCIENTIFICI**:
+   - Nome prodotto Beautycology ESATTO + link + come applicarlo
+   - Frequenza di utilizzo per ogni prodotto
+   - Quantità da utilizzare (es: 2-3 gocce, chicco di riso, etc.)
+   
+5. **CONSIGLI SCIENTIFICI DETTAGLIATI**:
    Titolo: "🧪 SPIEGAZIONE SCIENTIFICA:"
-   - Come ogni ingrediente agisce sul problema
-   - Percentuali ingredienti attivi
-   - Timeline risultati (2 settimane, 1 mese, 3 mesi)
+   - Come ogni ingrediente dei prodotti Beautycology agisce sul problema specifico
+   - Percentuali ingredienti attivi (es: Niacinamide 4% in Perfect & Pure Cream)
+   - Timeline risultati realistici (2 settimane, 1 mese, 3 mesi)
 
-6. **PRODOTTI CONSIGLIATI** (minimo 3-4):
+6. **PRODOTTI BEAUTYCOLOGY CONSIGLIATI** (minimo 4-5 prodotti reali):
    Titolo: "📦 I PRODOTTI BEAUTYCOLOGY PER TE:"
-   Per ogni prodotto:
-   - Nome esatto e prezzo
-   - Principi attivi e percentuali
-   - Benefici specifici per il tuo caso
-   - Link al prodotto
+   Per ogni prodotto dal catalogo:
+   - Nome esatto e prezzo (formato: **[Nome Esatto](link)** (€XX,00))
+   - Principi attivi e percentuali specifiche del prodotto
+   - Benefici specifici per il caso dell'utente
+   - Link obbligatorio al prodotto su beautycology.it
 
-7. **CONSIGLI FINALI**:
-   - Errori comuni da evitare
-   - Tips per massimizzare i risultati
-   - Link utili (blog, routine complete)
+7. **CONSIGLI FINALI E TIPS PRATICI**:
+   - Errori comuni da evitare nella routine
+   - Tips per massimizzare i risultati con i prodotti Beautycology
+   - Frequenza e modalità d'uso ottimali
+   - Link a https://beautycology.it/skincare-routine/ per approfondimenti
 
-⚠️ IMPORTANTISSIMO:
-- NON includere MAI pulsanti o scelte multiple nel messaggio finale
-- NON fare domande all'utente
+⚠️ CONTROLLO FINALE OBBLIGATORIO:
+- Verifica che ogni prodotto menzionato sia un prodotto REALE del catalogo Beautycology
+- Verifica che ogni prodotto abbia il suo link completo
+- Verifica che il messaggio sia COMPLETO senza troncare nessuna sezione
 - CONCLUDI SEMPRE con la frase ESATTA: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
+
+❌ ESEMPI DI COSA NON FARE MAI:
+❌ "detergente Beautycology" → USA: **[Mousse Away – Detergente viso](https://beautycology.it/prodotto/detergente-viso-mousse-away/)** (€8,00)
+❌ "crema Beautycology per pelli miste" → USA: **[Perfect & Pure Cream](https://beautycology.it/prodotto/crema-pelli-miste-perfect-pure/)** (€30,00)
+❌ "siero Beautycology" → USA prodotto specifico dal catalogo con link
 
 Usa emoji appropriati ✨🌟💧 per rendere il testo engaging ma professionale.`;
 
@@ -1943,8 +1976,8 @@ Usa emoji appropriati ✨🌟💧 per rendere il testo engaging ma professionale
         }],
         config: {
           ...this.generationConfig,
-          maxOutputTokens: 2048, // Increase token limit for comprehensive recommendations
-          temperature: 0.3 // Lower temperature for more focused recommendations
+          maxOutputTokens: 4096, // Increased significantly to prevent message truncation
+          temperature: 0.2 // Lower temperature for more focused and consistent recommendations
         }
       });
 
@@ -1955,18 +1988,88 @@ Usa emoji appropriati ✨🌟💧 per rendere il testo engaging ma professionale
         return this.getFallbackRecommendations(answers);
       }
 
-      // Validate the AI response for generic or non-existent products
-      if (this.productValidator) {
-        const validation = this.productValidator.validateRecommendationText(text);
-        if (!validation.isValid) {
-          console.warn(`⚠️ AI generated problematic product recommendations in final response:`, validation.issues);
-          console.log('🔄 Using fallback to ensure only real products are recommended');
-          return this.getFallbackRecommendations(answers);
+      // ROBUST POST-GENERATION VALIDATION AND ENFORCEMENT
+      let finalText = text;
+      let validationAttempts = 0;
+      const maxAttempts = 2;
+
+      while (validationAttempts < maxAttempts) {
+        // Validate the AI response for generic or non-existent products
+        if (this.productValidator) {
+          const validation = this.productValidator.validateRecommendationText(finalText);
+          if (!validation.isValid) {
+            console.warn(`⚠️ AI generated problematic product recommendations (attempt ${validationAttempts + 1}):`, validation.issues);
+            
+            if (validationAttempts < maxAttempts - 1) {
+              // Try to correct the response with a focused prompt
+              console.log('🔄 Attempting to correct invalid product recommendations...');
+              
+              const correctionPrompt = `
+CORREZIONE OBBLIGATORIA: Il testo seguente contiene errori nei prodotti raccomandati:
+
+ERRORI IDENTIFICATI:
+${validation.issues.join('\n')}
+
+TESTO DA CORREGGERE:
+${finalText}
+
+ISTRUZIONI OBBLIGATORIE:
+1. Sostituisci OGNI riferimento generico con il nome ESATTO del prodotto dal catalogo
+2. Aggiungi il link completo per OGNI prodotto menzionato
+3. Usa SOLO questi prodotti reali del catalogo: ${this.productValidator.getAllProductNames().join(', ')}
+4. Formato obbligatorio: **[Nome Esatto Prodotto](URL completo)** (prezzo)
+5. Mantieni la struttura completa del messaggio senza accorciarlo
+6. CONCLUDI con: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
+
+Riscrivi il testo corretto COMPLETO:`;
+
+              try {
+                const correctionResponse = await ai.models.generateContent({
+                  model: this.modelName,
+                  contents: [{
+                    role: "user",
+                    parts: [{ text: correctionPrompt }]
+                  }],
+                  config: {
+                    ...this.generationConfig,
+                    temperature: 0.1 // Lower temperature for more consistent corrections
+                  }
+                });
+                
+                const correctedText = correctionResponse.text || "";
+                if (correctedText && correctedText.trim().length > 0) {
+                  finalText = correctedText;
+                  validationAttempts++;
+                  continue;
+                }
+              } catch (correctionError) {
+                console.error('Error in correction attempt:', correctionError);
+                break;
+              }
+            }
+            
+            // If we reach here, correction failed or max attempts reached
+            console.log('🔄 Using fallback to ensure only real products are recommended');
+            return this.getFallbackRecommendations(answers);
+          } else {
+            console.log('✅ Product validation passed successfully');
+            break;
+          }
+        } else {
+          console.warn('⚠️ ProductValidator not available');
+          break;
         }
+        validationAttempts++;
       }
 
-      console.log('✅ Generated comprehensive recommendations successfully');
-      return text;
+      // FINAL COMPLETENESS CHECK - ensure the message ends properly
+      if (!finalText.includes("Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!")) {
+        console.log('⚠️ Final sentence missing, adding it...');
+        finalText += "\n\nSe hai altri dubbi o domande sui nostri prodotti, chiedi pure!";
+      }
+
+      console.log('✅ Generated and validated comprehensive recommendations successfully');
+      return finalText;
     } catch (error) {
       console.error('Error generating final recommendations:', error);
       return this.getFallbackRecommendations(answers);
