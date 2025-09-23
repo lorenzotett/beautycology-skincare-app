@@ -14,7 +14,7 @@ export const chatSessions = pgTable("chat_sessions", {
   sessionId: text("session_id").notNull().unique(),
   userName: text("user_name").notNull(),
   userEmail: text("user_email"),
-  brand: text("brand").notNull().default("beautycology"), // 'dermasense' or 'beautycology'
+  brand: text("brand").notNull().default("dermasense"), // 'dermasense' or 'beautycology'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   isActive: boolean("is_active").default(true),
@@ -48,7 +48,7 @@ export const insertChatSessionSchema = createInsertSchema(chatSessions).pick({
   userName: true,
   brand: true,
 }).extend({
-  brand: z.enum(["dermasense", "beautycology"]).default("beautycology"),
+  brand: z.enum(["dermasense", "beautycology"]).default("dermasense"),
 });
 
 export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({

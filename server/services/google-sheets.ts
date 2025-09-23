@@ -1,7 +1,6 @@
 import { google } from 'googleapis';
 import type { ChatMessage } from '../../shared/schema';
 import { ChatDataExtractor } from './chat-data-extractor';
-import { storage } from '../storage';
 
 export class GoogleSheetsService {
   private sheets: any;
@@ -28,21 +27,6 @@ export class GoogleSheetsService {
     aiExtractedData?: any
   ): Promise<boolean> {
     try {
-      // First, check the session brand to filter out dermasense conversations
-      const session = await storage.getChatSession(sessionId);
-      if (!session) {
-        console.log(`⚠️ Session ${sessionId} not found, skipping Google Sheets sync`);
-        return false;
-      }
-      
-      // Only send beautycology conversations to external dashboards
-      // Prevent dermasense data from being sent to external services
-      if (session.brand === 'dermasense') {
-        console.log(`🚫 Skipping Google Sheets sync for dermasense conversation ${sessionId}`);
-        return true; // Return true to avoid retries, but don't actually sync
-      }
-      
-      console.log(`✅ Proceeding with Google Sheets sync for ${session.brand} conversation ${sessionId}`);
       // Check if session already exists in sheet to update rather than duplicate
       const existingData = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,

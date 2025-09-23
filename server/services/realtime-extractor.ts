@@ -84,16 +84,6 @@ export class RealtimeDataExtractor {
 
       for (const session of newSessionsList) {
         try {
-          // First, filter out dermasense conversations to prevent external dashboard sync
-          if (session.brand === 'dermasense') {
-            console.log(`🚫 Skipping realtime extraction for dermasense conversation ${session.sessionId}`);
-            // Still update last processed ID to avoid reprocessing
-            this.lastProcessedSessionId = Math.max(this.lastProcessedSessionId, session.id || 0);
-            continue;
-          }
-          
-          console.log(`✅ Processing realtime extraction for ${session.brand} conversation ${session.sessionId}`);
-          
           // Get messages for this session
           const messages = await storage.getChatMessages(session.sessionId);
           if (!messages) continue;

@@ -119,21 +119,6 @@ export class KlaviyoLeadAutomation {
     }
 
     try {
-      // First, check the session brand to filter out dermasense conversations
-      const session = await storage.getChatSession(sessionId);
-      if (!session) {
-        console.log(`⚠️ Session ${sessionId} not found, skipping Klaviyo lead processing`);
-        return false;
-      }
-      
-      // Only process beautycology leads, prevent dermasense data from being sent to Klaviyo
-      if (session.brand === 'dermasense') {
-        console.log(`🚫 Skipping Klaviyo lead processing for dermasense conversation ${sessionId}`);
-        return true; // Return true to avoid retries, but don't actually process
-      }
-      
-      console.log(`✅ Proceeding with Klaviyo lead processing for ${session.brand} conversation ${sessionId}`);
-      
       // Get all messages for the conversation
       const messages = await storage.getChatMessages(sessionId);
       if (!messages || messages.length === 0) {
@@ -145,12 +130,15 @@ export class KlaviyoLeadAutomation {
       
       if (leadData.email) {
         console.log(`📧 LEAD DETECTED: ${leadData.name} (${leadData.email})`);
+        
+        // Get additional session data for context
+        const session = await storage.getChatSession(sessionId);
         const sessionData = {
           sessionId: sessionId,
-          source: `${session.brand === 'beautycology' ? 'Beautycology AI' : 'AI-DermaSense'} Chat`,
+          source: 'AI-DermaSense Chat',
           captureDate: new Date().toISOString(),
-          conversationDate: session.createdAt || new Date(),
-          finalButtonClicked: session.finalButtonClicked || false,
+          conversationDate: session?.createdAt || new Date(),
+          finalButtonClicked: session?.finalButtonClicked || false,
           extractionMethod: 'AI-Enhanced'
         };
 
@@ -194,25 +182,12 @@ export class KlaviyoLeadAutomation {
       
       try {
         const session = await storage.getChatSession(sessionId);
-        if (!session) {
-          console.log(`⚠️ Session ${sessionId} not found, skipping Klaviyo lead processing`);
-          return false;
-        }
-        
-        // Only process beautycology leads, prevent dermasense data from being sent to Klaviyo
-        if (session.brand === 'dermasense') {
-          console.log(`🚫 Skipping Klaviyo lead processing for dermasense message in session ${sessionId}`);
-          return true; // Return true to avoid retries, but don't actually process
-        }
-        
-        console.log(`✅ Proceeding with Klaviyo lead processing for ${session.brand} message in session ${sessionId}`);
-        
         const sessionData = {
           sessionId: sessionId,
-          source: `${session.brand === 'beautycology' ? 'Beautycology AI' : 'AI-DermaSense'} Chat`,
+          source: 'AI-DermaSense Chat',
           captureDate: new Date().toISOString(),
-          conversationDate: session.createdAt || new Date(),
-          finalButtonClicked: session.finalButtonClicked || false,
+          conversationDate: session?.createdAt || new Date(),
+          finalButtonClicked: session?.finalButtonClicked || false,
           extractionMethod: 'Real-time'
         };
 

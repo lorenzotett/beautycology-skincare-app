@@ -86,7 +86,7 @@ export class MemStorage implements IStorage {
       id,
       ...insertSession,
       userEmail: null,
-      brand: insertSession.brand || "beautycology",
+      brand: insertSession.brand || "dermasense",
       createdAt: new Date(),
       updatedAt: new Date(),
       isActive: true,
