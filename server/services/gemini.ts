@@ -1231,12 +1231,15 @@ A te la scelta!`;
     const lines = content.split('\n');
 
     for (const line of lines) {
-      const match = line.match(/^\s*[A-E]\)\s+(.+)$/);
+      // More flexible pattern: allow one or more spaces after )
+      const match = line.match(/^\s*[A-E]\)\s*(.+)$/);
       if (match) {
         choices.push(match[1].trim());
+        console.log(`✅ Extracted choice: "${match[1].trim()}" from line: "${line}"`);
       }
     }
 
+    console.log(`🔍 extractChoices found ${choices.length} choices:`, choices);
     return choices;
   }
 
