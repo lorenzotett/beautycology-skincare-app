@@ -40,6 +40,38 @@ function BeautycologyAdminDashboard() {
   return <AdminDashboard brand="beautycology" />;
 }
 
+function GenericAdminDashboard() {
+  // Auto-detect brand from URL params, localStorage, or default to beautycology
+  const getBrandFromContext = (): "beautycology" | "dermasense" => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const brandParam = urlParams.get('brand');
+    if (brandParam === 'dermasense' || brandParam === 'beautycology') {
+      return brandParam;
+    }
+    
+    const storedBrand = localStorage.getItem('brand-theme');
+    if (storedBrand === 'dermasense' || storedBrand === 'beautycology') {
+      return storedBrand;
+    }
+    
+    return 'beautycology'; // default
+  };
+
+  const brand = getBrandFromContext();
+
+  useEffect(() => {
+    // Ensure URL and localStorage are consistent
+    const url = new URL(window.location.href);
+    url.searchParams.set('brand', brand);
+    if (url.href !== window.location.href) {
+      window.history.replaceState({}, '', url.pathname + url.search);
+    }
+    localStorage.setItem('brand-theme', brand);
+  }, [brand]);
+  
+  return <AdminDashboard brand={brand} />;
+}
+
 function Router() {
   const [location] = useLocation();
   
@@ -49,8 +81,20 @@ function Router() {
     const adminParam = urlParams.get('admin');
     
     if (adminParam === 'true' && location !== '/admin-dashboard') {
-      // Clean redirect to admin dashboard
-      window.history.replaceState({}, '', '/admin-dashboard');
+      // Preserve brand parameter in redirect
+      const brandParam = urlParams.get('brand');
+      const storedBrand = localStorage.getItem('brand-theme');
+      
+      // Determine which brand to use: URL param > localStorage > default
+      let targetBrand = 'beautycology';
+      if (brandParam === 'dermasense' || brandParam === 'beautycology') {
+        targetBrand = brandParam;
+      } else if (storedBrand === 'dermasense' || storedBrand === 'beautycology') {
+        targetBrand = storedBrand;
+      }
+      
+      // Redirect with brand preserved
+      window.history.replaceState({}, '', `/admin-dashboard?brand=${targetBrand}`);
     }
   }, [location]);
   
@@ -59,7 +103,7 @@ function Router() {
       <Route path="/" component={Chat} />
       <Route path="/admin" component={DermaSenseAdminDashboard} />
       <Route path="/admin/beautycology" component={BeautycologyAdminDashboard} />
-      <Route path="/admin-dashboard" component={AdminDashboard} />
+      <Route path="/admin-dashboard" component={GenericAdminDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -76,8 +120,13 @@ function useBrandTheming() {
       // Check localStorage for persisted brand
       const storedBrand = localStorage.getItem('brand-theme');
       
-      // Use URL param if available, otherwise use stored brand
-      const activeBrand = brandParam || storedBrand;
+      // Validate and use URL param if valid, otherwise use stored brand
+      let activeBrand = null;
+      if (brandParam === 'beautycology' || brandParam === 'dermasense') {
+        activeBrand = brandParam;
+      } else if (storedBrand === 'beautycology' || storedBrand === 'dermasense') {
+        activeBrand = storedBrand;
+      }
       
       // Remove any existing brand classes
       const existingBrandClasses = Array.from(document.documentElement.classList).filter(className => 
@@ -85,13 +134,13 @@ function useBrandTheming() {
       );
       document.documentElement.classList.remove(...existingBrandClasses);
       
-      // Apply new brand theme if specified
+      // Apply new brand theme if valid brand is specified
       if (activeBrand) {
         const brandClass = `brand-${activeBrand}`;
         document.documentElement.classList.add(brandClass);
         
         // Persist to localStorage if it came from URL
-        if (brandParam) {
+        if (brandParam === activeBrand) {
           localStorage.setItem('brand-theme', activeBrand);
         }
         
