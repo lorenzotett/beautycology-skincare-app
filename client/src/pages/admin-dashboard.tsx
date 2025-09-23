@@ -48,7 +48,7 @@ interface SessionWithMessages extends ChatSession {
 type PeriodType = "Tutto il tempo" | "Oggi" | "Ieri" | "Ultima settimana" | "Ultimo mese" | "Personalizzato";
 
 interface AdminDashboardProps {
-  brand?: "beautycology";
+  brand?: "beautycology" | "dermasense";
 }
 
 export default function AdminDashboard({ brand = "beautycology" }: AdminDashboardProps) {
