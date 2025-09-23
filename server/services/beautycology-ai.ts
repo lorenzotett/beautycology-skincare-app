@@ -1494,7 +1494,7 @@ Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi 
     const sessionHistory = this.chatSessions.get(sessionId) || [];
     
     // Map skin problems to recommended ingredients based on system instructions
-    const skinProblemsMapping = {
+    const skinProblemsMapping: Record<string, string[]> = {
       'acne/brufoli': ['Bardana', 'Mirto', 'Niacinamide'],
       'macchie scure': ['Liquirizia', 'Vitamina C'],
       'rughe/invecchiamento': ['Ginkgo Biloba', 'Retinolo'],
@@ -1516,7 +1516,7 @@ Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi 
     });
     
     // Remove duplicates
-    recommendedIngredients = [...new Set(recommendedIngredients)];
+    recommendedIngredients = Array.from(new Set(recommendedIngredients));
     
     // Get RAG context for the specific product type
     const ragContext = await this.getRAGContext(`${selectedProductType} ${recommendedIngredients.join(' ')}`);
