@@ -1266,7 +1266,7 @@ export class BeautycologyAIService {
         } else if (state.currentStep === 'awaiting_advice_type') {
           fallbackResponse = "Vuoi che ti consigli una routine completa o cerchi un tipo di prodotto in particolare?";
           hasChoices = true;
-          choices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Prodotti Corpo"];
+          choices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Maschere Viso", "Prodotti Corpo"];
         } else if (state.currentStep === 'additional_info') {
           fallbackResponse = "C'è qualcos'altro che dovrei sapere sulla tua pelle o sulle tue esigenze specifiche?";
           hasChoices = false;
@@ -1313,7 +1313,7 @@ export class BeautycologyAIService {
     }
     
     if (text.includes('routine completa o cerchi') || text.includes('tipo di prodotto in particolare') || text.includes('consigli una routine completa')) {
-      return ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Prodotti Corpo"];
+      return ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Maschere Viso", "Prodotti Corpo"];
     }
     
     return null;
@@ -1892,21 +1892,6 @@ Quando l'utente ha richiesto una "routine completa", DEVI SEMPRE fornire:
 - SCRIVI SEMPRE la frase finale completa: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
 - Se il messaggio è lungo, continua comunque fino alla fine senza interruzioni
 - OGNI sezione deve essere completa e dettagliata
-
-🛑 **REGOLA CRITICA N.4 - RISPETTARE IL TIPO DI PRODOTTO RICHIESTO:**
-${answers.adviceType && answers.adviceType !== 'Routine completa' ? `
-🎯 **ATTENZIONE SPECIALE**: L'utente ha specificatamente richiesto "${answers.adviceType}"
-- DEVI CONCENTRARTI ESCLUSIVAMENTE su questo tipo di prodotto
-- NON fornire routine complete, ma SOLO raccomandazioni specifiche per ${answers.adviceType}
-- Trova e raccomanda SOLO prodotti ${answers.adviceType} dal catalogo Beautycology
-- Spiega perché questo tipo di prodotto è perfetto per la sua problematica
-- Include istruzioni specifiche per l'uso di ${answers.adviceType}
-- Mantieni il focus su ${answers.adviceType} senza distrarti su altri prodotti
-` : `
-🎯 L'utente ha richiesto una ROUTINE COMPLETA:
-- Fornisci routine completa mattina e sera con 4-5 prodotti Beautycology
-- Include tutti i passaggi necessari per una skincare completa
-`}
 
 Dati raccolti dall'utente durante la conversazione:
 - Tipo di pelle: ${answers.skinType || 'non specificato'}
