@@ -129,10 +129,16 @@ Categorizzazione skin type:
 - Altrimenti: "Mista"
 
 ESEMPI DI PATTERN DA RICONOSCERE:
-Età: "ho 25 anni", "25enne", "sono del '99"
+Età: "ho 25 anni", "25enne", "sono del '99", "16-25 anni", "fascia d'età 20-30"
 Genere: "sono una ragazza", "uomo di", "donna"
 Routine: "uso solo acqua", "crema la sera", "niente trucco"
 Problemi: "ho sempre brufoli", "pelle che tira", "macchie rosse"
+
+⚠️ REGOLA CRITICA PER DISTINGUERE ETÀ DA PROBLEMI:
+- Numeri o range numerici che indicano anni (es: "25", "16-25", "20-30") vanno SEMPRE in "eta", MAI in "problemi_principali"
+- Solo condizioni dermatologiche reali vanno in "problemi_principali" (acne, rossori, secchezza, rughe, macchie, oleosità, etc.)
+- Se vedi pattern come "16-25" nel contesto di analisi pelle, è probabilmente l'età dedotta dall'AI, non un problema
+- Range numerici senza contesto dermatologico specifico = età, non problema
 Idratazione: "Meno di 1L", "1-1.5L", "1.5-2L", "Più di 2L" - cerca le scelte multiple per l'acqua
 Sonno: "Meno di 6h", "6-7h", "7-8h", "Più di 8h" - cerca le scelte multiple per il sonno
 Protezione solare: "Sempre", "Solo d'estate", "Solo quando esco", "Raramente", "Mai"
@@ -209,27 +215,91 @@ Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantene
     }
   }
 
+  // Helper function to detect age patterns
+  private isAgePattern(text: string): boolean {
+    if (!text) return false;
+    
+    const cleanText = text.trim();
+    
+    // Pattern migliorati per riconoscere età in varie forme
+    const agePatterns = [
+      /^\d{1,2}$/, // singolo numero 13-99
+      /^\d{1,2}\s*[-–—]\s*\d{1,2}$/, // range con vari tipi di trattino e spazi opzionali
+      /^\d{1,2}\s*anni?$/, // "25 anni" o "25 anno"
+      /^età\s*\d{1,2}$/i, // "età 25"
+      /^fascia\s*d[''']età\s*\d{1,2}\s*[-–—]\s*\d{1,2}$/i, // "fascia d'età 20-30"
+      /^tra\s+i?\s*\d{1,2}\s*e\s*\d{1,2}(\s*anni)?$/i, // "tra i 16 e 25" o "tra 16 e 25 anni"
+      /^fra\s+i?\s*\d{1,2}\s*e\s*\d{1,2}(\s*anni)?$/i, // "fra i 16 e 25"
+      /^\d{1,2}\s*[-–—]\s*\d{1,2}\s*anni$/i, // "16-25 anni"
+    ];
+    
+    return agePatterns.some(pattern => pattern.test(cleanText));
+  }
+
+  // Helper function to validate and fix extracted data
+  private validateAndFixExtractedData(extractedData: ExtractedData): ExtractedData {
+    if (!extractedData.analisi_pelle?.problemi_principali) {
+      return extractedData;
+    }
+
+    const problemiPuliti: string[] = [];
+    let etaTrovata: string | null = null;
+
+    // Normalizza problemi_principali in array (come in ChatDataExtractor)
+    const problemiArray = Array.isArray(extractedData.analisi_pelle.problemi_principali) 
+      ? extractedData.analisi_pelle.problemi_principali 
+      : [extractedData.analisi_pelle.problemi_principali];
+
+    // Controlla ogni problema per vedere se è in realtà un'età
+    for (const problema of problemiArray) {
+      if (this.isAgePattern(problema)) {
+        // È un pattern di età, non un problema
+        etaTrovata = problema;
+        console.log(`🔧 Correzione: "${problema}" spostato da problemi a età`);
+      } else {
+        problemiPuliti.push(problema);
+      }
+    }
+
+    // Aggiorna i dati estratti
+    extractedData.analisi_pelle.problemi_principali = problemiPuliti;
+    
+    // Se abbiamo trovato un'età nei problemi e non c'è già un'età specificata
+    if (etaTrovata && (!extractedData.informazioni_base?.eta || extractedData.informazioni_base.eta === null)) {
+      if (!extractedData.informazioni_base) {
+        extractedData.informazioni_base = { eta: null, sesso: null, email: null };
+      }
+      extractedData.informazioni_base.eta = etaTrovata;
+      console.log(`🔧 Correzione: Età "${etaTrovata}" aggiunta alle informazioni base`);
+    }
+
+    return extractedData;
+  }
+
   // Convert extracted data to Google Sheets format
   convertToSheetsFormat(extractedData: ExtractedData): any {
+    // Applica validazione e correzioni prima della conversione
+    const cleanedData = this.validateAndFixExtractedData(extractedData);
+    
     const result: any = {};
     
     // Informazioni base
-    if (extractedData.informazioni_base) {
-      result.eta = extractedData.informazioni_base.eta || 'Non specificato';
-      result.sesso = extractedData.informazioni_base.sesso || 'Non specificato';
-      result.email = extractedData.informazioni_base.email || 'Non specificato';
+    if (cleanedData.informazioni_base) {
+      result.eta = cleanedData.informazioni_base.eta || 'Non specificato';
+      result.sesso = cleanedData.informazioni_base.sesso || 'Non specificato';
+      result.email = cleanedData.informazioni_base.email || 'Non specificato';
     } else {
       result.eta = 'Non specificato';
       result.sesso = 'Non specificato';
       result.email = 'Non specificato';
     }
 
-    // Analisi pelle
-    if (extractedData.analisi_pelle) {
-      result.tipoPelle = extractedData.analisi_pelle.tipo_pelle || 'Non specificato';
-      result.problemiPelle = extractedData.analisi_pelle.problemi_principali?.length ? 
-        extractedData.analisi_pelle.problemi_principali.join(', ') : 'Non specificato';
-      result.punteggioPelle = extractedData.analisi_pelle.punteggio_generale || 'Non specificato';
+    // Analisi pelle (usa dati puliti dalla validazione)
+    if (cleanedData.analisi_pelle) {
+      result.tipoPelle = cleanedData.analisi_pelle.tipo_pelle || 'Non specificato';
+      result.problemiPelle = cleanedData.analisi_pelle.problemi_principali?.length ? 
+        cleanedData.analisi_pelle.problemi_principali.join(', ') : 'Non specificato';
+      result.punteggioPelle = cleanedData.analisi_pelle.punteggio_generale || 'Non specificato';
     } else {
       result.tipoPelle = 'Non specificato';
       result.problemiPelle = 'Non specificato';

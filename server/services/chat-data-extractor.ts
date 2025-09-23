@@ -124,10 +124,16 @@ Restituisci un JSON con i seguenti campi:
 
 ### ESEMPI DI PATTERN DA RICONOSCERE:
 
-- Età: "ho 25 anni", "25enne", "sono del '99"
+- Età: "ho 25 anni", "25enne", "sono del '99", "16-25 anni", "fascia d'età 20-30"
 - Genere: "sono una ragazza", "uomo di", "donna"
 - Routine: "uso solo acqua", "crema la sera", "niente trucco"
 - Problemi: "ho sempre brufoli", "pelle che tira", "macchie rosse"
+
+⚠️ REGOLA CRITICA PER DISTINGUERE ETÀ DA PROBLEMI:
+- Numeri o range numerici che indicano anni (es: "25", "16-25", "20-30") vanno SEMPRE in "eta", MAI in "problemi_principali"
+- Solo condizioni dermatologiche reali vanno in "problemi_principali" (acne, rossori, secchezza, rughe, macchie, oleosità, etc.)
+- Se vedi pattern come "16-25" nel contesto di analisi pelle, è probabilmente l'età dedotta dall'AI, non un problema
+- Range numerici senza contesto dermatologico specifico = età, non problema
 
 Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantenendo alta precisione e completezza.`;
   }
@@ -150,62 +156,125 @@ Analizza attentamente ogni conversazione e estrai tutti i dati possibili mantene
     return input;
   }
 
+  // Helper function to detect age patterns
+  private isAgePattern(text: string): boolean {
+    if (!text) return false;
+    
+    const cleanText = text.trim();
+    
+    // Pattern migliorati per riconoscere età in varie forme
+    const agePatterns = [
+      /^\d{1,2}$/, // singolo numero 13-99
+      /^\d{1,2}\s*[-–—]\s*\d{1,2}$/, // range con vari tipi di trattino e spazi opzionali
+      /^\d{1,2}\s*anni?$/, // "25 anni" o "25 anno"
+      /^età\s*\d{1,2}$/i, // "età 25"
+      /^fascia\s*d['']età\s*\d{1,2}\s*[-–—]\s*\d{1,2}$/i, // "fascia d'età 20-30"
+      /^tra\s+i?\s*\d{1,2}\s*e\s*\d{1,2}(\s*anni)?$/i, // "tra i 16 e 25" o "tra 16 e 25 anni"
+      /^fra\s+i?\s*\d{1,2}\s*e\s*\d{1,2}(\s*anni)?$/i, // "fra i 16 e 25"
+      /^\d{1,2}\s*[-–—]\s*\d{1,2}\s*anni$/i, // "16-25 anni"
+    ];
+    
+    return agePatterns.some(pattern => pattern.test(cleanText));
+  }
+
+  // Helper function to validate and fix extracted data
+  private validateAndFixExtractedData(extractedData: any): any {
+    if (!extractedData.analisi_pelle?.problemi_principali) {
+      return extractedData;
+    }
+
+    const problemiPuliti: string[] = [];
+    let etaTrovata: string | null = null;
+
+    // Controlla ogni problema per vedere se è in realtà un'età
+    const problemiArray = Array.isArray(extractedData.analisi_pelle.problemi_principali) 
+      ? extractedData.analisi_pelle.problemi_principali 
+      : [extractedData.analisi_pelle.problemi_principali];
+
+    for (const problema of problemiArray) {
+      if (this.isAgePattern(problema)) {
+        // È un pattern di età, non un problema
+        etaTrovata = problema;
+        console.log(`🔧 Correzione: "${problema}" spostato da problemi a età`);
+      } else {
+        problemiPuliti.push(problema);
+      }
+    }
+
+    // Aggiorna i dati estratti
+    extractedData.analisi_pelle.problemi_principali = problemiPuliti;
+    
+    // Se abbiamo trovato un'età nei problemi e non c'è già un'età specificata
+    if (etaTrovata && (!extractedData.informazioni_base?.eta || extractedData.informazioni_base.eta === null)) {
+      if (!extractedData.informazioni_base) {
+        extractedData.informazioni_base = { eta: null, sesso: null, email: null };
+      }
+      extractedData.informazioni_base.eta = etaTrovata;
+      console.log(`🔧 Correzione: Età "${etaTrovata}" aggiunta alle informazioni base`);
+    }
+
+    return extractedData;
+  }
+
   private transformToSheetsFormat(extractedData: any): any {
+    // Applica validazione e correzioni prima della conversione
+    const cleanedData = this.validateAndFixExtractedData(extractedData);
+    
     // Trasforma il formato del modello personalizzato nel formato compatibile con Google Sheets
     const sheetsFormat: any = {};
 
     // Informazioni base
-    if (extractedData.informazioni_base) {
-      sheetsFormat.eta = extractedData.informazioni_base.eta || 'Non specificato';
-      sheetsFormat.sesso = extractedData.informazioni_base.sesso || 'Non specificato';
-      sheetsFormat.email = extractedData.informazioni_base.email || 'Non specificato';
+    if (cleanedData.informazioni_base) {
+      sheetsFormat.eta = cleanedData.informazioni_base.eta || 'Non specificato';
+      sheetsFormat.sesso = cleanedData.informazioni_base.sesso || 'Non specificato';
+      sheetsFormat.email = cleanedData.informazioni_base.email || 'Non specificato';
     }
 
     // Analisi pelle
-    if (extractedData.analisi_pelle) {
-      sheetsFormat.tipoPelle = extractedData.analisi_pelle.tipo_pelle || 'Non specificato';
-      sheetsFormat.punteggioPelle = extractedData.analisi_pelle.punteggio_generale || 'Non specificato';
+    if (cleanedData.analisi_pelle) {
+      sheetsFormat.tipoPelle = cleanedData.analisi_pelle.tipo_pelle || 'Non specificato';
+      sheetsFormat.punteggioPelle = cleanedData.analisi_pelle.punteggio_generale || 'Non specificato';
       
-      // Problemi principali come stringa
-      if (Array.isArray(extractedData.analisi_pelle.problemi_principali)) {
-        sheetsFormat.problemiPelle = extractedData.analisi_pelle.problemi_principali.join(', ');
+      // Problemi principali come stringa (ora puliti dalla validazione)
+      if (Array.isArray(cleanedData.analisi_pelle.problemi_principali)) {
+        sheetsFormat.problemiPelle = cleanedData.analisi_pelle.problemi_principali.join(', ');
       } else {
-        sheetsFormat.problemiPelle = extractedData.analisi_pelle.problemi_principali || 'Non specificato';
+        sheetsFormat.problemiPelle = cleanedData.analisi_pelle.problemi_principali || 'Non specificato';
       }
     }
 
     // Abitudini lifestyle
-    if (extractedData.abitudini_lifestyle) {
-      sheetsFormat.protezioneSolare = extractedData.abitudini_lifestyle.protezione_solare || 'Non specificato';
-      sheetsFormat.idratazione = extractedData.abitudini_lifestyle.idratazione_quotidiana || 'Non specificato';
-      sheetsFormat.sonno = extractedData.abitudini_lifestyle.ore_sonno || 'Non specificato';
-      sheetsFormat.alimentazione = extractedData.abitudini_lifestyle.alimentazione || 'Non specificato';
-      sheetsFormat.fumo = extractedData.abitudini_lifestyle.fumo || 'Non specificato';
-      sheetsFormat.stress = extractedData.abitudini_lifestyle.stress_level || 'Non specificato';
-      sheetsFormat.utilizzaScrub = extractedData.abitudini_lifestyle.utilizzo_scrub || 'Non specificato';
+    if (cleanedData.abitudini_lifestyle) {
+      sheetsFormat.protezioneSolare = cleanedData.abitudini_lifestyle.protezione_solare || 'Non specificato';
+      sheetsFormat.idratazione = cleanedData.abitudini_lifestyle.idratazione_quotidiana || 'Non specificato';
+      sheetsFormat.sonno = cleanedData.abitudini_lifestyle.ore_sonno || 'Non specificato';
+      sheetsFormat.alimentazione = cleanedData.abitudini_lifestyle.alimentazione || 'Non specificato';
+      sheetsFormat.fumo = cleanedData.abitudini_lifestyle.fumo || 'Non specificato';
+      sheetsFormat.stress = cleanedData.abitudini_lifestyle.stress_level || 'Non specificato';
+      sheetsFormat.utilizzaScrub = cleanedData.abitudini_lifestyle.utilizzo_scrub || 'Non specificato';
     }
 
     // Preferenze prodotti
-    if (extractedData.preferenze_prodotti) {
-      sheetsFormat.allergie = extractedData.preferenze_prodotti.allergie || 'Non specificato';
-      sheetsFormat.profumo = extractedData.preferenze_prodotti.profumo_fiori || 'Non specificato';
-      sheetsFormat.routine = extractedData.preferenze_prodotti.routine_attuale || 'Non specificato';
-      sheetsFormat.tipoRichiesta = extractedData.preferenze_prodotti.tipo_richiesta || 'Non specificato';
-      sheetsFormat.ingredientiPreferiti = extractedData.preferenze_prodotti.ingredienti_preferiti || 'Non specificato';
+    if (cleanedData.preferenze_prodotti) {
+      sheetsFormat.allergie = cleanedData.preferenze_prodotti.allergie || 'Non specificato';
+      sheetsFormat.profumo = cleanedData.preferenze_prodotti.profumo_fiori || 'Non specificato';
+      sheetsFormat.routine = cleanedData.preferenze_prodotti.routine_attuale || 'Non specificato';
+      sheetsFormat.tipoRichiesta = cleanedData.preferenze_prodotti.tipo_richiesta || 'Non specificato';
+      sheetsFormat.ingredientiPreferiti = cleanedData.preferenze_prodotti.ingredienti_preferiti || 'Non specificato';
     }
 
     // Aggiungi campi aggiuntivi dal modello personalizzato
-    if (extractedData.analisi_conversazione) {
-      sheetsFormat.faseCompletata = extractedData.analisi_conversazione.fase_completata || 'Non specificato';
-      sheetsFormat.accessoProdotti = extractedData.analisi_conversazione.accesso_prodotti || 'Non specificato';
-      sheetsFormat.qualitaDati = extractedData.analisi_conversazione.qualita_dati || 'Non specificato';
-      sheetsFormat.noteAggiuntive = extractedData.analisi_conversazione.note_aggiuntive || 'Non specificato';
+    if (cleanedData.analisi_conversazione) {
+      sheetsFormat.faseCompletata = cleanedData.analisi_conversazione.fase_completata || 'Non specificato';
+      sheetsFormat.accessoProdotti = cleanedData.analisi_conversazione.accesso_prodotti || 'Non specificato';
+      sheetsFormat.qualitaDati = cleanedData.analisi_conversazione.qualita_dati || 'Non specificato';
+      sheetsFormat.noteAggiuntive = cleanedData.analisi_conversazione.note_aggiuntive || 'Non specificato';
     }
 
     // Aggiungi ingredienti consigliati
-    if (extractedData.ingredienti_consigliati) {
-      if (Array.isArray(extractedData.ingredienti_consigliati.ingredienti_principali)) {
-        sheetsFormat.ingredientiConsigliati = extractedData.ingredienti_consigliati.ingredienti_principali.join(', ');
+    if (cleanedData.ingredienti_consigliati) {
+      if (Array.isArray(cleanedData.ingredienti_consigliati.ingredienti_principali)) {
+        sheetsFormat.ingredientiConsigliati = cleanedData.ingredienti_consigliati.ingredienti_principali.join(', ');
       } else {
         sheetsFormat.ingredientiConsigliati = 'Non specificato';
       }
