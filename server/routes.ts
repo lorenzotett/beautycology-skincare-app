@@ -1606,6 +1606,10 @@ Ricorda che i risultati possono variare da persona a persona.`,
       // Check cache first
       const cached = sessionDetailsCache.get(sessionId);
       if (cached && Date.now() - cached.timestamp < SESSION_DETAILS_CACHE_DURATION) {
+        // Validate brand even for cached data
+        if (cached.data.brand !== req.brand) {
+          return res.status(404).json({ error: "Session not found" });
+        }
         console.log(`⚡ Session details cache hit for ${sessionId}`);
         res.setHeader('X-Cache', 'HIT');
         return res.json(cached.data);
@@ -1614,6 +1618,11 @@ Ricorda che i risultati possono variare da persona a persona.`,
       const session = await storage.getChatSession(sessionId);
 
       if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      // Validate that session belongs to the current brand
+      if (session.brand !== req.brand) {
         return res.status(404).json({ error: "Session not found" });
       }
 
@@ -1644,7 +1653,15 @@ Ricorda che i risultati possono variare da persona a persona.`,
         return res.status(404).json({ error: "Session not found" });
       }
 
+      // Validate that session belongs to the current brand
+      if (session.brand !== req.brand) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
       await storage.deleteChatSession(sessionId);
+
+      // Invalidate the cache entry for this session
+      sessionDetailsCache.delete(sessionId);
 
       res.json({ success: true });
     } catch (error) {
