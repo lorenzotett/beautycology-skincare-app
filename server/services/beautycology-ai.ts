@@ -802,8 +802,39 @@ export class BeautycologyAIService {
         // Save the answer
         if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
         state.structuredFlowAnswers.adviceType = userMessage;
-        state.currentStep = 'awaiting_additional_info';
-        state.structuredFlowActive = true; // Keep flow active for final question
+        
+        // Check if user selected a specific product type vs complete routine
+        const isRoutineCompleta = userMessage.toLowerCase().includes("routine completa");
+        
+        if (isRoutineCompleta) {
+          // Continue with structured flow for complete routine
+          state.currentStep = 'awaiting_additional_info';
+          state.structuredFlowActive = true; // Keep flow active for final question
+        } else {
+          // User selected a specific product type - provide immediate recommendation
+          console.log(`🎯 User selected specific product type: ${userMessage} - providing immediate recommendation`);
+          
+          // End structured flow and provide specific product recommendation
+          state.currentStep = 'completed';
+          state.structuredFlowActive = false;
+          
+          // Generate specific product recommendation
+          responseText = await this.generateSpecificProductRecommendation(sessionId, userMessage, state);
+          
+          // Update history with the product recommendation
+          sessionHistory.pop(); // Remove the last model response placeholder
+          sessionHistory.push({
+            role: "model",
+            parts: [{ text: responseText }]
+          });
+          this.chatSessions.set(sessionId, sessionHistory);
+          
+          // Return immediately with the recommendation
+          return {
+            content: responseText,
+            hasChoices: false
+          };
+        }
       }
 
       // Check if user is providing additional information (final step)
@@ -1453,6 +1484,164 @@ Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi 
       console.error('Error getting RAG context:', error);
       return '';
     }
+  }
+
+  // Generate specific product recommendation based on skin problems and selected category
+  private async generateSpecificProductRecommendation(sessionId: string, selectedProductType: string, state: any): Promise<string> {
+    console.log(`🎯 Generating specific product recommendation for ${selectedProductType} for session ${sessionId}`);
+    
+    const answers = state.structuredFlowAnswers || {};
+    const sessionHistory = this.chatSessions.get(sessionId) || [];
+    
+    // Map skin problems to recommended ingredients based on system instructions
+    const skinProblemsMapping = {
+      'acne/brufoli': ['Bardana', 'Mirto', 'Niacinamide'],
+      'macchie scure': ['Liquirizia', 'Vitamina C'],
+      'rughe/invecchiamento': ['Ginkgo Biloba', 'Retinolo'],
+      'rossori': ['Centella Asiatica', 'Malva'],
+      'pori dilatati': ['Amamelide', 'Niacinamide'],
+      'pelle grassa': ['Amamelide', 'Niacinamide'],
+      'scarsa idratazione': ['Kigelia Africana', 'Acido Ialuronico'],
+      'pelle secca': ['Kigelia Africana', 'Acido Ialuronico'],
+    };
+
+    // Identify skin problems from user's main issue
+    const mainIssue = answers.mainIssue?.toLowerCase() || '';
+    let recommendedIngredients: string[] = [];
+    
+    Object.keys(skinProblemsMapping).forEach(problem => {
+      if (mainIssue.includes(problem.split('/')[0])) {
+        recommendedIngredients.push(...skinProblemsMapping[problem]);
+      }
+    });
+    
+    // Remove duplicates
+    recommendedIngredients = [...new Set(recommendedIngredients)];
+    
+    // Get RAG context for the specific product type
+    const ragContext = await this.getRAGContext(`${selectedProductType} ${recommendedIngredients.join(' ')}`);
+    
+    // Build prompt for specific product recommendation
+    const productPrompt = `
+**RACCOMANDAZIONE PRODOTTO SPECIFICO**
+
+🎯 L'utente ha scelto: **${selectedProductType}**
+
+Dati dell'utente:
+- Tipo di pelle: ${answers.skinType || 'non specificato'}
+- Età: ${answers.age || 'non specificata'}  
+- Problematica principale: ${answers.mainIssue || 'non specificata'}
+- Ingredienti consigliati basati sui problemi: ${recommendedIngredients.join(', ') || 'da valutare'}
+
+${ragContext ? `Informazioni prodotti rilevanti:\n${ragContext}\n` : ''}
+
+🚨 IMPORTANTE: L'utente ha scelto UN PRODOTTO SPECIFICO, non una routine completa.
+
+DEVI OBBLIGATORIAMENTE:
+
+1. **RINGRAZIARE** per la scelta specifica
+2. **ANALIZZARE** la problematica principale identificata (${answers.mainIssue || 'problemi generici'})
+3. **SPIEGARE** perché il tipo di prodotto scelto (${selectedProductType}) è perfetto per la sua condizione
+4. **RACCOMANDARE IL PRODOTTO SPECIFICO** dalla knowledge base Beautycology più adatto:
+   - Nome del prodotto e prezzo
+   - Ingredienti chiave che risolvono il problema specifico
+   - Come e quando usarlo
+   - Benefici attesi
+   - Link diretto per l'acquisto
+5. **CONSIGLI D'USO** specifici per massimizzare l'efficacia
+6. **CONCLUDERE** sempre con: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
+
+⚠️ NON includere pulsanti, scelte multiple, o domande aggiuntive.
+⚠️ NON proporre routine complete - solo IL PRODOTTO SPECIFICO richiesto.
+⚠️ Usa la knowledge base per prodotti e prezzi reali di Beautycology.
+
+Rispondi come la Skin Expert di Beautycology con tono professionale ma amichevole. 🧪✨`;
+
+    try {
+      const response = await ai.models.generateContent({
+        model: this.modelName,
+        contents: [{
+          role: "user",
+          parts: [{ text: productPrompt }]
+        }],
+        config: {
+          ...this.generationConfig,
+          maxOutputTokens: 1500,
+          temperature: 0.3
+        }
+      });
+
+      const text = response.text || "";
+      
+      if (!text || text.trim().length === 0) {
+        console.log('⚠️ Empty response for specific product recommendation, using fallback');
+        return this.getFallbackSpecificProductRecommendation(selectedProductType, answers, recommendedIngredients);
+      }
+
+      console.log('✅ Generated specific product recommendation successfully');
+      return text;
+    } catch (error) {
+      console.error('Error generating specific product recommendation:', error);
+      return this.getFallbackSpecificProductRecommendation(selectedProductType, answers, recommendedIngredients);
+    }
+  }
+
+  // Fallback specific product recommendation if AI fails
+  private getFallbackSpecificProductRecommendation(productType: string, answers: any, ingredients: string[]): string {
+    const skinType = answers.skinType?.toLowerCase() || 'mista';
+    const mainIssue = answers.mainIssue || 'problemi generici della pelle';
+    
+    // Map product types to Beautycology products
+    const productMapping: any = {
+      'detergente-struccante': {
+        name: 'Acqua Micellare',
+        price: '€25,00',
+        description: 'Detergente delicato per tutti i tipi di pelle, rimuove trucco e impurità senza aggredire',
+        url: 'https://beautycology.it/products/acqua-micellare'
+      },
+      'creme viso': {
+        name: 'Perfect & Pure Cream',
+        price: '€45,00', 
+        description: 'Crema per pelli miste con Niacinamide 4% e Red Algae Extract, proprietà anti-imperfezioni e sebo-regolatrici',
+        url: 'https://beautycology.it/products/perfect-pure-cream'
+      },
+      'contorno occhi': {
+        name: 'M-Eye Secret',
+        price: '€50,00',
+        description: 'Crema contorno occhi multipeptide con Niacinamide 5%, antirughe, anti-borse e anti-occhiaie',
+        url: 'https://beautycology.it/products/m-eye-secret'
+      }
+    };
+    
+    const product = productMapping[productType.toLowerCase()] || productMapping['creme viso'];
+    const ingredientList = ingredients.length > 0 ? ingredients.join(', ') : 'ingredienti scientifici mirati';
+    
+    return `Perfetto! 🌟 Hai scelto di concentrarti su **${productType}** - una scelta intelligente!
+
+📋 **ANALISI DELLA TUA ESIGENZA:**
+Basandomi sui tuoi dati (pelle ${skinType}, problema principale: ${mainIssue}), il **${productType}** è esattamente quello di cui ha bisogno la tua pelle per risolvere questa problematica specifica.
+
+🧪 **IL PRODOTTO PERFETTO PER TE:**
+
+**${product.name}** (${product.price})
+${product.description}
+
+✨ **INGREDIENTI CHIAVE per il tuo problema:**
+${ingredientList} - selezionati scientificamente per la tua condizione specifica.
+
+📋 **COME USARLO:**
+- Applica ${productType.includes('detergente') ? 'mattina e sera su viso umido' : 'mattina e sera su pelle pulita'}
+- ${productType.includes('contorno') ? 'Tampona delicatamente senza strofinare' : 'Massaggia con movimenti circolari'}
+- Costanza è fondamentale: usa quotidianamente per 4-6 settimane per vedere risultati ottimali
+
+🎯 **BENEFICI ATTESI:**
+- Miglioramento visibile della problematica in 2-3 settimane
+- Pelle più equilibrata e sana
+- Risultati progressivi e duraturi
+
+🛒 **LINK DIRETTO:** [${product.name}](${product.url})
+
+Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
   }
 
   // Generate final recommendations when structured flow is completed
