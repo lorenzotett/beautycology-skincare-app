@@ -519,26 +519,240 @@ class ProductValidator {
   getProductsByCategory(category: string): Array<{name: string, url: string, price: string}> {
     const categoryLower = category.toLowerCase();
     
-    // Map categories to actual products
-    if (categoryLower.includes('detergente') || categoryLower.includes('struccante')) {
+    // First try to find products by exact category match from knowledge base
+    const productsByExactCategory = this.products
+      .filter(p => {
+        if (!p.category) return false;
+        return p.category.toLowerCase() === categoryLower;
+      })
+      .map(p => ({name: p.originalName, url: p.url, price: p.price}));
+    
+    if (productsByExactCategory.length > 0) {
+      console.log(`✅ Found ${productsByExactCategory.length} products for exact category: ${category}`);
+      return productsByExactCategory;
+    }
+    
+    // If no exact match, try keyword-based mapping for common searches
+    console.log(`🔍 Trying keyword matching for category: ${category}`);
+    
+    // Detergenti
+    if (categoryLower.includes('detergente') || categoryLower.includes('struccante') || categoryLower.includes('pulizia')) {
       return this.products
         .filter(p => p.name.includes('detergente') || p.name.includes('mousse') || p.name.includes('multitasking') || p.name.includes('cleaning'))
         .map(p => ({name: p.originalName, url: p.url, price: p.price}));
     }
     
+    // Creme
+    if (categoryLower.includes('crema') || categoryLower.includes('cream')) {
+      return this.products
+        .filter(p => p.name.toLowerCase().includes('crema') || p.name.toLowerCase().includes('cream') || 
+                     (p.category && p.category.toLowerCase() === 'creme'))
+        .map(p => ({name: p.originalName, url: p.url, price: p.price}));
+    }
+    
+    // Sieri
+    if (categoryLower.includes('siero') || categoryLower.includes('serum')) {
+      return this.products
+        .filter(p => p.name.toLowerCase().includes('siero') || p.name.toLowerCase().includes('serum') ||
+                     (p.category && p.category.toLowerCase() === 'sieri'))
+        .map(p => ({name: p.originalName, url: p.url, price: p.price}));
+    }
+    
+    // Protezione Solare
     if (categoryLower.includes('protezione') || categoryLower.includes('solare') || categoryLower.includes('spf')) {
       return this.products
-        .filter(p => p.name.includes('shield') || p.name.includes('spf'))
+        .filter(p => p.name.includes('shield') || p.name.includes('spf') || p.name.toLowerCase().includes('solare'))
         .map(p => ({name: p.originalName, url: p.url, price: p.price}));
     }
     
-    if (categoryLower.includes('contorno occhi')) {
+    // Contorno Occhi
+    if (categoryLower.includes('contorno occhi') || categoryLower.includes('occhi') || categoryLower.includes('eye')) {
       return this.products
-        .filter(p => p.name.toLowerCase().includes('eye') || p.name.toLowerCase().includes('occhi'))
+        .filter(p => p.name.toLowerCase().includes('eye') || p.name.toLowerCase().includes('occhi') ||
+                     (p.category && p.category.toLowerCase() === 'contorno occhi'))
         .map(p => ({name: p.originalName, url: p.url, price: p.price}));
     }
     
+    // Esfolianti
+    if (categoryLower.includes('esfoliante') || categoryLower.includes('peeling') || categoryLower.includes('esfoliazione')) {
+      return this.products
+        .filter(p => p.name.toLowerCase().includes('peel') || p.name.toLowerCase().includes('esfoliante') ||
+                     p.name.toLowerCase().includes('glow') || p.name.toLowerCase().includes('ray') ||
+                     (p.category && p.category.toLowerCase() === 'esfolianti'))
+        .map(p => ({name: p.originalName, url: p.url, price: p.price}));
+    }
+    
+    // Maschere
+    if (categoryLower.includes('maschera') || categoryLower.includes('mask')) {
+      return this.products
+        .filter(p => p.name.toLowerCase().includes('maschera') || p.name.toLowerCase().includes('mask') ||
+                     p.name.toLowerCase().includes('clay') || (p.category && p.category.toLowerCase() === 'maschere'))
+        .map(p => ({name: p.originalName, url: p.url, price: p.price}));
+    }
+    
+    // Kit e Routine
+    if (categoryLower.includes('kit') || categoryLower.includes('routine')) {
+      return this.products
+        .filter(p => p.name.toLowerCase().includes('kit') || p.name.toLowerCase().includes('routine') ||
+                     (p.category && p.category.toLowerCase() === 'kit & routine'))
+        .map(p => ({name: p.originalName, url: p.url, price: p.price}));
+    }
+    
+    // Corpo
+    if (categoryLower.includes('corpo') || categoryLower.includes('body')) {
+      return this.products
+        .filter(p => p.name.toLowerCase().includes('corpo') || p.name.toLowerCase().includes('body') ||
+                     p.name.toLowerCase().includes('bodylicious') || (p.category && p.category.toLowerCase() === 'corpo'))
+        .map(p => ({name: p.originalName, url: p.url, price: p.price}));
+    }
+    
+    console.log(`⚠️ No products found for category: ${category}`);
     return [];
+  }
+
+  // NEW METHOD: Get products based on specific skin problems and concerns
+  getProductsByProblems(problems: string[], skinType?: string): Array<{name: string, url: string, price: string, score: number, reason: string}> {
+    console.log(`🎯 Finding products for problems: ${problems.join(', ')}, skin type: ${skinType || 'not specified'}`);
+    
+    const productScores: Array<{name: string, url: string, price: string, score: number, reason: string}> = [];
+    
+    this.products.forEach(p => {
+      let score = 0;
+      let reasons: string[] = [];
+      const productName = p.originalName.toLowerCase();
+      const productDesc = (p.description || '').toLowerCase();
+      
+      problems.forEach(problem => {
+        const problemLower = problem.toLowerCase();
+        
+        // ACNE / IMPERFEZIONI / PELLE GRASSA
+        if (problemLower.includes('acne') || problemLower.includes('brufoli') || problemLower.includes('imperfezioni') || problemLower.includes('punti neri')) {
+          if (productName.includes('multipod') || productDesc.includes('acido azelaico') || productDesc.includes('azelaico')) {
+            score += 10; reasons.push('Acido Azelaico per acne/imperfezioni');
+          }
+          if (productName.includes('ray of light') || productDesc.includes('acido salicilico')) {
+            score += 8; reasons.push('Acido Salicilico per acne');
+          }
+          if (productName.includes('clay rehab') || productDesc.includes('argilla')) {
+            score += 7; reasons.push('Argilla purificante per acne');
+          }
+          if (productName.includes('perfect') && productName.includes('pure') || productDesc.includes('seboregolatori')) {
+            score += 6; reasons.push('Controllo sebo per pelle acneica');
+          }
+        }
+        
+        // MACCHIE / IPERPIGMENTAZIONE
+        if (problemLower.includes('macchie') || problemLower.includes('pigmentazione') || problemLower.includes('iperpigmentazione') || problemLower.includes('melasma')) {
+          if (productName.includes('combo macchie')) {
+            score += 10; reasons.push('Kit completo anti-macchie');
+          }
+          if (productName.includes('multipod') || productDesc.includes('acido azelaico')) {
+            score += 9; reasons.push('Acido Azelaico per macchie');
+          }
+          if (productName.includes('c-boost') || productDesc.includes('vitamina c') || productDesc.includes('acido ascorbico')) {
+            score += 8; reasons.push('Vitamina C per luminosità e macchie');
+          }
+        }
+        
+        // RUGHE / INVECCHIAMENTO / ANTI-AGE
+        if (problemLower.includes('rughe') || problemLower.includes('invecchiamento') || problemLower.includes('anti') || problemLower.includes('età')) {
+          if (productName.includes('retinal bomb') || productDesc.includes('retinaldeide 0,1%')) {
+            score += 10; reasons.push('Retinaldeide per rughe profonde');
+          }
+          if (productName.includes('retinal eye') || productDesc.includes('retinaldeide 0,05%')) {
+            score += 8; reasons.push('Retinaldeide delicata per contorno occhi');
+          }
+          if (productName.includes('better with age') || productDesc.includes('antirughe')) {
+            score += 7; reasons.push('Formula anti-rughe specifica');
+          }
+          if (productName.includes('m-eye secret') || productDesc.includes('multipeptide')) {
+            score += 6; reasons.push('Peptidi per contorno occhi');
+          }
+        }
+        
+        // PELLE SENSIBILE / ROSSORI / IRRITAZIONE
+        if (problemLower.includes('sensibile') || problemLower.includes('rossori') || problemLower.includes('irritazione') || problemLower.includes('rosacea')) {
+          if (productName.includes('redless') || productDesc.includes('acido tranexamico')) {
+            score += 10; reasons.push('Acido Tranexamico per rossori');
+          }
+          if (productName.includes('skin reset') || productDesc.includes('riequilibrante')) {
+            score += 9; reasons.push('Trattamento lenitivo per pelle sensibile');
+          }
+          if (productName.includes('barrier hero') || productDesc.includes('barriera')) {
+            score += 8; reasons.push('Ripristino barriera cutanea');
+          }
+          if (productName.includes('cleaning me softly')) {
+            score += 6; reasons.push('Detersione delicata per pelle sensibile');
+          }
+        }
+        
+        // IDRATAZIONE / SECCHEZZA
+        if (problemLower.includes('secca') || problemLower.includes('idratazione') || problemLower.includes('disidratata')) {
+          if (productName.includes('bionic hydralift') || productDesc.includes('acido lattobionico')) {
+            score += 9; reasons.push('Idratazione profonda 72h');
+          }
+          if (productName.includes('barrier hero')) {
+            score += 7; reasons.push('Idratazione e riparazione barriera');
+          }
+          if (productName.includes('cleaning me softly')) {
+            score += 6; reasons.push('Detersione oleosa per pelle secca');
+          }
+        }
+        
+        // ESFOLIAZIONE / LUMINOSITÀ / TEXTURE
+        if (problemLower.includes('esfoliante') || problemLower.includes('luminosità') || problemLower.includes('texture') || problemLower.includes('opaca')) {
+          if (productName.includes('let\'s glow') || productDesc.includes('multiacido 22%')) {
+            score += 10; reasons.push('Esfoliazione intensa AHA-PHA 22%');
+          }
+          if (productName.includes('i peel good') || productDesc.includes('acido glicolico 10%')) {
+            score += 9; reasons.push('Esfoliazione con Acido Glicolico');
+          }
+          if (productName.includes('ray of light') || productDesc.includes('acido salicilico 2%')) {
+            score += 7; reasons.push('Esfoliazione con Acido Salicilico');
+          }
+        }
+        
+        // PROTEZIONE SOLARE / PREVENZIONE
+        if (problemLower.includes('protezione') || problemLower.includes('sole') || problemLower.includes('prevenzione') || problemLower.includes('spf')) {
+          if (productName.includes('invisible shield 50+')) {
+            score += 10; reasons.push('Protezione solare SPF 50+');
+          }
+          if (productName.includes('invisible shield') && productName.includes('spf 30')) {
+            score += 8; reasons.push('Protezione solare quotidiana SPF 30');
+          }
+        }
+      });
+      
+      // Bonus per tipo di pelle specificato
+      if (skinType) {
+        const skinTypeLower = skinType.toLowerCase();
+        if (skinTypeLower === 'grassa' && (productName.includes('perfect') || productDesc.includes('seboregolatori'))) {
+          score += 2; reasons.push('Adatto a pelle grassa');
+        }
+        if (skinTypeLower === 'secca' && (productName.includes('barrier') || productDesc.includes('ceramidi'))) {
+          score += 2; reasons.push('Adatto a pelle secca');
+        }
+        if (skinTypeLower === 'sensibile' && productDesc.includes('testato su pelli sensibili')) {
+          score += 2; reasons.push('Testato su pelli sensibili');
+        }
+      }
+      
+      if (score > 0) {
+        productScores.push({
+          name: p.originalName,
+          url: p.url,
+          price: p.price,
+          score,
+          reason: reasons.join(', ')
+        });
+      }
+    });
+    
+    // Ordina per punteggio decrescente
+    productScores.sort((a, b) => b.score - a.score);
+    console.log(`✅ Found ${productScores.length} products matching problems, top scores:`, productScores.slice(0, 3).map(p => `${p.name} (${p.score})`));
+    
+    return productScores;
   }
 }
 
@@ -1791,40 +2005,57 @@ Rispondi come la Skin Expert di Beautycology con tono professionale ma amichevol
     }
   }
 
-  // Fallback specific product recommendation if AI fails - now uses real products from catalog
+  // Fallback specific product recommendation if AI fails - now uses intelligent matching
   private getFallbackSpecificProductRecommendation(productType: string, answers: any, ingredients: string[]): string {
     const skinType = answers.skinType?.toLowerCase() || 'mista';
     const mainIssue = answers.mainIssue || 'problemi generici della pelle';
     
-    // Use ProductValidator to get real products for the category
-    let realProducts: Array<{name: string, url: string, price: string}> = [];
+    console.log(`🎯 INTELLIGENT FALLBACK: Finding products for ${productType}, skin: ${skinType}, issue: ${mainIssue}`);
+    
+    let selectedProduct: {name: string, url: string, price: string, score?: number, reason?: string} | null = null;
     
     if (this.productValidator) {
-      realProducts = this.productValidator.getProductsByCategory(productType);
-    }
-    
-    // If no products found for category, get some default safe products
-    if (realProducts.length === 0 && this.productValidator) {
-      // Try to find some general products from the catalog
-      const allProductNames = this.productValidator.getAllProductNames();
-      if (allProductNames.length > 0) {
-        // Get first available product as fallback
-        const fallbackValidation = this.productValidator.validateProductName(allProductNames[0]);
-        if (fallbackValidation.isValid && fallbackValidation.product) {
-          realProducts = [fallbackValidation.product];
+      // First: Try intelligent matching based on problems and skin type
+      const problems = [mainIssue, productType];
+      const intelligentMatches = this.productValidator.getProductsByProblems(problems, skinType);
+      
+      if (intelligentMatches.length > 0) {
+        console.log(`✅ INTELLIGENT MATCH: Found ${intelligentMatches.length} products by problem matching`);
+        selectedProduct = intelligentMatches[0]; // Take the highest scored product
+      } else {
+        // Second: Try category-based matching (improved method)
+        console.log(`🔍 CATEGORY FALLBACK: Trying category matching for ${productType}`);
+        const categoryProducts = this.productValidator.getProductsByCategory(productType);
+        
+        if (categoryProducts.length > 0) {
+          console.log(`✅ CATEGORY MATCH: Found ${categoryProducts.length} products by category`);
+          selectedProduct = categoryProducts[0];
+        } else {
+          // Third: If all else fails, try to find ANY relevant product based on main issue
+          console.log(`🆘 LAST RESORT: Trying to find any product for main issue: ${mainIssue}`);
+          const lastResortMatches = this.productValidator.getProductsByProblems([mainIssue], skinType);
+          
+          if (lastResortMatches.length > 0) {
+            console.log(`✅ LAST RESORT MATCH: Found product for main issue`);
+            selectedProduct = lastResortMatches[0];
+          }
         }
       }
     }
     
     // If still no products, log error and return safe message
-    if (realProducts.length === 0) {
-      console.error(`❌ No real products found for category: ${productType}`);
-      return `Mi dispiace, al momento non riesco ad accedere al catalogo prodotti per la categoria ${productType}. Ti consiglio di visitare https://beautycology.it per vedere tutti i prodotti disponibili.`;
+    if (!selectedProduct) {
+      console.error(`❌ No products found for: category=${productType}, skin=${skinType}, issue=${mainIssue}`);
+      return `Mi dispiace, al momento non riesco a trovare un prodotto specifico per la categoria "${productType}" con il problema "${mainIssue}". Ti consiglio di visitare https://beautycology.it per vedere tutti i prodotti disponibili o contattare il nostro team di esperti.`;
     }
     
-    // Use the first available real product
-    const product = realProducts[0];
+    // Use the intelligently selected product
+    const product = selectedProduct;
     const ingredientList = ingredients.length > 0 ? ingredients.join(', ') : 'ingredienti scientifici mirati';
+    
+    // Add matching reason if available (from intelligent matching)
+    const matchingExplanation = product.reason ? 
+      `\n🎯 **PERCHÉ È PERFETTO PER TE:**\n${product.reason}\n` : '';
     
     return `Perfetto! 🌟 Hai scelto di concentrarti su **${productType}** - una scelta intelligente!
 
@@ -1835,7 +2066,7 @@ Basandomi sui tuoi dati (pelle ${skinType}, problema principale: ${mainIssue}), 
 
 **${product.name}** (${product.price})
 Questo prodotto è stato selezionato dal nostro catalogo scientifico di Beautycology per rispondere alle tue esigenze specifiche.
-
+${matchingExplanation}
 ✨ **INGREDIENTI CHIAVE per il tuo problema:**
 ${ingredientList} - selezionati scientificamente per la tua condizione specifica.
 
