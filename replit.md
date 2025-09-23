@@ -70,6 +70,22 @@ Preferred communication style: Simple, everyday language.
 - **Automatic Image Import System**: Complete automation for converting Base64 images to public URLs and generating Google Sheets IMAGE formulas. Processes 205+ conversations with user-uploaded photos, providing direct image display in spreadsheet cells without manual intervention (August 2025).
 - **Beautycology AI Platform**: Independent beauty consultant platform with comprehensive skincare analysis, personalized recommendations, and integrated admin dashboard for complete beauty consultation management (September 2025).
 
+## User Feedback and Issues Tracking
+
+### Reported Product Recommendation Issues (September 2025)
+**Problem**: AI is recommending generic or non-existent products instead of real products from the Beautycology catalog.
+
+**Specific Issues Identified**:
+- "beautycology detergente" - generic reference instead of specific products like "Cleaning Me Softly" (€25,00), "Multitasking Oil – Detergente oleoso" (€12,00), or "Mousse Away – Detergente viso" (€8,00)
+- "beautycology swr" - product does not exist in catalog
+- "beautycology crema defense" - product does not exist in catalog  
+- "beautycology protezione solare" - generic reference instead of "Invisible Shield – Crema viso SPF 30" (€15,00)
+
+**Required Solution**:
+- AI must only recommend products that actually exist in the knowledge base
+- Every product recommendation must include the exact product name and valid link
+- No generic or invented product names allowed
+
 ## External Dependencies
 - **@google/genai**: Google Gemini AI integration.
 - **@neondatabase/serverless**: PostgreSQL database driver.
