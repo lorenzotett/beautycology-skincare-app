@@ -290,11 +290,31 @@ Esempio CORRETTO:
 - Chiede esplicitamente un'analisi della pelle
 **NON partire con le domande se l'utente non ha fatto nessuna di queste azioni.**
 
+### REGOLE CRITICHE PER PRODOTTI E LINK:
+🚨 **OBBLIGO ASSOLUTO - PRODOTTI REALI SOLO:**
+- USA ESCLUSIVAMENTE i nomi ESATTI dei prodotti dal catalogo Beautycology
+- VIETATO inventare o usare nomi generici come "beautycology detergente", "beautycology crema", "beautycology swr", "beautycology crema defense"
+- SOLO nomi specifici come "Mousse Away – Detergente viso", "M-EYE SECRET – CREMA CONTORNO OCCHI MULTIPEPTIDE", "Invisible Shield – Crema viso SPF 30"
+
+🚨 **OBBLIGO ASSOLUTO - LINK OBBLIGATORI:**
+- OGNI prodotto menzionato DEVE avere il suo link completo https://beautycology.it/prodotto/...
+- VIETATO menzionare prodotti senza link
+- VIETATO usare link non-beautycology.it
+- Formato richiesto: **[Nome Esatto Prodotto](URL completo)** (prezzo)
+
+### ESEMPI CORRETTI:
+✅ **[Mousse Away – Detergente viso](https://beautycology.it/prodotto/detergente-viso-mousse-away/)** (€8,00)
+✅ **[Invisible Shield – Crema viso SPF 30](https://beautycology.it/prodotto/invisible-shield-crema-viso-spf-uva/)** (€15,00)
+
+### ESEMPI VIETATI:
+❌ "beautycology detergente" - usa nome specifico + link
+❌ "crema beautycology" - usa nome specifico + link  
+❌ "beautycology swr" - prodotto inesistente
+❌ "beautycology crema defense" - prodotto inesistente
+
 ### UTILIZZO KNOWLEDGE BASE:
-✅ **Utilizza sempre i prodotti REALI dalla knowledge base aggiornata**
 ✅ **Includi articoli del blog** per approfondimenti scientifici
 ✅ **Riferisci a https://beautycology.it/skincare-routine/** quando pertinente
-✅ **Link diretti ai prodotti** dal catalogo reale
 
 ### REGISTRAZIONE DATI:
 ✅ **Memorizza TUTTE le informazioni** dell'utente durante il flusso
@@ -312,11 +332,14 @@ Esempio CORRETTO:
 
 ## MAI:
 ❌ Non ripresentarti dopo la prima volta
-❌ Non dire "non conosco questo prodotto" se è nella knowledge base (es: M-Eye Secret, Perfect & Pure, Acqua Micellare)
+❌ Non dire "non conosco questo prodotto" se è nella knowledge base
 ❌ Non iniziare domande strutturate subito dopo il nome
 ❌ Non fare più domande contemporaneamente durante l'analisi
 ❌ Non saltare l'attesa delle risposte
-❌ Non inventare prodotti non presenti nella knowledge base
+❌ **CRITICO: Non inventare NESSUN prodotto non presente nella knowledge base**
+❌ **CRITICO: Non usare nomi generici come "beautycology detergente", "beautycology crema"**
+❌ **CRITICO: Non menzionare prodotti senza link completo**
+❌ **CRITICO: Non usare link esterni a beautycology.it**
 ❌ Non fare affermazioni mediche (rimanda al dermatologo)
 ❌ Non concludere prima di aver raccolto tutte le informazioni
 ❌ Non ripetere opzioni come bullet points quando fai domande con scelte multiple
@@ -357,6 +380,168 @@ Come dice Dr. Marilisa Franchini: ogni ingrediente ha una base scientifica rigor
 
 Ricorda: Sei la Skin Expert di Beautycology! Attingi sempre alla knowledge scientifica reale di beautycology.it! ✨🧪`;
 
+// Product validation class for ensuring only real products are recommended
+class ProductValidator {
+  private products: Array<{name: string, originalName: string, url: string, price: string}> = [];
+  
+  constructor(knowledgeBase: any) {
+    this.loadProducts(knowledgeBase);
+  }
+  
+  private loadProducts(knowledgeBase: any): void {
+    if (knowledgeBase && knowledgeBase.products) {
+      this.products = knowledgeBase.products.map((p: any) => ({
+        name: p.name.toLowerCase(),
+        originalName: p.name,
+        url: p.url,
+        price: p.price
+      }));
+      console.log(`✅ ProductValidator loaded ${this.products.length} products`);
+    }
+  }
+  
+  // Check if a product name exists in catalog (exact match only)
+  validateProductName(productName: string): {isValid: boolean, product?: any} {
+    const searchName = productName.toLowerCase().trim();
+    const exactMatch = this.products.find(p => p.name === searchName);
+    
+    if (exactMatch) {
+      return {
+        isValid: true,
+        product: {
+          name: exactMatch.originalName,
+          url: exactMatch.url,
+          price: exactMatch.price
+        }
+      };
+    }
+    
+    return {isValid: false};
+  }
+  
+  // Find all product names mentioned in text (case insensitive)
+  findProductMentionsInText(text: string): Array<{name: string, product: any}> {
+    const mentions: Array<{name: string, product: any}> = [];
+    
+    this.products.forEach(p => {
+      // Use regex to find case-insensitive whole word matches
+      const regex = new RegExp('\\b' + p.originalName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+      const matches = text.match(regex);
+      
+      if (matches) {
+        matches.forEach(match => {
+          mentions.push({
+            name: match,
+            product: {
+              name: p.originalName,
+              url: p.url,
+              price: p.price
+            }
+          });
+        });
+      }
+    });
+    
+    return mentions;
+  }
+  
+  // Validate that recommended text contains only real products with mandatory links
+  validateRecommendationText(text: string): {isValid: boolean, issues: string[]} {
+    const issues: string[] = [];
+    
+    // 1. Look for problematic generic patterns (user's specific issues)
+    const problematicPatterns = [
+      /beautycology\s+(detergente|crema|siero|protezione|swr|defense)/gi,
+      /detergente\s+beautycology/gi,
+      /crema\s+beautycology/gi,
+      /beautycology\s+swr/gi,
+      /beautycology\s+crema\s+defense/gi
+    ];
+    
+    problematicPatterns.forEach(pattern => {
+      const matches = text.match(pattern);
+      if (matches) {
+        matches.forEach(match => {
+          issues.push(`CRITICAL: Generic/non-existent product reference: "${match}" - use exact catalog product names only`);
+        });
+      }
+    });
+    
+    // 2. Find ALL product mentions in text (not just bold)
+    const productMentions = this.findProductMentionsInText(text);
+    
+    productMentions.forEach(mention => {
+      // For each real product mentioned, ensure its exact URL is present
+      if (!text.includes(mention.product.url)) {
+        issues.push(`CRITICAL: Product "${mention.product.name}" mentioned without mandatory link: ${mention.product.url}`);
+      }
+    });
+    
+    // 3. Validate ALL URLs in text (not just Markdown)
+    const allUrlMatches = text.match(/https?:\/\/[^\s\)]+/g);
+    if (allUrlMatches) {
+      allUrlMatches.forEach(url => {
+        // Clean up potential trailing punctuation
+        const cleanUrl = url.replace(/[.,;!?]+$/, '');
+        if (!cleanUrl.startsWith('https://beautycology.it/')) {
+          issues.push(`CRITICAL: Non-beautycology URL found: "${cleanUrl}" - all product links must be from beautycology.it`);
+        }
+      });
+    }
+    
+    // 4. Check for product-like words that might be generic references
+    const suspiciousPatterns = [
+      /\b(detergente|cleanser|crema|cream|siero|serum|gel|olio|oil)\s+(beautycology|efficace|specifico|adatto)\b/gi,
+      /\b(prodotto|cosmetico)\s+(beautycology|di qualità|specifico|adatto|perfetto)\b/gi
+    ];
+    
+    suspiciousPatterns.forEach(pattern => {
+      const matches = text.match(pattern);
+      if (matches) {
+        matches.forEach(match => {
+          issues.push(`WARNING: Suspicious generic reference: "${match}" - ensure you use specific product names from catalog`);
+        });
+      }
+    });
+    
+    return {
+      isValid: issues.length === 0,
+      issues
+    };
+  }
+  
+  // Get all available product names for reference  
+  getAllProductNames(): string[] {
+    return this.products.map(p => p.originalName);
+  }
+  
+  // Get real products for specific categories
+  getProductsByCategory(category: string): Array<{name: string, url: string, price: string}> {
+    const categoryLower = category.toLowerCase();
+    
+    // Map categories to actual products
+    if (categoryLower.includes('detergente') || categoryLower.includes('struccante')) {
+      return this.products
+        .filter(p => p.name.includes('detergente') || p.name.includes('mousse') || p.name.includes('multitasking') || p.name.includes('cleaning'))
+        .map(p => ({name: p.originalName, url: p.url, price: p.price}));
+    }
+    
+    if (categoryLower.includes('protezione') || categoryLower.includes('solare') || categoryLower.includes('spf')) {
+      return this.products
+        .filter(p => p.name.includes('shield') || p.name.includes('spf'))
+        .map(p => ({name: p.originalName, url: p.url, price: p.price}));
+    }
+    
+    if (categoryLower.includes('contorno occhi')) {
+      return this.products
+        .filter(p => p.name.toLowerCase().includes('eye') || p.name.toLowerCase().includes('occhi'))
+        .map(p => ({name: p.originalName, url: p.url, price: p.price}));
+    }
+    
+    return [];
+  }
+}
+
 export class BeautycologyAIService {
   private modelName = "gemini-2.5-flash";
   private generationConfig = {
@@ -378,6 +563,7 @@ export class BeautycologyAIService {
     };
   }> = new Map();
   private knowledgeBase: any = null;
+  private productValidator: ProductValidator | null = null;
 
   constructor() {
     // Configuration set up in constructor
@@ -408,6 +594,9 @@ export class BeautycologyAIService {
         const data = fs.readFileSync(knowledgePath, 'utf-8');
         this.knowledgeBase = JSON.parse(data);
         console.log(`✅ Loaded ${this.knowledgeBase.products?.length || 0} products from beautycology.json`);
+        
+        // Initialize product validator
+        this.productValidator = new ProductValidator(this.knowledgeBase);
         
         // Verify M-Eye Secret is present
         const hasMyEyeSecret = this.knowledgeBase.products?.some((p: any) => 
@@ -1425,21 +1614,27 @@ Se invece vuoi informazioni sui nostri prodotti, o per qualsiasi dubbio, chiedi 
   }
 
   // Get summary of knowledge base for prompt injection
-  private getKnowledgeBaseSummary(maxItems: number = 15): string {
+  private getKnowledgeBaseSummary(maxItems: number = 20): string {
     if (!this.knowledgeBase) {
       return '';
     }
 
     let summary = '';
     
-    // Add products section
+    // Add strict product validation instructions at the top
+    summary += `🚨 ATTENZIONE: USA SOLO QUESTI PRODOTTI REALI CON NOMI ESATTI E LINK OBBLIGATORI:\n\n`;
+    
+    // Add products section with mandatory link format
     if (this.knowledgeBase.products?.length > 0) {
       const topProducts = this.knowledgeBase.products
         .slice(0, maxItems)
-        .map((p: any) => `- **${p.name}** (${p.price}): ${p.description.substring(0, 100)}... 
-  Link: ${p.url}`)
-        .join('\n');
-      summary += `## PRODOTTI BEAUTYCOLOGY:\n${topProducts}\n\n`;
+        .map((p: any) => `✅ **[${p.name}](${p.url})** (${p.price})
+   ${p.description.substring(0, 120)}...`)
+        .join('\n\n');
+      summary += `## CATALOGO PRODOTTI REALI - SOLO QUESTI NOMI E LINK:\n${topProducts}\n\n`;
+      
+      // Add explicit forbidden examples
+      summary += `🚨 VIETATO USARE:\n❌ "beautycology detergente" → USA: [Mousse Away – Detergente viso](link)\n❌ "beautycology protezione solare" → USA: [Invisible Shield – Crema viso SPF 30](link)\n❌ "beautycology swr" → NON ESISTE\n❌ "beautycology crema defense" → NON ESISTE\n\n`;
     }
     
     // Add blog articles section
@@ -1578,6 +1773,16 @@ Rispondi come la Skin Expert di Beautycology con tono professionale ma amichevol
         return this.getFallbackSpecificProductRecommendation(selectedProductType, answers, recommendedIngredients);
       }
 
+      // Validate the AI response for generic or non-existent products
+      if (this.productValidator) {
+        const validation = this.productValidator.validateRecommendationText(text);
+        if (!validation.isValid) {
+          console.warn(`⚠️ AI generated problematic product recommendations:`, validation.issues);
+          console.log('🔄 Using fallback to ensure only real products are recommended');
+          return this.getFallbackSpecificProductRecommendation(selectedProductType, answers, recommendedIngredients);
+        }
+      }
+
       console.log('✅ Generated specific product recommendation successfully');
       return text;
     } catch (error) {
@@ -1586,34 +1791,39 @@ Rispondi come la Skin Expert di Beautycology con tono professionale ma amichevol
     }
   }
 
-  // Fallback specific product recommendation if AI fails
+  // Fallback specific product recommendation if AI fails - now uses real products from catalog
   private getFallbackSpecificProductRecommendation(productType: string, answers: any, ingredients: string[]): string {
     const skinType = answers.skinType?.toLowerCase() || 'mista';
     const mainIssue = answers.mainIssue || 'problemi generici della pelle';
     
-    // Map product types to Beautycology products
-    const productMapping: any = {
-      'detergente-struccante': {
-        name: 'Acqua Micellare',
-        price: '€25,00',
-        description: 'Detergente delicato per tutti i tipi di pelle, rimuove trucco e impurità senza aggredire',
-        url: 'https://beautycology.it/products/acqua-micellare'
-      },
-      'creme viso': {
-        name: 'Perfect & Pure Cream',
-        price: '€45,00', 
-        description: 'Crema per pelli miste con Niacinamide 4% e Red Algae Extract, proprietà anti-imperfezioni e sebo-regolatrici',
-        url: 'https://beautycology.it/products/perfect-pure-cream'
-      },
-      'contorno occhi': {
-        name: 'M-Eye Secret',
-        price: '€50,00',
-        description: 'Crema contorno occhi multipeptide con Niacinamide 5%, antirughe, anti-borse e anti-occhiaie',
-        url: 'https://beautycology.it/products/m-eye-secret'
-      }
-    };
+    // Use ProductValidator to get real products for the category
+    let realProducts: Array<{name: string, url: string, price: string}> = [];
     
-    const product = productMapping[productType.toLowerCase()] || productMapping['creme viso'];
+    if (this.productValidator) {
+      realProducts = this.productValidator.getProductsByCategory(productType);
+    }
+    
+    // If no products found for category, get some default safe products
+    if (realProducts.length === 0 && this.productValidator) {
+      // Try to find some general products from the catalog
+      const allProductNames = this.productValidator.getAllProductNames();
+      if (allProductNames.length > 0) {
+        // Get first available product as fallback
+        const fallbackValidation = this.productValidator.validateProductName(allProductNames[0]);
+        if (fallbackValidation.isValid && fallbackValidation.product) {
+          realProducts = [fallbackValidation.product];
+        }
+      }
+    }
+    
+    // If still no products, log error and return safe message
+    if (realProducts.length === 0) {
+      console.error(`❌ No real products found for category: ${productType}`);
+      return `Mi dispiace, al momento non riesco ad accedere al catalogo prodotti per la categoria ${productType}. Ti consiglio di visitare https://beautycology.it per vedere tutti i prodotti disponibili.`;
+    }
+    
+    // Use the first available real product
+    const product = realProducts[0];
     const ingredientList = ingredients.length > 0 ? ingredients.join(', ') : 'ingredienti scientifici mirati';
     
     return `Perfetto! 🌟 Hai scelto di concentrarti su **${productType}** - una scelta intelligente!
@@ -1624,7 +1834,7 @@ Basandomi sui tuoi dati (pelle ${skinType}, problema principale: ${mainIssue}), 
 🧪 **IL PRODOTTO PERFETTO PER TE:**
 
 **${product.name}** (${product.price})
-${product.description}
+Questo prodotto è stato selezionato dal nostro catalogo scientifico di Beautycology per rispondere alle tue esigenze specifiche.
 
 ✨ **INGREDIENTI CHIAVE per il tuo problema:**
 ${ingredientList} - selezionati scientificamente per la tua condizione specifica.
@@ -1745,6 +1955,16 @@ Usa emoji appropriati ✨🌟💧 per rendere il testo engaging ma professionale
         return this.getFallbackRecommendations(answers);
       }
 
+      // Validate the AI response for generic or non-existent products
+      if (this.productValidator) {
+        const validation = this.productValidator.validateRecommendationText(text);
+        if (!validation.isValid) {
+          console.warn(`⚠️ AI generated problematic product recommendations in final response:`, validation.issues);
+          console.log('🔄 Using fallback to ensure only real products are recommended');
+          return this.getFallbackRecommendations(answers);
+        }
+      }
+
       console.log('✅ Generated comprehensive recommendations successfully');
       return text;
     } catch (error) {
@@ -1753,33 +1973,45 @@ Usa emoji appropriati ✨🌟💧 per rendere il testo engaging ma professionale
     }
   }
 
-  // Fallback recommendations if AI fails
+  // Fallback recommendations if AI fails - now uses real products from catalog
   private getFallbackRecommendations(answers: any): string {
-    const skinTypeProducts: any = {
-      'grassa': {
-        cleanser: 'Acqua Micellare',
-        treatment: 'Perfect & Pure Cream con Niacinamide 4%',
-        serum: 'Serum con Acido Salicilico'
-      },
-      'secca': {
-        cleanser: 'Latte Detergente Delicato',
-        treatment: 'Crema Idratante Intensiva',
-        serum: 'Serum Acido Ialuronico'
-      },
-      'mista': {
-        cleanser: 'Gel Detergente Purificante',
-        treatment: 'Perfect & Pure Cream',
-        serum: 'Serum Niacinamide'
-      },
-      'normale': {
-        cleanser: 'Acqua Micellare',
-        treatment: 'Crema Viso Giorno',
-        serum: 'Serum Vitamina C'
-      }
-    };
-
     const skinType = answers.skinType?.toLowerCase() || 'mista';
-    const products = skinTypeProducts[skinType] || skinTypeProducts['mista'];
+    
+    // Use ProductValidator to get real products for different categories
+    let cleanserProducts: Array<{name: string, url: string, price: string}> = [];
+    let treatmentProducts: Array<{name: string, url: string, price: string}> = [];
+    let serumProducts: Array<{name: string, url: string, price: string}> = [];
+    
+    if (this.productValidator) {
+      cleanserProducts = this.productValidator.getProductsByCategory('detergente');
+      treatmentProducts = this.productValidator.getProductsByCategory('creme viso');
+      serumProducts = this.productValidator.getProductsByCategory('siero');
+      
+      // If categories don't return products, get some general products
+      if (cleanserProducts.length === 0 || treatmentProducts.length === 0 || serumProducts.length === 0) {
+        const allProducts = this.productValidator.getAllProductNames();
+        console.warn(`⚠️ Some product categories returned no results. Available products: ${allProducts.length}`);
+      }
+    }
+    
+    // Build product recommendations with real products or safe fallback message
+    const cleanser = cleanserProducts.length > 0 ? cleanserProducts[0] : null;
+    const treatment = treatmentProducts.length > 0 ? treatmentProducts[0] : null;
+    const serum = serumProducts.length > 0 ? serumProducts[0] : null;
+
+    // If we don't have enough real products, return a safe message
+    if (!cleanser || !treatment) {
+      return `Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
+
+📋 **INFORMAZIONI REGISTRATE:**
+- Tipo di pelle: ${answers.skinType || 'non specificato'}
+- Età: ${answers.age || 'non specificata'}
+- Problematica principale: ${answers.mainIssue || 'non specificata'}
+
+Mi dispiace, al momento non riesco ad accedere al nostro catalogo completo per fornirti raccomandazioni specifiche sui prodotti. Ti consiglio di visitare https://beautycology.it per vedere tutti i nostri prodotti scientificamente formulati.
+
+Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
+    }
 
     return `Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
 
@@ -1797,23 +2029,23 @@ Basandomi sulle informazioni fornite, ho identificato le seguenti aree di miglio
 Ho creato per te una routine completa e personalizzata utilizzando i prodotti Beautycology più adatti alle tue esigenze.
 
 **🌅 ROUTINE MATTINA:**
-1. **Detersione**: ${products.cleanser}
+1. **Detersione**: [${cleanser.name}](${cleanser.url}) (${cleanser.price})
    - Applicare su dischetto di cotone e pulire delicatamente viso e collo
-2. **Trattamento**: ${products.serum}
+2. **Trattamento**: ${serum ? `[${serum.name}](${serum.url}) (${serum.price})` : 'Siero specifico per il tuo tipo di pelle'}
    - 2-3 gocce su viso pulito, massaggiare delicatamente
-3. **Idratazione**: ${products.treatment}
+3. **Idratazione**: [${treatment.name}](${treatment.url}) (${treatment.price})
    - Applicare una quantità pari a un chicco di riso su tutto il viso
 4. **Protezione solare**: SPF 50+ (sempre!)
    - Essenziale per proteggere la pelle dai danni UV
 
 **🌙 ROUTINE SERA:**
-1. **Detersione**: ${products.cleanser}
+1. **Detersione**: [${cleanser.name}](${cleanser.url})
    - Rimuove trucco e impurità accumulate durante il giorno
 2. **Tonico**: Tonico Riequilibrante
    - Prepara la pelle ai trattamenti successivi
-3. **Trattamento**: ${products.serum}
+3. **Trattamento**: ${serum ? `[${serum.name}](${serum.url})` : 'Siero specifico'}
    - Applicare con movimenti circolari dal basso verso l'alto
-4. **Idratazione**: ${products.treatment}
+4. **Idratazione**: [${treatment.name}](${treatment.url})
    - Strato più generoso rispetto alla mattina per nutrire la pelle durante la notte
 
 🧪 **SPIEGAZIONE SCIENTIFICA:**
