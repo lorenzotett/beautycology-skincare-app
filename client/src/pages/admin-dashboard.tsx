@@ -77,17 +77,21 @@ export default function AdminDashboard({ brand = "beautycology" }: AdminDashboar
   const [sessionsCache, setSessionsCache] = useState<Map<string, any>>(new Map());
   const [lastCacheUpdate, setLastCacheUpdate] = useState<number>(0);
 
-  // Check if user is already authenticated and reset date fields
+  // Check if user is already authenticated for this brand and reset date fields
   useEffect(() => {
-    const authStatus = localStorage.getItem('admin-authenticated');
-    if (authStatus === 'true') {
-      setIsAuthenticated(true);
+    const authStatus = localStorage.getItem(`admin-authenticated-${brand}`);
+    setIsAuthenticated(authStatus === 'true');
+    
+    // Clear form fields when switching brands for security
+    if (authStatus !== 'true') {
+      setUsername("");
+      setPassword("");
     }
 
     // Force reset any invalid date values on component mount
     setCustomDateFrom("");
     setCustomDateTo("");
-  }, []);
+  }, [brand]);
 
   // DISABILITATO: Fetch realtime extraction status (troppo lento - 6 secondi)
   // useEffect(() => {
@@ -164,19 +168,36 @@ export default function AdminDashboard({ brand = "beautycology" }: AdminDashboar
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === "admin" && password === "password123") {
+    
+    // Brand-specific credentials
+    const credentials = {
+      dermasense: {
+        username: "admin-dermasense",
+        password: "derma2023!"
+      },
+      beautycology: {
+        username: "admin-beautycology", 
+        password: "beauty2023!"
+      }
+    };
+
+    const brandCredentials = credentials[brand];
+    
+    if (username === brandCredentials.username && password === brandCredentials.password) {
       setIsAuthenticated(true);
-      localStorage.setItem('admin-authenticated', 'true');
+      localStorage.setItem(`admin-authenticated-${brand}`, 'true');
       // Force immediate stats load after login
       queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ["admin-sessions"] });
     } else {
-      alert("Credenziali non valide");
+      alert(`Credenziali non valide per ${brand === 'beautycology' ? 'Beautycology AI' : 'Dermasense'}`);
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    localStorage.removeItem(`admin-authenticated-${brand}`);
+    // Also clear old generic key for cleanup
     localStorage.removeItem('admin-authenticated');
   };
 
@@ -661,7 +682,9 @@ export default function AdminDashboard({ brand = "beautycology" }: AdminDashboar
         <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Login</h1>
-            <p className="text-gray-600">Access the Beautycology AI dashboard</p>
+            <p className="text-gray-600">
+              Access the {brand === 'beautycology' ? 'Beautycology AI' : 'Dermasense'} dashboard
+            </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -696,10 +719,13 @@ export default function AdminDashboard({ brand = "beautycology" }: AdminDashboar
             </Button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-            <p className="text-sm text-gray-600 font-medium">Test Credentials:</p>
-            <p className="text-sm text-gray-600">Username: admin</p>
-            <p className="text-sm text-gray-600">Password: password123</p>
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 font-medium">
+              {brand === 'beautycology' ? 'Beautycology AI' : 'Dermasense'} Dashboard
+            </p>
+            <p className="text-sm text-blue-600">
+              Accedi con le credenziali dedicate per questo brand
+            </p>
           </div>
         </div>
       </div>
@@ -713,7 +739,9 @@ export default function AdminDashboard({ brand = "beautycology" }: AdminDashboar
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600">Beautycology AI Conversation Management</p>
+            <p className="text-gray-600">
+              {brand === 'beautycology' ? 'Beautycology AI' : 'Dermasense'} Conversation Management
+            </p>
           </div>
           <div className="flex items-center space-x-4">
             {!isSelectionMode ? (
