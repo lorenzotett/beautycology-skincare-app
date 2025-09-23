@@ -785,6 +785,148 @@ export class BeautycologyAIService {
     this.initializeRAG();
   }
 
+  // ✨ FUNZIONI PER L'ANALISI AUTOMATICA DEL TESTO DELL'UTENTE ✨
+  private analyzeSkinTypeFromText(text: string): string | undefined {
+    const lowerText = text.toLowerCase();
+    
+    if (lowerText.includes('pelle grassa') || lowerText.includes('troppo oleosa') || lowerText.includes('molto oleosa') || lowerText.includes('lucida') || lowerText.includes('unta')) {
+      return 'Grassa';
+    }
+    if (lowerText.includes('pelle secca') || lowerText.includes('desquama') || lowerText.includes('tira') || lowerText.includes('screpolata') || lowerText.includes('ruvida')) {
+      return 'Secca';
+    }
+    if (lowerText.includes('pelle mista') || lowerText.includes('zona t oleosa') || lowerText.includes('fronte oleosa') || lowerText.includes('guance secche')) {
+      return 'Mista';
+    }
+    if (lowerText.includes('pelle normale') || lowerText.includes('equilibrata') || lowerText.includes('non ho problemi particolari')) {
+      return 'Normale';
+    }
+    if (lowerText.includes('pelle sensibile') || lowerText.includes('si arrossa') || lowerText.includes('irritabile') || lowerText.includes('reattiva')) {
+      return 'Asfittica'; // ✨ Mappatura corretta per le opzioni del sistema
+    }
+    
+    return undefined;
+  }
+
+  private analyzeSkinProblemsFromText(text: string): string[] {
+    const lowerText = text.toLowerCase();
+    const problems: string[] = [];
+    
+    if (lowerText.includes('acne') || lowerText.includes('tanti brufoli') || lowerText.includes('brufoli grossi')) {
+      problems.push('Acne/Brufoli');
+    }
+    if (lowerText.includes('punti neri') || lowerText.includes('comedoni') || lowerText.includes('naso con punti neri')) {
+      problems.push('Punti neri');
+    }
+    if (lowerText.includes('macchie') || lowerText.includes('discromie') || lowerText.includes('macchie scure') || lowerText.includes('iperpigmentazione')) {
+      problems.push('Macchie scure');
+    }
+    if (lowerText.includes('rughe') || lowerText.includes('linee sottili') || lowerText.includes('segni espressione')) {
+      problems.push('Rughe/Invecchiamento');
+    }
+    if (lowerText.includes('rossori') || lowerText.includes('arrossamenti') || lowerText.includes('couperose') || lowerText.includes('capillari')) {
+      problems.push('Rosacea');
+    }
+    if (lowerText.includes('pori dilatati') || lowerText.includes('pori grandi') || lowerText.includes('pori visibili')) {
+      problems.push('Pori dilatati');
+    }
+    
+    return problems;
+  }
+
+  private analyzeAgeFromText(text: string): string | undefined {
+    const lowerText = text.toLowerCase();
+    
+    // Cerca pattern diretti dell'età
+    const ageMatch = lowerText.match(/(\d{2})\s*(anni?|years?)/i);
+    if (ageMatch) {
+      const age = parseInt(ageMatch[1]);
+      if (age >= 16 && age <= 25) return '16-25';
+      if (age >= 26 && age <= 35) return '26-35';
+      if (age >= 36 && age <= 45) return '36-45';
+      if (age >= 46 && age <= 55) return '46-55';
+      if (age >= 56) return '56+';
+    }
+    
+    // Cerca pattern descrittivi  
+    if (lowerText.includes('sono giovane') || lowerText.includes('sono ancora giovane') || lowerText.includes('20 anni') || lowerText.includes('vent')) {
+      return '16-25';
+    }
+    if (lowerText.includes('trentenne') || lowerText.includes('30 anni') || lowerText.includes('trent')) {
+      return '26-35';
+    }
+    if (lowerText.includes('quarantenne') || lowerText.includes('40 anni') || lowerText.includes('quarant')) {
+      return '36-45';
+    }
+    if (lowerText.includes('cinquantenne') || lowerText.includes('50 anni') || lowerText.includes('cinquant')) {
+      return '46-55';
+    }
+    if (lowerText.includes('over 50') || lowerText.includes('over cinquanta') || lowerText.includes('matura')) {
+      return '56+';
+    }
+    
+    return undefined;
+  }
+
+  private extractAndRegisterUserInfo(sessionId: string, userMessage: string): void {
+    const state = this.sessionState.get(sessionId)!;
+    if (!state.structuredFlowAnswers) {
+      state.structuredFlowAnswers = {};
+    }
+    
+    // Analizza il testo per estrarre informazioni
+    const detectedSkinType = this.analyzeSkinTypeFromText(userMessage);
+    const detectedProblems = this.analyzeSkinProblemsFromText(userMessage);
+    const detectedAge = this.analyzeAgeFromText(userMessage);
+    
+    // Registra le informazioni trovate
+    if (detectedSkinType && !state.structuredFlowAnswers.skinType) {
+      state.structuredFlowAnswers.skinType = detectedSkinType;
+      console.log(`✅ Auto-extracted skin type: ${detectedSkinType}`);
+    }
+    
+    if (detectedProblems.length > 0 && !state.structuredFlowAnswers.mainIssue) {
+      // Prendi la prima problematica rilevata come principale
+      state.structuredFlowAnswers.mainIssue = detectedProblems[0];
+      console.log(`✅ Auto-extracted skin problems: ${detectedProblems.join(', ')}`);
+    }
+    
+    if (detectedAge && !state.structuredFlowAnswers.age) {
+      state.structuredFlowAnswers.age = detectedAge;
+      console.log(`✅ Auto-extracted age: ${detectedAge}`);
+    }
+  }
+
+  private generateAutoInfoContext(sessionState: any): string {
+    const answers = sessionState.structuredFlowAnswers;
+    if (!answers) return '';
+    
+    let context = '';
+    
+    if (answers.skinType) {
+      context += `\n\n**🤖 INFORMAZIONI AUTO-ESTRATTE DAL TESTO DELL'UTENTE:**\n`;
+      context += `• **Tipologia pelle rilevata automaticamente**: ${answers.skinType.toUpperCase()}\n`;
+      context += '\n**🚨 REGOLA CRITICA:**\n';
+      context += '• **NON CHIEDERE** "Che tipo di pelle hai?" perché è già stato rilevato automaticamente\n';
+      context += '• **RICONOSCI** le informazioni rilevate: "Perfetto! Ho capito che hai la pelle ' + answers.skinType.toLowerCase() + '"\n';
+      context += '• **SALTA** alla domanda successiva (età) direttamente\n';
+    }
+    
+    if (answers.age) {
+      if (!context) context = '\n\n**🤖 INFORMAZIONI AUTO-ESTRATTE DAL TESTO DELL\'UTENTE:**\n';
+      context += `• **Età rilevata automaticamente**: ${answers.age}\n`;
+      context += '• **NON CHIEDERE** l\'età perché è già stata rilevata\n';
+    }
+    
+    if (answers.mainIssue) {
+      if (!context) context = '\n\n**🤖 INFORMAZIONI AUTO-ESTRATTE DAL TESTO DELL\'UTENTE:**\n';
+      context += `• **Problematica principale rilevata**: ${answers.mainIssue}\n`;
+      context += '• **NON CHIEDERE** la problematica principale perché è già stata rilevata\n';
+    }
+    
+    return context;
+  }
+
   private async initializeRAG(): Promise<void> {
     try {
       // Load documents into RAG service if not already loaded
@@ -842,6 +984,9 @@ export class BeautycologyAIService {
       }
       const state = this.sessionState.get(sessionId)!;
 
+      // ✨ ESTRAI E REGISTRA AUTOMATICAMENTE LE INFORMAZIONI DALLA CHAT ✨
+      this.extractAndRegisterUserInfo(sessionId, userMessage);
+
       // Check if this is a product information request
       const isProductInfoRequest = this.detectProductInformationIntent(userMessage);
       
@@ -867,9 +1012,13 @@ export class BeautycologyAIService {
         const productInfoInstruction = isProductInfoRequest ? 
           "\n\n🛍️ IMPORTANTE: L'utente sta chiedendo informazioni sui prodotti. NON INIZIARE IL FLUSSO DI DOMANDE STRUTTURATE. Fornisci invece informazioni dettagliate sui prodotti richiesti, inclusi prezzi, ingredienti, benefici e LINK DIRETTI ai prodotti su beautycology.it.\n\n" : '';
         
+        // ✨ Aggiungi contesto auto-estratto
+        const autoInfoContext = this.generateAutoInfoContext(state);
+        
         const fullPrompt = BEAUTYCOLOGY_SYSTEM_INSTRUCTION + 
           antiRepeatInstruction +
           productInfoInstruction +
+          autoInfoContext +
           (knowledgeSummary ? `\n\n# CATALOGO PRODOTTI E ARTICOLI AGGIORNATO:\n${knowledgeSummary}\n\n` : '\n\n') +
           (ragInfo ? `\n\n# INFORMAZIONI DETTAGLIATE PRODOTTI BEAUTYCOLOGY:\n${ragInfo}\n\n` : '') +
           `Utente: ${userMessage}`;
@@ -911,8 +1060,11 @@ export class BeautycologyAIService {
         const productInfoReminder = isProductInfoRequest ? 
           "🛍️ IMPORTANTE: L'utente sta chiedendo informazioni sui prodotti. NON INIZIARE IL FLUSSO DI DOMANDE STRUTTURATE. Fornisci informazioni dettagliate sui prodotti richiesti, inclusi prezzi, ingredienti, benefici e LINK DIRETTI ai prodotti su beautycology.it.\n\n" : '';
         
+        // ✨ Aggiungi contesto auto-estratto anche per messaggi successivi
+        const autoInfoContext = this.generateAutoInfoContext(state);
+        
         // Special handling for when structured flow is completed
-        let messageText = antiRepeatReminder + productInfoReminder + userMessage;
+        let messageText = antiRepeatReminder + productInfoReminder + autoInfoContext + userMessage;
         
         // Normalize user message for robust matching
         const normalizedMessage = userMessage.toLowerCase()
@@ -1464,19 +1616,50 @@ export class BeautycologyAIService {
       
       if (!isProductInfoRequest && (state.structuredFlowActive || state.currentStep)) {
         // Continue with structured flow (but not for product info requests)
+        
+        // ✨ CONTROLLO AUTO-ESTRAZIONE: Salta domande già risolte
+        const answers = state.structuredFlowAnswers || {};
+        
         if (state.currentStep === 'awaiting_skin_type' || !state.currentStep) {
-          fallbackResponse = "Capisco che stai avendo alcune preoccupazioni per la pelle. Per aiutarti al meglio, iniziamo con alcune domande specifiche.\n\nChe tipo di pelle hai?";
-          hasChoices = true;
-          choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
-          state.currentStep = 'awaiting_skin_type';
+          // Controlla se il tipo di pelle è già stato estratto automaticamente
+          if (answers.skinType) {
+            console.log(`✨ Auto-skip: skinType già presente (${answers.skinType}), passa all'età`);
+            state.currentStep = 'age_question';
+            fallbackResponse = `Perfetto! Ho capito che hai la pelle ${answers.skinType.toLowerCase()}. Ora dimmi, quanti anni hai?`;
+            hasChoices = true;
+            choices = ["16-25", "26-35", "36-45", "46-55", "56+"];
+          } else {
+            fallbackResponse = "Capisco che stai avendo alcune preoccupazioni per la pelle. Per aiutarti al meglio, iniziamo con alcune domande specifiche.\n\nChe tipo di pelle hai?";
+            hasChoices = true;
+            choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
+            state.currentStep = 'awaiting_skin_type';
+          }
         } else if (state.currentStep === 'age_question') {
-          fallbackResponse = "Perfetto! Ora dimmi, quanti anni hai?";
-          hasChoices = true;
-          choices = ["16-25", "26-35", "36-45", "46-55", "56+"];
+          // Controlla se l'età è già stata estratta automaticamente  
+          if (answers.age) {
+            console.log(`✨ Auto-skip: età già presente (${answers.age}), passa ai problemi`);
+            state.currentStep = 'main_concern';
+            fallbackResponse = `Ottimo! Vedo che hai ${answers.age} anni. Qual è la tua problematica principale che vorresti risolvere?`;
+            hasChoices = true;
+            choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Rosacea", "Punti neri", "Pori dilatati"];
+          } else {
+            fallbackResponse = "Perfetto! Ora dimmi, quanti anni hai?";
+            hasChoices = true;
+            choices = ["16-25", "26-35", "36-45", "46-55", "56+"];
+          }
         } else if (state.currentStep === 'main_concern') {
-          fallbackResponse = "Qual è la tua problematica principale che vorresti risolvere?";
-          hasChoices = true;
-          choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Rosacea", "Punti neri", "Pori dilatati"];
+          // Controlla se i problemi sono già stati estratti automaticamente
+          if (answers.skinProblems && answers.skinProblems.length > 0) {
+            console.log(`✨ Auto-skip: problemi già presenti (${answers.skinProblems.join(', ')}), passa al tipo di consiglio`);
+            state.currentStep = 'awaiting_advice_type';
+            fallbackResponse = `Ho capito che hai problemi di ${answers.skinProblems.join(', ')}. Vuoi che ti consigli una routine completa o cerchi un tipo di prodotto in particolare?`;
+            hasChoices = true;
+            choices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Maschere Viso", "Prodotti Corpo"];
+          } else {
+            fallbackResponse = "Qual è la tua problematica principale che vorresti risolvere?";
+            hasChoices = true;
+            choices = ["Acne/Brufoli", "Macchie scure", "Rughe/Invecchiamento", "Rosacea", "Punti neri", "Pori dilatati"];
+          }
         } else if (state.currentStep === 'awaiting_advice_type') {
           fallbackResponse = "Vuoi che ti consigli una routine completa o cerchi un tipo di prodotto in particolare?";
           hasChoices = true;
