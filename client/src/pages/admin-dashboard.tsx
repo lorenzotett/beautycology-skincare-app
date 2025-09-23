@@ -123,6 +123,13 @@ export default function AdminDashboard({ brand = "beautycology" }: AdminDashboar
     queryClient.invalidateQueries({ queryKey: ["admin-sessions"] });
   }, [searchTerm, selectedPeriod, customDateFrom, customDateTo, queryClient]);
 
+  // Clear sessions cache when brand changes to prevent cross-brand data leakage
+  useEffect(() => {
+    setSessionsCache(new Map());
+    setLastCacheUpdate(0);
+    console.log(`🗑️ Cleared sessions cache due to brand change: ${brand}`);
+  }, [brand]);
+
   // Lock body scroll when modal is open and handle ESC key
   useEffect(() => {
     if (selectedSession || zoomedImage) {
@@ -400,8 +407,10 @@ export default function AdminDashboard({ brand = "beautycology" }: AdminDashboar
   });
 
   const getCacheKey = (dateFilter?: { from?: Date; to?: Date }) => {
-    if (!dateFilter) return 'all-sessions';
-    return `sessions-${dateFilter.from?.toISOString()}-${dateFilter.to?.toISOString()}`;
+    const brandKey = `brand-${brand}`;
+    const searchKey = searchTerm ? `search-${searchTerm}` : '';
+    if (!dateFilter) return `${brandKey}-all-sessions-${searchKey}`;
+    return `${brandKey}-sessions-${dateFilter.from?.toISOString()}-${dateFilter.to?.toISOString()}-${searchKey}`;
   };
 
   const fetchSessions = async (dateFilter?: { from?: Date; to?: Date }) => {
@@ -420,7 +429,8 @@ export default function AdminDashboard({ brand = "beautycology" }: AdminDashboar
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: itemsPerPage.toString(),
-        search: searchTerm
+        search: searchTerm,
+        brand: brand
       });
 
       // Add date filters
