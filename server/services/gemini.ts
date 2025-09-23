@@ -607,6 +607,12 @@ interface SessionState {
   askedQuestions: Set<string>;
   lastQuestionAsked: string | null;
   hasUploadedPhoto: boolean;
+  autoExtractedInfo: {
+    skinType?: string;
+    skinProblems?: string[];
+    hasSensitiveSkin?: boolean;
+    hasBlackheads?: boolean;
+  };
 }
 
 export class GeminiService implements AIService {
@@ -618,10 +624,179 @@ export class GeminiService implements AIService {
         conversationHistory: [],
         askedQuestions: new Set(),
         lastQuestionAsked: null,
-        hasUploadedPhoto: false
+        hasUploadedPhoto: false,
+        autoExtractedInfo: {
+          skinType: undefined,
+          skinProblems: [],
+          hasSensitiveSkin: undefined,
+          hasBlackheads: undefined
+        }
       });
     }
     return this.sessionStates.get(sessionId)!;
+  }
+
+  // Funzioni per l'analisi automatica del testo dell'utente
+  private analyzeSkinTypeFromText(text: string): string | undefined {
+    const lowerText = text.toLowerCase();
+    
+    // Cerca pattern specifici per tipo di pelle
+    if (lowerText.includes('pelle grassa') || lowerText.includes('troppo oleosa') || lowerText.includes('molto oleosa') || lowerText.includes('lucida') || lowerText.includes('unta')) {
+      return 'grassa';
+    }
+    if (lowerText.includes('pelle secca') || lowerText.includes('desquama') || lowerText.includes('tira') || lowerText.includes('screpolata') || lowerText.includes('ruvida')) {
+      return 'secca';
+    }
+    if (lowerText.includes('pelle mista') || lowerText.includes('zona t oleosa') || lowerText.includes('fronte oleosa') || lowerText.includes('guance secche')) {
+      return 'mista';
+    }
+    if (lowerText.includes('pelle normale') || lowerText.includes('equilibrata') || lowerText.includes('non ho problemi particolari')) {
+      return 'normale';
+    }
+    if (lowerText.includes('pelle sensibile') || lowerText.includes('si arrossa') || lowerText.includes('irritabile') || lowerText.includes('reattiva')) {
+      return 'sensibile';
+    }
+    
+    return undefined;
+  }
+
+  private analyzeSkinProblemsFromText(text: string): string[] {
+    const lowerText = text.toLowerCase();
+    const problems: string[] = [];
+    
+    // Cerca problematiche specifiche
+    if (lowerText.includes('acne') || lowerText.includes('tanti brufoli') || lowerText.includes('brufoli grossi')) {
+      problems.push('acne');
+    }
+    if (lowerText.includes('brufoli') || lowerText.includes('qualche brufolo') || lowerText.includes('ogni tanto brufoli')) {
+      problems.push('brufoli occasionali');
+    }
+    if (lowerText.includes('punti neri') || lowerText.includes('comedoni') || lowerText.includes('naso con punti neri')) {
+      problems.push('punti neri');
+    }
+    if (lowerText.includes('macchie') || lowerText.includes('discromie') || lowerText.includes('macchie scure') || lowerText.includes('iperpigmentazione')) {
+      problems.push('macchie');
+    }
+    if (lowerText.includes('rughe') || lowerText.includes('linee sottili') || lowerText.includes('segni espressione')) {
+      problems.push('rughe');
+    }
+    if (lowerText.includes('rossori') || lowerText.includes('arrossamenti') || lowerText.includes('couperose') || lowerText.includes('capillari')) {
+      problems.push('rossori');
+    }
+    if (lowerText.includes('pori dilatati') || lowerText.includes('pori grandi') || lowerText.includes('pori visibili')) {
+      problems.push('pori dilatati');
+    }
+    if (lowerText.includes('cicatrici') || lowerText.includes('segni acne') || lowerText.includes('buchetti')) {
+      problems.push('cicatrici');
+    }
+    
+    return problems;
+  }
+
+  private analyzeSensitivityFromText(text: string): boolean | undefined {
+    const lowerText = text.toLowerCase();
+    
+    if (lowerText.includes('pelle sensibile') || lowerText.includes('si arrossa facilmente') || 
+        lowerText.includes('irritabile') || lowerText.includes('reattiva') || 
+        lowerText.includes('brucia') || lowerText.includes('pizzica')) {
+      return true;
+    }
+    if (lowerText.includes('non sensibile') || lowerText.includes('non si arrossa') || 
+        lowerText.includes('tollera tutto') || lowerText.includes('resistente')) {
+      return false;
+    }
+    
+    return undefined;
+  }
+
+  private analyzeBlackheadsFromText(text: string): boolean | undefined {
+    const lowerText = text.toLowerCase();
+    
+    if (lowerText.includes('punti neri') || lowerText.includes('comedoni') || 
+        lowerText.includes('naso con punti neri') || lowerText.includes('tanti punti neri')) {
+      return true;
+    }
+    if (lowerText.includes('non ho punti neri') || lowerText.includes('senza punti neri') || 
+        lowerText.includes('niente punti neri')) {
+      return false;
+    }
+    
+    return undefined;
+  }
+
+  private extractAndRegisterUserInfo(sessionId: string, userMessage: string): void {
+    const sessionState = this.getSessionState(sessionId);
+    
+    // Analizza il testo per estrarre informazioni
+    const detectedSkinType = this.analyzeSkinTypeFromText(userMessage);
+    const detectedProblems = this.analyzeSkinProblemsFromText(userMessage);
+    const detectedSensitivity = this.analyzeSensitivityFromText(userMessage);
+    const detectedBlackheads = this.analyzeBlackheadsFromText(userMessage);
+    
+    // Registra le informazioni trovate
+    if (detectedSkinType && !sessionState.autoExtractedInfo.skinType) {
+      sessionState.autoExtractedInfo.skinType = detectedSkinType;
+      console.log(`✅ Auto-extracted skin type: ${detectedSkinType}`);
+    }
+    
+    if (detectedProblems.length > 0) {
+      // Aggiungi nuove problematiche evitando duplicati
+      detectedProblems.forEach(problem => {
+        if (!sessionState.autoExtractedInfo.skinProblems?.includes(problem)) {
+          sessionState.autoExtractedInfo.skinProblems?.push(problem);
+        }
+      });
+      console.log(`✅ Auto-extracted skin problems: ${detectedProblems.join(', ')}`);
+    }
+    
+    if (detectedSensitivity !== undefined && sessionState.autoExtractedInfo.hasSensitiveSkin === undefined) {
+      sessionState.autoExtractedInfo.hasSensitiveSkin = detectedSensitivity;
+      console.log(`✅ Auto-extracted sensitivity: ${detectedSensitivity}`);
+    }
+    
+    if (detectedBlackheads !== undefined && sessionState.autoExtractedInfo.hasBlackheads === undefined) {
+      sessionState.autoExtractedInfo.hasBlackheads = detectedBlackheads;
+      console.log(`✅ Auto-extracted blackheads info: ${detectedBlackheads}`);
+    }
+  }
+
+  private generateAutoInfoContext(sessionState: SessionState): string {
+    const info = sessionState.autoExtractedInfo;
+    let context = '\n\n**🤖 INFORMAZIONI AUTO-ESTRATTE DAL TESTO DELL\'UTENTE:**\n';
+    let hasInfo = false;
+    
+    if (info.skinType) {
+      context += `• **Tipologia pelle rilevata automaticamente**: ${info.skinType.toUpperCase()}\n`;
+      hasInfo = true;
+    }
+    
+    if (info.skinProblems && info.skinProblems.length > 0) {
+      context += `• **Problematiche rilevate automaticamente**: ${info.skinProblems.join(', ')}\n`;
+      hasInfo = true;
+    }
+    
+    if (info.hasSensitiveSkin !== undefined) {
+      context += `• **Sensibilità rilevata automaticamente**: ${info.hasSensitiveSkin ? 'PELLE SENSIBILE' : 'PELLE NON SENSIBILE'}\n`;
+      hasInfo = true;
+    }
+    
+    if (info.hasBlackheads !== undefined) {
+      context += `• **Punti neri rilevati automaticamente**: ${info.hasBlackheads ? 'HA PUNTI NERI' : 'NON HA PUNTI NERI'}\n`;
+      hasInfo = true;
+    }
+    
+    if (hasInfo) {
+      context += '\n**🚨 REGOLA CRITICA PER L\'UTILIZZO DELLE INFORMAZIONI AUTO-ESTRATTE:**\n';
+      context += '• **NON CHIEDERE MAI** informazioni già rilevate automaticamente dal testo dell\'utente\n';
+      context += '• **SALTA LE DOMANDE** su tipologia di pelle, problematiche, sensibilità o punti neri SE sono già state rilevate\n';
+      context += '• **USA DIRETTAMENTE** queste informazioni come se l\'utente avesse risposto alle domande corrispondenti\n';
+      context += '• **RICONOSCI E CONFERMA** le informazioni già rilevate: "Perfetto! Ho capito che hai la pelle [tipo rilevato] con problematiche di [problemi rilevati]"\n';
+      context += '• **PASSA ALLE DOMANDE SUCCESSIVE** che non sono ancora state coperte dalle informazioni auto-estratte\n';
+      context += '• **ESEMPIO**: Se ho rilevato "pelle grassa" e "acne", NON chiedere "Che tipo di pelle hai?" ma inizia con "Perfetto! Ho capito che hai la pelle grassa con problemi di acne. Ora dimmi: quanti anni hai?"\n';
+      return context;
+    }
+    
+    return ''; // Non aggiungere contesto se non ci sono informazioni estratte
   }
 
   private async callGeminiWithRetry(params: any, maxRetries: number = 5, baseDelay: number = 2000): Promise<any> {
@@ -809,6 +984,11 @@ A te la scelta!`;
     
     // For compatibility, use the existing message parameter
     const message = userMessage;
+    
+    // ✨ ESTRAI E REGISTRA AUTOMATICAMENTE LE INFORMAZIONI DALLA CHAT ✨
+    // Analizza ogni messaggio dell'utente per estrarre automaticamente informazioni su pelle e problematiche
+    this.extractAndRegisterUserInfo(sessionId, message);
+    
     sessionState.conversationHistory.push({ role: "user", content: message });
 
     try {
@@ -886,10 +1066,14 @@ A te la scelta!`;
         parts: [{ text: enhancedMessage }]
       });
 
-      // Enhance system instruction to include photo upload status
+      // Generate auto-extracted info context for AI
+      const autoInfoContext = this.generateAutoInfoContext(sessionState);
+      
+      // Enhance system instruction to include photo upload status and auto-extracted info
       const enhancedSystemInstruction = SYSTEM_INSTRUCTION + `\n\n**STATO FOTO UTENTE:** ${sessionState.hasUploadedPhoto ? 
         'L\'utente HA caricato una foto iniziale. Puoi procedere con la generazione del prima/dopo se richiesto.' : 
-        'L\'utente NON ha caricato una foto iniziale. NON generare mai il trigger GENERATE_BEFORE_AFTER_IMAGES e non chiedere del prima/dopo.'}`;
+        'L\'utente NON ha caricato una foto iniziale. NON generare mai il trigger GENERATE_BEFORE_AFTER_IMAGES e non chiedere del prima/dopo.'}` + 
+        autoInfoContext;
 
       const response = await this.callGeminiWithRetry({
         model: "gemini-2.5-flash",
