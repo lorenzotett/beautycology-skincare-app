@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { getAppConfig } from "../config/app-config";
 import { ragService } from "./rag-simple";
 import { ImagePreprocessor } from "./image-preprocessor";
+import { storage } from "../storage";
 import fs from 'fs';
 import path from 'path';
 
@@ -64,6 +65,16 @@ NON fare mai riferimento a prodotti hardcoded o inventati. Ogni prodotto DEVE av
 ## STEP 1: PRESENTAZIONE DOPO IL NOME
 Dopo che l'utente fornisce il suo nome, presentati SOLO UNA VOLTA e spiega le opzioni disponibili.
 ⚠️ **NON RIPRESENTARTI MAI dopo la prima presentazione!**
+
+## 🚨🚨🚨 REGOLE CRITICHE PER L'USO DEL NOME 🚨🚨🚨
+
+**REGOLE ASSOLUTE PER L'USO DEL NOME UTENTE:**
+1. **USA SEMPRE IL NOME** quando disponibile nei messaggi personalizzati
+2. **NON SALUTARE MAI** come se fosse l'inizio della conversazione nei messaggi finali
+3. **MAI INVENTARE NOMI** - usa solo il nome fornito dall'utente
+4. **MESSAGGI FINALI** devono iniziare con "Perfetto [NOME]!" non con saluti generici
+5. **MANTIENI IL NOME** per tutta la durata della conversazione
+6. **CONCLUSIONE OBBLIGATORIA:** Tutti i messaggi finali DEVONO finire con esattamente: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
 
 ## STEP 2: RICONOSCIMENTO TIPO DI RICHIESTA
 Dopo la presentazione, aspetta che l'utente scelga cosa fare:
@@ -2683,6 +2694,17 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
     const answers = state.structuredFlowAnswers || {};
     const sessionHistory = this.chatSessions.get(sessionId) || [];
     
+    // Get userName from session
+    let userName = 'bellezza'; // Friendly fallback
+    try {
+      const session = await storage.getChatSession(sessionId);
+      if (session?.userName) {
+        userName = session.userName;
+      }
+    } catch (error) {
+      console.log('Could not retrieve userName from session, using fallback');
+    }
+    
     // Call resolveRoutineKitLink to get appropriate kit recommendation
     const routineKit = this.resolveRoutineKitLink(answers);
     console.log(`🔍 Routine kit recommendation: ${routineKit ? `${routineKit.name} (${routineKit.url})` : 'None found'}`);
@@ -2729,6 +2751,7 @@ Quando l'utente ha richiesto una "routine completa", DEVI SEMPRE:
 - OGNI sezione deve essere completa e dettagliata
 
 Dati raccolti dall'utente durante la conversazione:
+- Nome utente: ${userName}
 - Tipo di pelle: ${answers.skinType || 'non specificato'}
 - Età: ${answers.age || 'non specificata'}
 - Problematica principale: ${answers.mainIssue || 'non specificata'}
@@ -2743,7 +2766,8 @@ ${ragContext ? `\n# INFORMAZIONI AGGIUNTIVE SPECIFICHE PER IL TUO CASO:\n${ragCo
 DEVI OBBLIGATORIAMENTE fornire NELL'ORDINE COMPLETO:
 
 1. **RIEPILOGO COMPLETO DELLE INFORMAZIONI REGISTRATE**:
-   Inizia con: "Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:"
+   Inizia con: "Perfetto ${userName}! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:"
+   **🚨 IMPORTANTE: Il nome utente è già incluso nel prompt, NON modificarlo**
    - Elenca TUTTE le informazioni raccolte dall'utente
    - Conferma ogni dato fornito
 
@@ -2806,7 +2830,9 @@ ${routineKit ? `7. **KIT BEAUTYCOLOGY CONSIGLIATO SPECIFICAMENTE PER TE** (OBBLI
 - Verifica che ogni prodotto menzionato sia un prodotto REALE del catalogo Beautycology
 - Verifica che ogni prodotto abbia il suo link completo
 - Verifica che il messaggio sia COMPLETO senza troncare nessuna sezione
-- CONCLUDI SEMPRE con la frase ESATTA: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
+- **🚨 CONCLUSIONE OBBLIGATORIA FINALE:** CONCLUDI SEMPRE con la frase ESATTA: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
+- **🚨 USA SEMPRE IL NOME:** Se conosci il nome dell'utente, inizia il messaggio finale con "Perfetto [NOME]!" 
+- **🚨 MAI SALUTARE NEI MESSAGGI FINALI:** Non dire "Ciao [NOME]" nei messaggi di raccomandazioni finali - usa "Perfetto [NOME]!"
 
 ❌ ESEMPI DI COSA NON FARE MAI:
 ❌ "detergente Beautycology" → USA: **[Mousse Away – Detergente viso](https://beautycology.it/prodotto/detergente-viso-mousse-away/)** (€8,00)
@@ -2834,7 +2860,7 @@ Usa emoji appropriati ✨🌟💧 per rendere il testo engaging ma professionale
 
       if (!text || text.trim().length === 0) {
         console.log('⚠️ Empty response from AI, using fallback recommendations');
-        return this.getFallbackRecommendations(answers);
+        return await this.getFallbackRecommendations(answers, sessionId);
       }
 
       // ROBUST POST-GENERATION VALIDATION AND ENFORCEMENT
@@ -2914,7 +2940,7 @@ Riscrivi il testo corretto COMPLETO:`;
             
             // If we reach here, correction failed or max attempts reached
             console.log('🔄 Using fallback to ensure only real products are recommended');
-            return this.getFallbackRecommendations(answers);
+            return await this.getFallbackRecommendations(answers, sessionId);
           } else {
             console.log('✅ Product validation passed successfully');
             
@@ -3060,7 +3086,7 @@ Riscrivi il testo corretto COMPLETO:`;
             if (hasInvalidProductNames) {
               console.warn(`❌ CRITICAL: Invalid product names detected in final text:`, invalidNames);
               console.log('🔄 Forcing fallback due to hallucinated product names');
-              return this.getFallbackRecommendations(answers);
+              return await this.getFallbackRecommendations(answers, sessionId);
             }
             
             // CRITICAL ADDITION: Validate that routine kit link is included when expected
@@ -3079,7 +3105,7 @@ Riscrivi il testo corretto COMPLETO:`;
                   console.warn(`Expected: ${routineKit.name} (${routineKit.url})`);
                   console.warn(`User profile: skinType="${answers.skinType}", mainIssue="${answers.mainIssue}", adviceType="${answers.adviceType}"`);
                   console.log('🔄 Forcing fallback to ensure routine kit link is included');
-                  return this.getFallbackRecommendations(answers);
+                  return await this.getFallbackRecommendations(answers, sessionId);
                 } else {
                   console.log(`✅ Routine kit link properly included: ${routineKit.name}`);
                 }
@@ -3109,7 +3135,7 @@ Riscrivi il testo corretto COMPLETO:`;
       return finalText;
     } catch (error) {
       console.error('Error generating final recommendations:', error);
-      return this.getFallbackRecommendations(answers);
+      return await this.getFallbackRecommendations(answers, sessionId);
     }
   }
 
@@ -3269,9 +3295,22 @@ Riscrivi il testo corretto COMPLETO:`;
   }
 
   // Fallback recommendations if AI fails - now uses real products from catalog
-  private getFallbackRecommendations(answers: any): string {
+  private async getFallbackRecommendations(answers: any, sessionId?: string): Promise<string> {
     const skinType = answers.skinType?.toLowerCase() || 'mista';
     const mainIssue = answers.mainIssue?.toLowerCase() || '';
+    
+    // Get userName from session
+    let userName = 'bellezza'; // Friendly fallback
+    if (sessionId) {
+      try {
+        const session = await storage.getChatSession(sessionId);
+        if (session?.userName) {
+          userName = session.userName;
+        }
+      } catch (error) {
+        console.log('Could not retrieve userName from session, using fallback');
+      }
+    }
     
     // Call resolveRoutineKitLink to get appropriate kit recommendation
     const routineKit = this.resolveRoutineKitLink(answers);
@@ -3308,7 +3347,7 @@ Riscrivi il testo corretto COMPLETO:`;
       treatment = realProducts.skinReset; // For sensitive skin
     }
 
-    return `Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
+    return `Perfetto ${userName}! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
 
 **1. 📋 INFORMAZIONI REGISTRATE:**
 - Tipo di pelle: ${answers.skinType || 'non specificato'}
@@ -3383,8 +3422,21 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
   }
 
   // Basic fallback message when product validator is not available
-  private getBasicFallbackMessage(answers: any): string {
-    return `Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
+  private async getBasicFallbackMessage(answers: any, sessionId?: string): Promise<string> {
+    // Get userName from session
+    let userName = 'bellezza'; // Friendly fallback
+    if (sessionId) {
+      try {
+        const session = await storage.getChatSession(sessionId);
+        if (session?.userName) {
+          userName = session.userName;
+        }
+      } catch (error) {
+        console.log('Could not retrieve userName from session, using fallback');
+      }
+    }
+    
+    return `Perfetto ${userName}! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
 
 📋 **INFORMAZIONI REGISTRATE:**
 - Tipo di pelle: ${answers.skinType || 'non specificato'}
