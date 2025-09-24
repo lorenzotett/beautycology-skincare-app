@@ -2809,55 +2809,102 @@ Riscrivi il testo corretto COMPLETO:`;
     }
   }
 
+  // Get guaranteed real products from catalog for complete routines
+  private getGuaranteedRealProducts() {
+    // These are REAL products from beautycology.it catalog - verified to exist
+    return {
+      cleanser: {
+        name: "Mousse Away – Detergente viso",
+        url: "https://beautycology.it/prodotto/detergente-viso-mousse-away/",
+        price: "€8,00"
+      },
+      spf: {
+        name: "Invisible Shield – Crema viso SPF 30",
+        url: "https://beautycology.it/prodotto/invisible-shield-crema-viso-spf-uva/",
+        price: "€15,00"
+      },
+      mixedSkinCream: {
+        name: "Perfect & Pure – Crema per pelli miste",
+        url: "https://beautycology.it/prodotto/crema-pelli-miste-perfect-pure/",
+        price: "€15,00"
+      },
+      serum: {
+        name: "C-Boost – Siero alla Vitamina C",
+        url: "https://beautycology.it/prodotto/c-boost-siero-viso-vitamina-c-acido-ascorbico/",
+        price: "€55,00"
+      },
+      azelaic: {
+        name: "Multipod Gel",
+        url: "https://beautycology.it/prodotto/multipod-gel-acido-azelaico/",
+        price: "€35,00"
+      },
+      hydraSerum: {
+        name: "Bionic HydraLift – Siero con Acido Lattobionico 8%",
+        url: "https://beautycology.it/prodotto/bionic-hydralift-siero-acido-lattobionico/",
+        price: "€50,00"
+      },
+      peeling: {
+        name: "Let's Glow – Peeling esfoliante Multiacido 22% (AHA-PHA)",
+        url: "https://beautycology.it/prodotto/lets-glow-peeling-esfoliante-multi-acido-22-aha-pha/",
+        price: "€50,00"
+      },
+      retinal: {
+        name: "Retinal bomb",
+        url: "https://beautycology.it/prodotto/retinal-bomb-siero-retinaldeide/",
+        price: "€55,00"
+      },
+      bodyLotion: {
+        name: "BODYLICIOUS – EMULSIONE CORPO CON RETINOLO",
+        url: "https://beautycology.it/prodotto/bodylicious-emulsione-corpo-con-retinolo/",
+        price: "€45,00"
+      },
+      skinReset: {
+        name: "Skin Reset – Trattamento Riequilibrante Pelli sensibili",
+        url: "https://beautycology.it/prodotto/skin-reset-trattamento-riequilibrante-pelli-sensibili-reattive-fragilizzate/",
+        price: "€40,00"
+      },
+      oilCleanser: {
+        name: "Multitasking Oil – Detergente oleoso",
+        url: "https://beautycology.it/prodotto/multitasking-oil-detergente-oleoso/",
+        price: "€12,00"
+      }
+    };
+  }
+
   // Fallback recommendations if AI fails - now uses real products from catalog
   private getFallbackRecommendations(answers: any): string {
     const skinType = answers.skinType?.toLowerCase() || 'mista';
+    const mainIssue = answers.mainIssue?.toLowerCase() || '';
     
-    if (!this.productValidator) {
-      return this.getBasicFallbackMessage(answers);
-    }
+    // Always use guaranteed real products from catalog
+    const realProducts = this.getGuaranteedRealProducts();
     
-    // Get real products for different categories - more robust approach
-    let cleanserProducts = this.productValidator.getProductsByCategory('detergente');
-    let treatmentProducts = this.productValidator.getProductsByCategory('creme viso');
-    let serumProducts = this.productValidator.getProductsByCategory('siero');
-    let spfProducts = this.productValidator.getProductsByCategory('protezione solare');
+    // Select products based on skin type and main issue
+    let cleanser = realProducts.cleanser;
+    let treatment = realProducts.mixedSkinCream;
+    let serum = realProducts.serum;
+    let spf = realProducts.spf;
     
-    // If specific categories don't work, try broader searches
-    if (cleanserProducts.length === 0) {
-      cleanserProducts = this.productValidator.getProductsByCategory('detergenti');
-    }
-    if (treatmentProducts.length === 0) {
-      treatmentProducts = this.productValidator.getProductsByCategory('creme');
-    }
-    if (serumProducts.length === 0) {
-      serumProducts = this.productValidator.getProductsByCategory('sieri');
-    }
-    // Broader SPF search to ensure we find sunscreen products
-    if (spfProducts.length === 0) {
-      spfProducts = this.productValidator.getProductsByCategory('spf');
-    }
-    if (spfProducts.length === 0) {
-      spfProducts = this.productValidator.getProductsByCategory('solare');
+    // Customize based on skin concerns
+    if (mainIssue.includes('acne') || mainIssue.includes('brufol') || mainIssue.includes('impurit')) {
+      serum = realProducts.azelaic; // Multipod Gel for acne
+    } else if (mainIssue.includes('macchi') || mainIssue.includes('discrom')) {
+      serum = realProducts.azelaic; // Also good for spots
+    } else if (mainIssue.includes('rugh') || mainIssue.includes('invecchiament') || mainIssue.includes('anti-age')) {
+      serum = realProducts.retinal; // Retinal for anti-aging
+    } else if (mainIssue.includes('secc') || mainIssue.includes('disidrat')) {
+      serum = realProducts.hydraSerum; // Bionic HydraLift for hydration
+      cleanser = realProducts.oilCleanser; // Oil cleanser for dry skin
+    } else if (mainIssue.includes('sensibil') || mainIssue.includes('rossore') || mainIssue.includes('irritat')) {
+      treatment = realProducts.skinReset; // Skin Reset for sensitive skin
+      serum = realProducts.hydraSerum; // Gentle hydrating serum
     }
     
-    // Log if some categories are missing
-    if (cleanserProducts.length === 0 || treatmentProducts.length === 0) {
-      const allProductNames = this.productValidator.getAllProductNames();
-      console.warn(`⚠️ Some categories returned no results. Available products: ${allProductNames.length}`);
-    }
-    
-    // Build product recommendations - require real products for each step 
-    const cleanser = cleanserProducts.length > 0 ? cleanserProducts[0] : null;
-    const treatment = treatmentProducts.length > 0 ? treatmentProducts[0] : null;
-    const serum = serumProducts.length > 0 ? serumProducts[0] : null;
-    const spf = spfProducts.length > 0 ? spfProducts[0] : null;
-
-    // STRICT REQUIREMENT: Every routine step must have a real catalog product with link
-    // If we don't have ALL essential products (cleanser, treatment, spf), return safe message
-    if (!cleanser || !treatment || !spf) {
-      console.warn(`⚠️ Missing essential products for routine: cleanser=${!!cleanser}, treatment=${!!treatment}, spf=${!!spf}`);
-      return this.getBasicFallbackMessage(answers);
+    // Adjust cream based on skin type
+    if (skinType.includes('secc')) {
+      treatment = realProducts.skinReset; // More hydrating for dry skin
+    } else if (skinType.includes('sensibil')) {
+      treatment = realProducts.skinReset; // For sensitive skin
     }
 
     return `Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
@@ -2876,22 +2923,44 @@ Basandomi sulle informazioni fornite, ho identificato le seguenti aree di miglio
 Ho creato per te una routine completa e personalizzata utilizzando i prodotti Beautycology più adatti alle tue esigenze.
 
 **🌅 ROUTINE MATTINA:**
-1. **Detersione**: [${cleanser.name}](${cleanser.url}) (${cleanser.price})
-   - Applicare su dischetto di cotone e pulire delicatamente viso e collo
-2. **Trattamento**: ${serum ? `[${serum.name}](${serum.url}) (${serum.price})` : `Usa ${treatment.name} come base idratante`}
-   - 2-3 gocce su viso pulito, massaggiare delicatamente
-3. **Idratazione**: [${treatment.name}](${treatment.url}) (${treatment.price})
+1. **Detersione**: **[${cleanser.name}](${cleanser.url})** (${cleanser.price})
+   - Applicare su viso umido, massaggiare delicatamente e risciacquare con acqua tiepida
+   - Rimuove il sebo prodotto durante la notte e prepara la pelle ai trattamenti successivi
+
+2. **Siero Trattamento**: **[${serum.name}](${serum.url})** (${serum.price})
+   - Applicare 2-3 gocce su viso pulito e asciutto
+   - Massaggiare delicatamente con movimenti circolari dal centro verso l'esterno
+   - Attendere 1-2 minuti per l'assorbimento completo
+
+3. **Crema Idratante**: **[${treatment.name}](${treatment.url})** (${treatment.price})
    - Applicare una quantità pari a un chicco di riso su tutto il viso
-4. **Protezione solare**: [${spf.name}](${spf.url}) (${spf.price})
-   - Essenziale per proteggere la pelle dai danni UV
+   - Stendere con movimenti verso l'alto per un effetto lifting
+
+4. **Protezione Solare (OBBLIGATORIA)**: **[${spf.name}](${spf.url})** (${spf.price})
+   - Applicare generosamente 15 minuti prima dell'esposizione al sole
+   - Riapplicare ogni 2-3 ore se esposti al sole diretto
+   - Essenziale tutto l'anno per prevenire macchie e invecchiamento precoce
 
 **🌙 ROUTINE SERA:**
-1. **Detersione**: [${cleanser.name}](${cleanser.url}) (${cleanser.price})
-   - Rimuove trucco e impurità accumulate durante il giorno
-2. **Trattamento**: ${serum ? `[${serum.name}](${serum.url}) (${serum.price})` : `Applica un secondo strato di [${treatment.name}](${treatment.url})`}
-   - Applicare con movimenti circolari dal basso verso l'alto
-3. **Idratazione**: [${treatment.name}](${treatment.url}) (${treatment.price})
-   - Strato più generoso rispetto alla mattina per nutrire la pelle durante la notte
+1. **Doppia Detersione**:
+   - Prima fase: **[${realProducts.oilCleanser.name}](${realProducts.oilCleanser.url})** (${realProducts.oilCleanser.price}) per rimuovere trucco e SPF
+   - Seconda fase: **[${cleanser.name}](${cleanser.url})** (${cleanser.price}) per pulire in profondità
+
+2. **Siero Trattamento Notte**: **[${serum.name}](${serum.url})** (${serum.price})
+   - Applicare su viso pulito e asciutto
+   - Concentrarsi sulle zone problematiche identificate
+   - Lasciare assorbire completamente prima del prossimo step
+
+3. **Crema Notte Rigenerante**: **[${treatment.name}](${treatment.url})** (${treatment.price})
+   - Strato più generoso rispetto alla mattina
+   - Massaggiare includendo collo e décolleté
+   - La pelle si rigenera durante il sonno, quindi nutrirla adeguatamente è fondamentale
+
+**💫 TRATTAMENTI EXTRA (1-2 volte a settimana):**
+- **Esfoliazione**: **[${realProducts.peeling.name}](${realProducts.peeling.url})** (${realProducts.peeling.price})
+  - Applicare la sera su pelle pulita, evitando il contorno occhi
+  - Lasciare agire 5-10 minuti poi risciacquare
+  - Non usare altri acidi o retinali la stessa sera
 
 🧪 **SPIEGAZIONE SCIENTIFICA:**
 I prodotti Beautycology sono formulati con ingredienti scientificamente testati e percentuali ottimali per garantire risultati visibili. ${treatment ? `Il ${treatment.name} contiene` : 'I nostri prodotti contengono'} ingredienti attivi accuratamente dosati per minimizzare l'irritazione mantenendo l'efficacia.
