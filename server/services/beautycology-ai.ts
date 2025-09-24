@@ -467,6 +467,82 @@ class ProductValidator {
     return mentions;
   }
   
+  // SPECIAL VALIDATION for complete routines - ensures each step has real products with links
+  validateCompleteRoutine(text: string): {isValid: boolean, issues: string[], hasCompleteRoutine: boolean} {
+    const issues: string[] = [];
+    const textLower = text.toLowerCase();
+    
+    // Check if this is a complete routine response
+    const hasRoutineMattina = textLower.includes('routine mattina') || textLower.includes('routine mattutina');
+    const hasRoutineSera = textLower.includes('routine sera') || textLower.includes('routine serale');
+    const hasCompleteRoutine = hasRoutineMattina && hasRoutineSera;
+    
+    if (!hasCompleteRoutine) {
+      return { isValid: true, issues: [], hasCompleteRoutine: false };
+    }
+    
+    console.log('🔍 Validating complete routine response...');
+    
+    // For complete routines, be extra strict about product validation
+    const routineSteps = [
+      'detersione', 'detergente', 'pulizia',
+      'idratazione', 'crema', 'moisturizer', 
+      'trattamento', 'siero', 'serum',
+      'protezione', 'solare', 'spf'
+    ];
+    
+    // Check that each routine step mentions a specific product with link
+    routineSteps.forEach(step => {
+      const stepRegex = new RegExp(`${step}[^\n]*?([^\[]*?\[([^\]]+)\]\(([^\)]+)\))`, 'gi');
+      const stepMatches = text.match(stepRegex);
+      
+      if (stepMatches) {
+        stepMatches.forEach(match => {
+          // Extract product name and URL from markdown format
+          const productMatch = match.match(/\[([^\]]+)\]\(([^\)]+)\)/);
+          if (productMatch) {
+            const productName = productMatch[1];
+            const productUrl = productMatch[2];
+            
+            // Verify product exists in catalog
+            const productExists = this.validateProductName(productName);
+            if (!productExists.isValid) {
+              issues.push(`CRITICAL ROUTINE: Product "${productName}" in ${step} step not found in catalog`);
+            }
+            
+            // Verify URL is correct
+            if (!productUrl.startsWith('https://beautycology.it/')) {
+              issues.push(`CRITICAL ROUTINE: Invalid URL for "${productName}": ${productUrl}`);
+            }
+          } else {
+            issues.push(`CRITICAL ROUTINE: ${step} step mentions product without proper link format`);
+          }
+        });
+      }
+    });
+    
+    // Extra check for generic product references in routines
+    const genericRoutinePatterns = [
+      /routine.*?\b(detergente|crema|siero)\s+(beautycology|efficace|specifico|adatto)\b/gi,
+      /\b(mattina|sera|morning|evening).*?\b(prodotto|detergente|crema|siero)\s+beautycology\b/gi
+    ];
+    
+    genericRoutinePatterns.forEach(pattern => {
+      const matches = text.match(pattern);
+      if (matches) {
+        matches.forEach(match => {
+          issues.push(`CRITICAL ROUTINE: Generic product reference in routine: "${match}" - must use specific product names`);
+        });
+      }
+    });
+    
+    return {
+      isValid: issues.length === 0,
+      issues,
+      hasCompleteRoutine: true
+    };
+  }
+
   // Validate that recommended text contains only real products with mandatory links
   validateRecommendationText(text: string): {isValid: boolean, issues: string[]} {
     const issues: string[] = [];
@@ -2436,9 +2512,22 @@ Usa emoji appropriati ✨🌟💧 per rendere il testo engaging ma professionale
       while (validationAttempts < maxAttempts) {
         // Validate the AI response for generic or non-existent products
         if (this.productValidator) {
+          // First run standard validation
           const validation = this.productValidator.validateRecommendationText(finalText);
-          if (!validation.isValid) {
-            console.warn(`⚠️ AI generated problematic product recommendations (attempt ${validationAttempts + 1}):`, validation.issues);
+          
+          // For routine complete requests, run additional strict validation
+          const routineValidation = this.productValidator.validateCompleteRoutine(finalText);
+          
+          // Combine validation results
+          const allIssues = [...validation.issues, ...routineValidation.issues];
+          const isValid = validation.isValid && routineValidation.isValid;
+          
+          if (routineValidation.hasCompleteRoutine) {
+            console.log(`🔍 Complete routine validation: ${routineValidation.isValid ? 'PASSED' : 'FAILED'} (${routineValidation.issues.length} issues)`);
+          }
+          
+          if (!isValid) {
+            console.warn(`⚠️ AI generated problematic product recommendations (attempt ${validationAttempts + 1}):`, allIssues);
             
             if (validationAttempts < maxAttempts - 1) {
               // Try to correct the response with a focused prompt
@@ -2448,7 +2537,9 @@ Usa emoji appropriati ✨🌟💧 per rendere il testo engaging ma professionale
 CORREZIONE OBBLIGATORIA: Il testo seguente contiene errori nei prodotti raccomandati:
 
 ERRORI IDENTIFICATI:
-${validation.issues.join('\n')}
+${allIssues.join('\n')}
+
+${routineValidation.hasCompleteRoutine ? '🚨 ROUTINE COMPLETA RILEVATA - VALIDAZIONE EXTRA RIGOROSA RICHIESTA' : ''}
 
 TESTO DA CORREGGERE:
 ${finalText}
