@@ -2640,6 +2640,10 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
     const answers = state.structuredFlowAnswers || {};
     const sessionHistory = this.chatSessions.get(sessionId) || [];
     
+    // Call resolveRoutineKitLink to get appropriate kit recommendation
+    const routineKit = this.resolveRoutineKitLink(answers);
+    console.log(`🔍 Routine kit recommendation: ${routineKit ? `${routineKit.name} (${routineKit.url})` : 'None found'}`);
+    
     // Get RAG context based on user's main issue
     const ragContext = await this.getRAGContext(answers.mainIssue || 'routine skincare');
     
@@ -2740,7 +2744,15 @@ DEVI OBBLIGATORIAMENTE fornire NELL'ORDINE COMPLETO:
    - Benefici specifici per il caso dell'utente
    - Link obbligatorio al prodotto su beautycology.it
 
-7. **CONSIGLI FINALI E TIPS PRATICI**:
+${routineKit ? `7. **KIT BEAUTYCOLOGY CONSIGLIATO SPECIFICAMENTE PER TE** (OBBLIGATORIO):
+   Titolo: "🌟 KIT BEAUTYCOLOGY CONSIGLIATO PER TE:"
+   **DEVI ASSOLUTAMENTE INCLUDERE QUESTA SEZIONE CON IL FORMATO ESATTO:**
+   **[${routineKit.name}](${routineKit.url})** - Kit completo formulato specificamente per le tue esigenze
+   
+   Spiega brevemente perché questo kit è perfetto per il tipo di pelle e problematiche dell'utente.
+   **🚨 IMPORTANTE: Questa sezione deve essere ben visibile e formattata esattamente come indicato sopra.**
+
+8. **CONSIGLI FINALI E TIPS PRATICI**:` : `7. **CONSIGLI FINALI E TIPS PRATICI**:`}
    - Errori comuni da evitare nella routine
    - Tips per massimizzare i risultati con i prodotti Beautycology
    - Frequenza e modalità d'uso ottimali
