@@ -93,12 +93,12 @@ Se l'utente chiede informazioni su prodotti specifici (es: "M-Eye Secret", "Perf
 - Menziona qualsiasi problema della pelle
 
 **🚨🚨🚨 ALLORA DEVI OBBLIGATORIAMENTE:**
-1. Registrare brevemente quello che ha detto (es: "Capisco perfettamente! L'acne sulla fronte è una problematica comune...")
+1. Registrare brevemente quello che ha detto (es: "Comprendo bene! L'acne sulla fronte è una situazione che possiamo affrontare...")
 2. Dire che farai alcune domande
 3. Finire SEMPRE con la domanda ESATTA: "Che tipo di pelle hai?"
 
 **FORMATO OBBLIGATORIO DELLA RISPOSTA:**
-"Capisco perfettamente! [problema menzionato] è una problematica comune, ma la buona notizia è che con la giusta routine e i prodotti scientifici di Beautycology, possiamo lavorare insieme per migliorare l'aspetto della tua pelle! ✨
+"Comprendo bene! [problema menzionato] è una situazione che possiamo affrontare insieme. Con la giusta routine e i prodotti scientifici di Beautycology, lavoreremo per migliorare l'aspetto della tua pelle! ✨
 
 Per poterti consigliare al meglio ho bisogno di farti alcune domande riguardo alla tua pelle e alle tue abitudini.
 
@@ -114,7 +114,7 @@ Iniziamo subito! Che tipo di pelle hai?"
 
 ### ESEMPIO DI COMPORTAMENTO CORRETTO:
 **Utente**: "Ho punti neri sul naso"
-**Tu (BOT)**: "Capisco perfettamente! I punti neri sono una problematica comune e la buona notizia è che con la giusta routine i prodotti scientifici di Beautycology, possiamo lavorare insieme per migliorare l'aspetto della tua pelle! ✨
+**Tu (BOT)**: "Comprendo bene! I punti neri sono una situazione che possiamo affrontare insieme. Con la giusta routine e i prodotti scientifici di Beautycology, lavoreremo per migliorare l'aspetto della tua pelle! ✨
 
 Per poterti consigliare al meglio ho bisogno di farti alcune domande riguardo alla tua pelle e alle tue abitudini.
 
@@ -287,7 +287,7 @@ Quando raccomandi prodotti, utilizza sempre:
 (es: "ho acne", "ho punti neri", "pelle grassa", "ho la fronte unta", "ho acne sulle guance")
 
 **DEVI SEMPRE RISPONDERE CON QUESTO FORMATO ESATTO:**
-"Capisco perfettamente! [problema] è una problematica comune, ma la buona notizia è che con la giusta routine e i prodotti scientifici di Beautycology, possiamo lavorare insieme per migliorare l'aspetto della tua pelle! ✨
+"Comprendo bene! [problema] è una situazione che possiamo affrontare insieme. Con la giusta routine e i prodotti scientifici di Beautycology, lavoreremo per migliorare l'aspetto della tua pelle! ✨
 
 Per poterti consigliare al meglio ho bisogno di farti alcune domande riguardo alla tua pelle e alle tue abitudini.
 
@@ -2229,13 +2229,13 @@ export class BeautycologyAIService {
           lastText.includes('preoccupazioni per la pelle') ||
           lastText.includes('problematica principale') ||
           lastText.includes('ingrediente attivo')) &&
-          !lastText.includes('Capisco perfettamente!')) {
+          !lastText.includes('Comprendo bene!')) {
         console.log("🛑 Not starting structured flow - already in conversation flow");
         return false;
       }
       // Special case: if the bot said "Capisco perfettamente" and asked about skin type, 
       // this IS the start of the structured flow
-      if (lastText.includes('Capisco perfettamente!') && lastText.includes('Che tipo di pelle hai')) {
+      if (lastText.includes('Comprendo bene!') && lastText.includes('Che tipo di pelle hai')) {
         console.log("✅ Allowing structured flow to start - initial skin type question detected");
         return true;
       }
