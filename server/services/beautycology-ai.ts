@@ -3063,6 +3063,32 @@ Riscrivi il testo corretto COMPLETO:`;
               return this.getFallbackRecommendations(answers);
             }
             
+            // CRITICAL ADDITION: Validate that routine kit link is included when expected
+            if (routineKit) {
+              // Check if we should include routine kit link
+              const shouldIncludeRoutineKit = 
+                answers.adviceType?.toLowerCase().includes('routine completa') || 
+                answers.adviceType?.toLowerCase().includes('routine') ||
+                !answers.adviceType || // If no specific advice type, default to complete routine
+                answers.adviceType === 'Routine completa';
+              
+              if (shouldIncludeRoutineKit) {
+                const hasRoutineKitLink = finalText.includes(routineKit.url) && finalText.includes(routineKit.name);
+                if (!hasRoutineKitLink) {
+                  console.warn(`❌ CRITICAL: Routine kit link missing from final recommendations!`);
+                  console.warn(`Expected: ${routineKit.name} (${routineKit.url})`);
+                  console.warn(`User profile: skinType="${answers.skinType}", mainIssue="${answers.mainIssue}", adviceType="${answers.adviceType}"`);
+                  console.log('🔄 Forcing fallback to ensure routine kit link is included');
+                  return this.getFallbackRecommendations(answers);
+                } else {
+                  console.log(`✅ Routine kit link properly included: ${routineKit.name}`);
+                }
+              }
+            } else {
+              // Log when no routine kit is found (this shouldn't happen for valid combinations)
+              console.warn(`⚠️ No routine kit found for skinType="${answers.skinType}", mainIssue="${answers.mainIssue}"`);
+            }
+            
             console.log('✅ All product names verified against catalog - no hallucinations detected');
             break;
           }
