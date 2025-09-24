@@ -3204,6 +3204,10 @@ Riscrivi il testo corretto COMPLETO:`;
     const skinType = answers.skinType?.toLowerCase() || 'mista';
     const mainIssue = answers.mainIssue?.toLowerCase() || '';
     
+    // Call resolveRoutineKitLink to get appropriate kit recommendation
+    const routineKit = this.resolveRoutineKitLink(answers);
+    console.log(`🔍 Routine kit recommendation in fallback: ${routineKit ? `${routineKit.name} (${routineKit.url})` : 'None found'}`);
+    
     // Always use guaranteed real products from catalog
     const realProducts = this.getGuaranteedRealProducts();
     
@@ -3237,20 +3241,20 @@ Riscrivi il testo corretto COMPLETO:`;
 
     return `Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
 
-📋 **INFORMAZIONI REGISTRATE:**
+**1. 📋 INFORMAZIONI REGISTRATE:**
 - Tipo di pelle: ${answers.skinType || 'non specificato'}
 - Età: ${answers.age || 'non specificata'}
 - Problematica principale: ${answers.mainIssue || 'non specificata'}
 - Ingredienti preferiti: ${answers.activesPreference || 'nessuno in particolare'}
 - Routine attuale: ${answers.routineStatus || 'non specificata'}
 
-📋 **PROBLEMATICHE RILEVATE E ANALISI:**
+**2. 📋 PROBLEMATICHE RILEVATE E ANALISI:**
 Basandomi sulle informazioni fornite, ho identificato le seguenti aree di miglioramento per la tua pelle che possiamo trattare efficacemente con i prodotti Beautycology formulati scientificamente.
 
-💫 **RACCOMANDAZIONI PERSONALIZZATE:**
+**3. 💫 RACCOMANDAZIONI PERSONALIZZATE:**
 Ho creato per te una routine completa e personalizzata utilizzando i prodotti Beautycology più adatti alle tue esigenze.
 
-**🌅 ROUTINE MATTINA:**
+**4. 🌅 ROUTINE MATTINA:**
 1. **Detersione**: **[${cleanser.name}](${cleanser.url})** (${cleanser.price})
    - Applicare su viso umido, massaggiare delicatamente e risciacquare con acqua tiepida
    - Rimuove il sebo prodotto durante la notte e prepara la pelle ai trattamenti successivi
@@ -3269,7 +3273,7 @@ Ho creato per te una routine completa e personalizzata utilizzando i prodotti Be
    - Riapplicare ogni 2-3 ore se esposti al sole diretto
    - Essenziale tutto l'anno per prevenire macchie e invecchiamento precoce
 
-**🌙 ROUTINE SERA:**
+**5. 🌙 ROUTINE SERA:**
 1. **Doppia Detersione**:
    - Prima fase: **[${realProducts.oilCleanser.name}](${realProducts.oilCleanser.url})** (${realProducts.oilCleanser.price}) per rimuovere trucco e SPF
    - Seconda fase: **[${cleanser.name}](${cleanser.url})** (${cleanser.price}) per pulire in profondità
@@ -3284,7 +3288,7 @@ Ho creato per te una routine completa e personalizzata utilizzando i prodotti Be
    - Massaggiare includendo collo e décolleté
    - La pelle si rigenera durante il sonno, quindi nutrirla adeguatamente è fondamentale
 
-**💫 TRATTAMENTI EXTRA (1-2 volte a settimana):**
+**6. 💫 TRATTAMENTI EXTRA (1-2 volte a settimana):**
 - **Esfoliazione**: **[${realProducts.peeling.name}](${realProducts.peeling.url})** (${realProducts.peeling.price})
   - Applicare la sera su pelle pulita, evitando il contorno occhi
   - Lasciare agire 5-10 minuti poi risciacquare
@@ -3296,7 +3300,12 @@ I prodotti Beautycology sono formulati con ingredienti scientificamente testati 
 📦 **I PRODOTTI BEAUTYCOLOGY PER TE:**
 Tutti i prodotti consigliati sono disponibili su beautycology.it con spedizione gratuita per ordini superiori a 50€.
 
-💡 **CONSIGLI FINALI:**
+${routineKit ? `💫 **7. KIT BEAUTYCOLOGY CONSIGLIATO PER TE:**
+**[${routineKit.name}](${routineKit.url})** - Kit completo formulato specificamente per le tue esigenze
+
+Questo kit include tutti i prodotti essenziali per creare una routine completa e bilanciata, perfetta per il tuo tipo di pelle e le tue specifiche problematiche.
+
+💡 **8. CONSIGLI FINALI:**` : '💡 **7. CONSIGLI FINALI:**'}
 - Inizia gradualmente introducendo un prodotto alla volta per permettere alla pelle di adattarsi
 - La costanza è fondamentale: i primi risultati si vedono dopo 2 settimane, miglioramenti significativi dopo 1 mese
 - Evita di cambiare prodotti troppo frequentemente
