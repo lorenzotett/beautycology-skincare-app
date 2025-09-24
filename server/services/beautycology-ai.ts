@@ -2784,40 +2784,51 @@ Riscrivi il testo corretto COMPLETO:`;
   private getFallbackRecommendations(answers: any): string {
     const skinType = answers.skinType?.toLowerCase() || 'mista';
     
-    // Use ProductValidator to get real products for different categories
-    let cleanserProducts: Array<{name: string, url: string, price: string}> = [];
-    let treatmentProducts: Array<{name: string, url: string, price: string}> = [];
-    let serumProducts: Array<{name: string, url: string, price: string}> = [];
-    
-    if (this.productValidator) {
-      cleanserProducts = this.productValidator.getProductsByCategory('detergente');
-      treatmentProducts = this.productValidator.getProductsByCategory('creme viso');
-      serumProducts = this.productValidator.getProductsByCategory('siero');
-      
-      // If categories don't return products, get some general products
-      if (cleanserProducts.length === 0 || treatmentProducts.length === 0 || serumProducts.length === 0) {
-        const allProducts = this.productValidator.getAllProductNames();
-        console.warn(`⚠️ Some product categories returned no results. Available products: ${allProducts.length}`);
-      }
+    if (!this.productValidator) {
+      return this.getBasicFallbackMessage(answers);
     }
     
-    // Build product recommendations with real products or safe fallback message
+    // Get real products for different categories - more robust approach
+    let cleanserProducts = this.productValidator.getProductsByCategory('detergente');
+    let treatmentProducts = this.productValidator.getProductsByCategory('creme viso');
+    let serumProducts = this.productValidator.getProductsByCategory('siero');
+    let spfProducts = this.productValidator.getProductsByCategory('protezione solare');
+    
+    // If specific categories don't work, try broader searches
+    if (cleanserProducts.length === 0) {
+      cleanserProducts = this.productValidator.getProductsByCategory('detergenti');
+    }
+    if (treatmentProducts.length === 0) {
+      treatmentProducts = this.productValidator.getProductsByCategory('creme');
+    }
+    if (serumProducts.length === 0) {
+      serumProducts = this.productValidator.getProductsByCategory('sieri');
+    }
+    // Broader SPF search to ensure we find sunscreen products
+    if (spfProducts.length === 0) {
+      spfProducts = this.productValidator.getProductsByCategory('spf');
+    }
+    if (spfProducts.length === 0) {
+      spfProducts = this.productValidator.getProductsByCategory('solare');
+    }
+    
+    // Log if some categories are missing
+    if (cleanserProducts.length === 0 || treatmentProducts.length === 0) {
+      const allProductNames = this.productValidator.getAllProductNames();
+      console.warn(`⚠️ Some categories returned no results. Available products: ${allProductNames.length}`);
+    }
+    
+    // Build product recommendations - require real products for each step 
     const cleanser = cleanserProducts.length > 0 ? cleanserProducts[0] : null;
     const treatment = treatmentProducts.length > 0 ? treatmentProducts[0] : null;
     const serum = serumProducts.length > 0 ? serumProducts[0] : null;
+    const spf = spfProducts.length > 0 ? spfProducts[0] : null;
 
-    // If we don't have enough real products, return a safe message
-    if (!cleanser || !treatment) {
-      return `Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
-
-📋 **INFORMAZIONI REGISTRATE:**
-- Tipo di pelle: ${answers.skinType || 'non specificato'}
-- Età: ${answers.age || 'non specificata'}
-- Problematica principale: ${answers.mainIssue || 'non specificata'}
-
-Mi dispiace, al momento non riesco ad accedere al nostro catalogo completo per fornirti raccomandazioni specifiche sui prodotti. Ti consiglio di visitare https://beautycology.it per vedere tutti i nostri prodotti scientificamente formulati.
-
-Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
+    // STRICT REQUIREMENT: Every routine step must have a real catalog product with link
+    // If we don't have ALL essential products (cleanser, treatment, spf), return safe message
+    if (!cleanser || !treatment || !spf) {
+      console.warn(`⚠️ Missing essential products for routine: cleanser=${!!cleanser}, treatment=${!!treatment}, spf=${!!spf}`);
+      return this.getBasicFallbackMessage(answers);
     }
 
     return `Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
@@ -2838,25 +2849,23 @@ Ho creato per te una routine completa e personalizzata utilizzando i prodotti Be
 **🌅 ROUTINE MATTINA:**
 1. **Detersione**: [${cleanser.name}](${cleanser.url}) (${cleanser.price})
    - Applicare su dischetto di cotone e pulire delicatamente viso e collo
-2. **Trattamento**: ${serum ? `[${serum.name}](${serum.url}) (${serum.price})` : 'Siero specifico per il tuo tipo di pelle'}
+2. **Trattamento**: ${serum ? `[${serum.name}](${serum.url}) (${serum.price})` : `Usa ${treatment.name} come base idratante`}
    - 2-3 gocce su viso pulito, massaggiare delicatamente
 3. **Idratazione**: [${treatment.name}](${treatment.url}) (${treatment.price})
    - Applicare una quantità pari a un chicco di riso su tutto il viso
-4. **Protezione solare**: SPF 50+ (sempre!)
+4. **Protezione solare**: [${spf.name}](${spf.url}) (${spf.price})
    - Essenziale per proteggere la pelle dai danni UV
 
 **🌙 ROUTINE SERA:**
-1. **Detersione**: [${cleanser.name}](${cleanser.url})
+1. **Detersione**: [${cleanser.name}](${cleanser.url}) (${cleanser.price})
    - Rimuove trucco e impurità accumulate durante il giorno
-2. **Tonico**: Tonico Riequilibrante
-   - Prepara la pelle ai trattamenti successivi
-3. **Trattamento**: ${serum ? `[${serum.name}](${serum.url})` : 'Siero specifico'}
+2. **Trattamento**: ${serum ? `[${serum.name}](${serum.url}) (${serum.price})` : `Applica un secondo strato di [${treatment.name}](${treatment.url})`}
    - Applicare con movimenti circolari dal basso verso l'alto
-4. **Idratazione**: [${treatment.name}](${treatment.url})
+3. **Idratazione**: [${treatment.name}](${treatment.url}) (${treatment.price})
    - Strato più generoso rispetto alla mattina per nutrire la pelle durante la notte
 
 🧪 **SPIEGAZIONE SCIENTIFICA:**
-I prodotti Beautycology sono formulati con ingredienti scientificamente testati e percentuali ottimali per garantire risultati visibili. La Niacinamide al 4% nella Perfect & Pure Cream, ad esempio, è stata specificamente dosata per minimizzare l'irritazione mantenendo l'efficacia.
+I prodotti Beautycology sono formulati con ingredienti scientificamente testati e percentuali ottimali per garantire risultati visibili. ${treatment ? `Il ${treatment.name} contiene` : 'I nostri prodotti contengono'} ingredienti attivi accuratamente dosati per minimizzare l'irritazione mantenendo l'efficacia.
 
 📦 **I PRODOTTI BEAUTYCOLOGY PER TE:**
 Tutti i prodotti consigliati sono disponibili su beautycology.it con spedizione gratuita per ordini superiori a 50€.
@@ -2865,6 +2874,22 @@ Tutti i prodotti consigliati sono disponibili su beautycology.it con spedizione 
 - Inizia gradualmente introducendo un prodotto alla volta per permettere alla pelle di adattarsi
 - La costanza è fondamentale: i primi risultati si vedono dopo 2 settimane, miglioramenti significativi dopo 1 mese
 - Evita di cambiare prodotti troppo frequentemente
+
+Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
+  }
+
+  // Basic fallback message when product validator is not available
+  private getBasicFallbackMessage(answers: any): string {
+    return `Perfetto! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
+
+📋 **INFORMAZIONI REGISTRATE:**
+- Tipo di pelle: ${answers.skinType || 'non specificato'}
+- Età: ${answers.age || 'non specificata'}  
+- Problematica principale: ${answers.mainIssue || 'non specificata'}
+
+Al momento non riesco ad accedere al nostro catalogo completo per fornirti raccomandazioni specifiche sui prodotti. Ti consiglio di visitare https://beautycology.it per vedere tutti i nostri prodotti scientificamente formulati per la cura della pelle.
+
+I nostri esperti sono sempre disponibili per aiutarti a scegliere i prodotti più adatti alle tue esigenze specifiche.
 
 Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
   }
