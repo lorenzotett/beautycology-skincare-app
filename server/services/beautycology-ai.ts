@@ -1507,6 +1507,9 @@ export class BeautycologyAIService {
         hasChoices = true;
         choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
         
+        // Remove text choices from response since we're showing buttons
+        responseText = this.removeChoicesFromContent(responseText);
+        
         // Ensure the response ends with the skin type question
         const skinTypeQuestion = "\n\nChe tipo di pelle hai?";
         if (!responseText.toLowerCase().includes('che tipo di pelle')) {
@@ -2616,6 +2619,13 @@ Tutti i prodotti consigliati sono disponibili su beautycology.it con spedizione 
 - Evita di cambiare prodotti troppo frequentemente
 
 Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
+  }
+
+  private removeChoicesFromContent(content: string): string {
+    // Remove lines that start with letter followed by ) (allowing leading whitespace)
+    const lines = content.split('\n');
+    const filteredLines = lines.filter(line => !line.match(/^\s*[A-E]\)\s*/));
+    return filteredLines.join('\n').trim();
   }
 }
 
