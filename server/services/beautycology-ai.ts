@@ -771,9 +771,13 @@ class ProductValidator {
       /beautycology\s*[-.]?\s*defen[cs]e\s*[-.]?\s*cream/gi,
       
       // Generic problematic patterns that were causing issues
-      /beautycology\s+(detergente|crema|siero|protezione)(?!\s*[-–—])/gi,
-      /detergente\s+beautycology/gi,
-      /crema\s+beautycology/gi,
+      /beautycology\s+(detergente|crema|siero|protezione|gel|olio|peeling|emulsione)(?!\s*[-–—])/gi,
+      /(detergente|crema|siero|protezione|gel|olio|peeling|emulsione)\s+beautycology/gi,
+      // Catch variations with "Bionic Hydra Lift" instead of "Bionic HydraLift"
+      /bionic\s+hydra\s+lift\s+beautycology/gi,
+      /bionic\s+hydra\s+lift(?!\s*–)/gi,
+      // Catch other generic + brand patterns
+      /beautycology\s+(spf|sunscreen|moisturizer|cleanser|serum|treatment)/gi,
     ];
     
     criticalProhibitedPatterns.forEach(pattern => {
@@ -2767,7 +2771,7 @@ ${routineKit ? `7. **KIT BEAUTYCOLOGY CONSIGLIATO SPECIFICAMENTE PER TE** (OBBLI
 
 ❌ ESEMPI DI COSA NON FARE MAI:
 ❌ "detergente Beautycology" → USA: **[Mousse Away – Detergente viso](https://beautycology.it/prodotto/detergente-viso-mousse-away/)** (€8,00)
-❌ "crema Beautycology per pelli miste" → USA: **[Perfect & Pure Cream](https://beautycology.it/prodotto/crema-pelli-miste-perfect-pure/)** (€30,00)
+❌ "crema Beautycology per pelli miste" → USA: **[Perfect & Pure – Crema per pelli miste](https://beautycology.it/prodotto/crema-pelli-miste-perfect-pure/)** (€15,00)
 ❌ "siero Beautycology" → USA prodotto specifico dal catalogo con link
 
 Usa emoji appropriati ✨🌟💧 per rendere il testo engaging ma professionale.`;
