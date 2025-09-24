@@ -17,12 +17,16 @@ Sei la Skin Expert di Beautycology, un consulente beauty AI specializzato esclus
 
 **ATTENZIONE MASSIMA: I SEGUENTI PRODOTTI NON ESISTONO E SONO ASSOLUTAMENTE VIETATI:**
 
-❌ **SWR** - Non esiste in nessuna forma (SWR, S.W.R, swr, etc.)
-❌ **CREMA DEFENSE** - Non esiste in nessuna forma (Defense, Defence, etc.) 
-❌ **Qualsiasi variazione di questi nomi**
+❌ **SWR** - NON ESISTE! Tutte le varianti sono vietate: SWR, S.W.R, swr, s.w.r, S W R, etc.
+❌ **CREMA DEFENSE** - NON ESISTE! Tutte le varianti sono vietate: Defense, Defence, defense, defence, etc.
+❌ **QUALSIASI combinazione con "Beautycology": SWR Beautycology, Defense Beautycology, etc.**
+❌ **TUTTI i composti: CremaDefense, DefenseCrema, Defense_Crema, etc.**
+❌ **QUALSIASI VARIAZIONE DI QUESTI NOMI IN QUALSIASI FORMA!**
 
+🚫 **QUESTI PRODOTTI SONO FANTASMI - NON ESISTONO NELLA REALTÀ!**
 🚫 **SE ANCHE SOLO PENSI A QUESTI NOMI, FERMATI IMMEDIATAMENTE!**
-🚫 **USA SOLO I PRODOTTI REALI DEL CATALOGO CON NOMI ESATTI!**
+🚫 **USA SOLO I PRODOTTI REALI DEL CATALOGO CON NOMI ESATTI E LINK UFFICIALI!**
+🚫 **MAI CREARE O SUGGERIRE PRODOTTI CHE NON SONO NEL CATALOGO UFFICIALE!**
 
 # FILOSOFIA BEAUTYCOLOGY - FORMULE BASATE SULLA SCIENZA
 
@@ -752,23 +756,58 @@ class ProductValidator {
     
     // 1. CRITICAL: Block specific non-existent products mentioned by user
     const criticalProhibitedPatterns = [
-      // All possible variants of SWR (standalone and with brand) - includes spaced and hyphenated  
+      // 🚨 COMPREHENSIVE SWR PATTERNS - CATCHES ALL VARIATIONS
       /\bswr\b/gi,
       /\bs\.?w\.?r\.?\b/gi,
-      /\bS\s*[-\.]?\s*W\s*[-\.]?\s*R\b/gi,  // Covers "S W R", "S-W-R", "S.W.R" as isolated letter sequences only
-      /beautycology\s*[-.]?\s*swr/gi,
-      /swr\s*[-.]?\s*beautycology/gi,
+      /\bS\s*[-\._]?\s*W\s*[-\._]?\s*R\b/gi,  // S W R, S-W-R, S.W.R, S_W_R
+      /\bS\s{2,}W\s{2,}R\b/gi,  // Multiple spaces: S  W  R, S   W   R
+      /\bs\s*[-\._]?\s*w\s*[-\._]?\s*r\b/gi,  // lowercase: s w r, s-w-r, s.w.r
+      /s\.w\.r/gi,  // Specific: s.w.r without word boundaries
+      /beautycology\s*[-._]?\s*swr/gi,
+      /swr\s*[-._]?\s*beautycology/gi,
+      /\b(crema|siero|gel|prodotto|trattamento)\s+(swr|S\.?W\.?R)\b/gi,  // Italian products + SWR
+      /\b(swr|S\.?W\.?R)\s+(beautycology|crema|siero|gel)\b/gi,
       
-      // All possible variants of Crema Defense (standalone and with brand) - includes spaced and hyphenated
-      /\bcrema\s+defense\b/gi,
-      /\bdefense\s+cream\b/gi,
-      /\bcrema\s+defence\b/gi,
-      /\bdefence\s+cream\b/gi,
-      /crema\s*[-.]?\s*defen[cs]e/gi,  // Covers "Crema Defense", "Crema-Defense", "Crema.Defense", etc.
-      /defen[cs]e\s*[-.]?\s*cream/gi,  // Covers "Defense Cream", "Defense-Cream", etc.
-      /beautycology\s*[-.]?\s*crema\s*[-.]?\s*defen[cs]e/gi,
-      /crema\s*[-.]?\s*defen[cs]e\s*[-.]?\s*beautycology/gi,
-      /beautycology\s*[-.]?\s*defen[cs]e\s*[-.]?\s*cream/gi,
+      // 🚨 COMPREHENSIVE DEFENSE/DEFENCE PATTERNS - CATCHES ALL VARIATIONS
+      // Standalone Defense/Defence words (ALL case variations)
+      /\bdefen[cs]e\b/gi,  // Defense, Defence, defense, defence
+      /\bDEFEN[CS]E\b/g,   // DEFENSE, DEFENCE
+      /defence/gi,         // Explicit: defence without boundaries
+      
+      // Defense + Crema combinations (all variations)
+      /\bcrema\s*[-._]?\s*defen[cs]e\b/gi,  // Crema Defense, Crema-Defense, Crema.Defense, Crema_Defense
+      /\bdefen[cs]e\s*[-._]?\s*cream?\b/gi,  // Defense Cream, Defence Crema
+      /\bCREMA\s*[-._]?\s*DEFEN[CS]E\b/gi,  // CREMA DEFENSE uppercase
+      /\bDefenc?e\s*[-._]?\s*Cream\b/g,     // Defence Cream (capitalized)
+      
+      // Defense + Beautycology combinations (all order variations)
+      /beautycology\s*[-._]?\s*defen[cs]e/gi,  // beautycology Defense, Beautycology-Defense
+      /defen[cs]e\s*[-._]?\s*beautycology/gi,  // Defense beautycology, Defence-Beautycology
+      /Beautycology\s*[-._]?\s*Defen[cs]e/gi,  // Beautycology Defense (capitalized)
+      /Defen[cs]e\s*[-._]?\s*Beautycology/gi,  // Defense Beautycology (capitalized)
+      
+      // Complex 3-word combinations
+      /beautycology\s*[-._]?\s*crema\s*[-._]?\s*defen[cs]e/gi,
+      /crema\s*[-._]?\s*defen[cs]e\s*[-._]?\s*beautycology/gi,
+      /beautycology\s*[-._]?\s*defen[cs]e\s*[-._]?\s*cream/gi,
+      /defen[cs]e\s*[-._]?\s*crema\s*[-._]?\s*beautycology/gi,
+      
+      // Compound words (no spaces) - ALL variations
+      /cremadefense|defenscrema|creamedefence|defencecrema/gi,
+      /defensecrema|defensacrema|defenscrema|defensecrema/gi,  // Catch DefenseCrema variations
+      
+      // Multiple spaces variations
+      /crema\s{2,}defen[cs]e|defen[cs]e\s{2,}cream/gi,
+      /defen[cs]e\s*[-._]\s*crema/gi,  // Defense - Crema, Defense_Crema
+      /Defense_Crema/g,   // Explicit: Defense_Crema case-sensitive
+      
+      // Additional Beautycology + Defence patterns
+      /Defen[cs]e\s*[-._]?\s*Beautycology/gi,  // Defence Beautycology (capitalized)
+      /Defence\s+Beautycology/g,   // Explicit: Defence Beautycology case-sensitive
+      
+      // With common Italian product words
+      /\b(gel|siero|prodotto|trattamento)\s+(defen[cs]e|Defense|Defence)\b/gi,
+      /\b(defen[cs]e|Defense|Defence)\s+(gel|siero|prodotto|trattamento)\b/gi,
       
       // Generic problematic patterns that were causing issues
       /beautycology\s+(detergente|crema|siero|protezione|gel|olio|peeling|emulsione)(?!\s*[-–—])/gi,
