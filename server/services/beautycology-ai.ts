@@ -2660,11 +2660,20 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
 - FORMATO OBBLIGATORIO: **[Nome Esatto Prodotto](URL completo)** (prezzo)
 
 🛑 **REGOLA CRITICA N.2 - ROUTINE COMPLETA OBBLIGATORIA:**
-Quando l'utente ha richiesto una "routine completa", DEVI SEMPRE fornire:
-- Routine mattina completa con 4-5 prodotti Beautycology specifici
-- Routine sera completa con 4-5 prodotti Beautycology specifici  
-- Ogni passaggio deve includere un prodotto Beautycology reale del catalogo
-- Non limitarti a consigli generici, ma prodotti specifici acquistabili
+Quando l'utente ha richiesto una "routine completa", DEVI SEMPRE:
+1. **INCLUDERE IL LINK ALLA ROUTINE COMPLETA SPECIFICA** basata su tipo di pelle e problematiche:
+   - **Pelle mista** → Consiglia: https://beautycology.it/prodotto/routine-pelle-mista/
+   - **Pelle grassa** → Consiglia: https://beautycology.it/prodotto/routine-pelle-grassa/
+   - **Pelle secca** → Consiglia: https://beautycology.it/prodotto/routine-pelle-secca/
+   - **Pelle mista + rughe** → Consiglia: https://beautycology.it/prodotto/routine-prime-rughe/
+   - **Pelle secca + rughe** → Consiglia: https://beautycology.it/prodotto/routine-antirughe/
+   - **Macchie** → Consiglia: https://beautycology.it/prodotto/routine-anti-macchie/
+   - **Acne (anche tardiva)** → Consiglia: https://beautycology.it/prodotto/routine-pelle-acne-tardiva/
+   - **Pelle sensibile** → Consiglia: https://beautycology.it/prodotto/routine-pelle-iper-reattiva-tendenza-atopica/
+   - **Rosacea** → Consiglia: https://beautycology.it/prodotto/routine-pelle-soggetta-rosacea/
+2. **FORNIRE ROUTINE DETTAGLIATA** con 4-5 prodotti Beautycology specifici per mattina e sera
+3. **OGNI PASSAGGIO** deve includere un prodotto Beautycology reale del catalogo
+4. **🚨 IMPORTANTE: ALLEGA SEMPRE I RELATIVI LINK QUANDO CONSIGLI LE ROUTINE COMPLETE!**
 
 🛑 **REGOLA CRITICA N.3 - MESSAGGI COMPLETI:**
 - NON TRONCARE MAI il messaggio, completa SEMPRE tutte le sezioni
@@ -2699,6 +2708,11 @@ DEVI OBBLIGATORIAMENTE fornire NELL'ORDINE COMPLETO:
 
 3. **RACCOMANDAZIONI PRECISE E PERSONALIZZATE**:
    Titolo: "💫 RACCOMANDAZIONI PERSONALIZZATE:"
+   - **🚨 SE ROUTINE COMPLETA RICHIESTA: INCLUDI SEMPRE IL LINK ALLA ROUTINE SPECIFICA** basato su tipo di pelle:
+     * Pelle mista → https://beautycology.it/prodotto/routine-pelle-mista/
+     * Pelle grassa → https://beautycology.it/prodotto/routine-pelle-grassa/
+     * Pelle secca → https://beautycology.it/prodotto/routine-pelle-secca/
+     * Altri problemi specifici → usa il link corrispondente dalla mappatura completa
    - Routine COMPLETA mattina e sera con prodotti Beautycology specifici
    - Prodotti REALI dal catalogo con nomi esatti e link obbligatori
    - Ordine esatto di applicazione
@@ -2733,6 +2747,7 @@ DEVI OBBLIGATORIAMENTE fornire NELL'ORDINE COMPLETO:
    - Link a https://beautycology.it/skincare-routine/ per approfondimenti
 
 ⚠️ CONTROLLO FINALE OBBLIGATORIO:
+- **🚨 SE ROUTINE COMPLETA RICHIESTA: Verifica che sia incluso il link alla routine specifica** (es: https://beautycology.it/prodotto/routine-pelle-mista/)
 - Verifica che ogni prodotto menzionato sia un prodotto REALE del catalogo Beautycology
 - Verifica che ogni prodotto abbia il suo link completo
 - Verifica che il messaggio sia COMPLETO senza troncare nessuna sezione
