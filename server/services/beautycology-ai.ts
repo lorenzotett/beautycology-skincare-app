@@ -25,29 +25,11 @@ Sei la Skin Expert di Beautycology, un consulente beauty AI specializzato esclus
 ## Founder: Dr. Marilisa Franchini ("La Beautycologa")
 Cosmetologa laureata all'Università di Milano, specializzata nella comunicazione scientifica della cosmesi.
 
-# PRODOTTI REALI BEAUTYCOLOGY.IT
+# IMPORTANTE: CATALOGO PRODOTTI DINAMICO
 
-## SKINCARE SCIENTIFICA:
-### **Perfect & Pure Cream** (Crema per pelli miste)
-- **Niacinamide 4%**: Versione speciale a basso contenuto di acido nicotinico (< 100 PPM)
-  - Proprietà antibatteriche, lenitive e sebo-regolatrici
-  - Minimizza i pori e migliora la texture della pelle
-- **Red Algae Extract (Acrochaetium moniliforme)**:
-  - Regola la produzione di sebo
-  - Proprietà anti-inquinamento
-  - Protezione dai danni ambientali
-- **Proprietà**: Anti-imperfezioni, opacizzante, antinfiammatoria
-
-### **M-Eye Secret** (Crema contorno occhi multipeptide)
-- **Complesso Multipeptide**: Palmitoyl Tripeptide-1, Palmitoyl Tetrapeptide-7, Acetyl Tetrapeptide-5
-- **Niacinamide 5%**: Illumina e uniforma il contorno occhi
-- **Formula arricchita**: Ceramidi, Burro di Karitè, Olio di Avocado, Vitamina E
-- **Prezzo**: €50,00
-- **Proprietà**: Antirughe, anti-borse, anti-occhiaie
-
-### **Acqua Micellare**
-- Detergente delicato per tutti i tipi di pelle
-- Rimuove trucco e impurità senza aggredire
+🚨 **REGOLA FONDAMENTALE:**
+USA SOLO i prodotti forniti nel catalogo dinamico aggiornato che viene caricato automaticamente dal sistema.
+NON fare mai riferimento a prodotti hardcoded o inventati. Ogni prodotto DEVE avere il link ufficiale di beautycology.it.
 
 ## INGREDIENTI SCIENTIFICI BEAUTYCOLOGY:
 ### **Pantenolo (Pro-Vitamina B5)**
@@ -72,7 +54,7 @@ Dopo che l'utente fornisce il suo nome, presentati SOLO UNA VOLTA e spiega le op
 Dopo la presentazione, aspetta che l'utente scelga cosa fare:
 
 ### CASO A - INFORMAZIONI PRODOTTI:
-Se l'utente chiede informazioni su prodotti specifici (es: "M-Eye Secret", "Perfect & Pure", "Acqua Micellare"):
+Se l'utente chiede informazioni su prodotti specifici (es: "M-Eye Secret", "Perfect & Pure", "Invisible Shield"):
 **RICONOSCI IL PRODOTTO E FORNISCI INFORMAZIONI DIRETTAMENTE!**
 **NON CHIEDERE "Quale prodotto ti interessa" SE L'UTENTE HA GIÀ NOMINATO UN PRODOTTO SPECIFICO!**
 **🚨 IMPORTANTE: MAI USARE PULSANTI O DOMANDE A SCELTA MULTIPLA QUANDO L'UTENTE CHIEDE INFORMAZIONI SUI PRODOTTI!**
@@ -250,8 +232,7 @@ Dopo aver raccolto tutte le informazioni, DEVI SEMPRE:
 Quando raccomandi prodotti, utilizza sempre:
 - **Sito principale**: https://beautycology.it/
 - **Shop**: https://beautycology.it/shop/
-- **Prodotto specifico Perfect & Pure**: https://beautycology.it/prodotto/crema-pelli-miste-perfect-pure/
-- **Acqua Micellare**: https://beautycology.it/acqua-micellare/
+- **IMPORTANTE**: USA SOLO link di prodotti reali dal catalogo dinamico caricato automaticamente
 - **Blog educativo**: Tutti gli articoli su ingredienti e scienza cosmetica
 
 # REGOLE OPERATIVE PER FLUSSO CONVERSAZIONALE
@@ -1712,7 +1693,7 @@ export class BeautycologyAIService {
         }
       } else if (isProductInfoRequest) {
         // Product information request - provide product info without buttons
-        fallbackResponse = "Posso aiutarti con informazioni sui nostri prodotti Beautycology! Abbiamo una gamma completa di prodotti scientifici per la skincare, tra cui la Perfect & Pure Cream per pelli miste, M-Eye Secret per il contorno occhi, e l'Acqua Micellare per la detersione. Dimmi quale prodotto ti interessa o cosa stai cercando per la tua pelle.";
+        fallbackResponse = this.generateDynamicProductFallback();
         hasChoices = false;
         choices = [];
       } else {
@@ -2331,7 +2312,7 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
 
 🛑 **REGOLA CRITICA N.1 - USO OBBLIGATORIO PRODOTTI BEAUTYCOLOGY:**
 - DEVI SEMPRE INCLUDERE SOLO PRODOTTI BEAUTYCOLOGY SPECIFICI nelle routine
-- USA ESCLUSIVAMENTE i nomi ESATTI dei prodotti dal catalogo (es: "Perfect & Pure Cream", "M-Eye Secret", "Acqua Micellare")
+- USA ESCLUSIVAMENTE i nomi ESATTI dei prodotti dal catalogo (es: "Perfect & Pure – Crema per pelli miste", "M-EYE SECRET – CREMA CONTORNO OCCHI MULTIPEPTIDE", "Mousse Away – Detergente viso")
 - OGNI PRODOTTO MENZIONATO DEVE AVERE IL SUO LINK COMPLETO https://beautycology.it/prodotto/...
 - VIETATO ASSOLUTAMENTE usare nomi generici come "detergente Beautycology", "crema Beautycology", "siero Beautycology"
 - FORMATO OBBLIGATORIO: **[Nome Esatto Prodotto](URL completo)** (prezzo)
@@ -2626,6 +2607,53 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
     const lines = content.split('\n');
     const filteredLines = lines.filter(line => !line.match(/^\s*[A-E]\)\s*/));
     return filteredLines.join('\n').trim();
+  }
+
+  // Generate dynamic product fallback message using real catalog products
+  private generateDynamicProductFallback(): string {
+    if (!this.knowledgeBase?.products || this.knowledgeBase.products.length === 0) {
+      return "Posso aiutarti con informazioni sui nostri prodotti Beautycology! Abbiamo una gamma completa di prodotti scientifici per la skincare. Dimmi quale prodotto ti interessa o cosa stai cercando per la tua pelle.";
+    }
+
+    // Get sample products from different categories
+    const products = this.knowledgeBase.products;
+    const sampleProducts = [];
+
+    // Find a cream product
+    const creamProduct = products.find((p: any) => 
+      p.name?.toLowerCase().includes('crema') || 
+      p.category?.toLowerCase().includes('creme')
+    );
+    if (creamProduct) {
+      sampleProducts.push(`${creamProduct.name}`);
+    }
+
+    // Find a serum/treatment product
+    const serumProduct = products.find((p: any) => 
+      p.name?.toLowerCase().includes('siero') || 
+      p.category?.toLowerCase().includes('sieri') ||
+      p.name?.toLowerCase().includes('secret')
+    );
+    if (serumProduct) {
+      sampleProducts.push(`${serumProduct.name}`);
+    }
+
+    // Find a cleanser product
+    const cleanserProduct = products.find((p: any) => 
+      p.name?.toLowerCase().includes('detergente') || 
+      p.category?.toLowerCase().includes('detergenti') ||
+      p.name?.toLowerCase().includes('mousse')
+    );
+    if (cleanserProduct) {
+      sampleProducts.push(`${cleanserProduct.name}`);
+    }
+
+    if (sampleProducts.length > 0) {
+      const productList = sampleProducts.slice(0, 3).join(', ');
+      return `Posso aiutarti con informazioni sui nostri prodotti Beautycology! Abbiamo una gamma completa di prodotti scientifici per la skincare, tra cui ${productList}. Dimmi quale prodotto ti interessa o cosa stai cercando per la tua pelle.`;
+    }
+
+    return "Posso aiutarti con informazioni sui nostri prodotti Beautycology! Abbiamo una gamma completa di prodotti scientifici per la skincare. Dimmi quale prodotto ti interessa o cosa stai cercando per la tua pelle.";
   }
 }
 
