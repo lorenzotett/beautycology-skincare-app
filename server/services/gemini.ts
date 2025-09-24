@@ -1244,9 +1244,9 @@ A te la scelta!`;
   }
 
     private removeChoicesFromContent(content: string): string {
-    // Remove lines that start with letter followed by ) and a space (allowing leading whitespace)
+    // Remove lines that start with letter followed by ) (allowing leading whitespace)
     const lines = content.split('\n');
-    const filteredLines = lines.filter(line => !line.match(/^\s*[A-E]\)\s+/));
+    const filteredLines = lines.filter(line => !line.match(/^\s*[A-E]\)\s*/));
     return filteredLines.join('\n').trim();
   }
 
