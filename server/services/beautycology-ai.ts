@@ -753,7 +753,44 @@ class ProductValidator {
   getProductsByCategory(category: string): Array<{name: string, url: string, price: string}> {
     const categoryLower = category.toLowerCase();
     
-    // First try to find products by exact category match from knowledge base
+    // First: Map common search terms to exact catalog categories
+    const categoryMapping: {[key: string]: string} = {
+      'detergente': 'detergenti',
+      'detergenti': 'detergenti',
+      'struccante': 'detergenti',
+      'pulizia': 'detergenti',
+      'cleanser': 'detergenti',
+      
+      'crema': 'creme',
+      'creme': 'creme',
+      'creme viso': 'creme',
+      'cream': 'creme',
+      'moisturizer': 'creme',
+      'idratante': 'creme',
+      
+      'siero': 'sieri',
+      'sieri': 'sieri',
+      'serum': 'sieri',
+      'trattamento': 'sieri'
+    };
+    
+    // Check if we have a mapping for this category
+    const mappedCategory = categoryMapping[categoryLower];
+    if (mappedCategory) {
+      const productsByMappedCategory = this.products
+        .filter(p => {
+          if (!p.category) return false;
+          return p.category.toLowerCase() === mappedCategory;
+        })
+        .map(p => ({name: p.originalName, url: p.url, price: p.price}));
+      
+      if (productsByMappedCategory.length > 0) {
+        console.log(`✅ Found ${productsByMappedCategory.length} products for mapped category: ${category} -> ${mappedCategory}`);
+        return productsByMappedCategory;
+      }
+    }
+    
+    // Second: Try exact category match from knowledge base
     const productsByExactCategory = this.products
       .filter(p => {
         if (!p.category) return false;
