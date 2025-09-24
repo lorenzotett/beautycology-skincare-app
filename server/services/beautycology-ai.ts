@@ -402,7 +402,7 @@ Ricorda: Sei la Skin Expert di Beautycology! Attingi sempre alla knowledge scien
 
 // Product validation class for ensuring only real products are recommended
 class ProductValidator {
-  private products: Array<{name: string, originalName: string, url: string, price: string}> = [];
+  private products: Array<{name: string, originalName: string, url: string, price: string, category?: string, description?: string}> = [];
   
   constructor(knowledgeBase: any) {
     this.loadProducts(knowledgeBase);
@@ -414,7 +414,9 @@ class ProductValidator {
         name: p.name.toLowerCase(),
         originalName: p.name,
         url: p.url,
-        price: p.price
+        price: p.price,
+        category: p.category,
+        description: p.description
       }));
       console.log(`✅ ProductValidator loaded ${this.products.length} products`);
     }
@@ -794,6 +796,7 @@ export class BeautycologyAIService {
       mainIssue?: string;
       adviceType?: string;
       additionalInfo?: string;
+      skinProblems?: string[];
     };
   }> = new Map();
   private knowledgeBase: any = null;
