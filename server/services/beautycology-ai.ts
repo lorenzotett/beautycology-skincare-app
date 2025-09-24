@@ -2700,9 +2700,12 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
       const session = await storage.getChatSession(sessionId);
       if (session?.userName) {
         userName = session.userName;
+        console.log(`✅ Retrieved actual userName from session: "${userName}"`);
+      } else {
+        console.log('⚠️ No userName in session, using fallback "bellezza"');
       }
     } catch (error) {
-      console.log('Could not retrieve userName from session, using fallback');
+      console.log('⚠️ Could not retrieve userName from session, using fallback "bellezza"');
     }
     
     // Call resolveRoutineKitLink to get appropriate kit recommendation
@@ -2720,6 +2723,21 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
 **STEP 3: RACCOMANDAZIONI FINALI E RIEPILOGO COMPLETO**
 
 🚨🚨🚨 REGOLE ASSOLUTE OBBLIGATORIE - DEVI SEGUIRE TUTTE QUESTE REGOLE SENZA ECCEZIONI:
+
+⛔⛔⛔ **REGOLA SUPREMA - FORMATO DEL MESSAGGIO:**
+**QUESTO È UN MESSAGGIO DI CHAT, NON UNA EMAIL!**
+- **MAI USARE** formato email con "Oggetto:", "Caro/Cara", "Distinti saluti", etc.
+- **MAI INIZIARE** con "Ciao [nome]" o "Cara [nome]"
+- **SEMPRE INIZIARE** con "Perfetto ${userName}! 🌟" (USA IL NOME FORNITO: "${userName}")
+- **MAI INVENTARE NOMI:** Il nome utente è "${userName}" - NON USARE MAI "Fiammetta" o altri nomi!
+- **FORMATO CHAT:** Scrivi come un messaggio di chat amichevole e diretto, NON come una email formale
+
+⛔⛔⛔ **PRODOTTI COMPLETAMENTE VIETATI - NON ESISTONO:**
+**I SEGUENTI PRODOTTI NON ESISTONO E SONO ASSOLUTAMENTE VIETATI:**
+- ❌ **SWR** in qualsiasi forma (SWR, S.W.R, swr, SWR Beautycology, etc.) - NON ESISTE!
+- ❌ **CREMA DEFENSE** in qualsiasi forma (Defense, Defence, CremaDefense, etc.) - NON ESISTE!
+- ❌ **DEFENSE CREAM** o qualsiasi variante - NON ESISTE!
+- ❌ Se pensi anche solo vagamente a questi nomi, FERMATI! Sono prodotti INESISTENTI!
 
 🛑 **REGOLA CRITICA N.1 - USO OBBLIGATORIO PRODOTTI BEAUTYCOLOGY:**
 - DEVI SEMPRE INCLUDERE SOLO PRODOTTI BEAUTYCOLOGY SPECIFICI nelle routine
@@ -2766,8 +2784,10 @@ ${ragContext ? `\n# INFORMAZIONI AGGIUNTIVE SPECIFICHE PER IL TUO CASO:\n${ragCo
 DEVI OBBLIGATORIAMENTE fornire NELL'ORDINE COMPLETO:
 
 1. **RIEPILOGO COMPLETO DELLE INFORMAZIONI REGISTRATE**:
-   Inizia con: "Perfetto ${userName}! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:"
-   **🚨 IMPORTANTE: Il nome utente è già incluso nel prompt, NON modificarlo**
+   **🔴 OBBLIGATORIO: Inizia ESATTAMENTE con:** "Perfetto ${userName}! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:"
+   **⚠️ USA ESATTAMENTE IL NOME "${userName}" - NON CAMBIARLO MAI!**
+   **⚠️ NON USARE MAI "Fiammetta" O ALTRI NOMI!**
+   **⚠️ QUESTO È UN MESSAGGIO DI CHAT, NON UNA EMAIL!**
    - Elenca TUTTE le informazioni raccolte dall'utente
    - Conferma ogni dato fornito
 
@@ -2826,15 +2846,24 @@ ${routineKit ? `7. **KIT BEAUTYCOLOGY CONSIGLIATO SPECIFICAMENTE PER TE** (OBBLI
    - Link a https://beautycology.it/skincare-routine/ per approfondimenti
 
 ⚠️ CONTROLLO FINALE OBBLIGATORIO:
+- **🔴 VERIFICA FORMATO:** Questo DEVE essere un messaggio di CHAT, NON una EMAIL!
+- **🔴 VERIFICA NOME:** Hai usato "${userName}" come nome? (NON "Fiammetta" o altri nomi!)
+- **🔴 VERIFICA INIZIO:** Il messaggio inizia con "Perfetto ${userName}! 🌟"? (NON con "Ciao" o "Oggetto:"!)
+- **🔴 VERIFICA PRODOTTI:** Nessun prodotto inesistente come SWR o Crema Defense!
 - **🚨 SE ROUTINE COMPLETA RICHIESTA: Verifica che sia incluso il link alla routine specifica** (es: https://beautycology.it/prodotto/routine-pelle-mista/)
 - Verifica che ogni prodotto menzionato sia un prodotto REALE del catalogo Beautycology
 - Verifica che ogni prodotto abbia il suo link completo
 - Verifica che il messaggio sia COMPLETO senza troncare nessuna sezione
 - **🚨 CONCLUSIONE OBBLIGATORIA FINALE:** CONCLUDI SEMPRE con la frase ESATTA: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
-- **🚨 USA SEMPRE IL NOME:** Se conosci il nome dell'utente, inizia il messaggio finale con "Perfetto [NOME]!" 
-- **🚨 MAI SALUTARE NEI MESSAGGI FINALI:** Non dire "Ciao [NOME]" nei messaggi di raccomandazioni finali - usa "Perfetto [NOME]!"
+- **🚨 USA SEMPRE IL NOME CORRETTO:** Usa SOLO "${userName}" - MAI inventare nomi!
+- **🚨 MAI FORMATO EMAIL:** Non usare mai saluti formali, oggetti, o formato email
 
 ❌ ESEMPI DI COSA NON FARE MAI:
+❌ "Ciao Fiammetta" → USA: "Perfetto ${userName}! 🌟"
+❌ "Oggetto: Routine personalizzata" → NON USARE MAI formato email!
+❌ "Cara Maria" → USA: "Perfetto ${userName}! 🌟"
+❌ "SWR Beautycology" → PRODOTTO INESISTENTE! NON MENZIONARE MAI!
+❌ "Crema Defense" → PRODOTTO INESISTENTE! NON MENZIONARE MAI!
 ❌ "detergente Beautycology" → USA: **[Mousse Away – Detergente viso](https://beautycology.it/prodotto/detergente-viso-mousse-away/)** (€8,00)
 ❌ "crema Beautycology per pelli miste" → USA: **[Perfect & Pure – Crema per pelli miste](https://beautycology.it/prodotto/crema-pelli-miste-perfect-pure/)** (€15,00)
 ❌ "siero Beautycology" → USA prodotto specifico dal catalogo con link
@@ -2966,11 +2995,19 @@ Riscrivi il testo corretto COMPLETO:`;
             // Check for common patterns of invalid/generic product names that slip through
             const suspiciousPatterns = [
               /crema\s+defense/gi,
+              /crema\s+defence/gi,
+              /defense\s+cream/gi,
+              /defence\s+cream/gi,
               /\bswr\b/gi,
+              /s\.?w\.?r\.?/gi,
+              /swr\s+beautycology/gi,
+              /beautycology\s+swr/gi,
               /crema\s+beautycology/gi,
               /siero\s+beautycology/gi,
               /detergente\s+beautycology/gi,
-              /protezione\s+solare\s+beautycology/gi
+              /protezione\s+solare\s+beautycology/gi,
+              /beautycology\s+defense/gi,
+              /beautycology\s+defence/gi
             ];
             
             for (const pattern of suspiciousPatterns) {
@@ -3040,10 +3077,16 @@ Riscrivi il testo corretto COMPLETO:`;
                 
                 // First, check for known problematic patterns
                 if (lineText.includes('crema defense') || 
+                    lineText.includes('crema defence') ||
+                    lineText.includes('defense cream') ||
+                    lineText.includes('defence cream') ||
                     lineText.includes('swr') ||
+                    lineText.includes('s.w.r') ||
                     lineText.includes('beautycology detergente') ||
                     lineText.includes('beautycology crema') ||
-                    lineText.includes('beautycology siero')) {
+                    lineText.includes('beautycology siero') ||
+                    lineText.includes('beautycology defense') ||
+                    lineText.includes('beautycology defence')) {
                   hasInvalidProductNames = true;
                   invalidNames.push(`Known problematic pattern in: "${line.substring(0, 100)}..."`);
                   console.log(`❌ Known problematic product reference in line: "${line.substring(0, 100)}..."`);
@@ -3306,10 +3349,19 @@ Riscrivi il testo corretto COMPLETO:`;
         const session = await storage.getChatSession(sessionId);
         if (session?.userName) {
           userName = session.userName;
+          console.log(`✅ Fallback using actual userName: "${userName}"`);
+        } else {
+          console.log('⚠️ No userName in session for fallback, using "bellezza"');
         }
       } catch (error) {
-        console.log('Could not retrieve userName from session, using fallback');
+        console.log('⚠️ Could not retrieve userName from session for fallback, using "bellezza"');
       }
+    }
+    
+    // CRITICAL: Log to verify we're NOT using 'Fiammetta'
+    if (userName.toLowerCase() === 'fiammetta') {
+      console.error(`❌ WARNING: Detected 'Fiammetta' name in fallback - replacing with 'bellezza'`);
+      userName = 'bellezza';
     }
     
     // Call resolveRoutineKitLink to get appropriate kit recommendation
@@ -3430,10 +3482,19 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
         const session = await storage.getChatSession(sessionId);
         if (session?.userName) {
           userName = session.userName;
+          console.log(`✅ Basic fallback using actual userName: "${userName}"`);
+        } else {
+          console.log('⚠️ No userName in session for basic fallback, using "bellezza"');
         }
       } catch (error) {
-        console.log('Could not retrieve userName from session, using fallback');
+        console.log('⚠️ Could not retrieve userName from session for basic fallback, using "bellezza"');
       }
+    }
+    
+    // CRITICAL: Verify we're NOT using 'Fiammetta'
+    if (userName.toLowerCase() === 'fiammetta') {
+      console.error(`❌ WARNING: Detected 'Fiammetta' name in basic fallback - replacing with 'bellezza'`);
+      userName = 'bellezza';
     }
     
     return `Perfetto ${userName}! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:
