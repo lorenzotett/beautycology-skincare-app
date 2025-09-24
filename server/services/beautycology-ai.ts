@@ -2786,6 +2786,153 @@ Riscrivi il testo corretto COMPLETO:`;
             return this.getFallbackRecommendations(answers);
           } else {
             console.log('✅ Product validation passed successfully');
+            
+            // CRITICAL ADDITION: Check for hallucinated product names in final text
+            // This prevents AI from using invalid names like "Crema Defense", "SWR" even with valid links
+            const catalogProductNames = this.productValidator.getAllProductNames();
+            const mentionedProducts = this.productValidator.findProductMentionsInText(finalText);
+            
+            console.log(`🔍 Final validation: checking ${mentionedProducts.length} product mentions against catalog of ${catalogProductNames.length} products`);
+            
+            // Log all mentioned products for debugging
+            if (mentionedProducts.length > 0) {
+              console.log('📋 Products mentioned in final text:', mentionedProducts.map(p => p.name));
+            }
+            
+            // Log all available catalog products for comparison
+            console.log('📚 Available catalog products:', catalogProductNames.slice(0, 10) + (catalogProductNames.length > 10 ? ` ... and ${catalogProductNames.length - 10} more` : ''));
+            
+            // Extract all product names mentioned in the text (even those without proper formatting)
+            let hasInvalidProductNames = false;
+            const invalidNames: string[] = [];
+            
+            // Check for common patterns of invalid/generic product names that slip through
+            const suspiciousPatterns = [
+              /crema\s+defense/gi,
+              /\bswr\b/gi,
+              /crema\s+beautycology/gi,
+              /siero\s+beautycology/gi,
+              /detergente\s+beautycology/gi,
+              /protezione\s+solare\s+beautycology/gi
+            ];
+            
+            for (const pattern of suspiciousPatterns) {
+              const matches = finalText.match(pattern);
+              if (matches) {
+                hasInvalidProductNames = true;
+                invalidNames.push(...matches);
+              }
+            }
+            
+            // COMPREHENSIVE check: scan for ALL product name formats that could contain hallucinations
+            // This catches [Product](URL), **[Product]**, and plain text mentions
+            
+            // 1. Extract ONLY product links (containing /prodotto/) for validation
+            const allMarkdownLinks = finalText.match(/\*?\*?\[([^\]]+)\]\([^)]+\)\*?\*?/g) || [];
+            console.log(`🔍 Found ${allMarkdownLinks.length} total markdown links`);
+            
+            let productLinksCount = 0;
+            for (const linkMatch of allMarkdownLinks) {
+              // Extract both label and URL
+              const fullMatch = linkMatch.match(/\*?\*?\[([^\]]+)\]\(([^)]+)\)\*?\*?/);
+              if (fullMatch) {
+                const productName = fullMatch[1].trim();
+                const url = fullMatch[2].trim();
+                
+                // Only validate links that point to actual product pages
+                if (url.includes('/prodotto/') || url.includes('beautycology.it/prodotto')) {
+                  productLinksCount++;
+                  const normalizedName = productName.toLowerCase();
+                  
+                  // Check if this product name exists in our catalog (case insensitive)
+                  const isValidProduct = catalogProductNames.some(validName => 
+                    validName.toLowerCase() === normalizedName
+                  );
+                  
+                  if (!isValidProduct) {
+                    hasInvalidProductNames = true;
+                    invalidNames.push(productName);
+                    console.log(`❌ Invalid product name in product link: "${productName}" -> ${url}`);
+                  } else {
+                    console.log(`✅ Valid product link: "${productName}"`);
+                  }
+                }
+                // Educational links (blog articles, guides, etc.) are allowed and not validated
+              }
+            }
+            
+            console.log(`🔍 Validated ${productLinksCount} product links out of ${allMarkdownLinks.length} total links`);
+            
+            // 2. Extract potential product references from plain text (without links)
+            const textLines = finalText.split('\n');
+            for (const line of textLines) {
+              // Skip lines that are already checked as markdown links
+              if (line.includes('[') && line.includes('](')) continue;
+              
+              // Look for lines mentioning cosmetic products
+              if (line.toLowerCase().includes('crema') || 
+                  line.toLowerCase().includes('siero') || 
+                  line.toLowerCase().includes('detergente') ||
+                  line.toLowerCase().includes('maschera') ||
+                  line.toLowerCase().includes('protezione') ||
+                  line.toLowerCase().includes('cleanser') ||
+                  line.toLowerCase().includes('serum')) {
+                
+                // Generic check for capitalized product-like phrases that might be hallucinations
+                const lineText = line.toLowerCase();
+                
+                // First, check for known problematic patterns
+                if (lineText.includes('crema defense') || 
+                    lineText.includes('swr') ||
+                    lineText.includes('beautycology detergente') ||
+                    lineText.includes('beautycology crema') ||
+                    lineText.includes('beautycology siero')) {
+                  hasInvalidProductNames = true;
+                  invalidNames.push(`Known problematic pattern in: "${line.substring(0, 100)}..."`);
+                  console.log(`❌ Known problematic product reference in line: "${line.substring(0, 100)}..."`);
+                }
+                
+                // Generic check for capitalized product-like phrases
+                // Look for patterns like "Crema Something", "Siero Something", etc. that don't match catalog
+                const productPatterns = [
+                  /Crema\s+[A-Z][a-z]+/g,
+                  /Siero\s+[A-Z][a-z]+/g,
+                  /Detergente\s+[A-Z][a-z]+/g,
+                  /Maschera\s+[A-Z][a-z]+/g,
+                  /[A-Z][a-z]+\s+[A-Z][a-z]+\s*–\s*[A-Z][a-z]+/g, // "Something Something – Something" format
+                ];
+                
+                for (const pattern of productPatterns) {
+                  const matches = line.match(pattern);
+                  if (matches) {
+                    for (const match of matches) {
+                      // Check if this phrase appears to be a product name but isn't in our catalog
+                      const potentialProductName = match.trim();
+                      const normalizedName = potentialProductName.toLowerCase();
+                      
+                      const isValidProduct = catalogProductNames.some(validName => 
+                        validName.toLowerCase().includes(normalizedName) || 
+                        normalizedName.includes(validName.toLowerCase())
+                      );
+                      
+                      if (!isValidProduct) {
+                        hasInvalidProductNames = true;
+                        invalidNames.push(`Potential hallucinated product: "${potentialProductName}"`);
+                        console.log(`❌ Possible hallucinated product name: "${potentialProductName}" in line: "${line.substring(0, 100)}..."`);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            
+            if (hasInvalidProductNames) {
+              console.warn(`❌ CRITICAL: Invalid product names detected in final text:`, invalidNames);
+              console.log('🔄 Forcing fallback due to hallucinated product names');
+              return this.getFallbackRecommendations(answers);
+            }
+            
+            console.log('✅ All product names verified against catalog - no hallucinations detected');
             break;
           }
         } else {
