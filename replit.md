@@ -69,6 +69,7 @@ Preferred communication style: Simple, everyday language.
 - **Session Recovery**: Automatic Gemini service recreation when sessions are removed from memory, ensuring chat continuity after email submission and preventing "Chat service not found" errors (July 2025).
 - **Automatic Image Import System**: Complete automation for converting Base64 images to public URLs and generating Google Sheets IMAGE formulas. Processes 205+ conversations with user-uploaded photos, providing direct image display in spreadsheet cells without manual intervention (August 2025).
 - **Beautycology AI Platform**: Independent beauty consultant platform with comprehensive skincare analysis, personalized recommendations, and integrated admin dashboard for complete beauty consultation management (September 2025).
+- **Routine Kit Recommendation System**: Automated system that maps skin types and concerns to specific Beautycology routine kits with direct links. Implemented centralized resolver that prioritizes specific skin issues (acne, macchie, rughe, rosacea, sensibile) over base skin types, ensuring users receive targeted complete skincare solutions. Integrated in both primary AI recommendations and fallback scenarios with consistent formatting (September 2025).
 
 ## User Feedback and Issues Tracking
 
