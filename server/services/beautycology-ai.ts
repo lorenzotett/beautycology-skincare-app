@@ -472,53 +472,95 @@ class ProductValidator {
     const issues: string[] = [];
     const textLower = text.toLowerCase();
     
-    // Check if this is a complete routine response
-    const hasRoutineMattina = textLower.includes('routine mattina') || textLower.includes('routine mattutina');
-    const hasRoutineSera = textLower.includes('routine sera') || textLower.includes('routine serale');
-    const hasCompleteRoutine = hasRoutineMattina && hasRoutineSera;
+    console.log('🔍 Validating complete routine response...');
+    
+    // Extract routine sections first (morning and evening)
+    const routineSections = this.extractRoutineSections(text);
+    
+    // Check if this is a complete routine response - must have both morning and evening sections
+    const hasMorningSection = routineSections.some(section => {
+      const sectionLower = section.toLowerCase();
+      return sectionLower.includes('mattina') || sectionLower.includes('morning') || 
+             sectionLower.includes('mattutina') || sectionLower.includes('del mattino');
+    });
+    
+    const hasEveningSection = routineSections.some(section => {
+      const sectionLower = section.toLowerCase();  
+      return sectionLower.includes('sera') || sectionLower.includes('evening') ||
+             sectionLower.includes('serale') || sectionLower.includes('della sera');
+    });
+    
+    const hasCompleteRoutine = hasMorningSection && hasEveningSection;
     
     if (!hasCompleteRoutine) {
+      // If we have routine sections but not both morning and evening, that's incomplete
+      if (routineSections.length > 0) {
+        issues.push('CRITICAL ROUTINE: Incomplete routine found - missing either morning or evening section');
+        return { isValid: false, issues, hasCompleteRoutine: true };
+      }
+      // No routine sections at all - not a complete routine request
       return { isValid: true, issues: [], hasCompleteRoutine: false };
     }
     
-    console.log('🔍 Validating complete routine response...');
+    if (routineSections.length === 0) {
+      issues.push('CRITICAL ROUTINE: No routine sections found despite routine indicators present');
+      return { isValid: false, issues, hasCompleteRoutine: true };
+    }
     
-    // For complete routines, be extra strict about product validation
-    const routineSteps = [
-      'detersione', 'detergente', 'pulizia',
-      'idratazione', 'crema', 'moisturizer', 
-      'trattamento', 'siero', 'serum',
-      'protezione', 'solare', 'spf'
+    // Define required steps for complete routines (different for morning vs evening)
+    const morningRequiredSteps = [
+      { keywords: ['detersione', 'detergente', 'pulizia'], name: 'Detersione' },
+      { keywords: ['idratazione', 'crema', 'moisturizer', 'trattamento'], name: 'Idratazione/Trattamento' },
+      { keywords: ['protezione', 'solare', 'spf', 'shield'], name: 'Protezione Solare' }
     ];
     
-    // Check that each routine step mentions a specific product with link
-    routineSteps.forEach(step => {
-      const stepRegex = new RegExp(`${step}[^\n]*?([^\[]*?\[([^\]]+)\]\(([^\)]+)\))`, 'gi');
-      const stepMatches = text.match(stepRegex);
+    const eveningRequiredSteps = [
+      { keywords: ['detersione', 'detergente', 'pulizia'], name: 'Detersione' },
+      { keywords: ['trattamento', 'siero', 'serum'], name: 'Trattamento/Siero' },
+      { keywords: ['idratazione', 'crema', 'moisturizer'], name: 'Idratazione' }
+    ];
+    
+    // Validate each routine section
+    routineSections.forEach((section, index) => {
+      const isMorningRoutine = section.toLowerCase().includes('mattina') || section.toLowerCase().includes('morning');
+      const isEveningRoutine = section.toLowerCase().includes('sera') || section.toLowerCase().includes('evening');
       
-      if (stepMatches) {
-        stepMatches.forEach(match => {
-          // Extract product name and URL from markdown format
-          const productMatch = match.match(/\[([^\]]+)\]\(([^\)]+)\)/);
-          if (productMatch) {
-            const productName = productMatch[1];
-            const productUrl = productMatch[2];
-            
-            // Verify product exists in catalog
-            const productExists = this.validateProductName(productName);
-            if (!productExists.isValid) {
-              issues.push(`CRITICAL ROUTINE: Product "${productName}" in ${step} step not found in catalog`);
-            }
-            
-            // Verify URL is correct
-            if (!productUrl.startsWith('https://beautycology.it/')) {
-              issues.push(`CRITICAL ROUTINE: Invalid URL for "${productName}": ${productUrl}`);
-            }
-          } else {
-            issues.push(`CRITICAL ROUTINE: ${step} step mentions product without proper link format`);
-          }
-        });
+      let sectionName: string;
+      let requiredSteps: Array<{keywords: string[], name: string}>;
+      
+      if (isMorningRoutine) {
+        sectionName = 'Mattina';
+        requiredSteps = morningRequiredSteps;
+      } else if (isEveningRoutine) {
+        sectionName = 'Sera';
+        requiredSteps = eveningRequiredSteps;
+      } else {
+        // Fallback for sections that don't clearly indicate time
+        sectionName = index === 0 ? 'Prima routine' : 'Seconda routine';
+        requiredSteps = index === 0 ? morningRequiredSteps : eveningRequiredSteps;
       }
+      
+      console.log(`🔍 Validating ${sectionName} routine section...`);
+      
+      requiredSteps.forEach(requiredStep => {
+        const stepProducts = this.findProductsInRoutineStep(section, requiredStep.keywords);
+        
+        if (stepProducts.length === 0) {
+          issues.push(`CRITICAL ROUTINE: ${sectionName} routine missing ${requiredStep.name} step with valid product`);
+        } else {
+          // Validate each found product
+          stepProducts.forEach(product => {
+            const productExists = this.validateProductName(product.name);
+            if (!productExists.isValid) {
+              issues.push(`CRITICAL ROUTINE: Product "${product.name}" in ${sectionName} ${requiredStep.name} step not found in catalog`);
+            }
+            
+            if (!product.url.startsWith('https://beautycology.it/')) {
+              issues.push(`CRITICAL ROUTINE: Invalid URL for "${product.name}" in ${sectionName} ${requiredStep.name}: ${product.url}`);
+            }
+          });
+        }
+      });
     });
     
     // Extra check for generic product references in routines
@@ -541,6 +583,100 @@ class ProductValidator {
       issues,
       hasCompleteRoutine: true
     };
+  }
+
+  // Helper method to extract routine sections (morning and evening)
+  private extractRoutineSections(text: string): string[] {
+    const sections: string[] = [];
+    
+    // Look for routine section headers with various formats including markdown headers
+    const routineHeaderPatterns = [
+      // Bold markdown format: **🌅 ROUTINE MATTINA:**
+      /\*\*(?:🌅|🌙)?\s*(?:routine\s*(?:mattina|mattutina|del mattino|morning)|routine\s*(?:sera|serale|della sera|evening))\s*(?:🌅|🌙)?(?:\s*:\s*)?\*\*/gi,
+      // Emoji first: 🌅 **ROUTINE MATTINA**
+      /(?:🌅|🌙)\s*\*\*(?:routine\s*(?:mattina|mattutina|del mattino|morning)|routine\s*(?:sera|serale|della sera|evening))\*\*/gi,
+      // Markdown headers: ## 🌅 ROUTINE MATTINA
+      /#+\s*(?:🌅|🌙)?\s*(?:routine\s*(?:mattina|mattutina|del mattino|morning)|routine\s*(?:sera|serale|della sera|evening))/gi,
+      // Plain text with emojis: 🌅 ROUTINE MATTINA:
+      /(?:🌅|🌙)\s*(?:routine\s*(?:mattina|mattutina|del mattino|morning)|routine\s*(?:sera|serale|della sera|evening))\s*:?/gi,
+      // All caps variants: ROUTINE MATTINA or ROUTINE SERA
+      /(?:^|\n)\s*(?:routine\s*(?:mattina|mattutina|del mattino|morning)|routine\s*(?:sera|serale|della sera|evening))\s*:?/gmi
+    ];
+    
+    const headers: Array<{index: number, text: string}> = [];
+    
+    // Find all routine headers
+    routineHeaderPatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        headers.push({
+          index: match.index,
+          text: match[0]
+        });
+      }
+    });
+    
+    // Sort headers by position and remove duplicates (same index)
+    headers.sort((a, b) => a.index - b.index);
+    const uniqueHeaders = headers.filter((header, index) => {
+      return index === 0 || header.index !== headers[index - 1].index;
+    });
+    
+    // Extract sections between headers
+    for (let i = 0; i < uniqueHeaders.length; i++) {
+      const startIndex = uniqueHeaders[i].index;
+      const endIndex = i + 1 < uniqueHeaders.length ? uniqueHeaders[i + 1].index : text.length;
+      const section = text.slice(startIndex, endIndex);
+      sections.push(section);
+    }
+    
+    // If no sections found, try to split by common routine indicators as fallback
+    if (sections.length === 0) {
+      const fallbackSplit = text.split(/(?=.*(?:mattina|morning|sera|evening).*routine)|(?=.*routine.*(?:mattina|morning|sera|evening))/i);
+      const validSections = fallbackSplit.filter(section => 
+        section.toLowerCase().includes('routine') && 
+        (section.toLowerCase().includes('mattina') || section.toLowerCase().includes('morning') || 
+         section.toLowerCase().includes('sera') || section.toLowerCase().includes('evening'))
+      );
+      sections.push(...validSections);
+    }
+    
+    return sections;
+  }
+
+  // Helper method to find products in a specific routine step
+  private findProductsInRoutineStep(sectionText: string, stepKeywords: string[]): Array<{name: string, url: string}> {
+    const products: Array<{name: string, url: string}> = [];
+    const lines = sectionText.split('\n');
+    
+    // Find step headers and look for products in following lines
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].toLowerCase();
+      
+      // Check if this line contains a step keyword
+      const isStepLine = stepKeywords.some(keyword => line.includes(keyword));
+      
+      if (isStepLine) {
+        // Look for products in the next few lines after the step header
+        for (let j = i; j < Math.min(i + 5, lines.length); j++) {
+          const productMatches = lines[j].match(/\[([^\]]+)\]\(([^\)]+)\)/g);
+          if (productMatches) {
+            productMatches.forEach(match => {
+              const linkMatch = match.match(/\[([^\]]+)\]\(([^\)]+)\)/);
+              if (linkMatch) {
+                products.push({
+                  name: linkMatch[1].trim(),
+                  url: linkMatch[2].trim()
+                });
+              }
+            });
+          }
+        }
+        break; // Found this step, move to next required step
+      }
+    }
+    
+    return products;
   }
 
   // Validate that recommended text contains only real products with mandatory links
