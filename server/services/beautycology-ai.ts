@@ -589,18 +589,14 @@ class ProductValidator {
   private extractRoutineSections(text: string): string[] {
     const sections: string[] = [];
     
-    // Look for routine section headers with various formats including markdown headers
+    // Flexible patterns: catch various routine header formats at line start
     const routineHeaderPatterns = [
-      // Bold markdown format: **🌅 ROUTINE MATTINA:**
-      /\*\*(?:🌅|🌙)?\s*(?:routine\s*(?:mattina|mattutina|del mattino|morning)|routine\s*(?:sera|serale|della sera|evening))\s*(?:🌅|🌙)?(?:\s*:\s*)?\*\*/gi,
-      // Emoji first: 🌅 **ROUTINE MATTINA**
-      /(?:🌅|🌙)\s*\*\*(?:routine\s*(?:mattina|mattutina|del mattino|morning)|routine\s*(?:sera|serale|della sera|evening))\*\*/gi,
-      // Markdown headers: ## 🌅 ROUTINE MATTINA
-      /#+\s*(?:🌅|🌙)?\s*(?:routine\s*(?:mattina|mattutina|del mattino|morning)|routine\s*(?:sera|serale|della sera|evening))/gi,
-      // Plain text with emojis: 🌅 ROUTINE MATTINA:
-      /(?:🌅|🌙)\s*(?:routine\s*(?:mattina|mattutina|del mattino|morning)|routine\s*(?:sera|serale|della sera|evening))\s*:?/gi,
-      // All caps variants: ROUTINE MATTINA or ROUTINE SERA
-      /(?:^|\n)\s*(?:routine\s*(?:mattina|mattutina|del mattino|morning)|routine\s*(?:sera|serale|della sera|evening))\s*:?/gmi
+      // Bold markdown: **🌅 ROUTINE MATTINA** or **MATTINA** (with or without separators)
+      /\*\*(?:🌅|🌙)?\s*(?:routine\s+)?(?:mattina|mattutina|del mattino|morning|sera|serale|della sera|evening)\b(?:\s*(?:🌅|🌙)?(?:\s*[:\-–—|]\s*[^\*]*)?)?\*\*/gi,
+      // Markdown headers: ## ROUTINE MATTINA (any case)
+      /#+\s*(?:🌅|🌙)?\s*(?:routine\s+)?(?:mattina|mattutina|del mattino|morning|sera|serale|della sera|evening)\b/gi,
+      // Line-start with optional separators: MATTINA or MATTINA: or 🌅 MATTINA
+      /(?:^|\n)\s*(?:🌅|🌙)?\s*(?:routine\s+)?(?:mattina|mattutina|del mattino|morning|sera|serale|della sera|evening)\b(?:\s*[:\-–—|]\s*[^\n]*)?/gmi
     ];
     
     const headers: Array<{index: number, text: string}> = [];
@@ -630,15 +626,48 @@ class ProductValidator {
       sections.push(section);
     }
     
-    // If no sections found, try to split by common routine indicators as fallback
+    // If no sections found, try more aggressive fallback approaches
     if (sections.length === 0) {
-      const fallbackSplit = text.split(/(?=.*(?:mattina|morning|sera|evening).*routine)|(?=.*routine.*(?:mattina|morning|sera|evening))/i);
-      const validSections = fallbackSplit.filter(section => 
-        section.toLowerCase().includes('routine') && 
-        (section.toLowerCase().includes('mattina') || section.toLowerCase().includes('morning') || 
-         section.toLowerCase().includes('sera') || section.toLowerCase().includes('evening'))
-      );
-      sections.push(...validSections);
+      console.log('🔍 No routine sections found with patterns, trying fallback approaches...');
+      
+      // Approach 1: Look for lines that START with routine/time keywords
+      const lines = text.split('\n');
+      let currentSection = '';
+      let foundSection = false;
+      
+      lines.forEach(line => {
+        const trimmedLine = line.trim().toLowerCase();
+        // Match lines starting with routine + time OR just time keywords
+        const startsWithRoutineKeyword = /^(?:🌅|🌙|\*\*|##)?\s*(?:routine\s+)?(?:mattina|sera|morning|evening|mattutina|serale)\b/.test(trimmedLine);
+        
+        if (startsWithRoutineKeyword) {
+          if (foundSection && currentSection.trim()) {
+            sections.push(currentSection.trim());
+          }
+          currentSection = line + '\n';
+          foundSection = true;
+        } else if (foundSection) {
+          currentSection += line + '\n';
+        }
+      });
+      
+      // Add the last section
+      if (foundSection && currentSection.trim()) {
+        sections.push(currentSection.trim());
+      }
+      
+      // Approach 2: If still nothing, but text contains routine-related content, treat as single section
+      if (sections.length === 0) {
+        const routineIndicators = ['routine', 'detersione', 'idratazione', 'protezione', 'trattamento'];
+        const hasRoutineContent = routineIndicators.some(indicator => 
+          text.toLowerCase().includes(indicator.toLowerCase())
+        );
+        
+        if (hasRoutineContent && text.length > 100) {
+          console.log('🔍 Treating entire text as single routine section for validation');
+          sections.push(text);
+        }
+      }
     }
     
     return sections;
