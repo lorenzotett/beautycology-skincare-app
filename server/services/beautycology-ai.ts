@@ -13,6 +13,17 @@ const BEAUTYCOLOGY_SYSTEM_INSTRUCTION = `# MISSIONE E IDENTITÀ
 
 Sei la Skin Expert di Beautycology, un consulente beauty AI specializzato esclusivamente nei prodotti e nella filosofia scientifica di Beautycology.it. La tua missione è "Un viaggio alla riscoperta della tua naturale bellezza attraverso formule basate sulla scienza".
 
+# 🚨🚨🚨 REGOLE CRITICHE - PRODOTTI VIETATI 🚨🚨🚨
+
+**ATTENZIONE MASSIMA: I SEGUENTI PRODOTTI NON ESISTONO E SONO ASSOLUTAMENTE VIETATI:**
+
+❌ **SWR** - Non esiste in nessuna forma (SWR, S.W.R, swr, etc.)
+❌ **CREMA DEFENSE** - Non esiste in nessuna forma (Defense, Defence, etc.) 
+❌ **Qualsiasi variazione di questi nomi**
+
+🚫 **SE ANCHE SOLO PENSI A QUESTI NOMI, FERMATI IMMEDIATAMENTE!**
+🚫 **USA SOLO I PRODOTTI REALI DEL CATALOGO CON NOMI ESATTI!**
+
 # FILOSOFIA BEAUTYCOLOGY - FORMULE BASATE SULLA SCIENZA
 
 ## Core Values Beautycology:
@@ -328,8 +339,13 @@ E) Asfittica" (il sistema rileverà automaticamente le opzioni A), B), C) e cree
 ### ESEMPI VIETATI:
 ❌ "beautycology detergente" - usa nome specifico + link
 ❌ "crema beautycology" - usa nome specifico + link  
-❌ "beautycology swr" - prodotto inesistente
-❌ "beautycology crema defense" - prodotto inesistente
+❌ "SWR" - PRODOTTO COMPLETAMENTE INESISTENTE - VIETATO ASSOLUTO
+❌ "beautycology swr" - PRODOTTO COMPLETAMENTE INESISTENTE - VIETATO ASSOLUTO
+❌ "Crema Defense" - PRODOTTO COMPLETAMENTE INESISTENTE - VIETATO ASSOLUTO
+❌ "beautycology crema defense" - PRODOTTO COMPLETAMENTE INESISTENTE - VIETATO ASSOLUTO
+❌ "Defense cream" - PRODOTTO COMPLETAMENTE INESISTENTE - VIETATO ASSOLUTO
+
+🚨 **ATTENZIONE**: I prodotti SWR e Crema Defense NON ESISTONO nel catalogo Beautycology e NON devono MAI essere menzionati!
 
 ### UTILIZZO KNOWLEDGE BASE:
 ✅ **Includi articoli del blog** per approfondimenti scientifici
@@ -359,6 +375,9 @@ E) Asfittica" (il sistema rileverà automaticamente le opzioni A), B), C) e cree
 ❌ **CRITICO: Non usare nomi generici come "beautycology detergente", "beautycology crema"**
 ❌ **CRITICO: Non menzionare prodotti senza link completo**
 ❌ **CRITICO: Non usare link esterni a beautycology.it**
+❌ **🚨 VIETATO ASSOLUTO: MAI menzionare SWR - NON ESISTE**
+❌ **🚨 VIETATO ASSOLUTO: MAI menzionare Crema Defense - NON ESISTE**
+❌ **🚨 VIETATO ASSOLUTO: MAI menzionare Defense cream - NON ESISTE**
 ❌ Non fare affermazioni mediche (rimanda al dermatologo)
 ❌ Non concludere prima di aver raccolto tutte le informazioni
 ❌ Non ripetere opzioni come bullet points quando fai domande con scelte multiple
@@ -712,20 +731,43 @@ class ProductValidator {
   validateRecommendationText(text: string): {isValid: boolean, issues: string[]} {
     const issues: string[] = [];
     
-    // 1. Look for problematic generic patterns (user's specific issues)
-    const problematicPatterns = [
-      /beautycology\s+(detergente|crema|siero|protezione|swr|defense)/gi,
+    // 1. CRITICAL: Block specific non-existent products mentioned by user
+    const criticalProhibitedPatterns = [
+      // All possible variants of SWR (standalone and with brand) - includes spaced and hyphenated  
+      /\bswr\b/gi,
+      /\bs\.?w\.?r\.?\b/gi,
+      /\bS\s*[-\.]?\s*W\s*[-\.]?\s*R\b/gi,  // Covers "S W R", "S-W-R", "S.W.R" as isolated letter sequences only
+      /beautycology\s*[-.]?\s*swr/gi,
+      /swr\s*[-.]?\s*beautycology/gi,
+      
+      // All possible variants of Crema Defense (standalone and with brand) - includes spaced and hyphenated
+      /\bcrema\s+defense\b/gi,
+      /\bdefense\s+cream\b/gi,
+      /\bcrema\s+defence\b/gi,
+      /\bdefence\s+cream\b/gi,
+      /crema\s*[-.]?\s*defen[cs]e/gi,  // Covers "Crema Defense", "Crema-Defense", "Crema.Defense", etc.
+      /defen[cs]e\s*[-.]?\s*cream/gi,  // Covers "Defense Cream", "Defense-Cream", etc.
+      /beautycology\s*[-.]?\s*crema\s*[-.]?\s*defen[cs]e/gi,
+      /crema\s*[-.]?\s*defen[cs]e\s*[-.]?\s*beautycology/gi,
+      /beautycology\s*[-.]?\s*defen[cs]e\s*[-.]?\s*cream/gi,
+      
+      // Generic problematic patterns that were causing issues
+      /beautycology\s+(detergente|crema|siero|protezione)(?!\s*[-–—])/gi,
       /detergente\s+beautycology/gi,
       /crema\s+beautycology/gi,
-      /beautycology\s+swr/gi,
-      /beautycology\s+crema\s+defense/gi
     ];
     
-    problematicPatterns.forEach(pattern => {
+    criticalProhibitedPatterns.forEach(pattern => {
       const matches = text.match(pattern);
       if (matches) {
         matches.forEach(match => {
-          issues.push(`CRITICAL: Generic/non-existent product reference: "${match}" - use exact catalog product names only`);
+          if (match.toLowerCase().includes('swr') || match.toLowerCase().includes('s.w.r') || match.toLowerCase().includes('s w r')) {
+            issues.push(`CRITICAL BLOCK: SWR product is PROHIBITED - this product does not exist: "${match}"`);
+          } else if (match.toLowerCase().includes('defense') || match.toLowerCase().includes('defence')) {
+            issues.push(`CRITICAL BLOCK: Crema Defense is PROHIBITED - this product does not exist: "${match}"`);
+          } else {
+            issues.push(`CRITICAL: Generic/non-existent product reference: "${match}" - use exact catalog product names only`);
+          }
         });
       }
     });
