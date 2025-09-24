@@ -3094,6 +3094,99 @@ Riscrivi il testo corretto COMPLETO:`;
     };
   }
 
+  // Resolve routine kit link based on skin type and main issue combinations
+  private resolveRoutineKitLink(answers: any): {name: string, url: string} | null {
+    const skinType = (answers.skinType || '').toLowerCase().trim();
+    const mainIssue = (answers.mainIssue || '').toLowerCase().trim();
+    
+    console.log(`🔍 Resolving routine kit link for skinType: "${skinType}", mainIssue: "${mainIssue}"`);
+    
+    // Priority 1: Specific problems take precedence over skin type
+    // Check for specific skin issues first (acne, macchie, rughe, rosacea, sensibile)
+    
+    // Rosacea
+    if (mainIssue.includes('rosacea')) {
+      return {
+        name: 'Routine Pelle Soggetta a Rosacea',
+        url: 'https://beautycology.it/prodotto/routine-pelle-soggetta-rosacea/'
+      };
+    }
+    
+    // Macchie (spots/pigmentation)
+    if (mainIssue.includes('macchi') || mainIssue.includes('discrom') || mainIssue.includes('pigment')) {
+      return {
+        name: 'Routine Anti-Macchie',
+        url: 'https://beautycology.it/prodotto/routine-anti-macchie/'
+      };
+    }
+    
+    // Acne (including tardiva/late acne and with rossori/redness)
+    if (mainIssue.includes('acne') || mainIssue.includes('brufol') || mainIssue.includes('tardiva')) {
+      return {
+        name: 'Routine Pelle Acne Tardiva',
+        url: 'https://beautycology.it/prodotto/routine-pelle-acne-tardiva/'
+      };
+    }
+    
+    // Pelle sensibile (sensitive skin)
+    if (mainIssue.includes('sensibil') || mainIssue.includes('reattiv') || mainIssue.includes('atopic')) {
+      return {
+        name: 'Routine Pelle Iper-reattiva Tendenza Atopica',
+        url: 'https://beautycology.it/prodotto/routine-pelle-iper-reattiva-tendenza-atopica/'
+      };
+    }
+    
+    // Priority 2: Skin type + aging concerns (rughe)
+    const hasAgingConcerns = mainIssue.includes('rugh') || mainIssue.includes('invecchiament') || 
+                            mainIssue.includes('anti-age') || mainIssue.includes('prime rughe');
+    
+    if (hasAgingConcerns) {
+      // Pelle mista + rughe
+      if (skinType.includes('mist')) {
+        return {
+          name: 'Routine Prime Rughe',
+          url: 'https://beautycology.it/prodotto/routine-prime-rughe/'
+        };
+      }
+      
+      // Pelle secca + rughe
+      if (skinType.includes('secc')) {
+        return {
+          name: 'Routine Antirughe',
+          url: 'https://beautycology.it/prodotto/routine-antirughe/'
+        };
+      }
+    }
+    
+    // Priority 3: Base skin type routines
+    // Pelle mista
+    if (skinType.includes('mist')) {
+      return {
+        name: 'Routine Pelle Mista',
+        url: 'https://beautycology.it/prodotto/routine-pelle-mista/'
+      };
+    }
+    
+    // Pelle grassa
+    if (skinType.includes('grass')) {
+      return {
+        name: 'Routine Pelle Grassa',
+        url: 'https://beautycology.it/prodotto/routine-pelle-grassa/'
+      };
+    }
+    
+    // Pelle secca
+    if (skinType.includes('secc')) {
+      return {
+        name: 'Routine Pelle Secca',
+        url: 'https://beautycology.it/prodotto/routine-pelle-secca/'
+      };
+    }
+    
+    console.log(`❌ No routine kit match found for skinType: "${skinType}", mainIssue: "${mainIssue}"`);
+    return null;
+  }
+
   // Fallback recommendations if AI fails - now uses real products from catalog
   private getFallbackRecommendations(answers: any): string {
     const skinType = answers.skinType?.toLowerCase() || 'mista';
