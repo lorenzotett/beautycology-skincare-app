@@ -1,14 +1,29 @@
 import { GoogleGenAI } from "@google/genai";
 import { ragService } from "./rag-simple";
 import type { AIService } from "./ai-service-factory";
+import { SkincareRoutineService } from "./skincare-routine";
+import { SkinAnalysisService } from "./skin-analysis";
+import type { SkinAnalysisResult } from "./skin-analysis";
 
 const ai = new GoogleGenAI({ 
   apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || ""
 });
 
+const skincareRoutineService = new SkincareRoutineService();
+const skinAnalysisService = new SkinAnalysisService();
+
 const SYSTEM_INSTRUCTION = `# MISSIONE E IDENTITÀ
 
 Sei "Bonnie", un assistente dermocosmetico virtuale AI. La tua missione è eseguire un'analisi della pelle dettagliata e professionale, basata sia sulle informazioni fornite dall'utente sia su un'eventuale analisi fotografica, per poi fornire un riepilogo e, se richiesto, una proposta di routine personalizzata.
+
+## 🎯 NUOVA CAPACITÀ: GENERAZIONE AUTOMATICA DI ROUTINE SKINCARE
+
+Quando l'utente ti chiede una routine skincare (usando parole come "routine", "prodotti", "trattamento", "cosa mi consigli", "skincare", etc.) E hai già i risultati dell'analisi fotografica:
+1. **NON GENERARE TU LA ROUTINE** - Il sistema la genererà automaticamente
+2. **NON INVENTARE PRODOTTI** - I prodotti verranno selezionati dal database Beautycology
+3. **ASPETTA IL SISTEMA** - Se rilevi una richiesta di routine, il sistema interverrà automaticamente
+
+Se l'utente chiede una routine SENZA aver caricato una foto, invitalo prima a caricare una foto per un'analisi completa.
 
 # DATABASE DI CONOSCENZA INTERNO
 
@@ -90,6 +105,20 @@ NON fare MAI domande aperte per questi argomenti - usa SEMPRE le opzioni specifi
     - Frasi complete che contengono la risposta
     IMPORTANTE: NON chiedere chiarimenti se la risposta è ragionevolmente interpretabile. Procedi con la prossima domanda riconoscendo la scelta dell'utente.
 9.  **QUESTIONARIO OBBLIGATORIO:** È VIETATO fornire resoconto finale o routine senza aver completato TUTTE le 19 domande del questionario. Se provi a saltare questa fase, FERMATI e torna al questionario.
+
+## GESTIONE RICHIESTE DI ROUTINE SKINCARE
+
+Quando l'utente richiede una routine personalizzata:
+1. **SE HA GIÀ CARICATO UNA FOTO**: Il sistema genererà automaticamente una routine completa con:
+   - Routine mattutina e serale separate
+   - Prodotti Beautycology specifici con prezzi e link
+   - Spiegazioni scientifiche per ogni prodotto
+   - Ingredienti chiave e benefici
+   - Costo totale della routine
+
+2. **SE NON HA CARICATO UNA FOTO**: Rispondi gentilmente:
+   "Per creare la tua routine skincare personalizzata, ho bisogno di analizzare la tua pelle! 📸 
+   Carica una foto del tuo viso (con buona luce e senza trucco) così posso identificare le tue esigenze specifiche e consigliarti i prodotti Beautycology più adatti."
 
 # FLUSSO CONVERSAZIONALE STRUTTURATO (PERCORSO OBBLIGATO)
 
@@ -613,6 +642,8 @@ interface SessionState {
     hasSensitiveSkin?: boolean;
     hasBlackheads?: boolean;
   };
+  skinAnalysisResults?: SkinAnalysisResult; // Store the analysis results from photo
+  routineGenerated?: boolean; // Track if routine was already generated
 }
 
 export class GeminiService implements AIService {
@@ -896,6 +927,17 @@ A te la scelta!`;
       // Mark that the user has uploaded a photo
       sessionState.hasUploadedPhoto = true;
       
+      // Perform skin analysis on the image and store results
+      try {
+        console.log('🔬 Performing skin analysis on uploaded image...');
+        const analysisResults = await skinAnalysisService.analyzeImageFromPath(imagePath);
+        sessionState.skinAnalysisResults = analysisResults;
+        console.log('✅ Skin analysis results stored in session:', analysisResults);
+      } catch (analysisError) {
+        console.error('❌ Error performing skin analysis:', analysisError);
+        // Continue with the normal flow even if analysis fails
+      }
+      
       // Read the image file
       const fs = await import('fs');
       const imageData = fs.readFileSync(imagePath);
@@ -937,10 +979,16 @@ A te la scelta!`;
         parts: parts as any
       });
 
-      // Enhance system instruction to include photo upload status
+      // Pass skin analysis results to AI if available
+      let skinAnalysisContext = '';
+      if (sessionState.skinAnalysisResults) {
+        skinAnalysisContext = `\n\n**🔬 ANALISI DELLA PELLE ESEGUITA:**\n${JSON.stringify(sessionState.skinAnalysisResults, null, 2)}\n\n**IMPORTANTE:** Questi sono i risultati dell'analisi fotografica. Usa questi dati per le tue valutazioni.`;
+      }
+
+      // Enhance system instruction to include photo upload status and analysis results
       const enhancedSystemInstruction = SYSTEM_INSTRUCTION + `\n\n**STATO FOTO UTENTE:** ${sessionState.hasUploadedPhoto ? 
         'L\'utente HA caricato una foto iniziale. Puoi procedere con la generazione del prima/dopo se richiesto.' : 
-        'L\'utente NON ha caricato una foto iniziale. NON generare mai il trigger GENERATE_BEFORE_AFTER_IMAGES e non chiedere del prima/dopo.'}`;
+        'L\'utente NON ha caricato una foto iniziale. NON generare mai il trigger GENERATE_BEFORE_AFTER_IMAGES e non chiedere del prima/dopo.'}` + skinAnalysisContext;
 
       const response = await this.callGeminiWithRetry({
         model: "gemini-2.5-flash",
@@ -993,6 +1041,22 @@ A te la scelta!`;
     // ✨ ESTRAI E REGISTRA AUTOMATICAMENTE LE INFORMAZIONI DALLA CHAT ✨
     // Analizza ogni messaggio dell'utente per estrarre automaticamente informazioni su pelle e problematiche
     this.extractAndRegisterUserInfo(sessionId, message);
+    
+    // 🧴 CHECK IF USER IS ASKING FOR A SKINCARE ROUTINE
+    const isAskingForRoutine = this.detectRoutineRequest(message);
+    if (isAskingForRoutine && sessionState.skinAnalysisResults && !sessionState.routineGenerated) {
+      console.log('🎯 User is asking for a skincare routine!');
+      const routineResponse = this.generateRoutineResponse(sessionState);
+      if (routineResponse) {
+        sessionState.conversationHistory.push({ role: "user", content: message });
+        sessionState.conversationHistory.push({ role: "assistant", content: routineResponse });
+        sessionState.routineGenerated = true;
+        return {
+          content: routineResponse,
+          hasChoices: false
+        };
+      }
+    }
     
     sessionState.conversationHistory.push({ role: "user", content: message });
 
@@ -1512,5 +1576,91 @@ Sono qui per te, scegli quello che ti fa sentire più a tuo agio! 😊`;
     // Remove session state completely
     this.sessionStates.delete(sessionId);
     console.log(`Beautycology session ${sessionId} cleared`);
+  }
+
+  private detectRoutineRequest(message: string): boolean {
+    const lowerMessage = message.toLowerCase();
+    const routineKeywords = [
+      'routine', 'routina', 'prodotti', 'prodotto', 
+      'trattamento', 'skincare', 'skin care',
+      'cosa mi consigli', 'cosa usare', 'quali prodotti',
+      'mi consigli', 'consigliami', 'suggerimento',
+      'programma', 'regime', 'cura della pelle',
+      'mattina e sera', 'giornaliera', 'quotidiana'
+    ];
+    
+    return routineKeywords.some(keyword => lowerMessage.includes(keyword));
+  }
+
+  private generateRoutineResponse(sessionState: SessionState): string | null {
+    if (!sessionState.skinAnalysisResults) {
+      return null;
+    }
+
+    try {
+      // Generate personalized routine using the service
+      const skinType = sessionState.autoExtractedInfo.skinType || 'normale';
+      const routine = skincareRoutineService.generatePersonalizedRoutine(
+        sessionState.skinAnalysisResults,
+        skinType,
+        {
+          budget: 'medium',
+          preferNatural: false
+        }
+      );
+
+      // Format the routine response in Italian
+      let response = "🌟 **LA TUA ROUTINE SKINCARE PERSONALIZZATA BEAUTYCOLOGY** 🌟\n\n";
+      
+      // Add skin analysis summary
+      response += "📊 **ANALISI DELLA TUA PELLE:**\n";
+      response += `• Tipo di pelle: ${routine.skinType}\n`;
+      response += `• Principali problematiche: ${routine.skinConcerns.join(', ')}\n\n`;
+
+      // Morning routine
+      response += "☀️ **ROUTINE MATTUTINA:**\n";
+      routine.morningSteps.forEach((product, index) => {
+        response += `\n**${index + 1}. ${product.name}**\n`;
+        response += `💰 Prezzo: ${product.price}\n`;
+        response += `🔗 [Acquista qui](${product.url})\n`;
+        response += `\n📋 **Perché questo prodotto:**\n${product.scientificExplanation}\n`;
+        response += `\n🧪 **Ingredienti chiave:** ${product.keyIngredients.join(', ')}\n`;
+        response += `\n---\n`;
+      });
+
+      // Evening routine
+      response += "\n🌙 **ROUTINE SERALE:**\n";
+      routine.eveningSteps.forEach((product, index) => {
+        // Skip if already in morning routine
+        if (routine.morningSteps.some(m => m.name === product.name)) {
+          response += `\n**${index + 1}. ${product.name}** (già nella routine mattutina)\n`;
+        } else {
+          response += `\n**${index + 1}. ${product.name}**\n`;
+          response += `💰 Prezzo: ${product.price}\n`;
+          response += `🔗 [Acquista qui](${product.url})\n`;
+          response += `\n📋 **Perché questo prodotto:**\n${product.scientificExplanation}\n`;
+          response += `\n🧪 **Ingredienti chiave:** ${product.keyIngredients.join(', ')}\n`;
+        }
+        response += `\n---\n`;
+      });
+
+      // Add recommendations
+      response += `\n💡 **CONSIGLI PERSONALIZZATI:**\n${routine.recommendations}\n\n`;
+
+      // Add total cost
+      response += `\n💵 **COSTO TOTALE STIMATO:** €${routine.estimatedTotalCost.toFixed(2)}\n`;
+      response += `📦 **Numero totale di prodotti:** ${routine.totalProducts}\n\n`;
+
+      // Add final message
+      response += "\n✨ **NOTA IMPORTANTE:**\n";
+      response += "Questa routine è stata creata specificamente per le tue esigenze basandosi sull'analisi fotografica della tua pelle. ";
+      response += "Introduci i prodotti gradualmente (uno ogni 3-4 giorni) per permettere alla tua pelle di adattarsi. ";
+      response += "Se hai domande specifiche su come utilizzare i prodotti o vuoi ulteriori chiarimenti, sono qui per aiutarti!\n";
+
+      return response;
+    } catch (error) {
+      console.error('Error generating routine:', error);
+      return null;
+    }
   }
 }
