@@ -1590,6 +1590,28 @@ export class BeautycologyAIService {
               
               addProblem(analysisData.texture_uniforme, 'texture molto irregolare', 'texture non uniforme');
               
+              // AUTO-SET MAIN ISSUE BASED ON ANALYSIS SCORES
+              // Prioritize problems that have specific routine kits
+              if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
+              if (!state.structuredFlowAnswers.mainIssue) {
+                if (analysisData.acne >= 61) {
+                  state.structuredFlowAnswers.mainIssue = 'Acne/Brufoli';
+                  console.log('✅ Auto-set mainIssue: Acne/Brufoli (acne score: ' + analysisData.acne + ')');
+                } else if (analysisData.rossori >= 61) {
+                  state.structuredFlowAnswers.mainIssue = 'Rosacea';
+                  console.log('✅ Auto-set mainIssue: Rosacea (rossori score: ' + analysisData.rossori + ')');
+                } else if (analysisData.pigmentazione >= 61) {
+                  state.structuredFlowAnswers.mainIssue = 'Macchie scure';
+                  console.log('✅ Auto-set mainIssue: Macchie scure (pigmentazione score: ' + analysisData.pigmentazione + ')');
+                } else if (analysisData.rughe >= 61) {
+                  state.structuredFlowAnswers.mainIssue = 'Rughe/Invecchiamento';
+                  console.log('✅ Auto-set mainIssue: Rughe/Invecchiamento (rughe score: ' + analysisData.rughe + ')');
+                } else if (analysisData.pori_dilatati >= 61) {
+                  state.structuredFlowAnswers.mainIssue = 'Pori dilatati';
+                  console.log('✅ Auto-set mainIssue: Pori dilatati (pori_dilatati score: ' + analysisData.pori_dilatati + ')');
+                }
+              }
+              
               // Build the message with panorama and instruction to start questionnaire
               let panorama = "";
               if (criticalProblems.length > 0) {
@@ -2771,13 +2793,15 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
 🚨🚨🚨 **ATTENZIONE MASSIMA: IL LINK ALLA ROUTINE È ASSOLUTAMENTE OBBLIGATORIO!**
 Quando l'utente ha richiesto una "routine completa", DEVI SEMPRE:
 1. **INCLUDERE OBBLIGATORIAMENTE IL LINK ALLA ROUTINE COMPLETA** basata su tipo di pelle e problematiche:
+   - **Pelle grassa + acne/brufoli** → SEMPRE: https://beautycology.it/prodotto/routine-pelle-acne-tardiva/
+   - **Pelle grassa (senza acne)** → Consiglia: https://beautycology.it/prodotto/routine-pelle-grassa/
    - **Pelle mista** → Consiglia: https://beautycology.it/prodotto/routine-pelle-mista/
-   - **Pelle grassa** → Consiglia: https://beautycology.it/prodotto/routine-pelle-grassa/
    - **Pelle secca** → Consiglia: https://beautycology.it/prodotto/routine-pelle-secca/
    - **Pelle mista + rughe** → Consiglia: https://beautycology.it/prodotto/routine-prime-rughe/
    - **Pelle secca + rughe** → Consiglia: https://beautycology.it/prodotto/routine-antirughe/
    - **Macchie** → Consiglia: https://beautycology.it/prodotto/routine-anti-macchie/
-   - **Acne (anche tardiva)** → Consiglia: https://beautycology.it/prodotto/routine-pelle-acne-tardiva/
+   - **Acne (anche tardiva)** → SEMPRE: https://beautycology.it/prodotto/routine-pelle-acne-tardiva/
+   - **Acne + rossori** → SEMPRE: https://beautycology.it/prodotto/routine-pelle-acne-tardiva/
    - **Pelle sensibile** → Consiglia: https://beautycology.it/prodotto/routine-pelle-iper-reattiva-tendenza-atopica/
    - **Rosacea** → Consiglia: https://beautycology.it/prodotto/routine-pelle-soggetta-rosacea/
    - **FALLBACK GENERICO** → Se nessuna corrispondenza: https://beautycology.it/skincare-routine/
@@ -3158,7 +3182,7 @@ Riscrivi il testo corretto COMPLETO:`;
               return await this.getFallbackRecommendations(answers, sessionId);
             }
             
-            // CRITICAL ADDITION: Validate that routine kit link is included when expected
+            // CRITICAL ADDITION: Validate and FORCE routine kit link when expected
             if (routineKit) {
               // Check if we should include routine kit link
               const shouldIncludeRoutineKit = 
@@ -3168,13 +3192,33 @@ Riscrivi il testo corretto COMPLETO:`;
                 answers.adviceType === 'Routine completa';
               
               if (shouldIncludeRoutineKit) {
-                const hasRoutineKitLink = finalText.includes(routineKit.url) && finalText.includes(routineKit.name);
+                const hasRoutineKitLink = finalText.includes(routineKit.url);
                 if (!hasRoutineKitLink) {
                   console.warn(`❌ CRITICAL: Routine kit link missing from final recommendations!`);
                   console.warn(`Expected: ${routineKit.name} (${routineKit.url})`);
                   console.warn(`User profile: skinType="${answers.skinType}", mainIssue="${answers.mainIssue}", adviceType="${answers.adviceType}"`);
-                  console.log('🔄 Forcing fallback to ensure routine kit link is included');
-                  return await this.getFallbackRecommendations(answers, sessionId);
+                  console.log('🔧 FORCING addition of routine kit link to message');
+                  
+                  // Force add the routine kit section if missing
+                  const routineKitSection = `
+
+## 🌟 KIT BEAUTYCOLOGY CONSIGLIATO PER TE:
+
+**[${routineKit.name}](${routineKit.url})** - Kit completo formulato specificamente per le tue esigenze di pelle ${answers.skinType || ''} ${answers.mainIssue ? `con ${answers.mainIssue}` : ''}.
+
+Questa routine è stata studiata per coprire tutti gli step fondamentali di una corretta skincare: detersione, trattamento specifico, idratazione e protezione solare.`;
+                  
+                  // Insert the section before the final sentence if it exists, otherwise append
+                  if (finalText.includes("Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!")) {
+                    finalText = finalText.replace(
+                      "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!",
+                      routineKitSection + "\n\nSe hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
+                    );
+                  } else {
+                    finalText += routineKitSection;
+                  }
+                  
+                  console.log(`✅ Routine kit link FORCED INTO message: ${routineKit.name}`);
                 } else {
                   console.log(`✅ Routine kit link properly included: ${routineKit.name}`);
                 }
