@@ -1000,19 +1000,6 @@ export function ChatInterface() {
               </p>
             </div>
 
-            {/* Quick Consultation Link */}
-            <div className="mb-6 px-2">
-              <a
-                href="/consulenza-pelle"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-pink-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Consulenza Rapida: Scopri la tua Routine in 2 minuti!</span>
-              </a>
-            </div>
-
             {/* Input Section - Centered and properly styled */}
             <div className="flex items-center gap-2 px-3 py-3 bg-white rounded-lg shadow-md border border-gray-200">
               <input

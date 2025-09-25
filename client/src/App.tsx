@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Chat from "@/pages/chat";
 import AdminDashboard from "./pages/admin-dashboard";
-import SkinConsultationPage from "@/pages/skin-consultation-page";
 import NotFound from "@/pages/not-found";
 import ErrorBoundary from "@/components/error-boundary";
 import { useEffect } from "react";
@@ -102,7 +101,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Chat} />
-      <Route path="/consulenza-pelle" component={SkinConsultationPage} />
       <Route path="/admin" component={DermaSenseAdminDashboard} />
       <Route path="/admin/beautycology" component={BeautycologyAdminDashboard} />
       <Route path="/admin-dashboard" component={GenericAdminDashboard} />
