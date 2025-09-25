@@ -3470,11 +3470,55 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
       console.log('⚠️ Could not retrieve userName from session, using fallback "bellezza"');
     }
     
+    // CRITICAL FIX: Check if we have skin analysis data for this session
+    const skinAnalysisData = this.sessionSkinAnalysis.get(sessionId);
+    const adviceType = (answers.adviceType || '').toLowerCase();
+    const skinType = answers.skinType || 'normale';
+    
+    // If we have skin analysis data and user wants a routine, generate detailed product recommendations
+    if (skinAnalysisData && (adviceType.includes('routine') || adviceType === 'routine completa')) {
+      console.log('🔬 Found skin analysis data for session, generating detailed routine with individual products');
+      
+      try {
+        const detailedRoutine = this.generateDetailedRoutineResponse(
+          skinAnalysisData,
+          skinType
+        );
+        
+        if (detailedRoutine) {
+          // Build complete response with personalized greeting and detailed routine
+          let finalResponse = `Perfetto ${userName}! 🌟 Ora che conosco meglio la tua pelle, ecco il riepilogo delle informazioni che mi hai fornito:\n\n`;
+          
+          // Add summary of collected information
+          finalResponse += `📋 **DATI RACCOLTI:**\n`;
+          finalResponse += `• Tipo di pelle: ${answers.skinType || 'non specificato'}\n`;
+          finalResponse += `• Età: ${answers.age || 'non specificata'}\n`;
+          finalResponse += `• Problematica principale: ${answers.mainIssue || 'non specificata'}\n`;
+          finalResponse += `• Tipo di consiglio richiesto: ${answers.adviceType || 'non specificato'}\n`;
+          if (answers.additionalInfo) {
+            finalResponse += `• Informazioni aggiuntive: ${answers.additionalInfo}\n`;
+          }
+          finalResponse += '\n';
+          
+          // Add the detailed routine with individual products
+          finalResponse += detailedRoutine;
+          
+          // Add final closing
+          finalResponse += '\n\nSe hai altri dubbi o domande sui nostri prodotti, chiedi pure!';
+          
+          console.log('✅ Successfully generated detailed routine with individual products, prices, and scientific explanations');
+          return finalResponse;
+        }
+      } catch (error) {
+        console.error('Error generating detailed routine:', error);
+        // Fall back to regular generation if detailed routine fails
+      }
+    }
+    
     // Call resolveRoutineKitLink to get appropriate kit recommendation
     let routineKit = this.resolveRoutineKitLink(answers);
     
     // CRITICAL: If routine completa was requested and no specific kit found, use generic fallback
-    const adviceType = (answers.adviceType || '').toLowerCase();
     if (!routineKit && adviceType.includes('routine')) {
       console.log('⚠️ No specific routine kit found, using generic fallback link');
       routineKit = {
