@@ -686,7 +686,7 @@ Ecco la tua analisi dettagliata con tutti i parametri della pelle:`,
         }
         
         // Prepara la prima domanda del questionario Beautycology
-        const firstQuestion = "Ora che ho analizzato la tua pelle, ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche.\n\nChe tipo di pelle hai?";
+        const firstQuestion = "Grazie per aver condiviso la foto! Ora che ho analizzato la tua pelle, ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche.\n\nChe tipo di pelle hai?";
         
         response = {
           content: problemOverview + firstQuestion,

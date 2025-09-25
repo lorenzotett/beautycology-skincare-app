@@ -1603,7 +1603,7 @@ export class BeautycologyAIService {
                 `L'utente ha caricato una foto e l'analisi AI ha rilevato i seguenti parametri: ${JSON.stringify(analysisData)}\n\n` +
                 `IMPORTANTE: Devi fornire il seguente contenuto:\n` +
                 panorama +
-                `Ora che ho analizzato la tua pelle, ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche.\n\n` +
+                `Grazie per aver condiviso la foto! Ora che ho analizzato la tua pelle, ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine. Ti farò alcune domande specifiche.\n\n` +
                 `Che tipo di pelle hai?`;
             }
           } catch (e) {
@@ -1614,7 +1614,7 @@ export class BeautycologyAIService {
               state.currentStep = 'awaiting_skin_type';
               messageText = antiRepeatReminder + 
                 `L'utente ha caricato una foto per l'analisi della pelle. ` +
-                `Ho analizzato la tua pelle e ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine.\n\n` +
+                `Grazie per aver condiviso la foto! Ho analizzato la tua pelle e ora ho bisogno di alcune informazioni aggiuntive per personalizzare al meglio la tua routine.\n\n` +
                 `Che tipo di pelle hai?`;
             }
           }
