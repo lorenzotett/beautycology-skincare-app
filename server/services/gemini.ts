@@ -1439,7 +1439,8 @@ A te la scelta!`;
     }
 
     // For open questions, check if it's a reasonable answer
-    if (lowerQuestion.includes("anni hai") || lowerQuestion.includes("età")) {
+    if (lowerQuestion.includes("anni hai") || 
+        (lowerQuestion.includes("età") && lowerQuestion.includes("?"))) {
       const isValid = /^\d{1,3}$/.test(lowerAnswer) && parseInt(lowerAnswer) > 0 && parseInt(lowerAnswer) < 120;
       console.log(`Age validation: ${isValid}`);
       return isValid;

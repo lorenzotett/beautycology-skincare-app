@@ -2272,7 +2272,10 @@ export class BeautycologyAIService {
       return ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
     }
     
-    if (text.includes('quanti anni hai') || text.includes('età')) {
+    if (text.includes('quanti anni hai') || 
+        (text.includes('età') && text.includes('?')) ||
+        text.includes('dimmi la tua età') ||
+        text.includes('che età hai')) {
       return ["16-25", "26-35", "36-45", "46-55", "56+"];
     }
     
