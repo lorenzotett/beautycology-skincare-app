@@ -37,6 +37,20 @@ export const chatMessages = pgTable("chat_messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const skinProfiles = pgTable("skin_profiles", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  skinType: text("skin_type").notNull(), // 'grassa', 'secca', 'mista', 'sensibile'
+  hasWrinkles: boolean("has_wrinkles").notNull().default(false),
+  hasSpots: boolean("has_spots").notNull().default(false),
+  hasAcne: boolean("has_acne").notNull().default(false),
+  hasRedness: boolean("has_redness").notNull().default(false),
+  hasRosacea: boolean("has_rosacea").notNull().default(false),
+  recommendedRoutineUrl: text("recommended_routine_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -60,6 +74,14 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
   metadata: z.unknown().optional(),
 });
 
+export const insertSkinProfileSchema = createInsertSchema(skinProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  skinType: z.enum(['grassa', 'secca', 'mista', 'sensibile']),
+});
+
 export type Brand = "dermasense" | "beautycology";
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -68,3 +90,5 @@ export type ChatSession = typeof chatSessions.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type SkinProfile = typeof skinProfiles.$inferSelect;
+export type InsertSkinProfile = z.infer<typeof insertSkinProfileSchema>;

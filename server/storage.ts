@@ -2,12 +2,15 @@ import {
   users, 
   chatSessions, 
   chatMessages,
+  skinProfiles,
   type User, 
   type InsertUser,
   type ChatSession,
   type InsertChatSession,
   type ChatMessage,
-  type InsertChatMessage
+  type InsertChatMessage,
+  type SkinProfile,
+  type InsertSkinProfile
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
@@ -44,23 +47,32 @@ export interface IStorage {
     completedSessions: number;
     totalMessages: number;
   }>;
+  
+  // Skin profile methods
+  createSkinProfile(profile: InsertSkinProfile): Promise<SkinProfile>;
+  getSkinProfile(sessionId: string): Promise<SkinProfile | undefined>;
+  updateSkinProfile(sessionId: string, updates: Partial<SkinProfile>): Promise<SkinProfile | undefined>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private chatSessions: Map<string, ChatSession>;
   private chatMessages: Map<string, ChatMessage[]>;
+  private skinProfiles: Map<string, SkinProfile>;
   private currentUserId: number;
   private currentSessionId: number;
   private currentMessageId: number;
+  private currentProfileId: number;
 
   constructor() {
     this.users = new Map();
     this.chatSessions = new Map();
     this.chatMessages = new Map();
+    this.skinProfiles = new Map();
     this.currentUserId = 1;
     this.currentSessionId = 1;
     this.currentMessageId = 1;
+    this.currentProfileId = 1;
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -226,6 +238,32 @@ export class MemStorage implements IStorage {
       completedSessions,
       totalMessages
     };
+  }
+
+  async createSkinProfile(insertProfile: InsertSkinProfile): Promise<SkinProfile> {
+    const id = this.currentProfileId++;
+    const profile: SkinProfile = {
+      id,
+      ...insertProfile,
+      recommendedRoutineUrl: insertProfile.recommendedRoutineUrl || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.skinProfiles.set(insertProfile.sessionId, profile);
+    return profile;
+  }
+
+  async getSkinProfile(sessionId: string): Promise<SkinProfile | undefined> {
+    return this.skinProfiles.get(sessionId);
+  }
+
+  async updateSkinProfile(sessionId: string, updates: Partial<SkinProfile>): Promise<SkinProfile | undefined> {
+    const profile = this.skinProfiles.get(sessionId);
+    if (!profile) return undefined;
+    
+    const updatedProfile = { ...profile, ...updates, updatedAt: new Date() };
+    this.skinProfiles.set(sessionId, updatedProfile);
+    return updatedProfile;
   }
 }
 
@@ -397,6 +435,31 @@ export class DatabaseStorage implements IStorage {
       completedSessions,
       totalMessages
     };
+  }
+
+  async createSkinProfile(insertProfile: InsertSkinProfile): Promise<SkinProfile> {
+    const [profile] = await db
+      .insert(skinProfiles)
+      .values(insertProfile)
+      .returning();
+    return profile;
+  }
+
+  async getSkinProfile(sessionId: string): Promise<SkinProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(skinProfiles)
+      .where(eq(skinProfiles.sessionId, sessionId));
+    return profile || undefined;
+  }
+
+  async updateSkinProfile(sessionId: string, updates: Partial<SkinProfile>): Promise<SkinProfile | undefined> {
+    const [profile] = await db
+      .update(skinProfiles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(skinProfiles.sessionId, sessionId))
+      .returning();
+    return profile || undefined;
   }
 }
 

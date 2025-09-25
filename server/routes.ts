@@ -23,6 +23,8 @@ import { ragService } from './services/rag-simple';
 import { ragService as vectorRagService } from './services/rag';
 import { autoLearningSystem } from './services/auto-learning-system';
 import { BrandResolver } from './utils/brand';
+import { determineRoutineUrl } from '@shared/skincare-logic';
+import { insertSkinProfileSchema } from '@shared/schema';
 
 // Service management
 // AI services are now managed by AIServiceFactory - no need for session map
@@ -1131,6 +1133,71 @@ Ricorda che i risultati possono variare da persona a persona.`,
     } catch (error) {
       console.error("Error tracking WhatsApp button click:", error);
       res.status(500).json({ error: "Failed to track WhatsApp button click" });
+    }
+  });
+
+  // Skin profile endpoints
+  app.post("/api/skin-profile", async (req, res) => {
+    try {
+      const data = insertSkinProfileSchema.parse(req.body);
+      
+      // Calcola l'URL della routine consigliata
+      const recommendedRoutineUrl = determineRoutineUrl(data);
+      
+      // Verifica se esiste già un profilo per questa sessione
+      const existingProfile = await storage.getSkinProfile(data.sessionId);
+      
+      if (existingProfile) {
+        // Aggiorna il profilo esistente
+        const updatedProfile = await storage.updateSkinProfile(data.sessionId, {
+          ...data,
+          recommendedRoutineUrl,
+        });
+        return res.json({ success: true, profile: updatedProfile, updated: true });
+      }
+      
+      // Crea un nuovo profilo
+      const profile = await storage.createSkinProfile({
+        ...data,
+        recommendedRoutineUrl,
+      });
+      
+      console.log(`✅ Skin profile created for session ${data.sessionId}:`, {
+        skinType: data.skinType,
+        issues: {
+          wrinkles: data.hasWrinkles,
+          spots: data.hasSpots,
+          acne: data.hasAcne,
+          redness: data.hasRedness,
+          rosacea: data.hasRosacea,
+        },
+        recommendedRoutineUrl,
+      });
+      
+      res.json({ success: true, profile, updated: false });
+    } catch (error) {
+      console.error("Error creating/updating skin profile:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create/update skin profile" });
+    }
+  });
+
+  app.get("/api/skin-profile/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      const profile = await storage.getSkinProfile(sessionId);
+      
+      if (!profile) {
+        return res.status(404).json({ error: "Skin profile not found" });
+      }
+      
+      res.json({ success: true, profile });
+    } catch (error) {
+      console.error("Error fetching skin profile:", error);
+      res.status(500).json({ error: "Failed to fetch skin profile" });
     }
   });
 
