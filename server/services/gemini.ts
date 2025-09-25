@@ -927,21 +927,22 @@ A te la scelta!`;
       // Mark that the user has uploaded a photo
       sessionState.hasUploadedPhoto = true;
       
+      // Read the image file
+      const fs = await import('fs');
+      const imageData = fs.readFileSync(imagePath);
+      const base64Image = imageData.toString('base64');
+      
       // Perform skin analysis on the image and store results
       try {
         console.log('🔬 Performing skin analysis on uploaded image...');
-        const analysisResults = await skinAnalysisService.analyzeImageFromPath(imagePath);
+        const base64DataUrl = `data:image/jpeg;base64,${base64Image}`;
+        const analysisResults = await skinAnalysisService.analyzeImageFromBase64(base64DataUrl);
         sessionState.skinAnalysisResults = analysisResults;
         console.log('✅ Skin analysis results stored in session:', analysisResults);
       } catch (analysisError) {
         console.error('❌ Error performing skin analysis:', analysisError);
         // Continue with the normal flow even if analysis fails
       }
-      
-      // Read the image file
-      const fs = await import('fs');
-      const imageData = fs.readFileSync(imagePath);
-      const base64Image = imageData.toString('base64');
 
       // Get the mime type from file extension
       const path = await import('path');
