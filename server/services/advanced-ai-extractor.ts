@@ -90,7 +90,7 @@ Restituisci un JSON con i seguenti campi:
     "allergie": "lista ingredienti o 'Nessuna'",
     "profumo_fiori": "Sì/No",
     "routine_attuale": "descrizione routine esistente (opzionale)",
-    "tipo_richiesta": "Routine completa/Detergente-struccante/Esfoliante/Siero/Trattamento Specifico/Creme viso/Protezioni Solari/Contorno Occhi/Maschere Viso/Prodotti Corpo",
+    "tipo_richiesta": "Routine completa/Detergente-struccante/Esfoliante/Siero/Trattamento Specifico/Crema viso/Protezione solare/Contorno Occhi/Maschera viso/Prodotti Corpo",
     "ingredienti_preferiti": "lista ingredienti attivi preferiti (opzionale)"
   },
   "analisi_conversazione": {

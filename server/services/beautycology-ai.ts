@@ -207,7 +207,7 @@ A) Routine completa
 B) Detergente-struccante
 C) Esfoliante
 D) Siero/Trattamento Specifico
-E) Creme viso
+E) Crema viso
 F) Protezioni Solari
 G) Contorno Occhi
 H) Maschere Viso
@@ -1884,7 +1884,7 @@ export class BeautycologyAIService {
           
           // Automatically ask the advice type question
           const adviceResponse = "Vuoi che ti consigli una routine completa o cerchi un tipo di prodotto in particolare?";
-          const adviceChoices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Maschere Viso", "Prodotti Corpo"];
+          const adviceChoices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Crema viso", "Protezione solare", "Contorno Occhi", "Maschera viso", "Prodotti Corpo"];
           
           // Update history immediately so this question appears
           sessionHistory.push({
@@ -2210,7 +2210,7 @@ export class BeautycologyAIService {
             state.currentStep = 'awaiting_advice_type';
             fallbackResponse = `Ho capito che hai problemi di ${answers.skinProblems.join(', ')}. Vuoi che ti consigli una routine completa o cerchi un tipo di prodotto in particolare?`;
             hasChoices = true;
-            choices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Maschere Viso", "Prodotti Corpo"];
+            choices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Crema viso", "Protezione solare", "Contorno Occhi", "Maschera viso", "Prodotti Corpo"];
           } else {
             fallbackResponse = "Qual è la tua problematica principale che vorresti risolvere?";
             hasChoices = true;
@@ -2219,7 +2219,7 @@ export class BeautycologyAIService {
         } else if (state.currentStep === 'awaiting_advice_type') {
           fallbackResponse = "Vuoi che ti consigli una routine completa o cerchi un tipo di prodotto in particolare?";
           hasChoices = true;
-          choices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Maschere Viso", "Prodotti Corpo"];
+          choices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Crema viso", "Protezione solare", "Contorno Occhi", "Maschera viso", "Prodotti Corpo"];
         } else if (state.currentStep === 'additional_info') {
           fallbackResponse = "C'è qualcos'altro che dovrei sapere sulla tua pelle o sulle tue esigenze specifiche?";
           hasChoices = false;
@@ -2266,7 +2266,7 @@ export class BeautycologyAIService {
     }
     
     if (text.includes('routine completa o cerchi') || text.includes('tipo di prodotto in particolare') || text.includes('consigli una routine completa')) {
-      return ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Creme viso", "Protezioni Solari", "Contorno Occhi", "Maschere Viso", "Prodotti Corpo"];
+      return ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Crema viso", "Protezione solare", "Contorno Occhi", "Maschera viso", "Prodotti Corpo"];
     }
     
     return null;
