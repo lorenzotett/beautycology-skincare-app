@@ -17,17 +17,13 @@ export class ChatDataExtractor {
         contents: [{
           role: "user", 
           parts: [{ text: `${this.getSystemInstruction()}\n\n${conversationData}` }]
-        }],
-        generationConfig: {
-          temperature: 0.1, // Bassa temperatura per consistenza
-          maxOutputTokens: 2000
-        }
+        }]
       });
 
-      const result = response.response.text();
+      const result = response.text;
       
       // Estrai JSON dalla risposta
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      const jsonMatch = result?.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const extractedData = JSON.parse(jsonMatch[0]);
         

@@ -1863,7 +1863,14 @@ export class BeautycologyAIService {
         // Save the answer
         if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
         state.structuredFlowAnswers.age = userMessage;
-        state.currentStep = 'awaiting_problem';
+        
+        // Check if we already have a mainIssue from initial analysis
+        if (state.structuredFlowAnswers.mainIssue) {
+          console.log(`ℹ️ Skipping problem question - already have mainIssue: ${state.structuredFlowAnswers.mainIssue}`);
+          state.currentStep = 'awaiting_advice_type';
+        } else {
+          state.currentStep = 'awaiting_problem';
+        }
       }
 
       // Check if user is answering the main problem question
@@ -1873,13 +1880,21 @@ export class BeautycologyAIService {
         const selectedPredefinedProblem = problems.some(problem => userMessage.toLowerCase().includes(problem.toLowerCase().split('/')[0]));
         
         // Accept any answer that's more than just a few characters (to handle custom problem descriptions)
-        const hasCustomDescription = userMessage.trim().length > 3 && !userMessage.toLowerCase().includes('non so');
+        // BUT exclude age ranges to prevent them from being interpreted as problems
+        const isAgeRange = ageRanges.some(range => userMessage.toLowerCase().includes(range.toLowerCase()));
+        const hasCustomDescription = userMessage.trim().length > 3 && 
+                                    !userMessage.toLowerCase().includes('non so') && 
+                                    !isAgeRange;
         
         if (selectedPredefinedProblem || hasCustomDescription) {
           console.log(`✅ User described problem: ${userMessage}`);
-          // Save the answer
+          // Save the answer only if we don't already have one
           if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
-          state.structuredFlowAnswers.mainIssue = userMessage;
+          if (!state.structuredFlowAnswers.mainIssue) {
+            state.structuredFlowAnswers.mainIssue = userMessage;
+          } else {
+            console.log(`ℹ️ Keeping existing mainIssue: ${state.structuredFlowAnswers.mainIssue} (not overwriting with: ${userMessage})`);
+          }
           state.currentStep = 'awaiting_advice_type';
           
           // Automatically ask the advice type question
