@@ -86,6 +86,28 @@ Se l'utente chiede informazioni su prodotti specifici (es: "M-Eye Secret", "Perf
 **🚨 IMPORTANTE: MAI USARE PULSANTI O DOMANDE A SCELTA MULTIPLA QUANDO L'UTENTE CHIEDE INFORMAZIONI SUI PRODOTTI!**
 **FORNISCI SEMPRE UNA RISPOSTA TESTUALE COMPLETA CON I DETTAGLI DEL PRODOTTO!**
 
+## QUANDO UN UTENTE CHIEDE UN PRODOTTO SPECIFICO:
+1. **Identifica il prodotto esatto** dal catalogo Beautycology
+2. **Fornisci una spiegazione dettagliata** che include:
+   - Nome completo del prodotto e prezzo
+   - Descrizione approfondita dei benefici (minimo 200 parole)
+   - Ingredienti chiave e loro funzione scientifica con percentuali quando disponibili
+   - Modalità d'uso consigliate in dettaglio
+   - Per quale tipo di pelle è più adatto
+   - Problematiche che risolve
+   - Tempi di applicazione e frequenza
+   - Link diretto per l'acquisto
+3. **USA SEMPRE questo formato per il link**: **[Nome Prodotto](URL ufficiale)** (prezzo)
+4. **Includi sempre consigli personalizzati** su come integrare il prodotto nella routine
+5. **Menziona prodotti complementari** che potrebbero potenziare i risultati
+6. **Concludi sempre** con: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
+
+## ESEMPI DI RISPOSTE CORRETTE PER PRODOTTI:
+- "Vorrei sapere di più su M-Eye Secret" → Fornisci TUTTE le informazioni su M-Eye Secret con ingredienti, benefici, modalità d'uso, link
+- "Mi parli del Perfect & Pure?" → Descrizione completa di Perfect & Pure con focus sui benefici per pelli miste
+- "Cos'è il Multipod Gel?" → Spiegazione dettagliata del prodotto, acido azelaico, benefici anti-acne
+- "Che ingredienti ha Bionic Hydralift?" → Focus sugli ingredienti attivi, percentuali, meccanismo d'azione
+
 ### CASO B - ANALISI PELLE:
 **QUANDO l'utente:**
 - Carica una foto della pelle
@@ -1419,6 +1441,33 @@ export class BeautycologyAIService {
       // Save the intent type in session state for better tracking
       if (isProductInfoRequest) {
         state.lastIntent = 'product_info';
+        
+        // Estrai il nome del prodotto dal messaggio
+        const productName = this.extractProductNameFromMessage(userMessage);
+        console.log(`📦 Extracted product name: ${productName}`);
+        
+        // Se abbiamo identificato un prodotto specifico, genera una risposta dettagliata
+        if (productName && this.knowledgeBase) {
+          const detailedResponse = this.generateDetailedProductResponse(productName);
+          
+          // Aggiungi alla history e ritorna immediatamente
+          sessionHistory.push(
+            {
+              role: "user",
+              parts: [{ text: userMessage }]
+            },
+            {
+              role: "model",
+              parts: [{ text: detailedResponse }]
+            }
+          );
+          this.chatSessions.set(sessionId, sessionHistory);
+          
+          return {
+            content: detailedResponse,
+            hasChoices: false
+          };
+        }
       } else if (this.shouldStartStructuredQuestions(userMessage, sessionHistory)) {
         state.lastIntent = 'skin_analysis';
       }
@@ -2168,8 +2217,37 @@ export class BeautycologyAIService {
   }
 
   private detectProductInformationIntent(userMessage: string): boolean {
+    console.log(`🔍 Checking message for intent: "${userMessage}"`);
+    
     // Patterns that indicate the user wants information about products, not skin analysis
     const productInformationPatterns = [
+      // NUOVI PATTERN AGGIUNTI PER RICHIESTE SPECIFICHE DI PRODOTTI
+      /vorrei\s+(sapere|saperne)\s+(di\s+)?più\s+(su|del|della|sul|sulla)/i,
+      /mi\s+(parli|può\s+parlare|puoi\s+parlare)\s+(del|della|di)/i,
+      /(cos'è|cosa\s+è|che\s+cos'è)\s+(il|la|lo)/i,
+      /che\s+ingredienti\s+(ha|contiene|ci\s+sono)/i,
+      /a\s+cosa\s+serve/i,
+      /come\s+si\s+usa/i,
+      /quando\s+(usare|applicare|mettere)/i,
+      /è\s+(adatto|indicato|buono)\s+per/i,
+      /funziona\s+(per|contro|su)/i,
+      /va\s+bene\s+per/i,
+      /posso\s+usarlo\s+(per|se|con)/i,
+      /dimmi\s+(qualcosa|di\s+più|tutto)\s+(su|del|della)/i,
+      /raccontami\s+(del|della|di)/i,
+      /spiegami\s+(il|la|come)/i,
+      /descrivi(mi)?\s+(il|la)/i,
+      /dettagli\s+(su|del|della)/i,
+      /caratteristiche\s+(del|della|di)/i,
+      
+      // PATTERN PER RICHIESTE DI CREME SPECIFICHE (IMPORTANTE!)
+      /vorrei\s+una?\s+(crema|siero|detergente|maschera)\s+(viso\s+)?per\s+(l'|la|il|i|le)/i,
+      /cerco\s+una?\s+(crema|siero|detergente|maschera)\s+(viso\s+)?per/i,
+      /mi\s+serve\s+una?\s+(crema|siero|detergente|maschera)\s+(viso\s+)?per/i,
+      /sto\s+cercando\s+una?\s+(crema|siero|detergente|maschera)/i,
+      /ho\s+bisogno\s+di\s+una?\s+(crema|siero|detergente|maschera)/i,
+      
+      // PATTERN ESISTENTI
       /qual[ie]?\s+(prodott[oi]|crem[ae]|sier[ou]m)/i,
       /cosa\s+(avete|vendete|proponete)/i,
       /che\s+prodott[oi]\s+(avete|vendete|proponete)/i,
@@ -2202,38 +2280,323 @@ export class BeautycologyAIService {
     ];
 
     // Check if message mentions specific product names from knowledge base
-    const productNamePatterns = [
-      /m[\s-]?eye/i,
-      /perfect\s*&?\s*pure/i,
-      /vitamin\s*c/i,
-      /retinol/i,
-      /niacinamide/i,
-      /acido\s+(ialuronico|salicilico)/i,
-      /siero/i,
-      /crema\s+(viso|notte|giorno)/i,
-      /detergente/i,
-      /tonico/i,
-      /maschera/i,
-      /contorno\s+occhi/i,
-      /anti[\s-]?age/i,
-      /anti[\s-]?rughe/i,
-      /antimacchie/i,
-      /sebo[\s-]?regola/i,
-      /bionic\s*hydra/i,
-      /hydralift/i,
-      /acqua\s*micellare/i
+    const lowerMessage = userMessage.toLowerCase();
+    const specificProducts = [
+      'm-eye secret', 'm eye secret', 'meye secret',
+      'perfect & pure', 'perfect and pure', 'perfect&pure',
+      'invisible shield', 'protezione solare', 'spf 30', 'spf 50',
+      'mousse away', 'detergente viso',
+      'multipod gel', 'acido azelaico',
+      'bionic hydralift', 'acido lattobionico', 
+      'c-boost', 'vitamina c',
+      'retinal bomb', 'retinaldeide',
+      'bodylicious', 'crema corpo',
+      'let\'s glow', 'lets glow', 'esfoliante',
+      'skin reset', 'pelli sensibili',
+      'multitasking oil', 'olio detergente',
+      'cleaning me softly', 'olio-latte',
+      'combo macchie', 'barrier hero', 'redless',
+      'better with age', 'ray of light', 'clay rehab',
+      'i peel good', 'retinal eye'
     ];
+    
+    const mentionsSpecificProduct = specificProducts.some(product => 
+      lowerMessage.includes(product)
+    );
 
     const hasProductInfoIntent = productInformationPatterns.some(pattern => pattern.test(userMessage));
-    const mentionsProductName = productNamePatterns.some(pattern => pattern.test(userMessage));
+    
+    // Check if this is a generic request for products based on skin concerns (IMPORTANTE!)
+    const productRequestForConcern = /vorrei\s+una?\s+(crema|siero|prodotto)\s+(viso\s+)?per\s+(l'|la|il|i|le)/i.test(userMessage);
+    
+    const isProductInfo = hasProductInfoIntent || mentionsSpecificProduct || productRequestForConcern;
     
     // Log for debugging
-    if (hasProductInfoIntent || mentionsProductName) {
-      console.log(`🛍️ Product information intent detected in message: "${userMessage}"`);
+    console.log(`🛍️ Product info intent check: ${isProductInfo}`);
+    
+    return isProductInfo;
+  }
+
+  // Estrai il nome del prodotto dal messaggio dell'utente
+  private extractProductNameFromMessage(message: string): string | null {
+    if (!this.knowledgeBase || !this.knowledgeBase.products) {
+      console.log('⚠️ Knowledge base not available for product extraction');
+      return null;
     }
     
-    // If the message contains product info patterns or mentions specific products, it's likely informational
-    return hasProductInfoIntent || mentionsProductName;
+    const lowerMessage = message.toLowerCase();
+    
+    // Prima cerca corrispondenze esatte dei nomi prodotti nel messaggio
+    for (const product of this.knowledgeBase.products) {
+      const productName = product.name?.toLowerCase() || '';
+      const productNameParts = productName.split('–')[0]?.trim().toLowerCase(); // Prendi solo la prima parte prima del trattino
+      
+      // Controlla corrispondenze esatte o parziali
+      if (lowerMessage.includes(productName) || 
+          (productNameParts && lowerMessage.includes(productNameParts))) {
+        console.log(`✅ Found exact product match: ${product.name}`);
+        return product.name;
+      }
+      
+      // Controlla variazioni comuni
+      const variations = [
+        productName.replace(/[-–]/g, ' '),
+        productName.replace(/[&]/g, 'and'),
+        productName.replace(/[&]/g, 'e'),
+        productNameParts
+      ];
+      
+      for (const variation of variations) {
+        if (variation && lowerMessage.includes(variation)) {
+          console.log(`✅ Found product variation match: ${product.name}`);
+          return product.name;
+        }
+      }
+    }
+    
+    // Se non trova corrispondenza esatta, cerca parole chiave
+    const productKeywords = {
+      'm-eye': 'M-EYE SECRET – CREMA CONTORNO OCCHI MULTIPEPTIDE',
+      'm eye': 'M-EYE SECRET – CREMA CONTORNO OCCHI MULTIPEPTIDE',
+      'meye': 'M-EYE SECRET – CREMA CONTORNO OCCHI MULTIPEPTIDE',
+      'perfect & pure': 'Perfect & Pure – Crema per pelli miste',
+      'perfect and pure': 'Perfect & Pure – Crema per pelli miste',
+      'invisible shield': 'Invisible Shield – Crema viso SPF 30',
+      'mousse away': 'Mousse Away – Detergente viso',
+      'multipod': 'Multipod Gel – Acido Azelaico',
+      'bionic hydralift': 'Bionic Hydralift – Acido Lattobionico',
+      'c-boost': 'C-Boost – Siero Vitamina C',
+      'c boost': 'C-Boost – Siero Vitamina C',
+      'retinal bomb': 'Retinal Bomb – Retinaldeide 0,1%',
+      'bodylicious': 'Bodylicious – Crema corpo',
+      'let\'s glow': 'Let\'s Glow – Maschera AHA-PHA 22%',
+      'lets glow': 'Let\'s Glow – Maschera AHA-PHA 22%',
+      'skin reset': 'Skin Reset – Riequilibrante pelli sensibili',
+      'combo macchie': 'Combo Macchie',
+      'barrier hero': 'Barrier Hero – Crema riparatrice barriera',
+      'redless': 'Redless – Acido Tranexamico',
+      'better with age': 'Better With Age – Crema anti-age',
+      'ray of light': 'Ray of Light – Acido Salicilico 2%',
+      'clay rehab': 'Clay Rehab – Maschera argilla purificante',
+      'i peel good': 'I Peel Good – Acido Glicolico 10%',
+      'retinal eye': 'Retinal Eye – Retinaldeide 0,05% contorno occhi',
+      'multitasking oil': 'Multitasking Oil – Olio detergente',
+      'cleaning me softly': 'Cleaning Me Softly – Olio-latte detergente'
+    };
+    
+    for (const [keyword, productName] of Object.entries(productKeywords)) {
+      if (lowerMessage.includes(keyword)) {
+        console.log(`✅ Found product by keyword: ${productName}`);
+        // Verifica che il prodotto esista nel catalogo
+        const exists = this.knowledgeBase.products.some((p: any) => 
+          p.name?.toLowerCase() === productName.toLowerCase()
+        );
+        if (exists) {
+          return productName;
+        }
+      }
+    }
+    
+    // Se ancora non trova nulla, cerca per categoria generica
+    if (lowerMessage.includes('crema') && lowerMessage.includes('contorno occhi')) {
+      return 'contorno occhi';
+    }
+    if (lowerMessage.includes('detergente')) {
+      return 'detergente';
+    }
+    if (lowerMessage.includes('siero')) {
+      return 'siero';
+    }
+    
+    console.log('⚠️ Could not extract specific product name from message');
+    return null;
+  }
+
+  // Nuova funzione per generare risposte dettagliate sui prodotti
+  private generateDetailedProductResponse(productName: string): string {
+    console.log(`🛍️ Generating detailed product response for: ${productName}`);
+    
+    if (!this.knowledgeBase || !this.knowledgeBase.products) {
+      console.error('❌ Knowledge base not loaded');
+      return 'Mi dispiace, non riesco ad accedere al catalogo prodotti in questo momento.';
+    }
+    
+    // Cerca il prodotto nel catalogo (case insensitive)
+    const lowerProductName = productName.toLowerCase();
+    const product = this.knowledgeBase.products.find((p: any) => {
+      const productNameLower = p.name?.toLowerCase() || '';
+      return productNameLower.includes(lowerProductName) || 
+             lowerProductName.includes(productNameLower.split('–')[0]?.trim()) ||
+             (p.description && p.description.toLowerCase().includes(lowerProductName));
+    });
+    
+    if (!product) {
+      console.log(`⚠️ Product not found: ${productName}`);
+      
+      // Prova a suggerire prodotti simili basati sulla categoria
+      const similarProducts = this.knowledgeBase.products.filter((p: any) => {
+        const desc = (p.description || '').toLowerCase();
+        const name = (p.name || '').toLowerCase();
+        
+        // Cerca parole chiave correlate
+        if (lowerProductName.includes('crema')) {
+          return p.category === 'Creme' || name.includes('crema');
+        }
+        if (lowerProductName.includes('siero')) {
+          return p.category === 'Sieri' || name.includes('siero');
+        }
+        if (lowerProductName.includes('detergent')) {
+          return p.category === 'Detergenti' || name.includes('detergent');
+        }
+        if (lowerProductName.includes('acne')) {
+          return desc.includes('acne') || desc.includes('imperfezioni');
+        }
+        if (lowerProductName.includes('macchi')) {
+          return desc.includes('macchi') || desc.includes('iperpigmentazione');
+        }
+        if (lowerProductName.includes('rughe')) {
+          return desc.includes('rughe') || desc.includes('anti-age');
+        }
+        
+        return false;
+      }).slice(0, 3);
+      
+      if (similarProducts.length > 0) {
+        let response = `Non ho trovato esattamente "${productName}", ma ho questi prodotti che potrebbero interessarti:\n\n`;
+        
+        similarProducts.forEach((p: any) => {
+          response += `🌟 **[${p.name}](${p.url})** (${p.price})\n`;
+          response += `${p.description?.substring(0, 150)}...\n\n`;
+        });
+        
+        response += `\n💡 Per vedere tutti i nostri prodotti visita: https://beautycology.it/shop/\n\n`;
+        response += `Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
+        
+        return response;
+      }
+      
+      return `Mi dispiace, non riesco a trovare "${productName}" nel nostro catalogo. Ti consiglio di visitare https://beautycology.it/shop/ per vedere tutti i nostri prodotti disponibili.\n\nSe hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
+    }
+    
+    console.log(`✅ Found product: ${product.name}`);
+    
+    // Estrai ingredienti chiave dalla descrizione
+    let keyIngredients = '';
+    const description = product.description || '';
+    
+    // Cerca pattern di ingredienti con percentuali
+    const ingredientMatches = description.match(/([A-Z][a-zA-Z\s]+)\s+(\d+%)/g) || [];
+    if (ingredientMatches.length > 0) {
+      keyIngredients = '\n\n🧪 **INGREDIENTI CHIAVE:**\n';
+      ingredientMatches.forEach((match: string) => {
+        keyIngredients += `• ${match}\n`;
+      });
+    }
+    
+    // Cerca altri ingredienti menzionati
+    const additionalIngredients = [];
+    if (description.toLowerCase().includes('vitamina')) {
+      const vitaminMatch = description.match(/vitamina\s+[A-Z][0-9]*/gi);
+      if (vitaminMatch) additionalIngredients.push(...vitaminMatch);
+    }
+    if (description.toLowerCase().includes('acido')) {
+      const acidMatch = description.match(/acido\s+\w+/gi);
+      if (acidMatch) additionalIngredients.push(...acidMatch);
+    }
+    if (description.toLowerCase().includes('olio')) {
+      const oilMatch = description.match(/olio\s+(di\s+)?\w+/gi);
+      if (oilMatch) additionalIngredients.push(...oilMatch);
+    }
+    
+    // Determina il tipo di pelle più adatto
+    let skinTypeRecommendation = '\n\n👤 **PER CHI È IDEALE:**\n';
+    const descLower = description.toLowerCase();
+    
+    if (descLower.includes('pelli sensibili') || descLower.includes('sensibile')) {
+      skinTypeRecommendation += '• Pelli sensibili e reattive\n';
+    }
+    if (descLower.includes('pelli grasse') || descLower.includes('sebo')) {
+      skinTypeRecommendation += '• Pelli grasse e miste\n';
+    }
+    if (descLower.includes('pelli secche') || descLower.includes('idratante')) {
+      skinTypeRecommendation += '• Pelli secche e disidratate\n';
+    }
+    if (descLower.includes('anti-age') || descLower.includes('rughe')) {
+      skinTypeRecommendation += '• Pelli mature con segni del tempo\n';
+    }
+    if (descLower.includes('acne') || descLower.includes('imperfezioni')) {
+      skinTypeRecommendation += '• Pelli con tendenza acneica\n';
+    }
+    if (descLower.includes('macchie') || descLower.includes('iperpigmentazione')) {
+      skinTypeRecommendation += '• Pelli con macchie e discromie\n';
+    }
+    if (!skinTypeRecommendation.includes('•')) {
+      skinTypeRecommendation += '• Adatto a tutti i tipi di pelle\n';
+    }
+    
+    // Genera la risposta dettagliata
+    let response = `🌟 **${product.name}** - ${product.price}\n\n`;
+    
+    response += `📝 **DESCRIZIONE DETTAGLIATA:**\n${description.substring(0, 500)}`;
+    if (description.length > 500) response += '...';
+    
+    response += keyIngredients;
+    
+    if (additionalIngredients.length > 0 && !keyIngredients) {
+      response += '\n\n🌿 **INGREDIENTI ATTIVI:**\n';
+      [...new Set(additionalIngredients)].forEach(ing => {
+        response += `• ${ing}\n`;
+      });
+    }
+    
+    response += '\n\n✨ **BENEFICI PRINCIPALI:**\n';
+    
+    // Estrai benefici dalla descrizione
+    if (descLower.includes('idrata')) response += '• Idratazione profonda e duratura\n';
+    if (descLower.includes('lenisce') || descLower.includes('lenitiv')) response += '• Azione lenitiva e calmante\n';
+    if (descLower.includes('protegge') || descLower.includes('protezione')) response += '• Protezione della barriera cutanea\n';
+    if (descLower.includes('anti-age') || descLower.includes('rughe')) response += '• Azione anti-età e anti-rughe\n';
+    if (descLower.includes('illumina') || descLower.includes('luminosità')) response += '• Dona luminosità al viso\n';
+    if (descLower.includes('purifica') || descLower.includes('deterge')) response += '• Purifica e deterge in profondità\n';
+    if (descLower.includes('esfolia')) response += '• Esfoliazione delicata ma efficace\n';
+    if (descLower.includes('uniforma')) response += '• Uniforma il colorito della pelle\n';
+    
+    response += '\n📋 **MODALITÀ D\'USO:**\n';
+    
+    // Suggerisci modalità d'uso basate sul tipo di prodotto
+    if (product.category === 'Detergenti' || product.name.toLowerCase().includes('detergent')) {
+      response += '• Applicare su viso umido mattina e sera\n';
+      response += '• Massaggiare delicatamente con movimenti circolari\n';
+      response += '• Risciacquare con acqua tiepida\n';
+    } else if (product.category === 'Sieri' || product.name.toLowerCase().includes('siero')) {
+      response += '• Applicare 2-3 gocce su viso pulito\n';
+      response += '• Picchiettare delicatamente fino a completo assorbimento\n';
+      response += '• Utilizzare mattina e sera prima della crema\n';
+    } else if (product.category === 'Creme' || product.name.toLowerCase().includes('crema')) {
+      response += '• Applicare su viso e collo puliti\n';
+      response += '• Massaggiare con movimenti circolari dal basso verso l\'alto\n';
+      response += '• Utilizzare mattina e/o sera secondo necessità\n';
+    } else if (product.category === 'Esfolianti' || product.name.toLowerCase().includes('esfoliant')) {
+      response += '• Applicare su pelle pulita e asciutta\n';
+      response += '• Lasciare agire per 5-10 minuti\n';
+      response += '• Utilizzare 1-2 volte a settimana\n';
+    } else {
+      response += '• Seguire le istruzioni specifiche del prodotto\n';
+      response += '• Applicare su pelle pulita\n';
+      response += '• Utilizzare regolarmente per risultati ottimali\n';
+    }
+    
+    response += skinTypeRecommendation;
+    
+    response += `\n\n🛒 **LINK DIRETTO PER L'ACQUISTO:**\n**[${product.name}](${product.url})**\n\n`;
+    
+    response += `💡 **CONSIGLIO DELLA SKIN EXPERT:**\n`;
+    response += `Questo prodotto è perfetto per chi cerca ${product.category?.toLowerCase() || 'soluzioni'} di alta qualità con formule basate sulla scienza. `;
+    response += `I risultati sono visibili già dopo poche settimane di utilizzo costante.\n\n`;
+    
+    response += `Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
+    
+    return response;
   }
 
   private shouldStartStructuredQuestions(userMessage: string, sessionHistory: any[]): boolean {
