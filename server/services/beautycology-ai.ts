@@ -2007,7 +2007,7 @@ export class BeautycologyAIService {
         // Force structured questions with appropriate buttons
         console.log("🔍 Checking response for forced choices:", responseText.substring(0, 100));
         if (!hasChoices) {
-          const forcedChoice = this.getForcedChoiceForQuestion(responseText);
+          const forcedChoice = this.getForcedChoiceForQuestion(responseText, sessionId);
           if (forcedChoice) {
             console.log("✅ Forcing choices for structured question:", forcedChoice);
             hasChoices = true;
@@ -2060,6 +2060,20 @@ export class BeautycologyAIService {
         }
         
         state.currentStep = 'awaiting_age';
+      }
+
+      // Force advice type question after age (but not for product info requests)
+      if (!isProductInfoRequest && state.structuredFlowActive && state.currentStep === 'awaiting_advice_type') {
+        console.log(`🎯 Structured flow - forcing advice type question for session ${sessionId}`);
+        hasChoices = true;
+        choices = ["Routine completa", "Detergente-struccante", "Esfoliante", "Siero/Trattamento Specifico", "Crema viso", "Protezione solare", "Contorno Occhi", "Maschera viso", "Prodotti Corpo"];
+        
+        // Force advice type question in response
+        if (!responseText.toLowerCase().includes('routine completa o cerchi') && 
+            !responseText.toLowerCase().includes('tipo di prodotto in particolare')) {
+          responseText = "Perfetto! Ora dimmi, vuoi che ti consigli una routine completa o cerchi un tipo di prodotto in particolare?";
+          console.log(`📝 Forced advice type question in response`);
+        }
       }
 
       // Force problem question after age (but not for product info requests)
@@ -2260,8 +2274,23 @@ export class BeautycologyAIService {
     }
   }
 
-  private getForcedChoiceForQuestion(responseText: string): string[] | null {
+  private getForcedChoiceForQuestion(responseText: string, sessionId?: string): string[] | null {
     const text = responseText.toLowerCase();
+    
+    // If we have a session, check the current step first to avoid incorrect pattern matching
+    if (sessionId) {
+      const state = this.sessionState.get(sessionId);
+      if (state && state.structuredFlowActive && state.currentStep) {
+        // Don't force choices based on text patterns if we already handled them via currentStep
+        // This prevents showing age choices again when the AI confirms the age selection
+        if (state.currentStep === 'awaiting_advice_type' || 
+            state.currentStep === 'awaiting_problem' || 
+            state.currentStep === 'awaiting_additional_info') {
+          // These are handled by the state-driven logic, don't pattern match
+          return null;
+        }
+      }
+    }
     
     // Map ALL structured flow questions to their buttons - be very aggressive
     if (text.includes('che tipo di pelle') || 
@@ -2272,10 +2301,13 @@ export class BeautycologyAIService {
       return ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
     }
     
-    if (text.includes('quanti anni hai') || 
-        (text.includes('età') && text.includes('?')) ||
+    // Only check for age question if it's actually asking for age, not confirming it
+    if ((text.includes('quanti anni hai') || 
         text.includes('dimmi la tua età') ||
-        text.includes('che età hai')) {
+        text.includes('che età hai')) &&
+        !text.includes('hai fornito') && // Not a confirmation
+        !text.includes('vedo che hai') && // Not acknowledging age
+        !text.includes('grazie per')) { // Not thanking for age
       return ["16-25", "26-35", "36-45", "46-55", "56+"];
     }
     
