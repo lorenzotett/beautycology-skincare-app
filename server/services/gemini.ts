@@ -830,9 +830,14 @@ export class GeminiService implements AIService {
   }
 
 
-  async initializeConversation(sessionId: string, userName: string): Promise<ChatResponse> {
-    // Get or create session state
-    const sessionState = this.getSessionState(sessionId);
+  async initializeConversation(userName: string): Promise<ChatResponse> {
+    // Generate a temporary sessionId based on userName and timestamp
+    // This will be used for initial session state management
+    // The actual sessionId from the database will be used in subsequent sendMessage calls
+    const tempSessionId = `init_${userName}_${Date.now()}`;
+    
+    // Get or create session state with temporary sessionId
+    const sessionState = this.getSessionState(tempSessionId);
     
     // Start with the user's name
     sessionState.conversationHistory = [
