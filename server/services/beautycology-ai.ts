@@ -1442,7 +1442,7 @@ export class BeautycologyAIService {
       if (isProductInfoRequest) {
         state.lastIntent = 'product_info';
         
-        // Estrai il nome del prodotto dal messaggio
+        // Prima prova a estrarre il nome di un prodotto specifico
         const productName = this.extractProductNameFromMessage(userMessage);
         console.log(`📦 Extracted product name: ${productName}`);
         
@@ -1465,6 +1465,62 @@ export class BeautycologyAIService {
           
           return {
             content: detailedResponse,
+            hasChoices: false
+          };
+        } else {
+          // 🎯 NUOVO: Gestisci richieste generiche di prodotti per problemi
+          console.log('🎯 Handling generic product request');
+          
+          // Estrai il problema dalla richiesta
+          let problem = '';
+          const lowerMessage = userMessage.toLowerCase();
+          
+          if (lowerMessage.includes('acne') || lowerMessage.includes('brufoli')) {
+            problem = 'l\'acne';
+          } else if (lowerMessage.includes('macchi')) {
+            problem = 'le macchie';
+          } else if (lowerMessage.includes('rughe') || lowerMessage.includes('anti-age') || lowerMessage.includes('invecchiamento')) {
+            problem = 'le rughe';
+          } else if (lowerMessage.includes('pelle grassa') || lowerMessage.includes('grassa') || lowerMessage.includes('sebo')) {
+            problem = 'la pelle grassa';
+          } else if (lowerMessage.includes('pelle secca') || lowerMessage.includes('secca') || lowerMessage.includes('disidratazione')) {
+            problem = 'la pelle secca';
+          } else if (lowerMessage.includes('rossori') || lowerMessage.includes('rosacea')) {
+            problem = 'i rossori';
+          } else if (lowerMessage.includes('pori')) {
+            problem = 'i pori dilatati';
+          } else if (lowerMessage.includes('punti neri')) {
+            problem = 'i punti neri';
+          } else if (lowerMessage.includes('sensibil')) {
+            problem = 'la pelle sensibile';
+          } else {
+            // Default generico
+            problem = 'le tue esigenze';
+          }
+          
+          // Genera raccomandazioni di prodotti per il problema identificato
+          const recommendations = await this.generateGenericProductRecommendations(problem, sessionId);
+          
+          // 🚨 IMPORTANTE: Bypassa completamente il flusso strutturato
+          console.log('🚨 BYPASSING structured flow for generic product request');
+          state.structuredFlowActive = false;
+          state.currentStep = null;
+          
+          // Aggiungi alla history e ritorna immediatamente
+          sessionHistory.push(
+            {
+              role: "user",
+              parts: [{ text: userMessage }]
+            },
+            {
+              role: "model",
+              parts: [{ text: recommendations }]
+            }
+          );
+          this.chatSessions.set(sessionId, sessionHistory);
+          
+          return {
+            content: recommendations,
             hasChoices: false
           };
         }
@@ -2221,6 +2277,27 @@ export class BeautycologyAIService {
     
     // Patterns that indicate the user wants information about products, not skin analysis
     const productInformationPatterns = [
+      // PATTERN CRITICI PER RICHIESTE GENERICHE DI PRODOTTI (PRIORITY)
+      /vorrei\s+una?\s+(crema|siero|detergente|prodotto|maschera|trattamento)\s*(viso|corpo)?\s*(per|contro)\s*(l'|la|il|i|le)?/i,
+      /cerco\s+(un|una|qualcosa|prodott[oi]|crem[ae]|sier[oi])\s*(viso|corpo)?\s*(per|contro)\s*(l'|la|il|i|le)?/i,
+      /cerco\s+un\s+prodotto\s+(per|contro)\s*(l'|la|il|i|le)?/i,
+      /hai\s+(qualcosa|prodott[oi]|crem[ae]|sier[oi])\s*(per|contro)\s*(l'|la|il|i|le)?/i,
+      /avete\s+(qualcosa|prodott[oi]|crem[ae]|sier[oi])\s*(per|contro)\s*(l'|la|il|i|le)?/i,
+      /mi\s+serve\s+(un|una|qualcosa)\s*(crema|siero|prodotto|trattamento)?\s*(per|contro)?/i,
+      /ho\s+bisogno\s+di\s+(un|una|qualcosa)\s*(per|contro)?/i,
+      /cosa\s+(consigli|suggerisci|hai)\s*(per|contro)\s*(l'|la|il|i|le)?/i,
+      /puoi\s+(consigliarmi|suggerirmi)\s+(qualcosa|un prodotto|una crema)\s*(per|contro)?/i,
+      
+      // PATTERN PER PROBLEMI SPECIFICI
+      /(crema|siero|prodotto|trattamento|qualcosa)\s+(per|contro)\s+(acne|brufoli|imperfezioni)/i,
+      /(crema|siero|prodotto|trattamento|qualcosa)\s+(per|contro)\s+(macchie|iperpigmentazione|discromie)/i,
+      /(crema|siero|prodotto|trattamento|qualcosa)\s+(per|contro)\s+(rughe|anti-age|invecchiamento)/i,
+      /(crema|siero|prodotto|trattamento|qualcosa)\s+(per|contro)\s+(pelle\s+grassa|sebo|lucidità)/i,
+      /(crema|siero|prodotto|trattamento|qualcosa)\s+(per|contro)\s+(pelle\s+secca|secchezza|disidratazione)/i,
+      /(crema|siero|prodotto|trattamento|qualcosa)\s+(per|contro)\s+(rossori|rosacea|couperose)/i,
+      /(crema|siero|prodotto|trattamento|qualcosa)\s+(per|contro)\s+(pori\s+dilatati|pori)/i,
+      /(crema|siero|prodotto|trattamento|qualcosa)\s+(per|contro)\s+(punti\s+neri|comedoni)/i,
+      
       // NUOVI PATTERN AGGIUNTI PER RICHIESTE SPECIFICHE DI PRODOTTI
       /vorrei\s+(sapere|saperne)\s+(di\s+)?più\s+(su|del|della|sul|sulla)/i,
       /mi\s+(parli|può\s+parlare|puoi\s+parlare)\s+(del|della|di)/i,
@@ -2240,13 +2317,6 @@ export class BeautycologyAIService {
       /dettagli\s+(su|del|della)/i,
       /caratteristiche\s+(del|della|di)/i,
       
-      // PATTERN PER RICHIESTE DI CREME SPECIFICHE (IMPORTANTE!)
-      /vorrei\s+una?\s+(crema|siero|detergente|maschera)\s+(viso\s+)?per\s+(l'|la|il|i|le)/i,
-      /cerco\s+una?\s+(crema|siero|detergente|maschera)\s+(viso\s+)?per/i,
-      /mi\s+serve\s+una?\s+(crema|siero|detergente|maschera)\s+(viso\s+)?per/i,
-      /sto\s+cercando\s+una?\s+(crema|siero|detergente|maschera)/i,
-      /ho\s+bisogno\s+di\s+una?\s+(crema|siero|detergente|maschera)/i,
-      
       // PATTERN ESISTENTI
       /qual[ie]?\s+(prodott[oi]|crem[ae]|sier[ou]m)/i,
       /cosa\s+(avete|vendete|proponete)/i,
@@ -2256,6 +2326,7 @@ export class BeautycologyAIService {
       /parlami\s+(dei|di)\s+(vostri\s+)?prodott/i,
       /mi\s+(puoi|può)\s+(consigliare|suggerire)\s+un\s+prodott/i,
       /cercavo?\s+un\s+(prodotto|crema|siero)/i,
+      /sto\s+cercando\s+(un|una|qualcosa)/i,
       /avete\s+(qualcosa|un prodotto|una crema)/i,
       /quanto\s+cost/i,
       /prezz[oi]/i,
@@ -2317,6 +2388,179 @@ export class BeautycologyAIService {
     return isProductInfo;
   }
 
+  // Nuovo metodo per mappare problemi a prodotti appropriati
+  private mapProblemToProducts(problem: string): Array<{name: string, url: string, price: string, description: string}> {
+    console.log(`🗺️ Mapping problem to products: ${problem}`);
+    
+    if (!this.knowledgeBase || !this.knowledgeBase.products) {
+      console.error('❌ Knowledge base not available for product mapping');
+      return [];
+    }
+    
+    const lowerProblem = problem.toLowerCase();
+    const recommendedProducts: Array<{name: string, url: string, price: string, description: string}> = [];
+    
+    // Mappatura problemi -> prodotti basata sul catalogo reale
+    if (lowerProblem.includes('acne') || lowerProblem.includes('brufoli') || lowerProblem.includes('imperfezioni')) {
+      // Per acne: Multipod Gel, Perfect & Pure, routine pelle acne
+      const products = [
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('multipod')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('perfect & pure')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('routine') && p.name.toLowerCase().includes('acne'))
+      ].filter(Boolean);
+      recommendedProducts.push(...products.slice(0, 3));
+    } else if (lowerProblem.includes('macchi') || lowerProblem.includes('iperpigmentazione') || lowerProblem.includes('discromie')) {
+      // Per macchie: C-Boost, Multipod Gel, routine anti-macchie
+      const products = [
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('c-boost')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('multipod')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('routine') && p.name.toLowerCase().includes('macchi')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('combo macchi'))
+      ].filter(Boolean);
+      recommendedProducts.push(...products.slice(0, 3));
+    } else if (lowerProblem.includes('rughe') || lowerProblem.includes('anti-age') || lowerProblem.includes('invecchiamento')) {
+      // Per rughe: Retinal Bomb, Bionic Hydralift, routine antirughe
+      const products = [
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('retinal bomb')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('bionic hydralift')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('routine') && p.name.toLowerCase().includes('rughe')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('m-eye'))
+      ].filter(Boolean);
+      recommendedProducts.push(...products.slice(0, 3));
+    } else if (lowerProblem.includes('pelle grassa') || lowerProblem.includes('grassa') || lowerProblem.includes('sebo') || lowerProblem.includes('lucidità')) {
+      // Per pelle grassa: Perfect & Pure, Mousse Away, routine pelle grassa
+      const products = [
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('perfect & pure')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('mousse away')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('routine') && p.name.toLowerCase().includes('grassa'))
+      ].filter(Boolean);
+      recommendedProducts.push(...products.slice(0, 3));
+    } else if (lowerProblem.includes('pelle secca') || lowerProblem.includes('secca') || lowerProblem.includes('disidratazione')) {
+      // Per pelle secca: Bionic Hydralift, Skin Reset, routine pelle secca
+      const products = [
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('bionic hydralift')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('skin reset')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('routine') && p.name.toLowerCase().includes('secca'))
+      ].filter(Boolean);
+      recommendedProducts.push(...products.slice(0, 3));
+    } else if (lowerProblem.includes('rossori') || lowerProblem.includes('rosacea') || lowerProblem.includes('couperose')) {
+      // Per rosacea: Skin Reset, Multipod Gel, routine rosacea
+      const products = [
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('skin reset')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('multipod')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('routine') && p.name.toLowerCase().includes('rosacea'))
+      ].filter(Boolean);
+      recommendedProducts.push(...products.slice(0, 3));
+    } else if (lowerProblem.includes('pori') || lowerProblem.includes('dilatati')) {
+      // Per pori dilatati: Multipod Gel, Let's Glow, Perfect & Pure
+      const products = [
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('multipod')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('let\'s glow') || p.name.toLowerCase().includes('lets glow')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('perfect & pure'))
+      ].filter(Boolean);
+      recommendedProducts.push(...products.slice(0, 3));
+    } else if (lowerProblem.includes('punti neri') || lowerProblem.includes('comedoni')) {
+      // Per punti neri: Let's Glow, Mousse Away, Multipod Gel
+      const products = [
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('let\'s glow') || p.name.toLowerCase().includes('lets glow')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('mousse away')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('multipod'))
+      ].filter(Boolean);
+      recommendedProducts.push(...products.slice(0, 3));
+    } else if (lowerProblem.includes('sensibil') || lowerProblem.includes('reattiv')) {
+      // Per pelle sensibile: Skin Reset, Cleaning Me Softly, routine pelle sensibile
+      const products = [
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('skin reset')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('cleaning me softly')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('routine') && p.name.toLowerCase().includes('reattiva'))
+      ].filter(Boolean);
+      recommendedProducts.push(...products.slice(0, 3));
+    }
+    
+    // Se non trova prodotti specifici, suggerisci prodotti generali popolari
+    if (recommendedProducts.length === 0) {
+      const popularProducts = [
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('invisible shield')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('mousse away')),
+        this.knowledgeBase.products.find((p: any) => p.name.toLowerCase().includes('multipod'))
+      ].filter(Boolean);
+      recommendedProducts.push(...popularProducts.slice(0, 2));
+    }
+    
+    console.log(`✅ Found ${recommendedProducts.length} products for problem: ${problem}`);
+    return recommendedProducts;
+  }
+  
+  // Nuovo metodo per generare risposte per richieste generiche di prodotti
+  private async generateGenericProductRecommendations(problem: string, sessionId: string): Promise<string> {
+    console.log(`🎯 Generating generic product recommendations for: ${problem}`);
+    
+    // Ottieni il nome dell'utente dalla sessione
+    let userName = '';
+    try {
+      const session = await storage.getChatSession(sessionId);
+      if (session?.userName) {
+        userName = session.userName;
+      }
+    } catch (error) {
+      console.log('⚠️ Could not retrieve userName from session');
+    }
+    
+    // Ottieni i prodotti consigliati
+    const products = this.mapProblemToProducts(problem);
+    
+    if (products.length === 0) {
+      return `Mi dispiace${userName ? ` ${userName}` : ''}, non riesco a trovare prodotti specifici per "${problem}". Ti consiglio di visitare https://beautycology.it/shop/ per vedere tutti i nostri prodotti disponibili.\n\nSe hai altri dubbi o domande sui nostri prodotti, chiedi pure!`;
+    }
+    
+    // Genera la risposta formattata
+    let response = `Certo${userName ? ` ${userName}` : ''}! Per ${problem} ti consiglio questi prodotti Beautycology:\n\n`;
+    
+    // Aggiungi i prodotti consigliati
+    products.slice(0, 3).forEach((product, index) => {
+      const icon = index === 0 ? '🌟' : index === 1 ? '✨' : '💫';
+      response += `${icon} **[${product.name}](${product.url})** - ${product.price}\n`;
+      
+      // Estrai una breve descrizione dei benefici
+      const description = product.description || '';
+      let benefits = '';
+      
+      if (description.toLowerCase().includes('acne') || description.toLowerCase().includes('imperfezioni')) {
+        benefits = 'Trattamento specifico per imperfezioni e acne';
+      } else if (description.toLowerCase().includes('macchi')) {
+        benefits = 'Riduce visibilmente macchie e discromie';
+      } else if (description.toLowerCase().includes('rughe') || description.toLowerCase().includes('anti-age')) {
+        benefits = 'Azione anti-età per ridurre rughe e segni del tempo';
+      } else if (description.toLowerCase().includes('idrata')) {
+        benefits = 'Idratazione profonda e duratura';
+      } else if (description.toLowerCase().includes('sebo') || description.toLowerCase().includes('grass')) {
+        benefits = 'Regola il sebo e riduce la lucidità';
+      } else if (description.toLowerCase().includes('sensibil')) {
+        benefits = 'Formula delicata per pelli sensibili';
+      } else if (description.toLowerCase().includes('esfolia')) {
+        benefits = 'Esfoliazione delicata per una pelle luminosa';
+      } else if (description.toLowerCase().includes('protezion') || description.toLowerCase().includes('spf')) {
+        benefits = 'Protezione quotidiana dai raggi UV';
+      } else {
+        benefits = description.substring(0, 100) + '...';
+      }
+      
+      response += `${benefits}\n`;
+      response += `👉 Acquista ora: ${product.url}\n\n`;
+    });
+    
+    // Se c'è una routine completa appropriata, menzionala
+    const routineProduct = products.find(p => p.name.toLowerCase().includes('routine'));
+    if (routineProduct) {
+      response += `💡 **Consiglio extra:** Per risultati ottimali, considera la nostra **[${routineProduct.name}](${routineProduct.url})**\n`;
+      response += `Una routine completa pensata specificamente per le tue esigenze!\n\n`;
+    }
+    
+    response += `Vuoi maggiori dettagli su uno di questi prodotti? Sono qui per aiutarti! 💕`;
+    
+    return response;
+  }
+  
   // Estrai il nome del prodotto dal messaggio dell'utente
   private extractProductNameFromMessage(message: string): string | null {
     if (!this.knowledgeBase || !this.knowledgeBase.products) {
@@ -2544,7 +2788,7 @@ export class BeautycologyAIService {
     
     if (additionalIngredients.length > 0 && !keyIngredients) {
       response += '\n\n🌿 **INGREDIENTI ATTIVI:**\n';
-      [...new Set(additionalIngredients)].forEach(ing => {
+      Array.from(new Set(additionalIngredients)).forEach(ing => {
         response += `• ${ing}\n`;
       });
     }
@@ -2607,7 +2851,15 @@ export class BeautycologyAIService {
     const isProductInfo = this.detectProductInformationIntent(userMessage);
     console.log(`🛍️ Product info intent check: ${isProductInfo}`);
     
-    if (isProductInfo) {
+    // 🚨 CRITICAL: Double-check for product requests with problems
+    const lowerMessage = userMessage.toLowerCase();
+    const hasProductRequest = 
+      (lowerMessage.includes('cerco') && lowerMessage.includes('prodotto')) ||
+      (lowerMessage.includes('cerco') && lowerMessage.includes('per')) ||
+      (lowerMessage.includes('hai') && lowerMessage.includes('per')) ||
+      (lowerMessage.includes('vorrei') && lowerMessage.includes('per'));
+    
+    if (isProductInfo || hasProductRequest) {
       console.log("🛍️ Product information intent detected - NOT starting structured flow");
       return false;
     }
