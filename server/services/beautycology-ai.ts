@@ -2709,7 +2709,18 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
     }
     
     // Call resolveRoutineKitLink to get appropriate kit recommendation
-    const routineKit = this.resolveRoutineKitLink(answers);
+    let routineKit = this.resolveRoutineKitLink(answers);
+    
+    // CRITICAL: If routine completa was requested and no specific kit found, use generic fallback
+    const adviceType = (answers.adviceType || '').toLowerCase();
+    if (!routineKit && adviceType.includes('routine')) {
+      console.log('⚠️ No specific routine kit found, using generic fallback link');
+      routineKit = {
+        name: 'Collezione Routine Complete Beautycology',
+        url: 'https://beautycology.it/skincare-routine/'
+      };
+    }
+    
     console.log(`🔍 Routine kit recommendation: ${routineKit ? `${routineKit.name} (${routineKit.url})` : 'None found'}`);
     
     // Get RAG context based on user's main issue
@@ -2747,8 +2758,9 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
 - FORMATO OBBLIGATORIO: **[Nome Esatto Prodotto](URL completo)** (prezzo)
 
 🛑 **REGOLA CRITICA N.2 - ROUTINE COMPLETA OBBLIGATORIA:**
+🚨🚨🚨 **ATTENZIONE MASSIMA: IL LINK ALLA ROUTINE È ASSOLUTAMENTE OBBLIGATORIO!**
 Quando l'utente ha richiesto una "routine completa", DEVI SEMPRE:
-1. **INCLUDERE IL LINK ALLA ROUTINE COMPLETA SPECIFICA** basata su tipo di pelle e problematiche:
+1. **INCLUDERE OBBLIGATORIAMENTE IL LINK ALLA ROUTINE COMPLETA** basata su tipo di pelle e problematiche:
    - **Pelle mista** → Consiglia: https://beautycology.it/prodotto/routine-pelle-mista/
    - **Pelle grassa** → Consiglia: https://beautycology.it/prodotto/routine-pelle-grassa/
    - **Pelle secca** → Consiglia: https://beautycology.it/prodotto/routine-pelle-secca/
@@ -2758,9 +2770,11 @@ Quando l'utente ha richiesto una "routine completa", DEVI SEMPRE:
    - **Acne (anche tardiva)** → Consiglia: https://beautycology.it/prodotto/routine-pelle-acne-tardiva/
    - **Pelle sensibile** → Consiglia: https://beautycology.it/prodotto/routine-pelle-iper-reattiva-tendenza-atopica/
    - **Rosacea** → Consiglia: https://beautycology.it/prodotto/routine-pelle-soggetta-rosacea/
+   - **FALLBACK GENERICO** → Se nessuna corrispondenza: https://beautycology.it/skincare-routine/
 2. **FORNIRE ROUTINE DETTAGLIATA** con 4-5 prodotti Beautycology specifici per mattina e sera
 3. **OGNI PASSAGGIO** deve includere un prodotto Beautycology reale del catalogo
-4. **🚨 IMPORTANTE: ALLEGA SEMPRE I RELATIVI LINK QUANDO CONSIGLI LE ROUTINE COMPLETE!**
+4. **🚨 CRITICO: LA SEZIONE 7 "KIT BEAUTYCOLOGY CONSIGLIATO PER TE" DEVE SEMPRE APPARIRE!**
+5. **🚨 OBBLIGATORIO: ALLEGA SEMPRE I RELATIVI LINK QUANDO CONSIGLI LE ROUTINE COMPLETE!**
 
 🛑 **REGOLA CRITICA N.3 - MESSAGGI COMPLETI:**
 - NON TRONCARE MAI il messaggio, completa SEMPRE tutte le sezioni
@@ -2799,11 +2813,13 @@ DEVI OBBLIGATORIAMENTE fornire NELL'ORDINE COMPLETO:
 
 3. **RACCOMANDAZIONI PRECISE E PERSONALIZZATE**:
    Titolo: "💫 RACCOMANDAZIONI PERSONALIZZATE:"
-   - **🚨 SE ROUTINE COMPLETA RICHIESTA: INCLUDI SEMPRE IL LINK ALLA ROUTINE SPECIFICA** basato su tipo di pelle:
+   - **🚨 SE ROUTINE COMPLETA RICHIESTA: INCLUDI OBBLIGATORIAMENTE IL LINK ALLA ROUTINE** basato su tipo di pelle:
      * Pelle mista → https://beautycology.it/prodotto/routine-pelle-mista/
      * Pelle grassa → https://beautycology.it/prodotto/routine-pelle-grassa/
      * Pelle secca → https://beautycology.it/prodotto/routine-pelle-secca/
      * Altri problemi specifici → usa il link corrispondente dalla mappatura completa
+     * **SE NESSUNA CORRISPONDENZA SPECIFICA** → USA SEMPRE: https://beautycology.it/skincare-routine/
+   - **LA SEZIONE 7 "KIT BEAUTYCOLOGY CONSIGLIATO PER TE" È OBBLIGATORIA!**
    - Routine COMPLETA mattina e sera con prodotti Beautycology specifici
    - Prodotti REALI dal catalogo con nomi esatti e link obbligatori
    - Ordine esatto di applicazione
@@ -2831,15 +2847,15 @@ DEVI OBBLIGATORIAMENTE fornire NELL'ORDINE COMPLETO:
    - Benefici specifici per il caso dell'utente
    - Link obbligatorio al prodotto su beautycology.it
 
-${routineKit ? `7. **KIT BEAUTYCOLOGY CONSIGLIATO SPECIFICAMENTE PER TE** (OBBLIGATORIO):
+7. **KIT BEAUTYCOLOGY CONSIGLIATO SPECIFICAMENTE PER TE** (OBBLIGATORIO):
    Titolo: "🌟 KIT BEAUTYCOLOGY CONSIGLIATO PER TE:"
    **DEVI ASSOLUTAMENTE INCLUDERE QUESTA SEZIONE CON IL FORMATO ESATTO:**
-   **[${routineKit.name}](${routineKit.url})** - Kit completo formulato specificamente per le tue esigenze
+   ${routineKit ? `**[${routineKit.name}](${routineKit.url})** - Kit completo formulato specificamente per le tue esigenze` : `**[Scopri tutte le nostre routine complete](https://beautycology.it/skincare-routine/)** - Trova la routine perfetta per le tue esigenze specifiche`}
    
    Spiega brevemente perché questo kit è perfetto per il tipo di pelle e problematiche dell'utente.
-   **🚨 IMPORTANTE: Questa sezione deve essere ben visibile e formattata esattamente come indicato sopra.**
+   **🚨 IMPORTANTE: Questa sezione deve SEMPRE essere presente e ben visibile!**
 
-8. **CONSIGLI FINALI E TIPS PRATICI**:` : `7. **CONSIGLI FINALI E TIPS PRATICI**:`}
+8. **CONSIGLI FINALI E TIPS PRATICI**:
    - Errori comuni da evitare nella routine
    - Tips per massimizzare i risultati con i prodotti Beautycology
    - Frequenza e modalità d'uso ottimali
@@ -2850,7 +2866,7 @@ ${routineKit ? `7. **KIT BEAUTYCOLOGY CONSIGLIATO SPECIFICAMENTE PER TE** (OBBLI
 - **🔴 VERIFICA NOME:** Hai usato "${userName}" come nome? (NON "Fiammetta" o altri nomi!)
 - **🔴 VERIFICA INIZIO:** Il messaggio inizia con "Perfetto ${userName}! 🌟"? (NON con "Ciao" o "Oggetto:"!)
 - **🔴 VERIFICA PRODOTTI:** Nessun prodotto inesistente come SWR o Crema Defense!
-- **🚨 SE ROUTINE COMPLETA RICHIESTA: Verifica che sia incluso il link alla routine specifica** (es: https://beautycology.it/prodotto/routine-pelle-mista/)
+- **🚨 SE ROUTINE COMPLETA RICHIESTA: Verifica che la SEZIONE 7 sia presente con il link alla routine** (es: https://beautycology.it/prodotto/routine-pelle-mista/ o https://beautycology.it/skincare-routine/ come fallback)
 - Verifica che ogni prodotto menzionato sia un prodotto REALE del catalogo Beautycology
 - Verifica che ogni prodotto abbia il suo link completo
 - Verifica che il messaggio sia COMPLETO senza troncare nessuna sezione
@@ -3365,7 +3381,18 @@ Riscrivi il testo corretto COMPLETO:`;
     }
     
     // Call resolveRoutineKitLink to get appropriate kit recommendation
-    const routineKit = this.resolveRoutineKitLink(answers);
+    let routineKit = this.resolveRoutineKitLink(answers);
+    
+    // CRITICAL: Always ensure a routine link is present for complete routines
+    const adviceType = (answers.adviceType || '').toLowerCase();
+    if (!routineKit && adviceType.includes('routine')) {
+      console.log('⚠️ No specific routine kit found in fallback, using generic link');
+      routineKit = {
+        name: 'Collezione Routine Complete Beautycology',
+        url: 'https://beautycology.it/skincare-routine/'
+      };
+    }
+    
     console.log(`🔍 Routine kit recommendation in fallback: ${routineKit ? `${routineKit.name} (${routineKit.url})` : 'None found'}`);
     
     // Always use guaranteed real products from catalog
@@ -3460,12 +3487,12 @@ I prodotti Beautycology sono formulati con ingredienti scientificamente testati 
 📦 **I PRODOTTI BEAUTYCOLOGY PER TE:**
 Tutti i prodotti consigliati sono disponibili su beautycology.it con spedizione gratuita per ordini superiori a 50€.
 
-${routineKit ? `💫 **7. KIT BEAUTYCOLOGY CONSIGLIATO PER TE:**
-**[${routineKit.name}](${routineKit.url})** - Kit completo formulato specificamente per le tue esigenze
+💫 **7. KIT BEAUTYCOLOGY CONSIGLIATO PER TE:**
+${routineKit ? `**[${routineKit.name}](${routineKit.url})** - Kit completo formulato specificamente per le tue esigenze` : `**[Scopri tutte le nostre routine complete](https://beautycology.it/skincare-routine/)** - Trova la routine perfetta per le tue esigenze specifiche`}
 
 Questo kit include tutti i prodotti essenziali per creare una routine completa e bilanciata, perfetta per il tuo tipo di pelle e le tue specifiche problematiche.
 
-💡 **8. CONSIGLI FINALI:**` : '💡 **7. CONSIGLI FINALI:**'}
+💡 **8. CONSIGLI FINALI:**
 - Inizia gradualmente introducendo un prodotto alla volta per permettere alla pelle di adattarsi
 - La costanza è fondamentale: i primi risultati si vedono dopo 2 settimane, miglioramenti significativi dopo 1 mese
 - Evita di cambiare prodotti troppo frequentemente
