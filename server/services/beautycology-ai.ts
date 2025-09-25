@@ -208,9 +208,9 @@ B) Detergente-struccante
 C) Esfoliante
 D) Siero/Trattamento Specifico
 E) Crema viso
-F) Protezioni Solari
+F) Protezione solare
 G) Contorno Occhi
-H) Maschere Viso
+H) Maschera viso
 I) Prodotti Corpo"
 
 ⚠️ **DEVE includere SEMPRE le opzioni nel formato A), B), C), ecc.!**
@@ -939,7 +939,7 @@ class ProductValidator {
       
       'crema': 'creme',
       'creme': 'creme',
-      'creme viso': 'creme',
+      'crema viso': 'creme',
       'cream': 'creme',
       'moisturizer': 'creme',
       'idratante': 'creme',
@@ -1903,7 +1903,7 @@ export class BeautycologyAIService {
       }
 
       // Check if user is answering the advice type question (new question 4)
-      const adviceTypes = ["routine completa", "detergente-struccante", "esfoliante", "siero/trattamento specifico", "creme viso", "protezioni solari", "contorno occhi", "maschere viso", "prodotti corpo"];
+      const adviceTypes = ["routine completa", "detergente-struccante", "esfoliante", "siero/trattamento specifico", "crema viso", "protezione solare", "contorno occhi", "maschera viso", "prodotti corpo"];
       if (state.currentStep === 'awaiting_advice_type' && 
           adviceTypes.some(type => userMessage.toLowerCase().includes(type.toLowerCase().substring(0, 8)))) {
         console.log(`✅ User selected advice type: ${userMessage}`);
