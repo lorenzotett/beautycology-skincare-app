@@ -41,7 +41,7 @@ export class RAGLoader {
       }
 
       // Show final stats
-      const stats = ragService.getKnowledgeBaseStats();
+      const stats = await ragService.getKnowledgeBaseStats();
       console.log(`\n📊 Knowledge Base Stats:`);
       console.log(`- Total documents: ${stats.totalDocuments}`);
       console.log(`- Total chunks: ${stats.totalChunks}`);
@@ -66,7 +66,7 @@ export class RAGLoader {
       console.log(`✅ ${result}`);
       
       // Show updated stats
-      const stats = ragService.getKnowledgeBaseStats();
+      const stats = await ragService.getKnowledgeBaseStats();
       console.log(`\n📊 Updated Knowledge Base Stats:`);
       console.log(`- Total documents: ${stats.totalDocuments}`);
       console.log(`- Total chunks: ${stats.totalChunks}`);
@@ -76,8 +76,8 @@ export class RAGLoader {
     }
   }
 
-  static showKnowledgeBaseStatus(): void {
-    const stats = ragService.getKnowledgeBaseStats();
+  static async showKnowledgeBaseStatus(): Promise<void> {
+    const stats = await ragService.getKnowledgeBaseStats();
     console.log(`\n📊 Knowledge Base Status:`);
     console.log(`- Total documents: ${stats.totalDocuments}`);
     console.log(`- Total chunks: ${stats.totalChunks}`);
@@ -90,8 +90,8 @@ export class RAGLoader {
     }
   }
 
-  static clearKnowledgeBase(): void {
-    ragService.clearKnowledgeBase();
+  static async clearKnowledgeBase(): Promise<void> {
+    await ragService.clearKnowledgeBase();
     console.log(`✅ Knowledge base cleared successfully`);
   }
 
@@ -128,12 +128,12 @@ export async function loadDocument(filePath: string) {
   await RAGLoader.loadSingleDocument(filePath);
 }
 
-export function ragStatus() {
-  RAGLoader.showKnowledgeBaseStatus();
+export async function ragStatus() {
+  await RAGLoader.showKnowledgeBaseStatus();
 }
 
-export function ragClear() {
-  RAGLoader.clearKnowledgeBase();
+export async function ragClear() {
+  await RAGLoader.clearKnowledgeBase();
 }
 
 export async function ragTest(query: string) {

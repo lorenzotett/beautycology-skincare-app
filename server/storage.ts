@@ -2,12 +2,18 @@ import {
   users, 
   chatSessions, 
   chatMessages,
+  ragDocuments,
+  ragEmbeddings,
   type User, 
   type InsertUser,
   type ChatSession,
   type InsertChatSession,
   type ChatMessage,
-  type InsertChatMessage
+  type InsertChatMessage,
+  type RagDocument,
+  type InsertRagDocument,
+  type RagEmbedding,
+  type InsertRagEmbedding
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
@@ -44,23 +50,38 @@ export interface IStorage {
     completedSessions: number;
     totalMessages: number;
   }>;
+  
+  // RAG document methods
+  addRagDocuments(documents: InsertRagDocument[]): Promise<RagDocument[]>;
+  searchRagDocuments(query?: string): Promise<RagDocument[]>;
+  getRagDocuments(): Promise<RagDocument[]>;
+  clearRagDocuments(): Promise<void>;
+  getRagDocumentStats(): Promise<{
+    totalDocuments: number;
+    totalChunks: number;
+    sources: string[];
+  }>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private chatSessions: Map<string, ChatSession>;
   private chatMessages: Map<string, ChatMessage[]>;
+  private ragDocuments: Map<number, RagDocument>;
   private currentUserId: number;
   private currentSessionId: number;
   private currentMessageId: number;
+  private currentRagDocumentId: number;
 
   constructor() {
     this.users = new Map();
     this.chatSessions = new Map();
     this.chatMessages = new Map();
+    this.ragDocuments = new Map();
     this.currentUserId = 1;
     this.currentSessionId = 1;
     this.currentMessageId = 1;
+    this.currentRagDocumentId = 1;
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -225,6 +246,56 @@ export class MemStorage implements IStorage {
       activeSessions,
       completedSessions,
       totalMessages
+    };
+  }
+
+  async addRagDocuments(documents: InsertRagDocument[]): Promise<RagDocument[]> {
+    const added: RagDocument[] = [];
+    for (const doc of documents) {
+      const id = this.currentRagDocumentId++;
+      const ragDoc: RagDocument = {
+        id,
+        ...doc,
+        uploadedAt: new Date(),
+      };
+      this.ragDocuments.set(id, ragDoc);
+      added.push(ragDoc);
+    }
+    return added;
+  }
+
+  async searchRagDocuments(query?: string): Promise<RagDocument[]> {
+    const docs = Array.from(this.ragDocuments.values());
+    if (!query) return docs;
+    
+    // Simple text search for memory implementation
+    const lowerQuery = query.toLowerCase();
+    return docs.filter(doc => 
+      doc.content.toLowerCase().includes(lowerQuery) ||
+      doc.source.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  async getRagDocuments(): Promise<RagDocument[]> {
+    return Array.from(this.ragDocuments.values());
+  }
+
+  async clearRagDocuments(): Promise<void> {
+    this.ragDocuments.clear();
+  }
+
+  async getRagDocumentStats(): Promise<{
+    totalDocuments: number;
+    totalChunks: number;
+    sources: string[];
+  }> {
+    const docs = Array.from(this.ragDocuments.values());
+    const sources = Array.from(new Set(docs.map(doc => doc.source)));
+    
+    return {
+      totalDocuments: sources.length,
+      totalChunks: docs.length,
+      sources: sources
     };
   }
 }
@@ -396,6 +467,59 @@ export class DatabaseStorage implements IStorage {
       activeSessions,
       completedSessions,
       totalMessages
+    };
+  }
+
+  async addRagDocuments(documents: InsertRagDocument[]): Promise<RagDocument[]> {
+    const added = await db
+      .insert(ragDocuments)
+      .values(documents)
+      .returning();
+    return added;
+  }
+
+  async searchRagDocuments(query?: string): Promise<RagDocument[]> {
+    if (!query) {
+      return await db
+        .select()
+        .from(ragDocuments)
+        .orderBy(ragDocuments.uploadedAt);
+    }
+    
+    // For PostgreSQL text search - using ILIKE for case-insensitive search
+    const lowerQuery = `%${query}%`;
+    return await db
+      .select()
+      .from(ragDocuments)
+      .where(
+        sql`${ragDocuments.content} ILIKE ${lowerQuery} OR ${ragDocuments.source} ILIKE ${lowerQuery}`
+      )
+      .orderBy(ragDocuments.uploadedAt);
+  }
+
+  async getRagDocuments(): Promise<RagDocument[]> {
+    return await db
+      .select()
+      .from(ragDocuments)
+      .orderBy(ragDocuments.uploadedAt);
+  }
+
+  async clearRagDocuments(): Promise<void> {
+    await db.delete(ragDocuments);
+  }
+
+  async getRagDocumentStats(): Promise<{
+    totalDocuments: number;
+    totalChunks: number;
+    sources: string[];
+  }> {
+    const docs = await db.select().from(ragDocuments);
+    const sources = Array.from(new Set(docs.map(doc => doc.source)));
+    
+    return {
+      totalDocuments: sources.length,
+      totalChunks: docs.length,
+      sources: sources
     };
   }
 }

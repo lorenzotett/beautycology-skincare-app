@@ -60,6 +60,54 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
   metadata: z.unknown().optional(),
 });
 
+// RAG Documents table
+export const ragDocuments = pgTable("rag_documents", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  metadata: json("metadata").$type<{
+    source: string;
+    type: string;
+    uploadedAt: string;
+    chunkIndex: number;
+    totalChunks: number;
+  }>().notNull(),
+  source: text("source").notNull(),
+  chunkIndex: integer("chunk_index").notNull(),
+  totalChunks: integer("total_chunks").notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+});
+
+// RAG Embeddings table (for future implementations)
+export const ragEmbeddings = pgTable("rag_embeddings", {
+  id: serial("id").primaryKey(),
+  documentId: integer("document_id").notNull().references(() => ragDocuments.id, { onDelete: "cascade" }),
+  embedding: json("embedding").$type<number[]>().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertRagDocumentSchema = createInsertSchema(ragDocuments).pick({
+  content: true,
+  metadata: true,
+  source: true,
+  chunkIndex: true,
+  totalChunks: true,
+}).extend({
+  metadata: z.object({
+    source: z.string(),
+    type: z.string(),
+    uploadedAt: z.string(),
+    chunkIndex: z.number(),
+    totalChunks: z.number(),
+  }),
+});
+
+export const insertRagEmbeddingSchema = createInsertSchema(ragEmbeddings).pick({
+  documentId: true,
+  embedding: true,
+}).extend({
+  embedding: z.array(z.number()),
+});
+
 export type Brand = "dermasense" | "beautycology";
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -68,3 +116,7 @@ export type ChatSession = typeof chatSessions.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type RagDocument = typeof ragDocuments.$inferSelect;
+export type InsertRagDocument = z.infer<typeof insertRagDocumentSchema>;
+export type RagEmbedding = typeof ragEmbeddings.$inferSelect;
+export type InsertRagEmbedding = z.infer<typeof insertRagEmbeddingSchema>;

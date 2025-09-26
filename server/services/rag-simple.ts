@@ -2,6 +2,8 @@ import { GoogleGenAI } from '@google/genai';
 import fs from 'fs';
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
+import { storage } from '../storage';
+import type { InsertRagDocument } from '@shared/schema';
 
 interface Document {
   id: string;
@@ -25,7 +27,6 @@ interface RAGResult {
 }
 
 export class SimpleRAGService {
-  private documents: Document[] = [];
   private ai: GoogleGenAI;
 
   constructor() {
@@ -40,8 +41,7 @@ export class SimpleRAGService {
       const chunks = this.splitIntoChunks(fileContent);
       
       // Generate documents for each chunk
-      const documents: Document[] = chunks.map((chunk, index) => ({
-        id: `${originalName}_chunk_${index}_${Date.now()}`,
+      const documents: InsertRagDocument[] = chunks.map((chunk, index) => ({
         content: chunk,
         metadata: {
           source: originalName,
@@ -49,11 +49,14 @@ export class SimpleRAGService {
           uploadedAt: new Date().toISOString(),
           chunkIndex: index,
           totalChunks: chunks.length
-        }
+        },
+        source: originalName,
+        chunkIndex: index,
+        totalChunks: chunks.length
       }));
 
-      // Add to in-memory storage
-      this.documents.push(...documents);
+      // Add to database
+      await storage.addRagDocuments(documents);
 
       console.log(`Added ${chunks.length} chunks from ${originalName} to knowledge base`);
       return `Successfully added ${chunks.length} chunks from ${originalName}`;
@@ -69,8 +72,11 @@ export class SimpleRAGService {
 
   async searchSimilar(query: string, limit: number = 5): Promise<RAGResult> {
     try {
+      // Get all documents from database
+      const documents = await storage.getRagDocuments();
+      
       // Simple text similarity search
-      const results = this.documents
+      const results = documents
         .map(doc => ({
           ...doc,
           similarity: this.calculateSimilarity(query.toLowerCase(), doc.content.toLowerCase())
@@ -229,28 +235,22 @@ Rispondi utilizzando sia le informazioni dalla knowledge base che il contesto de
     }
   }
 
-  getKnowledgeBaseStats(): {
+  async getKnowledgeBaseStats(): Promise<{
     totalDocuments: number;
     totalChunks: number;
     sources: string[];
-  } {
-    const sources = Array.from(new Set(this.documents.map(doc => doc.metadata.source)));
-    
-    return {
-      totalDocuments: sources.length,
-      totalChunks: this.documents.length,
-      sources: sources
-    };
+  }> {
+    return await storage.getRagDocumentStats();
   }
 
-  clearKnowledgeBase(): void {
-    this.documents = [];
+  async clearKnowledgeBase(): Promise<void> {
+    await storage.clearRagDocuments();
     console.log('Knowledge base cleared successfully');
   }
 
   // Get all documents for debugging
-  getAllDocuments(): Document[] {
-    return this.documents;
+  async getAllDocuments(): Promise<any[]> {
+    return await storage.getRagDocuments();
   }
 }
 

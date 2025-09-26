@@ -1383,7 +1383,7 @@ export class BeautycologyAIService {
   private async initializeRAG(): Promise<void> {
     try {
       // Load documents into RAG service if not already loaded
-      const stats = ragService.getKnowledgeBaseStats();
+      const stats = await ragService.getKnowledgeBaseStats();
       if (stats.totalDocuments === 0) {
         console.log('📚 Loading Beautycology knowledge base...');
         const { RAGLoader } = await import('../utils/rag-loader');
@@ -1448,7 +1448,7 @@ export class BeautycologyAIService {
           const processedImage = await preprocessor.preprocessForGemini(imageData);
           
           // Perform skin analysis
-          const skinAnalysis = await this.skinAnalysisService.analyzeSkinPhoto(processedImage.base64);
+          const skinAnalysis = await this.skinAnalysisService.analyzeImageFromBase64(processedImage.base64);
           
           if (skinAnalysis) {
             console.log('✅ Skin analysis completed successfully');
@@ -1468,8 +1468,8 @@ export class BeautycologyAIService {
       if (isRoutineRequest && skinAnalysisData) {
         console.log('🌟 User requested routine and we have skin analysis data');
         
-        // Get skin type from extracted info or default
-        const skinType = this.extractedInfo.get(sessionId)?.skinType || 'normale';
+        // Get skin type from session or default
+        const skinType = 'normale'; // Default skin type
         
         // Generate detailed routine response
         const detailedRoutine = this.generateDetailedRoutineResponse(
@@ -4245,7 +4245,7 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
       return response;
     } catch (error) {
       console.error('Error generating detailed routine:', error);
-      return null;
+      return ''; // Return empty string instead of null
     }
   }
 
@@ -4296,7 +4296,7 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
     }
     
     // Check if we have skin analysis data for this session
-    const skinAnalysisData = this.sessionSkinAnalysis.get(sessionId);
+    const skinAnalysisData = sessionId ? this.sessionSkinAnalysis.get(sessionId) : undefined;
     
     // If we have skin analysis data and user wants a routine, use detailed generation
     const adviceType = (answers.adviceType || '').toLowerCase();

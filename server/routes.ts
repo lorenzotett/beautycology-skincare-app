@@ -3230,8 +3230,8 @@ ${imageFormulas.map(item =>
   // RAG Knowledge Base Management Routes
   app.get('/api/admin/rag/stats', async (req, res) => {
     try {
-      const ragStats = await ragService.getStats();
-      const vectorRagStats = await vectorRagService.getStats();
+      const ragStats = await ragService.getKnowledgeBaseStats();
+      const vectorRagStats = await vectorRagService.getKnowledgeBaseStats();
 
       res.json({
         success: true,
