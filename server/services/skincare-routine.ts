@@ -277,8 +277,8 @@ export class SkincareRoutineService {
     console.log(`🔍 Trovati ${suitableProducts.length} prodotti adatti`);
 
     // 3. Create morning and evening routines
-    const morningSteps = this.createMorningRoutine(suitableProducts, topConcerns);
-    const eveningSteps = this.createEveningRoutine(suitableProducts, topConcerns);
+    const morningSteps = this.createMorningRoutine(suitableProducts, topConcerns, skinType);
+    const eveningSteps = this.createEveningRoutine(suitableProducts, topConcerns, skinType);
 
     // 4. Calculate total cost
     const totalProducts = morningSteps.length + eveningSteps.filter(p => 
@@ -423,15 +423,15 @@ export class SkincareRoutineService {
   /**
    * Create morning routine (max 3-4 products)
    */
-  private createMorningRoutine(products: BeautycologyProduct[], concerns: Array<{concern: string, score: number}>): RoutineProduct[] {
+  private createMorningRoutine(products: BeautycologyProduct[], concerns: Array<{concern: string, score: number}>, skinType: string): RoutineProduct[] {
     const routine: RoutineProduct[] = [];
     const usedProducts = new Set<string>();
     const usedCategories = new Set<string>();
 
     // Sort products by their score for better personalization
     const sortedProducts = [...products].sort((a, b) => {
-      const scoreA = this.calculateProductScore(a, concerns, '');
-      const scoreB = this.calculateProductScore(b, concerns, '');
+      const scoreA = this.calculateProductScore(a, concerns, skinType);
+      const scoreB = this.calculateProductScore(b, concerns, skinType);
       return scoreB - scoreA;
     });
 
@@ -487,15 +487,15 @@ export class SkincareRoutineService {
   /**
    * Create evening routine (max 4-5 products)
    */
-  private createEveningRoutine(products: BeautycologyProduct[], concerns: Array<{concern: string, score: number}>): RoutineProduct[] {
+  private createEveningRoutine(products: BeautycologyProduct[], concerns: Array<{concern: string, score: number}>, skinType: string): RoutineProduct[] {
     const routine: RoutineProduct[] = [];
     const usedProducts = new Set<string>();
     const usedCategories = new Set<string>();
 
     // Sort products by their score for better personalization
     const sortedProducts = [...products].sort((a, b) => {
-      const scoreA = this.calculateProductScore(a, concerns, '');
-      const scoreB = this.calculateProductScore(b, concerns, '');
+      const scoreA = this.calculateProductScore(a, concerns, skinType);
+      const scoreB = this.calculateProductScore(b, concerns, skinType);
       return scoreB - scoreA;
     });
 
