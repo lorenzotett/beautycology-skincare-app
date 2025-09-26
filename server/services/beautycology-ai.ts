@@ -7,6 +7,8 @@ import fs from 'fs';
 import path from 'path';
 import { SkincareRoutineService } from "./skincare-routine";
 import { SkinAnalysisService } from "./skin-analysis";
+import { advancedRoutineGenerator } from "./advanced-routine-generator";
+import type { UserAnalysis, RAGPassage } from "./advanced-routine-generator";
 
 const ai = new GoogleGenAI({ 
   apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || ""
@@ -1209,6 +1211,7 @@ export class BeautycologyAIService {
   private skincareRoutineService = new SkincareRoutineService();
   private skinAnalysisService = new SkinAnalysisService();
   private sessionSkinAnalysis: Map<string, any> = new Map();
+  private currentSessionId: string = '';
   private modelName = "gemini-2.5-flash";
   private generationConfig = {
     temperature: 0.2,
@@ -1428,6 +1431,9 @@ export class BeautycologyAIService {
     choices?: string[];
   }> {
     try {
+      // Set current session ID for use in other methods
+      this.currentSessionId = sessionId;
+      
       // Get or create session history
       let sessionHistory = this.chatSessions.get(sessionId) || [];
       
@@ -1472,7 +1478,7 @@ export class BeautycologyAIService {
         const skinType = 'normale'; // Default skin type
         
         // Generate detailed routine response
-        const detailedRoutine = this.generateDetailedRoutineResponse(
+        const detailedRoutine = await this.generateDetailedRoutineResponse(
           skinAnalysisData,
           skinType
         );
@@ -3480,7 +3486,7 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
       console.log('🔬 Found skin analysis data for session, generating detailed routine with individual products');
       
       try {
-        const detailedRoutine = this.generateDetailedRoutineResponse(
+        const detailedRoutine = await this.generateDetailedRoutineResponse(
           skinAnalysisData,
           skinType
         );
@@ -4181,72 +4187,181 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
     return null;
   }
 
-  // Generate detailed routine using SkincareRoutineService
-  private generateDetailedRoutineResponse(skinAnalysisResults: any, skinType: string = 'normale'): string {
+  // Generate detailed routine using Advanced Routine Generator
+  private async generateDetailedRoutineResponse(skinAnalysisResults: any, skinType: string = 'normale'): Promise<string> {
     try {
-      // Generate personalized routine using the service
-      const routine = this.skincareRoutineService.generatePersonalizedRoutine(
+      console.log('🎯 Using advanced routine generator for personalized recommendations');
+      
+      // Get user session data if available
+      const sessionId = this.currentSessionId || '';
+      let userName = '';
+      
+      if (sessionId) {
+        try {
+          const session = await storage.getChatSession(sessionId);
+          if (session?.userName) {
+            userName = session.userName;
+          }
+        } catch (error) {
+          console.log('Could not retrieve userName from session');
+        }
+      }
+
+      // Prepare USER_ANALYSIS from skin data
+      const userAnalysis = this.skincareRoutineService.prepareUserAnalysisFromSkinData(
         skinAnalysisResults,
         skinType,
-        {
-          budget: 'medium',
-          preferNatural: false
+        userName
+      );
+      
+      console.log('📊 Prepared USER_ANALYSIS:', userAnalysis);
+
+      // Get RAG context - search for relevant skincare knowledge
+      let ragPassages: RAGPassage[] = [];
+      
+      try {
+        // Search for relevant skincare information based on concerns
+        const searchQueries = [
+          `prodotti ${skinType}`,
+          ...userAnalysis.concerns_detected.map(c => `trattamento ${c}`),
+          'routine skincare mattina sera',
+          'ingredienti attivi cosmeceutici'
+        ];
+
+        for (const query of searchQueries.slice(0, 3)) { // Limit searches
+          const ragResult = await ragService.searchSimilar(query, 5);
+          if (ragResult.sources && ragResult.sources.length > 0) {
+            ragPassages.push(...ragResult.sources.map((source: any) => ({
+              doc_id: source.metadata?.doc_id || 'unknown',
+              title: source.metadata?.source || '',
+              section: source.metadata?.section || '',
+              passage: source.content,
+              brand: 'Beautycology',
+              language: 'it'
+            })));
+          }
         }
+        
+        // Also add products from knowledge base as RAG passages
+        if (this.knowledgeBase?.products) {
+          const productPassages = this.knowledgeBase.products.slice(0, 20).map((product: any) => ({
+            doc_id: `product_${product.name}`,
+            title: product.name,
+            section: product.category || 'Prodotti',
+            passage: `${product.name} - ${product.price}. ${product.description}`,
+            brand: 'Beautycology',
+            language: 'it',
+            product_name: product.name,
+            properties: this.extractProductProperties(product.description)
+          }));
+          ragPassages.push(...productPassages);
+        }
+        
+        console.log(`📚 Retrieved ${ragPassages.length} RAG passages for routine generation`);
+      } catch (error) {
+        console.error('Error retrieving RAG context:', error);
+        // Continue with empty RAG context if retrieval fails
+      }
+
+      // Generate routine using the advanced generator
+      const routineResult = await advancedRoutineGenerator.generateRoutineFromAnalysis(
+        userAnalysis,
+        ragPassages
       );
 
-      // Format the routine response in Italian
-      let response = "🌟 **LA TUA ROUTINE SKINCARE PERSONALIZZATA BEAUTYCOLOGY** 🌟\n\n";
+      console.log('✅ Generated advanced routine with confidence:', routineResult.json.confidence);
+
+      // Return the natural language description
+      return routineResult.text;
       
-      // Add skin analysis summary
-      response += "📊 **ANALISI DELLA TUA PELLE:**\n";
-      response += `• Tipo di pelle: ${routine.skinType}\n`;
-      response += `• Principali problematiche: ${routine.skinConcerns.join(', ')}\n\n`;
+    } catch (error) {
+      console.error('Error generating advanced routine:', error);
+      
+      // Fallback to original routine generation if advanced fails
+      console.log('⚠️ Falling back to original routine generation');
+      try {
+        const routine = this.skincareRoutineService.generatePersonalizedRoutine(
+          skinAnalysisResults,
+          skinType,
+          {
+            budget: 'medium',
+            preferNatural: false
+          }
+        );
 
-      // Morning routine
-      response += "☀️ **ROUTINE MATTUTINA:**\n";
-      routine.morningSteps.forEach((product, index) => {
-        response += `\n**${index + 1}. ${product.name}**\n`;
-        response += `💰 Prezzo: ${product.price}\n`;
-        response += `🔗 [Acquista qui](${product.url})\n`;
-        response += `\n📋 **Perché questo prodotto:**\n${product.scientificExplanation}\n`;
-        response += `\n🧪 **Ingredienti chiave:** ${product.keyIngredients.join(', ')}\n`;
-        response += `\n---\n`;
-      });
+        // Format the routine response in Italian
+        let response = "🌟 **LA TUA ROUTINE SKINCARE PERSONALIZZATA BEAUTYCOLOGY** 🌟\n\n";
+        
+        // Add skin analysis summary
+        response += "📊 **ANALISI DELLA TUA PELLE:**\n";
+        response += `• Tipo di pelle: ${routine.skinType}\n`;
+        response += `• Principali problematiche: ${routine.skinConcerns.join(', ')}\n\n`;
 
-      // Evening routine
-      response += "\n🌙 **ROUTINE SERALE:**\n";
-      routine.eveningSteps.forEach((product, index) => {
-        // Skip if already in morning routine
-        if (routine.morningSteps.some(m => m.name === product.name)) {
-          response += `\n**${index + 1}. ${product.name}** (già nella routine mattutina)\n`;
-        } else {
+        // Morning routine
+        response += "☀️ **ROUTINE MATTUTINA:**\n";
+        routine.morningSteps.forEach((product, index) => {
           response += `\n**${index + 1}. ${product.name}**\n`;
           response += `💰 Prezzo: ${product.price}\n`;
           response += `🔗 [Acquista qui](${product.url})\n`;
           response += `\n📋 **Perché questo prodotto:**\n${product.scientificExplanation}\n`;
           response += `\n🧪 **Ingredienti chiave:** ${product.keyIngredients.join(', ')}\n`;
-        }
-        response += `\n---\n`;
-      });
+          response += `\n---\n`;
+        });
 
-      // Add recommendations
-      response += `\n💡 **CONSIGLI PERSONALIZZATI:**\n${routine.recommendations}\n\n`;
+        // Evening routine
+        response += "\n🌙 **ROUTINE SERALE:**\n";
+        routine.eveningSteps.forEach((product, index) => {
+          // Skip if already in morning routine
+          if (routine.morningSteps.some(m => m.name === product.name)) {
+            response += `\n**${index + 1}. ${product.name}** (già nella routine mattutina)\n`;
+          } else {
+            response += `\n**${index + 1}. ${product.name}**\n`;
+            response += `💰 Prezzo: ${product.price}\n`;
+            response += `🔗 [Acquista qui](${product.url})\n`;
+            response += `\n📋 **Perché questo prodotto:**\n${product.scientificExplanation}\n`;
+            response += `\n🧪 **Ingredienti chiave:** ${product.keyIngredients.join(', ')}\n`;
+          }
+          response += `\n---\n`;
+        });
 
-      // Add total cost
-      response += `\n💵 **COSTO TOTALE STIMATO:** €${routine.estimatedTotalCost.toFixed(2)}\n`;
-      response += `📦 **Numero totale di prodotti:** ${routine.totalProducts}\n\n`;
+        // Add recommendations
+        response += `\n💡 **CONSIGLI PERSONALIZZATI:**\n${routine.recommendations}\n\n`;
 
-      // Add final message
-      response += "\n✨ **NOTA IMPORTANTE:**\n";
-      response += "Questa routine è stata creata specificamente per le tue esigenze basandosi sull'analisi fotografica della tua pelle. ";
-      response += "Introduci i prodotti gradualmente (uno ogni 3-4 giorni) per permettere alla tua pelle di adattarsi. ";
-      response += "Se hai domande specifiche su come utilizzare i prodotti o vuoi ulteriori chiarimenti, sono qui per aiutarti!\n";
+        // Add total cost
+        response += `\n💵 **COSTO TOTALE STIMATO:** €${routine.estimatedTotalCost.toFixed(2)}\n`;
+        response += `📦 **Numero totale di prodotti:** ${routine.totalProducts}\n\n`;
 
-      return response;
-    } catch (error) {
-      console.error('Error generating detailed routine:', error);
-      return ''; // Return empty string instead of null
+        // Add final message
+        response += "\n✨ **NOTA IMPORTANTE:**\n";
+        response += "Questa routine è stata creata specificamente per le tue esigenze basandosi sull'analisi fotografica della tua pelle. ";
+        response += "Introduci i prodotti gradualmente (uno ogni 3-4 giorni) per permettere alla tua pelle di adattarsi. ";
+        response += "Se hai domande specifiche su come utilizzare i prodotti o vuoi ulteriori chiarimenti, sono qui per aiutarti!\n";
+
+        return response;
+      } catch (fallbackError) {
+        console.error('Fallback routine generation also failed:', fallbackError);
+        return ''; // Return empty string instead of null
+      }
     }
+  }
+
+  /**
+   * Extract product properties from description
+   */
+  private extractProductProperties(description: string): string[] {
+    const properties: string[] = [];
+    const desc = description.toLowerCase();
+    
+    if (desc.includes('dermatologicamente testato')) properties.push('Dermatologicamente testato');
+    if (desc.includes('nickel tested')) properties.push('Nickel Tested');
+    if (desc.includes('senza profumo')) properties.push('Senza profumo');
+    if (desc.includes('non comedogenic')) properties.push('Non comedogenico');
+    if (desc.includes('spf')) properties.push('SPF');
+    if (desc.includes('acido')) properties.push('Esfoliante');
+    if (desc.includes('retino')) properties.push('Retinoide');
+    if (desc.includes('biologico') || desc.includes('naturale')) properties.push('Naturale');
+    
+    return properties;
   }
 
   // Detect if user is asking for a routine
@@ -4302,7 +4417,7 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
     const adviceType = (answers.adviceType || '').toLowerCase();
     if (skinAnalysisData && adviceType.includes('routine')) {
       console.log('📊 Using detailed routine generation with skin analysis data');
-      const detailedRoutine = this.generateDetailedRoutineResponse(
+      const detailedRoutine = await this.generateDetailedRoutineResponse(
         skinAnalysisData,
         skinType
       );

@@ -126,6 +126,96 @@ export class SkincareRoutineService {
     this.loadBeautycologyData();
   }
 
+  /**
+   * Prepare USER_ANALYSIS object from skin analysis results
+   * This method formats the skin analysis data for the advanced routine generator
+   */
+  public prepareUserAnalysisFromSkinData(
+    skinAnalysisResults: SkinAnalysisResult,
+    skinType?: string,
+    userName?: string,
+    additionalPreferences?: string[]
+  ): {
+    skin_type_detected: string;
+    concerns_detected: string[];
+    preferences: string[];
+  } {
+    // Detect skin type from analysis or use provided
+    let detectedSkinType = skinType || 'normale';
+    
+    // Auto-detect skin type if not provided
+    if (!skinType) {
+      if (skinAnalysisResults.oleosita > 60) {
+        detectedSkinType = 'grassa';
+      } else if (skinAnalysisResults.idratazione < 30) {
+        detectedSkinType = 'secca';
+      } else if (skinAnalysisResults.rossori > 50) {
+        detectedSkinType = 'sensibile';
+      } else if (skinAnalysisResults.oleosita > 40 && skinAnalysisResults.idratazione < 50) {
+        detectedSkinType = 'mista';
+      }
+    }
+
+    // Extract concerns from analysis (scores > 30 indicate significant issues)
+    const concerns: string[] = [];
+    
+    if (skinAnalysisResults.acne > 30) concerns.push('acne');
+    if (skinAnalysisResults.rughe > 30) concerns.push('rughe');
+    if (skinAnalysisResults.pigmentazione > 30) concerns.push('macchie');
+    if (skinAnalysisResults.rossori > 30) concerns.push('rossori');
+    if (skinAnalysisResults.pori_dilatati > 30) concerns.push('pori_dilatati');
+    if (skinAnalysisResults.texture_uniforme > 30) concerns.push('texture_irregolare');
+    if (skinAnalysisResults.oleosita > 50) concerns.push('oleosità');
+    if (skinAnalysisResults.idratazione < 40) concerns.push('secchezza');
+    if (skinAnalysisResults.elasticita < 40) concerns.push('perdita_elasticità');
+    if (skinAnalysisResults.danni_solari > 30) concerns.push('danni_solari');
+    if (skinAnalysisResults.opacita > 30) concerns.push('opacità');
+    
+    // If no significant concerns, add based on skin type
+    if (concerns.length === 0) {
+      if (detectedSkinType === 'grassa') {
+        concerns.push('oleosità', 'pori_dilatati');
+      } else if (detectedSkinType === 'secca') {
+        concerns.push('secchezza', 'idratazione');
+      } else if (detectedSkinType === 'sensibile') {
+        concerns.push('rossori', 'sensibilità');
+      } else if (detectedSkinType === 'mista') {
+        concerns.push('zona_T_grassa', 'guance_secche');
+      } else {
+        concerns.push('mantenimento', 'prevenzione');
+      }
+    }
+
+    // Prepare preferences
+    const preferences: string[] = [];
+    
+    if (userName) {
+      preferences.push(`name:${userName}`);
+    }
+    
+    // Add skin-specific preferences
+    if (detectedSkinType === 'sensibile' || skinAnalysisResults.rossori > 40) {
+      preferences.push('prefer_gentle_products');
+      preferences.push('dermatologically_tested');
+      preferences.push('fragrance_free');
+    }
+    
+    if (skinAnalysisResults.acne > 40) {
+      preferences.push('non_comedogenic');
+    }
+    
+    // Add any additional preferences provided
+    if (additionalPreferences) {
+      preferences.push(...additionalPreferences);
+    }
+
+    return {
+      skin_type_detected: detectedSkinType,
+      concerns_detected: concerns,
+      preferences: preferences
+    };
+  }
+
   private loadBeautycologyData(): void {
     try {
       // Try to find the file from different working directories
