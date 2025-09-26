@@ -41,7 +41,7 @@ interface PersonalizedRoutine {
 }
 
 export class SkincareRoutineService {
-  private beautycologyData: BeautycologyKnowledge;
+  private beautycologyData: BeautycologyKnowledge = { products: [] };
   
   // Mapping of product categories to routine steps
   private readonly ROUTINE_ORDER = {
@@ -169,7 +169,6 @@ export class SkincareRoutineService {
     if (skinAnalysisResults.idratazione < 40) concerns.push('secchezza');
     if (skinAnalysisResults.elasticita < 40) concerns.push('perdita_elasticità');
     if (skinAnalysisResults.danni_solari > 30) concerns.push('danni_solari');
-    if (skinAnalysisResults.opacita > 30) concerns.push('opacità');
     
     // If no significant concerns, add based on skin type
     if (concerns.length === 0) {
@@ -427,9 +426,17 @@ export class SkincareRoutineService {
   private createMorningRoutine(products: BeautycologyProduct[], concerns: Array<{concern: string, score: number}>): RoutineProduct[] {
     const routine: RoutineProduct[] = [];
     const usedProducts = new Set<string>();
+    const usedCategories = new Set<string>();
 
-    // 1. Cleanser (optional for morning)
-    const cleanser = products.find(p => 
+    // Sort products by their score for better personalization
+    const sortedProducts = [...products].sort((a, b) => {
+      const scoreA = this.calculateProductScore(a, concerns, '');
+      const scoreB = this.calculateProductScore(b, concerns, '');
+      return scoreB - scoreA;
+    });
+
+    // 1. Cleanser (optional for morning - prioritize gentle ones)
+    const cleanser = sortedProducts.find(p => 
       p.category === 'Detergenti' && 
       !usedProducts.has(p.name) &&
       p.description.toLowerCase().includes('delicato')
@@ -437,25 +444,27 @@ export class SkincareRoutineService {
     if (cleanser && routine.length < 4) {
       routine.push(this.createRoutineProduct(cleanser, concerns, routine.length + 1));
       usedProducts.add(cleanser.name);
+      usedCategories.add('Detergenti');
     }
 
-    // 2. Serum (if needed)
-    const serum = products.find(p => 
+    // 2. Serum (based on concerns, not specific names)
+    const serum = sortedProducts.find(p => 
       p.category === 'Sieri' && 
-      !usedProducts.has(p.name) &&
-      (p.name.includes('C-Boost') || p.name.includes('Bionic'))
+      !usedProducts.has(p.name)
     );
     if (serum && routine.length < 4) {
       routine.push(this.createRoutineProduct(serum, concerns, routine.length + 1));
       usedProducts.add(serum.name);
+      usedCategories.add('Sieri');
     }
 
-    // 3. Treatment (if specific concern)
-    const treatment = products.find(p => 
+    // 3. Treatment or Moisturizer (based on skin needs)
+    const treatment = sortedProducts.find(p => 
       (p.category === 'Altri Prodotti' || p.category === 'Creme') &&
       !usedProducts.has(p.name) &&
-      !p.name.includes('SPF') &&
-      !p.name.includes('Retinal')
+      !p.description.toLowerCase().includes('spf') &&
+      !p.name.toLowerCase().includes('retinal') && // Retinoids for evening only
+      !p.name.toLowerCase().includes('esfoliant') // Exfoliants for evening only
     );
     if (treatment && routine.length < 4) {
       routine.push(this.createRoutineProduct(treatment, concerns, routine.length + 1));
@@ -463,7 +472,7 @@ export class SkincareRoutineService {
     }
 
     // 4. SPF (essential for morning)
-    const spf = products.find(p => 
+    const spf = sortedProducts.find(p => 
       p.description.toLowerCase().includes('spf') && 
       !usedProducts.has(p.name)
     );
@@ -481,23 +490,32 @@ export class SkincareRoutineService {
   private createEveningRoutine(products: BeautycologyProduct[], concerns: Array<{concern: string, score: number}>): RoutineProduct[] {
     const routine: RoutineProduct[] = [];
     const usedProducts = new Set<string>();
+    const usedCategories = new Set<string>();
+
+    // Sort products by their score for better personalization
+    const sortedProducts = [...products].sort((a, b) => {
+      const scoreA = this.calculateProductScore(a, concerns, '');
+      const scoreB = this.calculateProductScore(b, concerns, '');
+      return scoreB - scoreA;
+    });
 
     // 1. Cleanser (essential for evening)
-    const cleanser = products.find(p => 
+    const cleanser = sortedProducts.find(p => 
       p.category === 'Detergenti' && 
       !usedProducts.has(p.name)
     );
     if (cleanser) {
       routine.push(this.createRoutineProduct(cleanser, concerns, routine.length + 1));
       usedProducts.add(cleanser.name);
+      usedCategories.add('Detergenti');
     }
 
-    // 2. Exfoliant (2-3 times per week)
+    // 2. Exfoliant (2-3 times per week if needed)
     const needsExfoliation = concerns.find(c => 
       ['texture_uniforme', 'pori_dilatati', 'acne'].includes(c.concern)
     );
     if (needsExfoliation) {
-      const exfoliant = products.find(p => 
+      const exfoliant = sortedProducts.find(p => 
         p.category === 'Esfolianti' && 
         !usedProducts.has(p.name)
       );
@@ -506,37 +524,68 @@ export class SkincareRoutineService {
         exfoliantProduct.scientificExplanation += ' (Utilizzare 2-3 volte a settimana)';
         routine.push(exfoliantProduct);
         usedProducts.add(exfoliant.name);
+        usedCategories.add('Esfolianti');
       }
     }
 
-    // 3. Treatment serum (retinal, acids, etc.)
-    const treatmentSerum = products.find(p => 
-      (p.category === 'Sieri' || p.category === 'Altri Prodotti') &&
-      !usedProducts.has(p.name) &&
-      (p.name.includes('Retinal') || p.name.includes('Multipod') || p.name.includes('Bionic'))
+    // 3. Treatment serum (selected based on actual skin concerns)
+    const hasRetinoidConcerns = concerns.find(c => 
+      ['rughe', 'invecchiamento', 'macchie', 'texture_uniforme'].includes(c.concern)
     );
+    
+    // Choose treatment based on primary concerns
+    const treatmentSerum = sortedProducts.find(p => {
+      if (!usedProducts.has(p.name) && 
+          (p.category === 'Sieri' || p.category === 'Altri Prodotti')) {
+        
+        // If aging/wrinkles are a concern, prioritize retinoid products
+        if (hasRetinoidConcerns && 
+            (p.name.toLowerCase().includes('retinal') || 
+             p.description.toLowerCase().includes('retinol'))) {
+          return true;
+        }
+        
+        // Otherwise, select based on highest score
+        if (!usedCategories.has('Sieri')) {
+          return true;
+        }
+      }
+      return false;
+    });
+    
     if (treatmentSerum && routine.length < 5) {
       routine.push(this.createRoutineProduct(treatmentSerum, concerns, routine.length + 1));
       usedProducts.add(treatmentSerum.name);
+      if (treatmentSerum.category === 'Sieri') {
+        usedCategories.add('Sieri');
+      }
     }
 
-    // 4. Hydrating/repairing product
-    const hydrator = products.find(p => 
+    // 4. Hydrating/repairing product (based on skin needs)
+    const needsHydration = concerns.find(c => 
+      ['idratazione', 'secchezza', 'sensibilita'].includes(c.concern)
+    );
+    
+    const hydrator = sortedProducts.find(p => 
       (p.category === 'Creme' || p.category === 'Altri Prodotti') &&
       !usedProducts.has(p.name) &&
-      (p.name.includes('Skin Reset') || p.description.includes('idrat'))
+      !p.description.toLowerCase().includes('spf') && // No SPF for night
+      (needsHydration || p.description.toLowerCase().includes('idrat') || 
+       p.description.toLowerCase().includes('repair') ||
+       p.description.toLowerCase().includes('nutrient'))
     );
+    
     if (hydrator && routine.length < 5) {
       routine.push(this.createRoutineProduct(hydrator, concerns, routine.length + 1));
       usedProducts.add(hydrator.name);
     }
 
-    // 5. Night cream or additional treatment
-    if (routine.length < 5) {
-      const nightCream = products.find(p => 
+    // 5. Night cream (if not already added)
+    if (routine.length < 5 && !usedCategories.has('Creme')) {
+      const nightCream = sortedProducts.find(p => 
         p.category === 'Creme' &&
         !usedProducts.has(p.name) &&
-        !p.description.includes('SPF')
+        !p.description.toLowerCase().includes('spf')
       );
       if (nightCream) {
         routine.push(this.createRoutineProduct(nightCream, concerns, routine.length + 1));
