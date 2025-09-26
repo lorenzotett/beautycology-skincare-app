@@ -4321,20 +4321,9 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
 
       console.log('✅ Generated advanced routine with confidence:', routineResult.json.confidence);
 
-      // Create the combined response with both natural language and structured JSON
-      let combinedResponse = routineResult.text;
-      
-      // Add separator and structured JSON section
-      combinedResponse += '\n\n---\n\n';
-      combinedResponse += '**Dati Strutturati Routine:**\n';
-      combinedResponse += '```json\n';
-      combinedResponse += JSON.stringify(routineResult.json, null, 2);
-      combinedResponse += '\n```';
-      
-      console.log('✅ Added structured JSON data to response');
-
-      // Return the combined response with both text and JSON
-      return combinedResponse;
+      // Return only the natural language text without structured JSON data
+      console.log('✅ Returning natural language routine without structured data');
+      return routineResult.text;
       
     } catch (error) {
       console.error('Error generating advanced routine:', error);
