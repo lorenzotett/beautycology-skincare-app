@@ -1467,42 +1467,92 @@ export class BeautycologyAIService {
         }
       }
 
-      // Check if user is asking for a routine and we have skin analysis
+      // Check if user is asking for a routine
       const isRoutineRequest = this.detectRoutineRequest(userMessage);
-      const skinAnalysisData = this.sessionSkinAnalysis.get(sessionId);
       
-      if (isRoutineRequest && skinAnalysisData) {
-        console.log('🌟 User requested routine and we have skin analysis data');
+      if (isRoutineRequest) {
+        console.log('🌟 User requested a routine - checking for skin information');
         
-        // Get skin type from session or default
-        const skinType = 'normale'; // Default skin type
+        // Extract skin information from message
+        const extractedInfo = this.extractSkinInfoFromMessage(userMessage);
         
-        // Generate detailed routine response
-        const detailedRoutine = await this.generateDetailedRoutineResponse(
-          skinAnalysisData,
-          skinType
-        );
+        // Try to get existing skin analysis data from session
+        let skinAnalysisData = this.sessionSkinAnalysis.get(sessionId);
+        let skinType = extractedInfo.skinType || 'normale';
         
-        if (detailedRoutine) {
-          // Add to history
-          sessionHistory.push(
-            {
-              role: "user",
-              parts: [{ text: userMessage }]
-            },
-            {
-              role: "model",
-              parts: [{ text: detailedRoutine }]
-            }
+        // If user provided skin info in message but we don't have analysis, create synthetic analysis
+        if (!skinAnalysisData && (extractedInfo.skinType || extractedInfo.concerns.length > 0)) {
+          console.log('🔬 Creating synthetic skin analysis from user description');
+          console.log('   - Skin type:', skinType);
+          console.log('   - Concerns:', extractedInfo.concerns);
+          
+          skinAnalysisData = this.createSyntheticSkinAnalysis(
+            skinType,
+            extractedInfo.concerns
           );
           
-          // Update session
-          this.chatSessions.set(sessionId, sessionHistory);
+          // Store the synthetic analysis in session
+          this.sessionSkinAnalysis.set(sessionId, skinAnalysisData);
+        }
+        
+        // If we now have skin analysis data (real or synthetic), generate routine
+        if (skinAnalysisData) {
+          console.log('✅ Generating detailed routine with advanced generator');
+          console.log('   - Using skin type:', skinType);
+          console.log('   - Using concerns:', extractedInfo.concerns.join(', ') || 'general');
           
-          return {
-            content: detailedRoutine,
-            hasChoices: false
-          };
+          // Generate detailed routine response using AdvancedRoutineGenerator
+          const detailedRoutine = await this.generateDetailedRoutineResponse(
+            skinAnalysisData,
+            skinType
+          );
+          
+          if (detailedRoutine) {
+            // Get user name from session if available
+            let userName = '';
+            try {
+              const session = await storage.getChatSession(sessionId);
+              if (session?.userName) {
+                userName = session.userName;
+              }
+            } catch (error) {
+              console.log('Could not retrieve userName');
+            }
+            
+            // Prepare final response
+            const finalResponse = userName 
+              ? `Perfetto ${userName}! ${detailedRoutine}`
+              : detailedRoutine;
+            
+            // Add to history
+            sessionHistory.push(
+              {
+                role: "user",
+                parts: [{ text: userMessage }]
+              },
+              {
+                role: "model",
+                parts: [{ text: finalResponse }]
+              }
+            );
+            
+            // Update session
+            this.chatSessions.set(sessionId, sessionHistory);
+            
+            // Mark that we've bypassed structured flow
+            state.structuredFlowActive = false;
+            state.currentStep = 'completed';
+            
+            console.log('✅ Advanced routine generation completed successfully');
+            
+            return {
+              content: finalResponse,
+              hasChoices: false
+            };
+          }
+        } else {
+          console.log('⚠️ No skin information available - will proceed with normal flow');
+          // Continue with normal flow - the AI will ask questions
         }
       }
       
@@ -4376,11 +4426,129 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
       'trattamento',
       'programma',
       'schema',
-      'protocollo'
+      'protocollo',
+      'voglio una routine',
+      'dammi una routine',
+      'consigli per la mia pelle',
+      'ho bisogno di una routine'
     ];
     
     const lowerMessage = message.toLowerCase();
     return routineKeywords.some(keyword => lowerMessage.includes(keyword));
+  }
+
+  // Extract skin information from user message
+  private extractSkinInfoFromMessage(message: string): { skinType?: string, concerns: string[] } {
+    const lowerMessage = message.toLowerCase();
+    const result: { skinType?: string, concerns: string[] } = { concerns: [] };
+    
+    // Extract skin type
+    if (lowerMessage.includes('pelle mista')) {
+      result.skinType = 'mista';
+    } else if (lowerMessage.includes('pelle grassa')) {
+      result.skinType = 'grassa';
+    } else if (lowerMessage.includes('pelle secca')) {
+      result.skinType = 'secca';
+    } else if (lowerMessage.includes('pelle normale')) {
+      result.skinType = 'normale';
+    } else if (lowerMessage.includes('pelle sensibile')) {
+      result.skinType = 'sensibile';
+    } else if (lowerMessage.includes('pelle asfittica')) {
+      result.skinType = 'asfittica';
+    }
+    
+    // Extract concerns
+    if (lowerMessage.includes('acne') || lowerMessage.includes('brufoli')) {
+      result.concerns.push('acne');
+    }
+    if (lowerMessage.includes('macchi')) {
+      result.concerns.push('macchie');
+    }
+    if (lowerMessage.includes('rughe') || lowerMessage.includes('invecchiamento') || lowerMessage.includes('anti-age')) {
+      result.concerns.push('rughe');
+    }
+    if (lowerMessage.includes('rossori') || lowerMessage.includes('rosacea')) {
+      result.concerns.push('rossori');
+    }
+    if (lowerMessage.includes('punti neri')) {
+      result.concerns.push('punti neri');
+    }
+    if (lowerMessage.includes('pori dilatati') || lowerMessage.includes('pori')) {
+      result.concerns.push('pori dilatati');
+    }
+    if (lowerMessage.includes('occhiaie')) {
+      result.concerns.push('occhiaie');
+    }
+    if (lowerMessage.includes('sebo') || lowerMessage.includes('lucidità')) {
+      result.concerns.push('eccesso di sebo');
+    }
+    if (lowerMessage.includes('disidratazione') || lowerMessage.includes('disidratata')) {
+      result.concerns.push('disidratazione');
+    }
+    
+    return result;
+  }
+
+  // Create synthetic skin analysis from user description
+  private createSyntheticSkinAnalysis(skinType: string, concerns: string[]): any {
+    // Create a synthetic skin analysis based on described problems
+    const analysis: any = {
+      acne: 0,
+      rughe: 0,
+      rossori: 0,
+      pori_dilatati: 0,
+      macchie: 0,
+      texture_uniforme: 80,
+      idratazione: 70,
+      occhiaie: 0,
+      segni_del_tempo: 0,
+      luminosità: 70
+    };
+    
+    // Adjust scores based on concerns
+    if (concerns.includes('acne')) {
+      analysis.acne = 70;
+      analysis.texture_uniforme = 40;
+    }
+    if (concerns.includes('macchie')) {
+      analysis.macchie = 65;
+      analysis.luminosità = 45;
+    }
+    if (concerns.includes('rughe')) {
+      analysis.rughe = 60;
+      analysis.segni_del_tempo = 70;
+    }
+    if (concerns.includes('rossori') || concerns.includes('rosacea')) {
+      analysis.rossori = 75;
+    }
+    if (concerns.includes('punti neri') || concerns.includes('pori dilatati')) {
+      analysis.pori_dilatati = 70;
+      analysis.texture_uniforme = 45;
+    }
+    if (concerns.includes('occhiaie')) {
+      analysis.occhiaie = 65;
+    }
+    if (concerns.includes('eccesso di sebo')) {
+      analysis.idratazione = 85; // Paradoxically high for oily skin
+      analysis.luminosità = 40; // But low luminosity due to oiliness
+    }
+    if (concerns.includes('disidratazione')) {
+      analysis.idratazione = 30;
+      analysis.texture_uniforme = 50;
+    }
+    
+    // Adjust based on skin type
+    if (skinType === 'grassa') {
+      analysis.pori_dilatati = Math.max(analysis.pori_dilatati, 50);
+      analysis.idratazione = Math.max(analysis.idratazione, 75);
+    } else if (skinType === 'secca') {
+      analysis.idratazione = Math.min(analysis.idratazione, 40);
+      analysis.texture_uniforme = Math.min(analysis.texture_uniforme, 60);
+    } else if (skinType === 'sensibile') {
+      analysis.rossori = Math.max(analysis.rossori, 45);
+    }
+    
+    return analysis;
   }
   
   // Fallback recommendations if AI fails - now uses real products from catalog

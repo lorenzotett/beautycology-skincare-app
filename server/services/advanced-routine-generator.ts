@@ -1,4 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Type definitions for input data
 export interface UserAnalysis {
@@ -25,6 +27,8 @@ export interface RoutineStep {
   why: string;
   how_to_use: string;
   frequency?: string;
+  link?: string;
+  price?: string;
 }
 
 export interface RoutineRecommendations {
@@ -47,11 +51,57 @@ export class AdvancedRoutineGenerator {
   private selectedProducts: Set<string> = new Set();
   private alternativeCount: number = 0;
   private maxAlternatives: number = 2;
+  private productCatalog: Map<string, { price: string; url: string }> = new Map();
 
   constructor() {
     this.ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || ""
     });
+    this.loadProductCatalog();
+  }
+
+  /**
+   * Load product catalog with prices and URLs
+   */
+  private loadProductCatalog(): void {
+    try {
+      const possiblePaths = [
+        path.join(process.cwd(), 'knowledge-base', 'beautycology.json'),
+        path.join(process.cwd(), '..', 'knowledge-base', 'beautycology.json'),
+        path.join(process.cwd(), '../..', 'knowledge-base', 'beautycology.json'),
+        'knowledge-base/beautycology.json'
+      ];
+      
+      let rawData = '';
+      
+      for (const testPath of possiblePaths) {
+        try {
+          if (fs.existsSync(testPath)) {
+            rawData = fs.readFileSync(testPath, 'utf-8');
+            break;
+          }
+        } catch (e) {
+          // Continue to next path
+        }
+      }
+      
+      if (rawData) {
+        const data = JSON.parse(rawData);
+        data.products?.forEach((product: any) => {
+          if (product.name) {
+            this.productCatalog.set(product.name.toLowerCase(), {
+              price: product.price || '',
+              url: product.url || ''
+            });
+          }
+        });
+        console.log(`✅ Loaded ${this.productCatalog.size} products from beautycology.json`);
+      } else {
+        console.warn('⚠️ beautycology.json not found - product links and prices will be unavailable');
+      }
+    } catch (error) {
+      console.error('❌ Error loading product catalog:', error);
+    }
   }
 
   /**
@@ -245,11 +295,15 @@ export class AdvancedRoutineGenerator {
     );
     
     if (cleanser) {
+      const productName = cleanser.product_name || 'Detergente delicato';
+      const productInfo = this.productCatalog.get(productName.toLowerCase());
       morningSteps.push({
         step: 'cleanser',
-        product: cleanser.product_name || 'Detergente delicato',
+        product: productName,
         why: this.generateWhyText(cleanser, userAnalysis),
-        how_to_use: 'Applicare su viso umido, massaggiare delicatamente e risciacquare con acqua tiepida'
+        how_to_use: 'Applicare su viso umido, massaggiare delicatamente e risciacquare con acqua tiepida',
+        link: productInfo?.url,
+        price: productInfo?.price
       });
     }
 
@@ -262,11 +316,15 @@ export class AdvancedRoutineGenerator {
     );
     
     if (treatment) {
+      const productName = treatment.product_name || 'Siero trattamento';
+      const productInfo = this.productCatalog.get(productName.toLowerCase());
       morningSteps.push({
         step: 'treatment',
-        product: treatment.product_name || 'Siero trattamento',
+        product: productName,
         why: this.generateWhyText(treatment, userAnalysis),
-        how_to_use: 'Applicare poche gocce su viso e collo, picchiettare delicatamente fino ad assorbimento'
+        how_to_use: 'Applicare poche gocce su viso e collo, picchiettare delicatamente fino ad assorbimento',
+        link: productInfo?.url,
+        price: productInfo?.price
       });
     }
 
@@ -280,11 +338,15 @@ export class AdvancedRoutineGenerator {
     );
     
     if (eyeCream) {
+      const productName = eyeCream.product_name || 'Contorno occhi';
+      const productInfo = this.productCatalog.get(productName.toLowerCase());
       morningSteps.push({
         step: 'eye',
-        product: eyeCream.product_name || 'Contorno occhi',
+        product: productName,
         why: this.generateWhyText(eyeCream, userAnalysis),
-        how_to_use: 'Applicare picchiettando delicatamente nella zona perioculare'
+        how_to_use: 'Applicare picchiettando delicatamente nella zona perioculare',
+        link: productInfo?.url,
+        price: productInfo?.price
       });
     }
 
@@ -299,11 +361,15 @@ export class AdvancedRoutineGenerator {
     );
     
     if (moisturizer) {
+      const productName = moisturizer.product_name || 'Crema idratante';
+      const productInfo = this.productCatalog.get(productName.toLowerCase());
       morningSteps.push({
         step: 'moisturizer',
-        product: moisturizer.product_name || 'Crema idratante',
+        product: productName,
         why: this.generateWhyText(moisturizer, userAnalysis),
-        how_to_use: 'Applicare su viso e collo con movimenti circolari verso l\'alto'
+        how_to_use: 'Applicare su viso e collo con movimenti circolari verso l\'alto',
+        link: productInfo?.url,
+        price: productInfo?.price
       });
     }
 
@@ -318,12 +384,26 @@ export class AdvancedRoutineGenerator {
       moisturizer?.product_name
     );
     
-    morningSteps.push({
-      step: 'spf',
-      product: spf?.product_name || 'Protezione solare SPF 30+',
-      why: 'Protezione essenziale dai raggi UV per prevenire fotoinvecchiamento e macchie',
-      how_to_use: 'Applicare generosamente 15 minuti prima dell\'esposizione solare, riapplicare ogni 2 ore'
-    });
+    if (spf) {
+      const productName = spf.product_name || 'Protezione SPF 30+';
+      const productInfo = this.productCatalog.get(productName.toLowerCase());
+      morningSteps.push({
+        step: 'spf',
+        product: productName,
+        why: 'Protezione UV essenziale per prevenire danni solari e invecchiamento precoce',
+        how_to_use: 'Applicare generosamente 15 minuti prima dell\'esposizione solare, riapplicare ogni 2 ore',
+        link: productInfo?.url,
+        price: productInfo?.price
+      });
+    } else {
+      // Always include SPF even if no specific product found
+      morningSteps.push({
+        step: 'spf',
+        product: 'Protezione solare SPF 30+',
+        why: 'Protezione essenziale dai raggi UV per prevenire fotoinvecchiamento e macchie',
+        how_to_use: 'Applicare generosamente 15 minuti prima dell\'esposizione solare, riapplicare ogni 2 ore'
+      });
+    }
 
     return morningSteps;
   }
@@ -347,11 +427,15 @@ export class AdvancedRoutineGenerator {
     );
     
     if (oilCleanser) {
+      const productName = oilCleanser.product_name || 'Olio detergente';
+      const productInfo = this.productCatalog.get(productName.toLowerCase());
       eveningSteps.push({
         step: 'cleanser/oil',
-        product: oilCleanser.product_name || 'Olio detergente',
+        product: productName,
         why: this.generateWhyText(oilCleanser, userAnalysis),
-        how_to_use: 'Massaggiare su viso asciutto per sciogliere il trucco, emulsionare con acqua e risciacquare'
+        how_to_use: 'Massaggiare su viso asciutto per sciogliere il trucco, emulsionare con acqua e risciacquare',
+        link: productInfo?.url,
+        price: productInfo?.price
       });
     }
 
@@ -364,11 +448,15 @@ export class AdvancedRoutineGenerator {
     );
     
     if (foamCleanser) {
+      const productName = foamCleanser.product_name || 'Detergente schiumogeno';
+      const productInfo = this.productCatalog.get(productName.toLowerCase());
       eveningSteps.push({
         step: 'cleanser/foam',
-        product: foamCleanser.product_name || 'Detergente schiumogeno',
+        product: productName,
         why: this.generateWhyText(foamCleanser, userAnalysis),
-        how_to_use: 'Applicare su viso umido dopo il primo detergente, massaggiare e risciacquare'
+        how_to_use: 'Applicare su viso umido dopo il primo detergente, massaggiare e risciacquare',
+        link: productInfo?.url,
+        price: productInfo?.price
       });
     }
 
@@ -395,14 +483,18 @@ export class AdvancedRoutineGenerator {
                             hasAcid || hasRetinoid;
 
     if (activeIngredient) {
+      const productName = activeIngredient.product_name || 'Trattamento esfoliante/retinoide';
+      const productInfo = this.productCatalog.get(productName.toLowerCase());
       eveningSteps.push({
         step: 'exfoliant_or_retinoid (alternate)',
-        product: activeIngredient.product_name || 'Trattamento esfoliante/retinoide',
+        product: productName,
         why: this.generateWhyText(activeIngredient, userAnalysis),
         how_to_use: 'Applicare su pelle asciutta evitando il contorno occhi',
         frequency: hasAcid && hasRetinoid ? 
           'Alternare: lunedì/mercoledì/venerdì acido, martedì/giovedì retinoide' :
-          '2-3 volte a settimana, aumentare gradualmente'
+          '2-3 volte a settimana, aumentare gradualmente',
+        link: productInfo?.url,
+        price: productInfo?.price
       });
     }
 
@@ -417,11 +509,15 @@ export class AdvancedRoutineGenerator {
     );
     
     if (nightMoisturizer) {
+      const productName = nightMoisturizer.product_name || 'Crema notte rigenerante';
+      const productInfo = this.productCatalog.get(productName.toLowerCase());
       eveningSteps.push({
         step: 'moisturizer',
-        product: nightMoisturizer.product_name || 'Crema notte rigenerante',
+        product: productName,
         why: this.generateWhyText(nightMoisturizer, userAnalysis),
-        how_to_use: 'Applicare generosamente su viso e collo come ultimo step della routine serale'
+        how_to_use: 'Applicare generosamente su viso e collo come ultimo step della routine serale',
+        link: productInfo?.url,
+        price: productInfo?.price
       });
     }
 
@@ -593,14 +689,28 @@ export class AdvancedRoutineGenerator {
     // Morning routine description
     description += '**ROUTINE MATTUTINA:**\n';
     routine.recommendations.morning.forEach((step, index) => {
-      description += `${index + 1}. **${step.product}** - ${step.why}\n`;
+      description += `${index + 1}. **${step.product}**`;
+      if (step.price) {
+        description += ` - ${step.price}`;
+      }
+      description += `\n   ${step.why}\n`;
+      if (step.link) {
+        description += `   🛍️ [Acquista](${step.link})\n`;
+      }
       description += `   _Come usare: ${step.how_to_use}_\n\n`;
     });
 
     // Evening routine description
     description += '\n**ROUTINE SERALE:**\n';
     routine.recommendations.evening.forEach((step, index) => {
-      description += `${index + 1}. **${step.product}** - ${step.why}\n`;
+      description += `${index + 1}. **${step.product}**`;
+      if (step.price) {
+        description += ` - ${step.price}`;
+      }
+      description += `\n   ${step.why}\n`;
+      if (step.link) {
+        description += `   🛍️ [Acquista](${step.link})\n`;
+      }
       description += `   _Come usare: ${step.how_to_use}_\n`;
       if (step.frequency) {
         description += `   _Frequenza: ${step.frequency}_\n`;
