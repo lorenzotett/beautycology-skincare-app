@@ -54,6 +54,7 @@ export function ChatInterface() {
   const recognition = useRef<any>(null);
   const [isFromIframe, setIsFromIframe] = useState(false);
   const [pendingIngredients, setPendingIngredients] = useState<string[]>([]);
+  const [beforeAfterImages, setBeforeAfterImages] = useState<any>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -329,9 +330,6 @@ export function ChatInterface() {
       setIsTyping(false);
       
       // Track "Inizio Chat" when session is successfully created
-      trackChatStart(data.sessionId);
-
-      // Track chat start event - user submitted name and started chat
       trackChatStart(data.sessionId);
 
       // Extract user initial from Gemini's corrected name
@@ -612,7 +610,7 @@ export function ChatInterface() {
       if (messageRotation) {
         clearInterval(messageRotation);
       }
-    } catch (error) {
+    } catch (error: any) {
       setIsTyping(false);
       setTypingMessage("Sta scrivendo"); // Reset to default message
 
@@ -1012,12 +1010,12 @@ export function ChatInterface() {
               />
               <button
                 onClick={toggleVoiceRecognition}
-                disabled={isTyping || selectedImage}
+                disabled={isTyping || !!selectedImage}
                 className={`p-2 rounded-md transition-all duration-200 transform ${
                   isListening 
                     ? 'text-white shadow-lg scale-105 animate-pulse' 
                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:scale-95'
-                } ${isTyping || selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                } ${isTyping || !!selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 style={isListening ? {backgroundColor: '#7791DA'} : {}}
                 title={isListening ? "Ferma registrazione" : "Inizia registrazione vocale"}
               >
@@ -1143,7 +1141,7 @@ export function ChatInterface() {
                   }}
                   onKeyPress={(e) => e.key === "Enter" && !(emailError && isEmailContext()) && handleSendMessage()}
                   className={`w-full bg-transparent border-none text-gray-700 placeholder:text-gray-400 focus:outline-none text-base ${emailError ? 'border-red-500' : ''} ${selectedImage ? 'cursor-not-allowed opacity-50' : ''}`}
-                  disabled={isTyping || selectedImage}
+                  disabled={isTyping || !!selectedImage}
                 />
                 {emailError && (
                   <p className="text-red-400 text-xs mt-1 px-1">
@@ -1161,12 +1159,12 @@ export function ChatInterface() {
 
               <button
                 onClick={toggleVoiceRecognition}
-                disabled={isTyping || selectedImage}
+                disabled={isTyping || !!selectedImage}
                 className={`p-2 rounded-md transition-all duration-200 transform ${
                   isListening 
                     ? 'text-white shadow-lg scale-105 animate-pulse' 
                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:scale-95'
-                } ${isTyping || selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                } ${isTyping || !!selectedImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 style={isListening ? {backgroundColor: '#7791DA'} : {}}
                 title={isListening ? "Ferma registrazione" : "Inizia registrazione vocale"}
               >

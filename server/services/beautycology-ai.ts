@@ -1563,9 +1563,8 @@ export class BeautycologyAIService {
             }
             
             // Prepare final response
-            const finalResponse = userName 
-              ? `Perfetto ${userName}! ${detailedRoutine}`
-              : detailedRoutine;
+            // detailedRoutine already contains "Perfetto [NAME]!" from the generator
+            const finalResponse = detailedRoutine;
             
             // Add to history
             sessionHistory.push(
@@ -4636,7 +4635,8 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
       
       if (detailedRoutine) {
         console.log('✅ Generated detailed routine with individual products, prices, and URLs');
-        return `Perfetto ${userName}! ${detailedRoutine}`;
+        // detailedRoutine already contains "Perfetto [NAME]!" from the generator
+        return detailedRoutine;
       }
     }
     
