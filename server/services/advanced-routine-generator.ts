@@ -146,7 +146,7 @@ export class AdvancedRoutineGenerator {
       const notes = this.generateNotes(userAnalysis, confidence);
 
       // Extract sources from relevant passages
-      const sources = [...new Set(relevantPassages.map(p => p.title || p.doc_id))];
+      const sources = Array.from(new Set(relevantPassages.map(p => p.title || p.doc_id)));
 
       // Create the structured output
       const jsonOutput: AdvancedRoutineOutput = {
@@ -677,11 +677,16 @@ export class AdvancedRoutineGenerator {
   ): string {
     const name = userAnalysis.preferences?.find(p => p.startsWith('name:'))?.replace('name:', '') || '';
     
-    let description = `${name ? `Ciao ${name}! ` : ''}`;
-    description += `Ecco la tua routine skincare personalizzata per pelle ${routine.skin_type}`;
+    let description = `Perfetto${name ? ` ${name}` : ''}! `;
+    description += `Ecco la tua routine skincare personalizzata`;
+    
+    // Only add skin type if it's not 'normale' or if it was actually detected
+    if (routine.skin_type && routine.skin_type !== 'normale') {
+      description += ` per pelle ${routine.skin_type}`;
+    }
     
     if (routine.concerns.length > 0) {
-      description += ` con focus su ${routine.concerns.join(', ')}.\n\n`;
+      description += ` con focus su: ${routine.concerns.map(c => c.replace(/_/g, ' ')).join(', ')}.\n\n`;
     } else {
       description += '.\n\n';
     }
@@ -697,7 +702,7 @@ export class AdvancedRoutineGenerator {
       if (step.link) {
         description += `   🛍️ [Acquista](${step.link})\n`;
       }
-      description += `   _Come usare: ${step.how_to_use}_\n\n`;
+      description += `   **Come usare:** ${step.how_to_use}\n\n`;
     });
 
     // Evening routine description
@@ -711,9 +716,9 @@ export class AdvancedRoutineGenerator {
       if (step.link) {
         description += `   🛍️ [Acquista](${step.link})\n`;
       }
-      description += `   _Come usare: ${step.how_to_use}_\n`;
+      description += `   **Come usare:** ${step.how_to_use}\n`;
       if (step.frequency) {
-        description += `   _Frequenza: ${step.frequency}_\n`;
+        description += `   **Frequenza:** ${step.frequency}\n`;
       }
       description += '\n';
     });
