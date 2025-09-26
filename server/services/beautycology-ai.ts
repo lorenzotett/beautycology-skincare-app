@@ -1478,20 +1478,63 @@ export class BeautycologyAIService {
         
         // Try to get existing skin analysis data from session
         let skinAnalysisData = this.sessionSkinAnalysis.get(sessionId);
-        let skinType = extractedInfo.skinType || 'normale';
+        
+        // FIRST check if we have a skin type from structured flow answers
+        let skinType = state.structuredFlowAnswers?.skinType || 
+                      extractedInfo.skinType || 
+                      'normale';
+        
+        console.log('🔍 Skin type determination:', {
+          fromStructuredFlow: state.structuredFlowAnswers?.skinType,
+          fromExtraction: extractedInfo.skinType,
+          final: skinType
+        });
+        
+        // Also get concerns from structured flow if available
+        const structuredFlowConcerns: string[] = [];
+        if (state.structuredFlowAnswers?.mainIssue) {
+          // Map mainIssue to concerns format
+          const issueMapping: Record<string, string> = {
+            'Acne/Brufoli': 'acne',
+            'Macchie scure': 'macchie',
+            'Rughe/Invecchiamento': 'rughe',
+            'Rosacea': 'rossori',
+            'Punti neri': 'punti_neri',
+            'Pori dilatati': 'pori_dilatati'
+          };
+          const mappedConcern = issueMapping[state.structuredFlowAnswers.mainIssue];
+          if (mappedConcern) {
+            structuredFlowConcerns.push(mappedConcern);
+          }
+        }
+        
+        // Combine concerns from structured flow and extraction
+        const combinedConcerns = Array.from(new Set([...structuredFlowConcerns, ...extractedInfo.concerns]));
         
         // If user provided skin info in message but we don't have analysis, create synthetic analysis
-        if (!skinAnalysisData && (extractedInfo.skinType || extractedInfo.concerns.length > 0)) {
+        if (!skinAnalysisData && (skinType !== 'normale' || combinedConcerns.length > 0)) {
           console.log('🔬 Creating synthetic skin analysis from user description');
           console.log('   - Skin type:', skinType);
-          console.log('   - Concerns:', extractedInfo.concerns);
+          console.log('   - Concerns from structured flow:', structuredFlowConcerns);
+          console.log('   - Concerns from extraction:', extractedInfo.concerns);
+          console.log('   - Combined concerns:', combinedConcerns);
           
           skinAnalysisData = this.createSyntheticSkinAnalysis(
             skinType,
-            extractedInfo.concerns
+            combinedConcerns
           );
           
           // Store the synthetic analysis in session
+          this.sessionSkinAnalysis.set(sessionId, skinAnalysisData);
+        }
+        
+        // If no skin analysis data exists, create synthetic one from structured flow answers
+        if (!skinAnalysisData && state.structuredFlowAnswers?.skinType) {
+          console.log('📊 Creating synthetic skin analysis from structured flow answers');
+          skinAnalysisData = this.createSyntheticSkinAnalysis(
+            skinType,
+            combinedConcerns
+          );
           this.sessionSkinAnalysis.set(sessionId, skinAnalysisData);
         }
         
@@ -1499,12 +1542,12 @@ export class BeautycologyAIService {
         if (skinAnalysisData) {
           console.log('✅ Generating detailed routine with advanced generator');
           console.log('   - Using skin type:', skinType);
-          console.log('   - Using concerns:', extractedInfo.concerns.join(', ') || 'general');
+          console.log('   - Using concerns:', combinedConcerns.join(', ') || 'general');
           
           // Generate detailed routine response using AdvancedRoutineGenerator
           const detailedRoutine = await this.generateDetailedRoutineResponse(
             skinAnalysisData,
-            skinType
+            skinType  // This will now use the correct skin type from structured flow
           );
           
           if (detailedRoutine) {
