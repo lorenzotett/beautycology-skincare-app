@@ -1859,24 +1859,25 @@ export class BeautycologyAIService {
               addProblem(analysisData.texture_uniforme, 'texture molto irregolare', 'texture non uniforme');
               
               // AUTO-SET MAIN ISSUE BASED ON ANALYSIS SCORES
-              // Prioritize problems that have specific routine kits
+              // Prioritize the most severe problem by score, not by static order
               if (!state.structuredFlowAnswers) state.structuredFlowAnswers = {};
               if (!state.structuredFlowAnswers.mainIssue) {
-                if (analysisData.acne >= 61) {
-                  state.structuredFlowAnswers.mainIssue = 'Acne/Brufoli';
-                  console.log('✅ Auto-set mainIssue: Acne/Brufoli (acne score: ' + analysisData.acne + ')');
-                } else if (analysisData.rossori >= 61) {
-                  state.structuredFlowAnswers.mainIssue = 'Rosacea';
-                  console.log('✅ Auto-set mainIssue: Rosacea (rossori score: ' + analysisData.rossori + ')');
-                } else if (analysisData.pigmentazione >= 61) {
-                  state.structuredFlowAnswers.mainIssue = 'Macchie scure';
-                  console.log('✅ Auto-set mainIssue: Macchie scure (pigmentazione score: ' + analysisData.pigmentazione + ')');
-                } else if (analysisData.rughe >= 61) {
-                  state.structuredFlowAnswers.mainIssue = 'Rughe/Invecchiamento';
-                  console.log('✅ Auto-set mainIssue: Rughe/Invecchiamento (rughe score: ' + analysisData.rughe + ')');
-                } else if (analysisData.pori_dilatati >= 61) {
-                  state.structuredFlowAnswers.mainIssue = 'Pori dilatati';
-                  console.log('✅ Auto-set mainIssue: Pori dilatati (pori_dilatati score: ' + analysisData.pori_dilatati + ')');
+                // Collect all significant problems (score >= 40) with their mapping
+                const significantProblems = [
+                  { score: analysisData.pigmentazione, name: 'Macchie scure', key: 'pigmentazione' },
+                  { score: analysisData.acne, name: 'Acne/Brufoli', key: 'acne' },
+                  { score: analysisData.rossori, name: 'Rosacea', key: 'rossori' },
+                  { score: analysisData.rughe, name: 'Rughe/Invecchiamento', key: 'rughe' },
+                  { score: analysisData.pori_dilatati, name: 'Pori dilatati', key: 'pori_dilatati' }
+                ].filter(problem => problem.score >= 40)
+                 .sort((a, b) => b.score - a.score); // Sort by score descending
+                
+                // Set the most severe problem as mainIssue
+                if (significantProblems.length > 0) {
+                  const topProblem = significantProblems[0];
+                  state.structuredFlowAnswers.mainIssue = topProblem.name;
+                  console.log(`✅ Auto-set mainIssue: ${topProblem.name} (${topProblem.key} score: ${topProblem.score})`);
+                  console.log(`📊 All significant problems (>=40): ${significantProblems.map(p => `${p.name}(${p.score})`).join(', ')}`);
                 }
               }
               
