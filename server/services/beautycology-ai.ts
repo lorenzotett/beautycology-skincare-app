@@ -4220,9 +4220,9 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
     console.log(`🔍 Resolving routine kit link for skinType: "${skinType}", mainIssue: "${mainIssue}"`);
     
     // Priority 1: Specific problems take precedence over skin type
-    // Check for specific skin issues first (acne, macchie, rughe, rosacea, sensibile)
+    // Check for specific skin issues first - prioritize pigmentation over acne when both are present
     
-    // Rosacea
+    // Rosacea - highest priority for specific skin conditions
     if (mainIssue.includes('rosacea')) {
       return {
         name: 'Routine Pelle Soggetta a Rosacea',
@@ -4230,8 +4230,9 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
       };
     }
     
-    // Macchie (spots/pigmentation)
-    if (mainIssue.includes('macchi') || mainIssue.includes('discrom') || mainIssue.includes('pigment')) {
+    // Macchie (spots/pigmentation) - high priority as it's often the main concern
+    if (mainIssue.includes('macchi') || mainIssue.includes('discrom') || mainIssue.includes('pigment') || mainIssue.includes('scure')) {
+      console.log(`✅ Pigmentation detected in mainIssue: "${mainIssue}" - recommending Anti-Macchie routine`);
       return {
         name: 'Routine Anti-Macchie',
         url: 'https://beautycology.it/prodotto/routine-anti-macchie/'
@@ -4240,6 +4241,7 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
     
     // Acne (including tardiva/late acne and with rossori/redness)
     if (mainIssue.includes('acne') || mainIssue.includes('brufol') || mainIssue.includes('tardiva')) {
+      console.log(`ℹ️ Acne detected in mainIssue: "${mainIssue}" - recommending Acne Tardiva routine`);
       return {
         name: 'Routine Pelle Acne Tardiva',
         url: 'https://beautycology.it/prodotto/routine-pelle-acne-tardiva/'

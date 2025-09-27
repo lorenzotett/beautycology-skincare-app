@@ -156,13 +156,13 @@ export class SkincareRoutineService {
       }
     }
 
-    // Extract concerns from analysis (scores > 30 indicate significant issues)
+    // Extract concerns from analysis (lower thresholds for visible issues like acne and pigmentation)
     const concerns: string[] = [];
     
-    if (skinAnalysisResults.acne > 30) concerns.push('acne');
+    if (skinAnalysisResults.acne > 25) concerns.push('acne');
     if (skinAnalysisResults.rughe > 30) concerns.push('rughe');
-    if (skinAnalysisResults.pigmentazione > 30) concerns.push('macchie');
-    if (skinAnalysisResults.rossori > 30) concerns.push('rossori');
+    if (skinAnalysisResults.pigmentazione > 25) concerns.push('macchie');
+    if (skinAnalysisResults.rossori > 25) concerns.push('rossori');
     if (skinAnalysisResults.pori_dilatati > 30) concerns.push('pori_dilatati');
     if (skinAnalysisResults.texture_uniforme > 30) concerns.push('texture_irregolare');
     if (skinAnalysisResults.oleosita > 50) concerns.push('oleosità');
@@ -310,8 +310,8 @@ export class SkincareRoutineService {
       .map(([key, value]) => ({ concern: key, score: value }))
       .filter(c => {
         // Use different thresholds for different types of concerns
-        if (['acne', 'rossori'].includes(c.concern)) {
-          return c.score > 25; // Lower threshold for visible issues
+        if (['acne', 'rossori', 'pigmentazione'].includes(c.concern)) {
+          return c.score > 25; // Lower threshold for visible issues like acne and pigmentation
         } else if (['rughe', 'elasticita', 'danni_solari'].includes(c.concern)) {
           return c.score > 20; // Even lower for aging concerns
         } else {
