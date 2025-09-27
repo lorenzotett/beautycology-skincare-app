@@ -3574,8 +3574,12 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
     const adviceType = (answers.adviceType || '').toLowerCase();
     const skinType = answers.skinType || 'normale';
     
+    // Check if user wants a complete routine or a specific product
+    const wantsCompleteRoutine = adviceType.includes('routine') || adviceType === 'routine completa';
+    const wantsSpecificProduct = !wantsCompleteRoutine && adviceType && adviceType !== '';
+    
     // If we have skin analysis data and user wants a routine, generate detailed product recommendations
-    if (skinAnalysisData && (adviceType.includes('routine') || adviceType === 'routine completa')) {
+    if (skinAnalysisData && wantsCompleteRoutine) {
       console.log('🔬 Found skin analysis data for session, generating detailed routine with individual products');
       
       try {
@@ -3611,6 +3615,27 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
       } catch (error) {
         console.error('Error generating detailed routine:', error);
         // Fall back to regular generation if detailed routine fails
+      }
+    }
+    
+    // If user wants a specific product (not a complete routine), generate specific product recommendation
+    if (wantsSpecificProduct) {
+      console.log(`🎯 User requested specific product: ${adviceType}, generating targeted recommendation`);
+      
+      try {
+        const specificProductRecommendation = await this.generateSpecificProductRecommendation(
+          sessionId,
+          adviceType,
+          state
+        );
+        
+        if (specificProductRecommendation) {
+          console.log('✅ Successfully generated specific product recommendation');
+          return specificProductRecommendation;
+        }
+      } catch (error) {
+        console.error('Error generating specific product recommendation:', error);
+        // Fall back to regular generation if specific product recommendation fails
       }
     }
     
