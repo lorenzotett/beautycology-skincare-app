@@ -525,7 +525,7 @@ export class AdvancedRoutineGenerator {
   }
 
   /**
-   * Select a product based on criteria
+   * Select a product based on criteria with improved variation
    */
   private selectProduct(
     products: RAGPassage[],
@@ -570,9 +570,37 @@ export class AdvancedRoutineGenerator {
       }
     }
 
-    // Select the best product
+    // Select product with improved variation logic
     if (candidates.length > 0) {
-      const selected = candidates[0];
+      let selected: RAGPassage;
+      
+      if (candidates.length === 1) {
+        selected = candidates[0];
+      } else if (candidates.length === 2) {
+        // For 2 candidates, prefer first but occasionally use second
+        const useSecond = this.selectedProducts.size > 0 && this.selectedProducts.size % 3 === 0;
+        selected = candidates[useSecond ? 1 : 0];
+      } else {
+        // For 3+ candidates, use more sophisticated selection
+        // Always prefer top candidate for critical steps (first few selections)
+        if (this.selectedProducts.size < 2) {
+          // For first two critical products, always use the best match
+          selected = candidates[0];
+        } else {
+          // For subsequent products, introduce controlled variation
+          const variationFactor = this.selectedProducts.size % 5;
+          let selectionIndex = 0; // Default to best candidate
+          
+          if (variationFactor === 2) {
+            selectionIndex = Math.min(1, candidates.length - 1); // Occasionally pick 2nd
+          } else if (variationFactor === 4) {
+            selectionIndex = Math.min(2, candidates.length - 1); // Rarely pick 3rd
+          }
+          
+          selected = candidates[selectionIndex];
+        }
+      }
+      
       if (selected.product_name) {
         this.selectedProducts.add(selected.product_name);
         

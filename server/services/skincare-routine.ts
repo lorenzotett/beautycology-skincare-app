@@ -302,28 +302,56 @@ export class SkincareRoutineService {
   }
 
   /**
-   * Identify the most problematic skin parameters
+   * Identify the most problematic skin parameters with nuanced scoring
    */
   private identifyTopConcerns(skinAnalysis: SkinAnalysisResult): Array<{concern: string, score: number}> {
-    const concerns = Object.entries(skinAnalysis)
+    // Use more nuanced thresholds based on score ranges
+    const allConcerns = Object.entries(skinAnalysis)
       .map(([key, value]) => ({ concern: key, score: value }))
-      .filter(c => c.score > 30) // Only consider issues with significant scores
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5); // Top 5 concerns
+      .filter(c => {
+        // Use different thresholds for different types of concerns
+        if (['acne', 'rossori'].includes(c.concern)) {
+          return c.score > 25; // Lower threshold for visible issues
+        } else if (['rughe', 'elasticita', 'danni_solari'].includes(c.concern)) {
+          return c.score > 20; // Even lower for aging concerns
+        } else {
+          return c.score > 30; // Standard threshold for others
+        }
+      })
+      .sort((a, b) => b.score - a.score);
 
-    // Always include hydration and sun protection as basic needs
-    if (!concerns.find(c => c.concern === 'idratazione') && skinAnalysis.idratazione > 20) {
+    // Take top concerns but also include moderate ones for variety
+    const primaryConcerns = allConcerns.slice(0, 3); // Top 3 most severe
+    const secondaryConcerns = allConcerns.slice(3, 6).filter(c => c.score > 25); // Moderate concerns
+
+    let concerns = [...primaryConcerns, ...secondaryConcerns];
+
+    // Always include hydration and sun protection as basic needs (before final slice)
+    if (!concerns.find(c => c.concern === 'idratazione') && skinAnalysis.idratazione > 15) {
       concerns.push({ concern: 'idratazione', score: skinAnalysis.idratazione });
     }
-    if (!concerns.find(c => c.concern === 'danni_solari')) {
-      concerns.push({ concern: 'danni_solari', score: Math.max(skinAnalysis.danni_solari, 30) });
+    if (!concerns.find(c => c.concern === 'danni_solari') && skinAnalysis.danni_solari > 15) {
+      concerns.push({ concern: 'danni_solari', score: Math.max(skinAnalysis.danni_solari, 25) });
     }
 
-    return concerns;
+    // Ensure hydration and sun protection are always included by limiting other concerns first
+    const hydrationConcern = concerns.find(c => c.concern === 'idratazione');
+    const sunProtectionConcern = concerns.find(c => c.concern === 'danni_solari');
+    const otherConcerns = concerns.filter(c => !['idratazione', 'danni_solari'].includes(c.concern));
+    
+    // Limit other concerns to make room for mandatory ones
+    const maxOtherConcerns = 6 - (hydrationConcern ? 1 : 0) - (sunProtectionConcern ? 1 : 0);
+    const finalOtherConcerns = otherConcerns.slice(0, maxOtherConcerns);
+    
+    const finalConcerns = [...finalOtherConcerns];
+    if (hydrationConcern) finalConcerns.push(hydrationConcern);
+    if (sunProtectionConcern) finalConcerns.push(sunProtectionConcern);
+
+    return finalConcerns.slice(0, 6); // Return up to 6 concerns for more personalization
   }
 
   /**
-   * Find products suitable for the identified concerns and skin type
+   * Find products suitable for the identified concerns and skin type with improved variety
    */
   private findSuitableProducts(
     concerns: Array<{concern: string, score: number}>, 
@@ -354,10 +382,35 @@ export class SkincareRoutineService {
         score: this.calculateProductScore(product, concerns, skinType)
       }))
       .filter(item => item.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map(item => item.product);
+      .sort((a, b) => b.score - a.score);
 
-    return scoredProducts.slice(0, 10); // Return top 10 products
+    // Introduce variety by selecting from different score tiers
+    const topTier = scoredProducts.slice(0, 4);      // Top 4 products
+    const midTier = scoredProducts.slice(4, 8);      // Next 4 products
+    const lowerTier = scoredProducts.slice(8, 12);   // Next 4 products
+
+    // Select products from different tiers for variety
+    const selectedProducts: BeautycologyProduct[] = [];
+    
+    // Always include top 2 products
+    selectedProducts.push(...topTier.slice(0, 2).map(item => item.product));
+    
+    // Add variety from mid and lower tiers
+    if (midTier.length > 0) {
+      selectedProducts.push(...midTier.slice(0, 2).map(item => item.product));
+    }
+    if (lowerTier.length > 0) {
+      selectedProducts.push(...lowerTier.slice(0, 2).map(item => item.product));
+    }
+    
+    // Fill remaining slots with top tier if needed
+    const remainingSlots = 10 - selectedProducts.length;
+    if (remainingSlots > 0) {
+      const remainingTopTier = topTier.slice(2).map(item => item.product);
+      selectedProducts.push(...remainingTopTier.slice(0, remainingSlots));
+    }
+
+    return selectedProducts.slice(0, 10);
   }
 
   /**
@@ -376,19 +429,23 @@ export class SkincareRoutineService {
   }
 
   /**
-   * Calculate how well a product matches the concerns
+   * Calculate how well a product matches the concerns with more nuanced scoring
    */
   private calculateProductScore(product: BeautycologyProduct, concerns: Array<{concern: string, score: number}>, skinType: string): number {
     let score = 0;
     
-    // Check ingredient matches
+    // Check ingredient matches with severity-based weighting
     if (product.ingredients) {
       for (const ingredient of product.ingredients) {
         for (const [key, data] of Object.entries(this.INGREDIENT_BENEFITS)) {
           if (ingredient.toLowerCase().includes(key.toLowerCase())) {
             concerns.forEach(concern => {
               if (data.concerns.includes(concern.concern)) {
-                score += concern.score * 2; // Weight by concern severity
+                // Use more nuanced weighting based on score ranges
+                const multiplier = concern.score > 70 ? 3 : 
+                                 concern.score > 50 ? 2.5 : 
+                                 concern.score > 30 ? 2 : 1.5;
+                score += concern.score * multiplier;
               }
             });
           }
@@ -396,28 +453,39 @@ export class SkincareRoutineService {
       }
     }
 
-    // Check description for concern keywords
+    // Check description for concern keywords with varying importance
     const productDesc = product.description.toLowerCase();
     concerns.forEach(concern => {
       const keywords = this.getConcernKeywords(concern.concern);
       keywords.forEach(keyword => {
         if (productDesc.includes(keyword)) {
-          score += concern.score;
+          // Add variable bonus based on concern priority and severity
+          const severityBonus = concern.score > 60 ? concern.score * 1.5 : concern.score;
+          score += severityBonus;
         }
       });
     });
 
-    // Bonus for matching skin type category
+    // Bonus for matching skin type category (variable based on skin type)
     if (this.SKIN_TYPE_CATEGORIES[skinType]?.includes(product.category)) {
-      score += 20;
+      const skinTypeBonus = skinType === 'sensibile' ? 35 : 
+                           skinType === 'grassa' ? 30 : 
+                           skinType === 'secca' ? 25 : 20;
+      score += skinTypeBonus;
     }
 
-    // Special bonus for SPF products if sun damage is a concern
+    // Special bonuses with variation
     if (productDesc.includes('spf') && concerns.find(c => c.concern === 'danni_solari')) {
-      score += 50;
+      const solarConcern = concerns.find(c => c.concern === 'danni_solari');
+      score += solarConcern ? Math.min(80, solarConcern.score + 30) : 50;
     }
 
-    return score;
+    // Add small variation factor to prevent identical scoring
+    const productNameHash = product.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const variation = (productNameHash % 10) - 5; // Small random-like variation (-5 to +4)
+    score += variation;
+
+    return Math.max(0, score);
   }
 
   /**
