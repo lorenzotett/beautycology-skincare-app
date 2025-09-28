@@ -2095,16 +2095,31 @@ export class BeautycologyAIService {
           hasIntroduced: true
         };
         
-        // Generate appropriate fallback based on flow state
+        // Generate appropriate fallback based on flow state AND original intent
         if (state.currentStep === 'completed') {
-          // If flow is completed but we have an empty response, generate final recommendations
-          responseText = await this.generateFinalRecommendations(sessionId, state);
+          // Check if the original request was for product information
+          if (state.lastIntent === 'product_info') {
+            console.log('🛍️ Empty response fallback: Detected product info intent, generating product-focused response');
+            responseText = "Mi dispiace, sto avendo difficoltà a elaborare la tua richiesta sui prodotti. " +
+                          "Puoi essere più specifico su quale prodotto ti interessa o quale problema della pelle vuoi risolvere? " +
+                          "Sarò felice di fornirti informazioni dettagliate sui nostri prodotti Beautycology con ingredienti, prezzi e modalità d'uso.";
+          } else {
+            // If flow is completed but we have an empty response, generate final recommendations
+            responseText = await this.generateFinalRecommendations(sessionId, state);
+          }
         } else if (state.structuredFlowActive) {
           // Continue with structured flow
           responseText = "Capisco le tue esigenze. Continuiamo con le domande per personalizzare al meglio i miei consigli.";
         } else {
-          // General fallback
-          responseText = "Capisco quello che mi stai dicendo. Basandomi sui prodotti Beautycology, posso aiutarti a trovare la soluzione migliore per le tue esigenze. Dimmi di più su cosa ti preoccupa della tua pelle.";
+          // General fallback - also check for product intent
+          if (state.lastIntent === 'product_info') {
+            console.log('🛍️ General fallback: Product info intent detected');
+            responseText = "Capisco che stai cercando informazioni sui nostri prodotti Beautycology. " +
+                          "Dimmi quale prodotto ti interessa o per quale problema della pelle stai cercando una soluzione, " +
+                          "così posso fornirti dettagli precisi con ingredienti, benefici e modalità d'uso.";
+          } else {
+            responseText = "Capisco quello che mi stai dicendo. Basandomi sui prodotti Beautycology, posso aiutarti a trovare la soluzione migliore per le tue esigenze. Dimmi di più su cosa ti preoccupa della tua pelle.";
+          }
         }
         
         console.log(`✅ Generated fallback response: ${responseText.substring(0, 100)}...`);
