@@ -2661,6 +2661,7 @@ export class BeautycologyAIService {
       /cosa\s+(consigli|suggerisci|hai)\s*(per|contro)\s*(l'|la|il|i|le)?/i,
       /puoi\s+(consigliarmi|suggerirmi)\s+(qualcosa|un prodotto|una crema)\s*(per|contro)?/i,
       /(consigliami|suggeriscimi)\s+(un|una)\s+(crema|siero|prodotto|trattamento)\s*(per|contro)\s*(l'|la|il|i|le)?/i,
+      /(invece\s+)?(un|una)\s+(crema|siero|prodotto|trattamento)\s*(per|contro)\s*(l'|la|il|i|le)?/i,
       
       // PATTERN PER PROBLEMI SPECIFICI
       /(crema|siero|prodotto|trattamento|qualcosa)\s+(per|contro)\s+(acne|brufoli|imperfezioni)/i,
@@ -2893,7 +2894,7 @@ export class BeautycologyAIService {
     // Aggiungi i prodotti consigliati
     products.slice(0, 3).forEach((product, index) => {
       const icon = index === 0 ? '🌟' : index === 1 ? '✨' : '💫';
-      response += `${icon} **[${product.name}](${product.url})** - ${product.price}\n`;
+      response += `${icon} **${product.name}** - ${product.price}\n`;
       
       // Estrai una breve descrizione dei benefici
       const description = product.description || '';
@@ -3155,8 +3156,8 @@ export class BeautycologyAIService {
     // Genera la risposta dettagliata
     let response = `🌟 **${product.name}** - ${product.price}\n\n`;
     
-    response += `📝 **DESCRIZIONE DETTAGLIATA:**\n${description.substring(0, 500)}`;
-    if (description.length > 500) response += '...';
+    response += `📝 **DESCRIZIONE:**\n${description.substring(0, 300)}`;
+    if (description.length > 300) response += '...';
     
     response += keyIngredients;
     
@@ -3206,7 +3207,7 @@ export class BeautycologyAIService {
     
     response += skinTypeRecommendation;
     
-    response += `\n\n🛒 **LINK DIRETTO PER L'ACQUISTO:**\n**[${product.name}](${product.url})**\n\n`;
+    response += `\n\n🛒 **ACQUISTA ORA:**\n${product.url}\n\n`;
     
     response += `💡 **CONSIGLIO DELLA SKIN EXPERT:**\n`;
     response += `Questo prodotto è perfetto per chi cerca ${product.category?.toLowerCase() || 'soluzioni'} di alta qualità con formule basate sulla scienza. `;
