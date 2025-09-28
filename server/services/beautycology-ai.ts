@@ -1324,15 +1324,60 @@ export class BeautycologyAIService {
     return undefined;
   }
 
+  // ✨ NUOVA FUNZIONE: Estrae problemi dai punteggi di analisi dell'immagine
+  private extractProblemsFromSkinAnalysis(sessionId: string): string[] {
+    const skinAnalysisData = this.sessionSkinAnalysis.get(sessionId);
+    if (!skinAnalysisData) return [];
+    
+    const problems: string[] = [];
+    
+    console.log(`🔬 Extracting problems from skin analysis scores:`, skinAnalysisData);
+    
+    // Usa le stesse soglie della funzione prepareUserAnalysisFromSkinData
+    if (skinAnalysisData.pigmentazione > 25) {
+      problems.push('Macchie scure');
+      console.log(`✅ Added 'Macchie scure' - pigmentazione: ${skinAnalysisData.pigmentazione}`);
+    }
+    if (skinAnalysisData.acne > 25) {
+      problems.push('Acne/Brufoli');
+      console.log(`✅ Added 'Acne/Brufoli' - acne: ${skinAnalysisData.acne}`);
+    }
+    if (skinAnalysisData.rughe > 30) {
+      problems.push('Rughe/Invecchiamento');
+      console.log(`✅ Added 'Rughe/Invecchiamento' - rughe: ${skinAnalysisData.rughe}`);
+    }
+    if (skinAnalysisData.rossori > 25) {
+      problems.push('Rosacea');
+      console.log(`✅ Added 'Rosacea' - rossori: ${skinAnalysisData.rossori}`);
+    }
+    if (skinAnalysisData.pori_dilatati > 30) {
+      problems.push('Pori dilatati');
+      console.log(`✅ Added 'Pori dilatati' - pori_dilatati: ${skinAnalysisData.pori_dilatati}`);
+    }
+    
+    console.log(`🎯 Extracted ${problems.length} problems from skin analysis:`, problems);
+    return problems;
+  }
+
   private extractAndRegisterUserInfo(sessionId: string, userMessage: string): void {
     const state = this.sessionState.get(sessionId)!;
     if (!state.structuredFlowAnswers) {
       state.structuredFlowAnswers = {};
     }
     
-    // Analizza il testo per estrarre informazioni
+    // PRIMO: Estrai problemi dall'analisi dell'immagine se disponibile
+    let detectedProblems = this.extractProblemsFromSkinAnalysis(sessionId);
+    
+    // SECONDO: Se non ci sono problemi dall'analisi, prova dal testo
+    if (detectedProblems.length === 0) {
+      detectedProblems = this.analyzeSkinProblemsFromText(userMessage);
+      console.log(`📝 No skin analysis found, using text analysis: ${detectedProblems.join(', ')}`);
+    } else {
+      console.log(`🔬 Using skin analysis results: ${detectedProblems.join(', ')}`);
+    }
+    
+    // Analizza il testo per estrarre altre informazioni
     const detectedSkinType = this.analyzeSkinTypeFromText(userMessage);
-    const detectedProblems = this.analyzeSkinProblemsFromText(userMessage);
     const detectedAge = this.analyzeAgeFromText(userMessage);
     
     // Registra le informazioni trovate
