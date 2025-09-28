@@ -2660,6 +2660,7 @@ export class BeautycologyAIService {
       /ho\s+bisogno\s+di\s+(un|una|qualcosa)\s*(per|contro)?/i,
       /cosa\s+(consigli|suggerisci|hai)\s*(per|contro)\s*(l'|la|il|i|le)?/i,
       /puoi\s+(consigliarmi|suggerirmi)\s+(qualcosa|un prodotto|una crema)\s*(per|contro)?/i,
+      /(consigliami|suggeriscimi)\s+(un|una)\s+(crema|siero|prodotto|trattamento)\s*(per|contro)\s*(l'|la|il|i|le)?/i,
       
       // PATTERN PER PROBLEMI SPECIFICI
       /(crema|siero|prodotto|trattamento|qualcosa)\s+(per|contro)\s+(acne|brufoli|imperfezioni)/i,
