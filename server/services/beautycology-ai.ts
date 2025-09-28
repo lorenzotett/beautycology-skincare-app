@@ -3791,16 +3791,24 @@ Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
       }
     }
     
-    // Call resolveRoutineKitLink to get appropriate kit recommendation
-    let routineKit = this.resolveRoutineKitLink(answers);
+    // IMPORTANT: Only resolve routine kit links if this is actually a routine request
+    let routineKit = null;
+    const isRequestingCompleteRoutine = adviceType.includes('routine') || adviceType.includes('completa');
     
-    // CRITICAL: If routine completa was requested and no specific kit found, use generic fallback
-    if (!routineKit && adviceType.includes('routine')) {
-      console.log('⚠️ No specific routine kit found, using generic fallback link');
-      routineKit = {
-        name: 'Collezione Routine Complete Beautycology',
-        url: 'https://beautycology.it/skincare-routine/'
-      };
+    if (isRequestingCompleteRoutine) {
+      console.log('🌟 User requested routine - calling resolveRoutineKitLink');
+      routineKit = this.resolveRoutineKitLink(answers);
+      
+      // CRITICAL: If routine completa was requested and no specific kit found, use generic fallback
+      if (!routineKit) {
+        console.log('⚠️ No specific routine kit found, using generic fallback link');
+        routineKit = {
+          name: 'Collezione Routine Complete Beautycology',
+          url: 'https://beautycology.it/skincare-routine/'
+        };
+      }
+    } else {
+      console.log('🛍️ Single product request detected - skipping routine kit resolution');
     }
     
     console.log(`🔍 Routine kit recommendation: ${routineKit ? `${routineKit.name} (${routineKit.url})` : 'None found'}`);
@@ -4840,16 +4848,24 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
       }
     }
     
-    // Otherwise, fall back to routine kit links
-    let routineKit = this.resolveRoutineKitLink(answers);
+    // IMPORTANT: Only resolve routine kit links if this is actually a routine request
+    let routineKit = null;
+    const isRequestingCompleteRoutine = adviceType.includes('routine') || adviceType.includes('completa');
     
-    // CRITICAL: Always ensure a routine link is present for complete routines
-    if (!routineKit && adviceType.includes('routine')) {
-      console.log('⚠️ No specific routine kit found in fallback, using generic link');
-      routineKit = {
-        name: 'Collezione Routine Complete Beautycology',
-        url: 'https://beautycology.it/skincare-routine/'
-      };
+    if (isRequestingCompleteRoutine) {
+      console.log('🌟 Fallback detected routine request - calling resolveRoutineKitLink');
+      routineKit = this.resolveRoutineKitLink(answers);
+      
+      // CRITICAL: Always ensure a routine link is present for complete routines
+      if (!routineKit) {
+        console.log('⚠️ No specific routine kit found in fallback, using generic link');
+        routineKit = {
+          name: 'Collezione Routine Complete Beautycology',
+          url: 'https://beautycology.it/skincare-routine/'
+        };
+      }
+    } else {
+      console.log('🛍️ Fallback detected single product request - skipping routine kit resolution');
     }
     
     console.log(`🔍 Routine kit recommendation in fallback: ${routineKit ? `${routineKit.name} (${routineKit.url})` : 'None found'}`);
