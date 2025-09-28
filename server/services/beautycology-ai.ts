@@ -1591,8 +1591,11 @@ export class BeautycologyAIService {
         }
       }
 
-      // Check if user is asking for a routine
-      const isRoutineRequest = this.detectRoutineRequest(userMessage);
+      // Check if this is a product information request FIRST (higher priority)
+      const isProductInfoRequest = this.detectProductInformationIntent(userMessage);
+      
+      // Check if user is asking for a routine (only if not a product request)
+      const isRoutineRequest = !isProductInfoRequest && this.detectRoutineRequest(userMessage);
       
       if (isRoutineRequest) {
         console.log('🌟 User requested a routine - checking for skin information');
@@ -1722,8 +1725,7 @@ export class BeautycologyAIService {
         }
       }
       
-      // Check if this is a product information request
-      const isProductInfoRequest = this.detectProductInformationIntent(userMessage);
+      // Product information request was already checked above with higher priority
       
       // Save the intent type in session state for better tracking
       if (isProductInfoRequest) {
@@ -4620,27 +4622,47 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
     return properties;
   }
 
-  // Detect if user is asking for a routine
+  // Detect if user is asking for a routine (more specific patterns)
   private detectRoutineRequest(message: string): boolean {
-    const routineKeywords = [
-      'routine',
-      'consiglia',
-      'raccomanda',
-      'cosa mi consigli',
-      'quali prodotti',
-      'skincare',
-      'trattamento',
-      'programma',
-      'schema',
-      'protocollo',
-      'voglio una routine',
-      'dammi una routine',
-      'consigli per la mia pelle',
-      'ho bisogno di una routine'
+    const lowerMessage = message.toLowerCase();
+    
+    // Specific routine request patterns
+    const routinePatterns = [
+      /\broutine\b/i,
+      /routine\s+(completa|mattina|sera|giornaliera|quotidiana|skincare)/i,
+      /voglio\s+una\s+routine/i,
+      /dammi\s+una\s+routine/i,
+      /ho\s+bisogno\s+di\s+una\s+routine/i,
+      /consigli\s+per\s+la\s+mia\s+routine/i,
+      /che\s+routine\s+mi\s+consigli/i,
+      /skincare\s+routine/i,
+      /programma\s+(skincare|di\s+cura)/i,
+      /schema\s+di\s+trattamento/i,
+      /protocollo\s+skincare/i,
+      /step\s+(skincare|di\s+bellezza)/i
     ];
     
-    const lowerMessage = message.toLowerCase();
-    return routineKeywords.some(keyword => lowerMessage.includes(keyword));
+    // Check for routine patterns
+    const hasRoutinePattern = routinePatterns.some(pattern => pattern.test(lowerMessage));
+    
+    // Additional check: mentions multiple product types (suggests routine)
+    const productTypeCount = ['detergente', 'crema', 'siero', 'protezione', 'maschera', 'esfoliante'].filter(type => 
+      lowerMessage.includes(type)
+    ).length;
+    
+    // Consider it a routine request if:
+    // 1. Has specific routine patterns, OR
+    // 2. Mentions multiple product types (suggests complete routine)
+    const isRoutineRequest = hasRoutinePattern || productTypeCount >= 2;
+    
+    console.log(`🔍 Routine request analysis:`, {
+      message: lowerMessage.substring(0, 50),
+      hasRoutinePattern,
+      productTypeCount,
+      isRoutineRequest
+    });
+    
+    return isRoutineRequest;
   }
 
   // Extract skin information from user message
