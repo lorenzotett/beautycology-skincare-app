@@ -1714,8 +1714,11 @@ export class BeautycologyAIService {
             
             console.log('✅ Advanced routine generation completed successfully');
             
+            // Validate response context before returning
+            const contextValidation = this.validateResponseContextMatch(sessionId, finalResponse);
+            
             return {
-              content: finalResponse,
+              content: contextValidation.isValid ? finalResponse : (contextValidation.correctedResponse || finalResponse),
               hasChoices: false
             };
           }
@@ -2582,8 +2585,11 @@ export class BeautycologyAIService {
       // Update state
       this.sessionState.set(sessionId, state);
       
+      // Validate response context before returning
+      const contextValidation = this.validateResponseContextMatch(sessionId, fallbackResponse);
+      
       return {
-        content: fallbackResponse,
+        content: contextValidation.isValid ? fallbackResponse : (contextValidation.correctedResponse || fallbackResponse),
         hasChoices,
         choices
       };
@@ -4624,6 +4630,69 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
         return ''; // Return empty string instead of null
       }
     }
+  }
+
+  /**
+   * Validate that the response content matches the user's original intent
+   */
+  private validateResponseContextMatch(sessionId: string, responseContent: string): {
+    isValid: boolean,
+    correctedResponse?: string,
+    issues: string[]
+  } {
+    const state = this.sessionState.get(sessionId);
+    const issues: string[] = [];
+    
+    if (!state) {
+      return { isValid: true, issues: [] };
+    }
+    
+    // Check if user wanted product information but got routine recommendations
+    if (state.lastIntent === 'product_info') {
+      const contentLower = responseContent.toLowerCase();
+      
+      // Check for routine indicators in response when user asked for products
+      const routineIndicators = [
+        'routine mattutina',
+        'routine serale',
+        '☀️',
+        '🌙',
+        'step ',
+        'passaggio ',
+        'mattina:',
+        'sera:',
+        'routine completa',
+        'routine personalizzata'
+      ];
+      
+      const hasRoutineContent = routineIndicators.some(indicator => 
+        contentLower.includes(indicator)
+      );
+      
+      if (hasRoutineContent) {
+        issues.push('Response contains routine recommendations when user requested product information');
+        
+        // Generate corrected product-focused response
+        const correctedResponse = 
+          "Mi dispiace per la confusione. Vedo che stai cercando informazioni specifiche sui nostri prodotti. " +
+          "Posso aiutarti con dettagli su ingredienti, modalità d'uso, prezzi e caratteristiche di qualsiasi prodotto Beautycology. " +
+          "Quale prodotto ti interessa di più? Oppure dimmi quale problema della pelle vuoi risolvere e ti consiglierò i prodotti più adatti.";
+        
+        console.log('🚨 CONTEXT VALIDATION ERROR: User requested product info but got routine');
+        return {
+          isValid: false,
+          correctedResponse,
+          issues
+        };
+      }
+    }
+    
+    // Log successful validation
+    if (issues.length === 0) {
+      console.log(`✅ Response context validation passed for intent: ${state.lastIntent || 'none'}`);
+    }
+    
+    return { isValid: true, issues };
   }
 
   /**
