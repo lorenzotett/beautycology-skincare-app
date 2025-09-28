@@ -2651,7 +2651,8 @@ export class BeautycologyAIService {
     const productInformationPatterns = [
       // PATTERN CRITICI PER RICHIESTE GENERICHE DI PRODOTTI (PRIORITY)
       /vorrei\s+una?\s+(crema|siero|detergente|prodotto|maschera|trattamento)\s*(viso|corpo)?\s*(per|contro)\s*(l'|la|il|i|le)?/i,
-      /cerco\s+(un|una|qualcosa|prodott[oi]|crem[ae]|sier[oi])\s*(viso|corpo)?\s*(per|contro)\s*(l'|la|il|i|le)?/i,
+      /cerco\s+(un|una)\s+(crema|siero|detergente|prodotto|maschera|trattamento)\s*(viso|corpo)?\s*(per|contro)\s*(l'|la|il|i|le)?/i,
+      /cerco\s+(qualcosa|prodott[oi]|crem[ae]|sier[oi])\s*(viso|corpo)?\s*(per|contro)\s*(l'|la|il|i|le)?/i,
       /cerco\s+un\s+prodotto\s+(per|contro)\s*(l'|la|il|i|le)?/i,
       /hai\s+(qualcosa|prodott[oi]|crem[ae]|sier[oi])\s*(per|contro)\s*(l'|la|il|i|le)?/i,
       /avete\s+(qualcosa|prodott[oi]|crem[ae]|sier[oi])\s*(per|contro)\s*(l'|la|il|i|le)?/i,
