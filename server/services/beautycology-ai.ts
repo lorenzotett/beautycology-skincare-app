@@ -929,6 +929,15 @@ class ProductValidator {
     return this.products.map(p => p.originalName);
   }
   
+  // Find a product by name and return its details including category
+  findProductByName(productName: string): {name: string, originalName: string, url: string, price: string, category?: string, description?: string} | null {
+    const nameLower = productName.toLowerCase();
+    const product = this.products.find(p => 
+      p.name === nameLower || p.originalName.toLowerCase() === nameLower
+    );
+    return product || null;
+  }
+  
   // Get real products for specific categories
   getProductsByCategory(category: string): Array<{name: string, url: string, price: string}> {
     const categoryLower = category.toLowerCase();
@@ -3610,18 +3619,22 @@ ${ragContext ? `Informazioni prodotti rilevanti:\n${ragContext}\n` : ''}
 
 🚨 IMPORTANTE: L'utente ha scelto UN PRODOTTO SPECIFICO, non una routine completa.
 
+⚠️ REGOLA ASSOLUTA: Il prodotto raccomandato DEVE SEMPRE essere adatto alla problematica identificata (${answers.mainIssue || 'problemi generici'}). Non raccomandare mai prodotti generici - SOLO prodotti che risolvono specificatamente il problema della persona.
+
 DEVI OBBLIGATORIAMENTE:
 
 1. **RINGRAZIARE** per la scelta specifica
 2. **ANALIZZARE** la problematica principale identificata (${answers.mainIssue || 'problemi generici'})
-3. **SPIEGARE** perché il tipo di prodotto scelto (${selectedProductType}) è perfetto per la sua condizione
-4. **RACCOMANDARE IL PRODOTTO SPECIFICO** dalla knowledge base Beautycology più adatto:
-   - Nome del prodotto e prezzo
+3. **SPIEGARE** perché il tipo di prodotto scelto (${selectedProductType}) è perfetto per la sua condizione specifica
+4. **RACCOMANDARE ESCLUSIVAMENTE** il prodotto dalla knowledge base Beautycology che:
+   - È della categoria ${selectedProductType} E contemporaneamente
+   - È specificamente formulato per risolvere il problema identificato (${answers.mainIssue || 'problemi generici'})
+   - Nome del prodotto e prezzo esatto
    - Ingredienti chiave che risolvono il problema specifico
-   - Come e quando usarlo
-   - Benefici attesi
+   - Come e quando usarlo per questo problema
+   - Benefici attesi specifici per questa problematica
    - Link diretto per l'acquisto
-5. **CONSIGLI D'USO** specifici per massimizzare l'efficacia
+5. **CONSIGLI D'USO** specifici per massimizzare l'efficacia contro il problema identificato
 6. **CONCLUDERE** sempre con: "Se hai altri dubbi o domande sui nostri prodotti, chiedi pure!"
 
 ⚠️ NON includere pulsanti, scelte multiple, o domande aggiuntive.
@@ -3669,48 +3682,127 @@ Rispondi come la Skin Expert di Beautycology con tono professionale ma amichevol
     }
   }
 
-  // Fallback specific product recommendation if AI fails - now uses intelligent matching
+  // Helper method to check if a product matches the requested category using authoritative metadata
+  private matchesRequestedCategory(requestedCategory: string, productName: string): boolean {
+    if (!this.productValidator) return false;
+    
+    // Find the actual product in the catalog to get its authoritative category
+    const product = this.productValidator.findProductByName(productName);
+    if (!product || !product.category) {
+      console.log(`⚠️ Product not found or missing category: ${productName}`);
+      return false;
+    }
+    
+    const catalogCategory = product.category.toLowerCase();
+    const requestedCategoryLower = requestedCategory.toLowerCase();
+    
+    console.log(`🔍 Matching requested "${requestedCategory}" against catalog category "${product.category}" for product "${productName}"`);
+    
+    // Map user requests to exact catalog categories
+    const categoryMappings: {[key: string]: string[]} = {
+      // Detergenti requests
+      'detergente': ['detergenti'],
+      'detergente-struccante': ['detergenti'],
+      'detergenti': ['detergenti'],
+      
+      // Sieri requests (exclude eye products)
+      'siero': ['sieri'],
+      'serum': ['sieri'],
+      'sieri': ['sieri'],
+      
+      // Creme viso requests (exclude eye and body)
+      'crema': ['creme'],
+      'crema viso': ['creme'],
+      'cream': ['creme'],
+      'creme': ['creme'],
+      
+      // Contorno occhi (specific)
+      'contorno': ['contorno occhi'],
+      'contorno occhi': ['contorno occhi'], 
+      'eye': ['contorno occhi'],
+      
+      // Protezione solare
+      'protezione solare': ['protezione solare'],
+      'spf': ['protezione solare'],
+      'protezione': ['protezione solare'],
+      
+      // Esfolianti
+      'esfoliante': ['esfolianti'],
+      'peeling': ['esfolianti'],
+      'peel': ['esfolianti'],
+      'esfolianti': ['esfolianti'],
+      
+      // Maschere
+      'maschera': ['maschere'],
+      'mask': ['maschere'],
+      'maschere': ['maschere'],
+      
+      // Corpo
+      'corpo': ['corpo'],
+      'body': ['corpo'],
+      
+      // Kit e routine
+      'routine': ['kit & routine'],
+      'kit': ['kit & routine']
+    };
+    
+    // Check if the requested category maps to the product's actual category
+    const allowedCategories = categoryMappings[requestedCategoryLower] || [];
+    const isMatch = allowedCategories.some(allowed => catalogCategory.includes(allowed.toLowerCase()));
+    
+    console.log(`${isMatch ? '✅' : '❌'} Category match for "${productName}": requested=${requestedCategory}, catalog=${product.category}, allowed=${allowedCategories.join(', ')}`);
+    
+    return isMatch;
+  }
+  
+  // Fallback specific product recommendation if AI fails - SEMPRE abbina problema a prodotto
   private getFallbackSpecificProductRecommendation(productType: string, answers: any, ingredients: string[]): string {
     const skinType = answers.skinType?.toLowerCase() || 'mista';
     const mainIssue = answers.mainIssue || 'problemi generici della pelle';
     
-    console.log(`🎯 INTELLIGENT FALLBACK: Finding products for ${productType}, skin: ${skinType}, issue: ${mainIssue}`);
+    console.log(`🎯 PROBLEM-FOCUSED FALLBACK: Finding ${productType} specifically for ${mainIssue} (skin: ${skinType})`);
     
     let selectedProduct: {name: string, url: string, price: string, score?: number, reason?: string} | null = null;
+    let productSearchStrategy: 'exact_match' | 'no_match' = 'exact_match';
     
     if (this.productValidator) {
-      // First: Try intelligent matching based on problems and skin type
-      const problems = [mainIssue, productType];
-      const intelligentMatches = this.productValidator.getProductsByProblems(problems, skinType);
+      // STRATEGY 1: Find products that solve the problem, then filter by category
+      const problems = [mainIssue];
+      const problemSolvingProducts = this.productValidator.getProductsByProblems(problems, skinType);
       
-      if (intelligentMatches.length > 0) {
-        console.log(`✅ INTELLIGENT MATCH: Found ${intelligentMatches.length} products by problem matching`);
-        selectedProduct = intelligentMatches[0]; // Take the highest scored product
+      console.log(`🔍 Found ${problemSolvingProducts.length} products that solve ${mainIssue}`);
+      
+      // Filter to only products that match the requested category using authoritative metadata
+      const categoryAndProblemMatches = problemSolvingProducts.filter(product => {
+        return this.matchesRequestedCategory(productType, product.name);
+      });
+      
+      if (categoryAndProblemMatches.length > 0) {
+        console.log(`✅ EXACT MATCH: Found ${categoryAndProblemMatches.length} ${productType} products that solve ${mainIssue}`);
+        selectedProduct = categoryAndProblemMatches[0];
+        productSearchStrategy = 'exact_match';
       } else {
-        // Second: Try category-based matching (improved method)
-        console.log(`🔍 CATEGORY FALLBACK: Trying category matching for ${productType}`);
-        const categoryProducts = this.productValidator.getProductsByCategory(productType);
-        
-        if (categoryProducts.length > 0) {
-          console.log(`✅ CATEGORY MATCH: Found ${categoryProducts.length} products by category`);
-          selectedProduct = categoryProducts[0];
-        } else {
-          // Third: If all else fails, try to find ANY relevant product based on main issue
-          console.log(`🆘 LAST RESORT: Trying to find any product for main issue: ${mainIssue}`);
-          const lastResortMatches = this.productValidator.getProductsByProblems([mainIssue], skinType);
-          
-          if (lastResortMatches.length > 0) {
-            console.log(`✅ LAST RESORT MATCH: Found product for main issue`);
-            selectedProduct = lastResortMatches[0];
-          }
-        }
+        // NO FALLBACK - Only recommend if product matches BOTH category AND problem
+        console.log(`❌ NO MATCH: No ${productType} found that specifically solves ${mainIssue}`);
+        selectedProduct = null;
+        productSearchStrategy = 'no_match';
       }
     }
     
-    // If still no products, log error and return safe message
+    // If no problem-aligned products found, recommend exploring the complete routine or other categories
     if (!selectedProduct) {
-      console.error(`❌ No products found for: category=${productType}, skin=${skinType}, issue=${mainIssue}`);
-      return `Mi dispiace, al momento non riesco a trovare un prodotto specifico per la categoria "${productType}" con il problema "${mainIssue}". Ti consiglio di visitare https://beautycology.it per vedere tutti i prodotti disponibili o contattare il nostro team di esperti.`;
+      console.error(`❌ No problem-aligned products found for: category=${productType}, skin=${skinType}, issue=${mainIssue}`);
+      return `Ciao! Ho cercato nel nostro catalogo Beautycology un **${productType}** specifico per il tuo problema di ${mainIssue}, ma al momento non abbiamo prodotti in questa categoria che siano specificatamente formulati per questa problematica.
+
+💡 **ECCO COSA TI CONSIGLIO:**
+
+1. **Routine completa**: Per risultati ottimali contro ${mainIssue}, considera una routine completa che include prodotti specifici per questo problema. Visita: https://beautycology.it per vedere le routine mirate.
+
+2. **Alternative più efficaci**: Potrei suggerirti altri tipi di prodotti del nostro catalogo che sono PERFETTI per risolvere ${mainIssue} - anche se non sono ${productType}.
+
+Vuoi che ti consigli il prodotto più efficace per ${mainIssue} dal nostro catalogo, anche se è di una categoria diversa? Oppure preferisci vedere le nostre routine complete?
+
+Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
     }
     
     // Use the intelligently selected product
@@ -3721,29 +3813,37 @@ Rispondi come la Skin Expert di Beautycology con tono professionale ma amichevol
     const matchingExplanation = product.reason ? 
       `\n🎯 **PERCHÉ È PERFETTO PER TE:**\n${product.reason}\n` : '';
     
-    return `Perfetto! 🌟 Hai scelto di concentrarti su **${productType}** - una scelta intelligente!
+    // Generate response based on search strategy used
+    let responseIntro = '';
+    let productExplanation = '';
+    
+    if (productSearchStrategy === 'exact_match') {
+      responseIntro = `Perfetto! 🌟 Hai scelto **${productType}** - una scelta intelligente per il tuo problema di ${mainIssue}!`;
+      productExplanation = `Questo ${productType} è stato specificamente selezionato perché è perfetto sia per la categoria che hai scelto che per risolvere la tua problematica di ${mainIssue}.`;
+    }
+    
+    return `${responseIntro}
 
 📋 **ANALISI DELLA TUA ESIGENZA:**
-Basandomi sui tuoi dati (pelle ${skinType}, problema principale: ${mainIssue}), il **${productType}** è esattamente quello di cui ha bisogno la tua pelle per risolvere questa problematica specifica.
+Basandomi sui tuoi dati (pelle ${skinType}, problema principale: ${mainIssue}), ecco la mia raccomandazione personalizzata.
 
-🧪 **IL PRODOTTO PERFETTO PER TE:**
+🧪 **IL PRODOTTO SELEZIONATO PER TE:**
 
 **${product.name}** (${product.price})
-Questo prodotto è stato selezionato dal nostro catalogo scientifico di Beautycology per rispondere alle tue esigenze specifiche.
+${productExplanation}
 ${matchingExplanation}
 ✨ **INGREDIENTI CHIAVE per il tuo problema:**
 ${ingredientList} - selezionati scientificamente per la tua condizione specifica.
 
-📋 **COME USARLO:**
+📋 **COME USARLO per il tuo problema specifico:**
 - Applica ${productType.includes('detergente') ? 'mattina e sera su viso umido' : 'mattina e sera su pelle pulita'}
 - ${productType.includes('contorno') ? 'Tampona delicatamente senza strofinare' : 'Massaggia con movimenti circolari'}
-- Costanza è fondamentale: usa quotidianamente per 4-6 settimane per vedere risultati ottimali
+- Costanza è fondamentale: usa quotidianamente per 4-6 settimane per vedere risultati ottimali contro ${mainIssue}
 
-🎯 **BENEFICI ATTESI:**
-- Miglioramento visibile della problematica in 2-3 settimane
-- Pelle più equilibrata e sana
-- Risultati progressivi e duraturi
-
+🎯 **BENEFICI ATTESI per la tua problematica:**
+- Miglioramento visibile di ${mainIssue} in 2-3 settimane
+- Pelle più equilibrata e sana, con riduzione specifica del problema
+- Risultati progressivi e duraturi contro ${mainIssue}
 🛒 **LINK DIRETTO:** [${product.name}](${product.url})
 
 Se hai altri dubbi o domande sui nostri prodotti, chiedi pure! 💕`;
