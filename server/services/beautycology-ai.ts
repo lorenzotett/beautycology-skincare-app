@@ -1359,6 +1359,71 @@ export class BeautycologyAIService {
     return problems;
   }
 
+  // 🔧 NUOVA FUNZIONE: Determina se l'analisi della foto dovrebbe sovrascrivere il mainIssue esistente
+  private shouldOverrideMainIssueWithPhotoAnalysis(sessionId: string, currentMainIssue: string): { shouldOverride: boolean, newMainIssue?: string, reason?: string } {
+    const skinAnalysisData = this.sessionSkinAnalysis.get(sessionId);
+    if (!skinAnalysisData) {
+      return { shouldOverride: false, reason: 'No skin analysis data available' };
+    }
+
+    // Trova il problema con il punteggio più alto dall'analisi della foto
+    const analysisProblems = [
+      { name: 'Macchie scure', score: skinAnalysisData.pigmentazione, threshold: 25 },
+      { name: 'Acne/Brufoli', score: skinAnalysisData.acne, threshold: 25 },
+      { name: 'Rughe/Invecchiamento', score: skinAnalysisData.rughe, threshold: 30 },
+      { name: 'Rosacea', score: skinAnalysisData.rossori, threshold: 25 },
+      { name: 'Pori dilatati', score: skinAnalysisData.pori_dilatati, threshold: 30 }
+    ].filter(p => p.score > p.threshold)
+     .sort((a, b) => b.score - a.score);
+
+    if (analysisProblems.length === 0) {
+      return { shouldOverride: false, reason: 'No significant problems detected in photo analysis' };
+    }
+
+    const topProblemFromPhoto = analysisProblems[0];
+    
+    // Controlla se il problema principale dall'analisi è significativamente diverso dal mainIssue attuale
+    const currentMainIssueLower = currentMainIssue.toLowerCase();
+    const topProblemLower = topProblemFromPhoto.name.toLowerCase();
+    
+    // Se è lo stesso problema, non sovrascrivi
+    if (currentMainIssueLower.includes('acne') && topProblemLower.includes('acne') ||
+        currentMainIssueLower.includes('macch') && topProblemLower.includes('macch') ||
+        currentMainIssueLower.includes('rosacea') && topProblemLower.includes('rosacea') ||
+        currentMainIssueLower.includes('rughe') && topProblemLower.includes('rughe')) {
+      return { shouldOverride: false, reason: 'Photo analysis confirms current mainIssue' };
+    }
+
+    // Controlla se il problema dall'analisi è significativamente più importante
+    const isSignificantScore = topProblemFromPhoto.score >= 50; // Score significativo
+    
+    // Controllo specifico per il caso pigmentazione vs acne
+    if (topProblemFromPhoto.name === 'Macchie scure' && currentMainIssueLower.includes('acne')) {
+      const pigmentationScore = skinAnalysisData.pigmentazione;
+      const acneScore = skinAnalysisData.acne;
+      const scoreDifference = pigmentationScore - acneScore;
+      
+      if (pigmentationScore >= 50 && scoreDifference >= 30) {
+        return { 
+          shouldOverride: true, 
+          newMainIssue: topProblemFromPhoto.name,
+          reason: `Photo analysis shows pigmentation (${pigmentationScore}) is significantly more important than acne (${acneScore}), difference: ${scoreDifference} points`
+        };
+      }
+    }
+
+    // Controllo generale per altri casi
+    if (isSignificantScore) {
+      return { 
+        shouldOverride: true, 
+        newMainIssue: topProblemFromPhoto.name,
+        reason: `Photo analysis shows ${topProblemFromPhoto.name} with high confidence (score: ${topProblemFromPhoto.score})`
+      };
+    }
+
+    return { shouldOverride: false, reason: `Photo analysis not conclusive enough to override current mainIssue` };
+  }
+
   private extractAndRegisterUserInfo(sessionId: string, userMessage: string): void {
     const state = this.sessionState.get(sessionId)!;
     if (!state.structuredFlowAnswers) {
@@ -1386,10 +1451,24 @@ export class BeautycologyAIService {
       console.log(`✅ Auto-extracted skin type: ${detectedSkinType}`);
     }
     
-    if (detectedProblems.length > 0 && !state.structuredFlowAnswers.mainIssue) {
-      // Prendi la prima problematica rilevata come principale
-      state.structuredFlowAnswers.mainIssue = detectedProblems[0];
-      console.log(`✅ Auto-extracted skin problems: ${detectedProblems.join(', ')}`);
+    if (detectedProblems.length > 0) {
+      if (!state.structuredFlowAnswers.mainIssue) {
+        // Primo caso: non c'è ancora un mainIssue, settalo
+        state.structuredFlowAnswers.mainIssue = detectedProblems[0];
+        console.log(`✅ Auto-extracted skin problems: ${detectedProblems.join(', ')}`);
+      } else {
+        // 🔧 NUOVO: C'è già un mainIssue, controlla se l'analisi della foto dovrebbe sovrascriverlo
+        const overrideCheck = this.shouldOverrideMainIssueWithPhotoAnalysis(sessionId, state.structuredFlowAnswers.mainIssue);
+        
+        if (overrideCheck.shouldOverride && overrideCheck.newMainIssue) {
+          console.log(`🔄 INTELLIGENT OVERRIDE: "${state.structuredFlowAnswers.mainIssue}" → "${overrideCheck.newMainIssue}"`);
+          console.log(`📋 Reason: ${overrideCheck.reason}`);
+          state.structuredFlowAnswers.mainIssue = overrideCheck.newMainIssue;
+        } else {
+          console.log(`ℹ️ Keeping existing mainIssue: ${state.structuredFlowAnswers.mainIssue} (photo analysis: ${detectedProblems.join(', ')})`);
+          console.log(`📋 Reason: ${overrideCheck.reason}`);
+        }
+      }
     }
     
     if (detectedAge && !state.structuredFlowAnswers.age) {
@@ -2075,8 +2154,19 @@ export class BeautycologyAIService {
         
         // Check if we already have a mainIssue from initial analysis
         if (state.structuredFlowAnswers.mainIssue) {
-          console.log(`ℹ️ Skipping problem question - already have mainIssue: ${state.structuredFlowAnswers.mainIssue}`);
-          state.currentStep = 'awaiting_advice_type';
+          // 🔧 NUOVO: Controlla se l'analisi della foto dovrebbe sovrascrivere il mainIssue esistente
+          const overrideCheck = this.shouldOverrideMainIssueWithPhotoAnalysis(sessionId, state.structuredFlowAnswers.mainIssue);
+          
+          if (overrideCheck.shouldOverride && overrideCheck.newMainIssue) {
+            console.log(`🔄 OVERRIDING mainIssue: "${state.structuredFlowAnswers.mainIssue}" → "${overrideCheck.newMainIssue}"`);
+            console.log(`📋 Reason: ${overrideCheck.reason}`);
+            state.structuredFlowAnswers.mainIssue = overrideCheck.newMainIssue;
+            state.currentStep = 'awaiting_advice_type';
+          } else {
+            console.log(`ℹ️ Keeping existing mainIssue: ${state.structuredFlowAnswers.mainIssue}`);
+            console.log(`📋 Reason: ${overrideCheck.reason}`);
+            state.currentStep = 'awaiting_advice_type';
+          }
         } else {
           state.currentStep = 'awaiting_problem';
         }
