@@ -2892,43 +2892,83 @@ export class BeautycologyAIService {
     let response = `Certo${userName ? ` ${userName}` : ''}! Per ${problem} ti consiglio questi prodotti Beautycology:\n\n`;
     
     // Aggiungi i prodotti consigliati
-    products.slice(0, 3).forEach((product, index) => {
+    const displayedProducts = products.slice(0, 3);
+    displayedProducts.forEach((product, index) => {
       const icon = index === 0 ? '🌟' : index === 1 ? '✨' : '💫';
       response += `${icon} **${product.name}** - ${product.price}\n`;
       
-      // Estrai una breve descrizione dei benefici
+      // Genera una descrizione più dettagliata e specifica per la problematica
       const description = product.description || '';
+      const descLower = description.toLowerCase();
+      const problemLower = problem.toLowerCase();
       let benefits = '';
       
-      if (description.toLowerCase().includes('acne') || description.toLowerCase().includes('imperfezioni')) {
-        benefits = 'Trattamento specifico per imperfezioni e acne';
-      } else if (description.toLowerCase().includes('macchi')) {
-        benefits = 'Riduce visibilmente macchie e discromie';
-      } else if (description.toLowerCase().includes('rughe') || description.toLowerCase().includes('anti-age')) {
-        benefits = 'Azione anti-età per ridurre rughe e segni del tempo';
-      } else if (description.toLowerCase().includes('idrata')) {
-        benefits = 'Idratazione profonda e duratura';
-      } else if (description.toLowerCase().includes('sebo') || description.toLowerCase().includes('grass')) {
-        benefits = 'Regola il sebo e riduce la lucidità';
-      } else if (description.toLowerCase().includes('sensibil')) {
-        benefits = 'Formula delicata per pelli sensibili';
-      } else if (description.toLowerCase().includes('esfolia')) {
-        benefits = 'Esfoliazione delicata per una pelle luminosa';
-      } else if (description.toLowerCase().includes('protezion') || description.toLowerCase().includes('spf')) {
-        benefits = 'Protezione quotidiana dai raggi UV';
+      // Benefici specifici in base al problema richiesto
+      if (problemLower.includes('acne') || problemLower.includes('brufol') || problemLower.includes('imperfezioni')) {
+        if (descLower.includes('acido azelaico') || product.name.toLowerCase().includes('multipod')) {
+          benefits = 'Contiene acido azelaico al 10% che riduce efficacemente brufoli e imperfezioni, regolando la produzione di sebo e prevenendo la formazione di comedoni';
+        } else if (descLower.includes('salicilico') || product.name.toLowerCase().includes('ray of light')) {
+          benefits = 'Formula con acido salicilico BHA che penetra nei pori ostruiti, dissolve i punti neri e previene la formazione di nuovi brufoli';
+        } else if (product.name.toLowerCase().includes('routine') && descLower.includes('acne')) {
+          benefits = 'Routine completa anti-acne con prodotti sinergici per detergere, trattare e idratare la pelle acneica senza seccarla eccessivamente';
+        } else {
+          benefits = 'Trattamento specifico formulato per contrastare imperfezioni e acne, riducendo l\'infiammazione e prevenendo nuove eruzioni cutanee';
+        }
+      } else if (problemLower.includes('macchi') || problemLower.includes('discromie') || problemLower.includes('iperpigmentazione')) {
+        if (descLower.includes('tranexamico') || product.name.toLowerCase().includes('redless')) {
+          benefits = 'Contiene acido tranexamico che blocca la produzione di melanina, schiarendo visibilmente macchie scure e uniformando il colorito';
+        } else if (descLower.includes('vitamina c') || product.name.toLowerCase().includes('c-boost')) {
+          benefits = 'Siero con vitamina C stabilizzata che illumina la pelle e riduce le macchie scure grazie alla sua azione antiossidante e schiarente';
+        } else if (product.name.toLowerCase().includes('combo macchie')) {
+          benefits = 'Kit specifico anti-macchie che combina principi attivi sinergici per un trattamento completo delle discromie e dell\'iperpigmentazione';
+        } else {
+          benefits = 'Formula avanzata che schiarisce progressivamente macchie e discromie, uniformando il colorito per una pelle più luminosa e omogenea';
+        }
+      } else if (problemLower.includes('rosacea') || problemLower.includes('rossor') || problemLower.includes('irritazion') || problemLower.includes('sensibil')) {
+        if (product.name.toLowerCase().includes('skin reset')) {
+          benefits = 'Trattamento riequilibrante che calma rossori e irritazioni, rafforzando la barriera cutanea delle pelli sensibili e reattive';
+        } else if (product.name.toLowerCase().includes('routine') && descLower.includes('rosacea')) {
+          benefits = 'Routine delicata specificatamente formulata per pelli con rosacea, che lenisce rossori e riduce la reattività cutanea';
+        } else {
+          benefits = 'Formula ultra-delicata che riduce rossori e irritazioni, ideale per pelli sensibili e reattive che necessitano di cure specifiche';
+        }
+      } else if (problemLower.includes('rughe') || problemLower.includes('anti-age') || problemLower.includes('invecchiamento')) {
+        if (descLower.includes('retinaldeide') || product.name.toLowerCase().includes('retinal')) {
+          benefits = 'Contiene retinaldeide, la forma più efficace di vitamina A, che stimola il rinnovamento cellulare riducendo rughe e segni dell\'età';
+        } else if (descLower.includes('lattobionico') || product.name.toLowerCase().includes('bionic')) {
+          benefits = 'Formula con acido lattobionico che esfolia delicatamente stimolando il rinnovamento cellulare per una pelle più giovane e levigata';
+        } else {
+          benefits = 'Trattamento anti-età avanzato che riduce visibilmente rughe e segni del tempo, migliorando elasticità e compattezza della pelle';
+        }
+      } else if (problemLower.includes('sebo') || problemLower.includes('grass') || problemLower.includes('lucid')) {
+        benefits = 'Regola efficacemente la produzione di sebo, riducendo lucidità e aspetto oleoso per una pelle opacizzata e purificata';
+      } else if (problemLower.includes('idratazion') || problemLower.includes('secch')) {
+        benefits = 'Fornisce idratazione profonda e duratura, ripristinando il giusto equilibrio idro-lipidico per una pelle morbida e nutrita';
       } else {
-        benefits = description.substring(0, 100) + '...';
+        // Fallback generico ma più dettagliato
+        if (descLower.includes('acne') || descLower.includes('imperfezioni')) {
+          benefits = 'Trattamento specifico per imperfezioni e acne che purifica e normalizza la pelle';
+        } else if (descLower.includes('macchi')) {
+          benefits = 'Riduce visibilmente macchie e discromie per un colorito più uniforme';
+        } else if (descLower.includes('sensibil') || descLower.includes('delicata')) {
+          benefits = 'Formula delicata studiata per pelli sensibili e reattive';
+        } else {
+          benefits = description.substring(0, 150) + (description.length > 150 ? '...' : '');
+        }
       }
       
       response += `${benefits}\n`;
       response += `👉 Acquista ora: ${product.url}\n\n`;
     });
     
-    // Se c'è una routine completa appropriata, menzionala
+    // Se c'è una routine completa appropriata che NON è già stata mostrata, menzionala
     const routineProduct = products.find(p => p.name.toLowerCase().includes('routine'));
-    if (routineProduct) {
-      response += `💡 **Consiglio extra:** Per risultati ottimali, considera la nostra **[${routineProduct.name}](${routineProduct.url})**\n`;
-      response += `Una routine completa pensata specificamente per le tue esigenze!\n\n`;
+    const routineAlreadyShown = displayedProducts.some(p => p.name.toLowerCase().includes('routine'));
+    
+    if (routineProduct && !routineAlreadyShown) {
+      response += `💡 **Consiglio extra:** Per risultati ottimali, considera la nostra **${routineProduct.name}** (${routineProduct.price})\n`;
+      response += `Una routine completa pensata specificamente per le tue esigenze!\n`;
+      response += `👉 Acquista ora: ${routineProduct.url}\n\n`;
     }
     
     response += `Vuoi maggiori dettagli su uno di questi prodotti? Sono qui per aiutarti! 💕`;
