@@ -1301,19 +1301,65 @@ export class BeautycologyAIService {
   private analyzeSkinTypeFromText(text: string): string | undefined {
     const lowerText = text.toLowerCase();
     
-    if (lowerText.includes('pelle grassa') || lowerText.includes('troppo oleosa') || lowerText.includes('molto oleosa') || lowerText.includes('lucida') || lowerText.includes('unta')) {
+    // 🔍 PELLE GRASSA - Patterns più completi
+    const grassaPatterns = [
+      'pelle grassa', 'troppo oleosa', 'molto oleosa', 'lucida', 'unta', 'pelle unta',
+      'oleosa', 'grassa sui punti', 'facilmente oleosa', 'sebacea', 'sebo in eccesso',
+      'produce troppo sebo', 'sempre lucida', 'zona t grassa', 'fronte grassa',
+      'naso oleoso', 'molto sebaceo', 'ho la pelle che produce sebo', 'iper-sebacea',
+      'grassa al tatto', 'untuosa', 'lucidissima', 'grassa e lucida'
+    ];
+    if (grassaPatterns.some(pattern => lowerText.includes(pattern))) {
       return 'Grassa';
     }
-    if (lowerText.includes('pelle secca') || lowerText.includes('desquama') || lowerText.includes('tira') || lowerText.includes('screpolata') || lowerText.includes('ruvida')) {
+    
+    // 🔍 PELLE SECCA - Patterns più completi
+    const seccaPatterns = [
+      'pelle secca', 'desquama', 'tira', 'screpolata', 'ruvida', 'pelle che tira',
+      'molto secca', 'super secca', 'disidratata', 'squamosa', 'pellicine',
+      'si screpola', 'tirante', 'sempre secca', 'pelle arida', 'xerosi',
+      'manca di idratazione', 'pelle spenta', 'ruvida al tatto', 'poco idratata',
+      'secca come carta', 'pelle che si stacca', 'tendente al secco'
+    ];
+    if (seccaPatterns.some(pattern => lowerText.includes(pattern))) {
       return 'Secca';
     }
-    if (lowerText.includes('pelle mista') || lowerText.includes('zona t oleosa') || lowerText.includes('fronte oleosa') || lowerText.includes('guance secche')) {
+    
+    // 🔍 PELLE MISTA - Patterns più completi  
+    const mistaPatterns = [
+      'pelle mista', 'zona t oleosa', 'fronte oleosa', 'guance secche',
+      'mista tendente', 'combinazione grassa e secca', 'naso oleoso guance secche',
+      'fronte grassa guance normali', 'zone diverse', 'zona t lucida',
+      'alcune zone oleose altre secche', 'grassa solo sulla t', 'fronte naso oleosi',
+      'guance normali zona t grassa', 'disomogenea', 'zone oleose e zone secche',
+      'combinata', 'pelle non uniforme', 'metà grassa metà secca'
+    ];
+    if (mistaPatterns.some(pattern => lowerText.includes(pattern))) {
       return 'Mista';
     }
-    if (lowerText.includes('pelle normale') || lowerText.includes('equilibrata') || lowerText.includes('non ho problemi particolari')) {
+    
+    // 🔍 PELLE NORMALE - Patterns più completi
+    const normalePatterns = [
+      'pelle normale', 'equilibrata', 'non ho problemi particolari', 'pelle buona',
+      'né secca né grassa', 'bilanciata', 'perfetta', 'senza problemi',
+      'equilibrio idro-lipidico', 'buono stato', 'pelle sana', 'nella norma',
+      'va bene così', 'non ha problemi', 'tutto ok', 'pelle regolare',
+      'né troppo secca né troppo grassa', 'ideale', 'ottimale', 'ben bilanciata'
+    ];
+    if (normalePatterns.some(pattern => lowerText.includes(pattern))) {
       return 'Normale';
     }
-    if (lowerText.includes('pelle sensibile') || lowerText.includes('si arrossa') || lowerText.includes('irritabile') || lowerText.includes('reattiva')) {
+    
+    // 🔍 PELLE SENSIBILE/ASFITTICA - Patterns più completi
+    const sensibilePatterns = [
+      'pelle sensibile', 'si arrossa', 'irritabile', 'reattiva', 'delicata',
+      'facilmente irritabile', 'rossori frequenti', 'intollerante', 'ipersensibile',
+      'reagisce subito', 'brucia facilmente', 'si infiamma', 'couperose',
+      'capillari visibili', 'tende ad arrossarsi', 'molto delicata', 'facilmente arrossabile',
+      'pelle che brucia', 'fastidio al contatto', 'prurito frequente', 'rosacea',
+      'dermatite', 'sempre arrossata', 'problemi di sensibilità', 'pelle problematica'
+    ];
+    if (sensibilePatterns.some(pattern => lowerText.includes(pattern))) {
       return 'Asfittica'; // ✨ Mappatura corretta per le opzioni del sistema
     }
     
