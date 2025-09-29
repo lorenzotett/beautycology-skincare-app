@@ -830,6 +830,97 @@ export class GeminiService implements AIService {
     return ''; // Non aggiungere contesto se non ci sono informazioni estratte
   }
 
+  // 🚨 FUNZIONE CRITICA: Controllo programmatico per saltare domande quando le informazioni sono già disponibili
+  private checkForQuestionSkipping(sessionState: SessionState, userMessage: string): { content: string; hasChoices?: boolean; choices?: string[] } | null {
+    const info = sessionState.autoExtractedInfo;
+    const lowerMessage = userMessage.toLowerCase();
+    
+    // Verifica se l'utente sta chiedendo una routine o analisi E abbiamo già informazioni sufficienti
+    const isRequestingAnalysis = lowerMessage.includes('routine') || 
+                                lowerMessage.includes('analisi') || 
+                                lowerMessage.includes('analizza') ||
+                                lowerMessage.includes('consigli') ||
+                                lowerMessage.includes('aiuto') ||
+                                lowerMessage.includes('cosa mi consigli');
+                                
+    const isDescribingSkinIssues = lowerMessage.includes('pelle') ||
+                                  lowerMessage.includes('brufoli') ||
+                                  lowerMessage.includes('acne') ||
+                                  lowerMessage.includes('macchie') ||
+                                  lowerMessage.includes('rossori') ||
+                                  lowerMessage.includes('punti neri') ||
+                                  lowerMessage.includes('rughe') ||
+                                  lowerMessage.includes('sensibile') ||
+                                  lowerMessage.includes('grassa') ||
+                                  lowerMessage.includes('secca') ||
+                                  lowerMessage.includes('mista');
+
+    // Se l'utente sta descrivendo problemi di pelle o chiedendo consigli E abbiamo già delle informazioni
+    if ((isRequestingAnalysis || isDescribingSkinIssues) && this.hasAutoExtractedInfo(info)) {
+      
+      // 🎯 CASO 1: Abbiamo tipo di pelle - salta la domanda sul tipo
+      if (info.skinType && this.wouldAskAboutSkinType(sessionState)) {
+        console.log(`🚨 PROGRAMMATIC SKIP: Skin type already detected (${info.skinType}), skipping skin type question`);
+        return {
+          content: `Perfetto! Ho capito che hai la pelle ${info.skinType.toLowerCase()}. Ora dimmi, quanti anni hai?`,
+          hasChoices: true,
+          choices: ["16-25", "26-35", "36-45", "46-55", "56+"]
+        };
+      }
+      
+      // 🎯 CASO 2: Abbiamo problemi di pelle - salta la domanda sui problemi
+      if (info.skinProblems && info.skinProblems.length > 0 && this.wouldAskAboutProblems(sessionState)) {
+        console.log(`🚨 PROGRAMMATIC SKIP: Skin problems already detected (${info.skinProblems.join(', ')}), skipping problems question`);
+        return {
+          content: `Ho capito che hai problemi di ${info.skinProblems.join(', ')}. Quanti anni hai?`,
+          hasChoices: true,
+          choices: ["16-25", "26-35", "36-45", "46-55", "56+"]
+        };
+      }
+      
+      // 🎯 CASO 3: Abbiamo multiple informazioni - salta all'età o consigli
+      if (info.skinType && info.skinProblems && info.skinProblems.length > 0) {
+        console.log(`🚨 PROGRAMMATIC SKIP: Multiple info detected, jumping to age or advice`);
+        return {
+          content: `Perfetto! Ho capito che hai la pelle ${info.skinType.toLowerCase()} con problemi di ${info.skinProblems.join(', ')}. Ora dimmi, quanti anni hai?`,
+          hasChoices: true,
+          choices: ["16-25", "26-35", "36-45", "46-55", "56+"]
+        };
+      }
+    }
+    
+    return null; // Nessun skip necessario, procedi normalmente
+  }
+
+  private hasAutoExtractedInfo(info: any): boolean {
+    return !!(info.skinType || 
+             (info.skinProblems && info.skinProblems.length > 0) ||
+             info.hasSensitiveSkin !== undefined ||
+             info.hasBlackheads !== undefined);
+  }
+
+  private wouldAskAboutSkinType(sessionState: SessionState): boolean {
+    // Controlla se la conversazione è nella fase iniziale dove si chiede il tipo di pelle
+    const recentMessages = sessionState.conversationHistory.slice(-3).map(msg => msg.content.toLowerCase());
+    const hasAskedSkinType = recentMessages.some(msg => 
+      msg.includes('che tipo di pelle') || 
+      msg.includes('tipologia di pelle') ||
+      msg.includes('pelle hai')
+    );
+    return !hasAskedSkinType && sessionState.conversationHistory.length <= 6; // Prime fasi della conversazione
+  }
+
+  private wouldAskAboutProblems(sessionState: SessionState): boolean {
+    // Controlla se la conversazione è nella fase dove si chiedono i problemi
+    const recentMessages = sessionState.conversationHistory.slice(-3).map(msg => msg.content.toLowerCase());
+    const hasAskedProblems = recentMessages.some(msg => 
+      msg.includes('problematica principale') || 
+      msg.includes('problema principale') ||
+      msg.includes('cosa vorresti risolvere')
+    );
+    return !hasAskedProblems;
+  }
+
   private async callGeminiWithRetry(params: any, maxRetries: number = 5, baseDelay: number = 2000): Promise<any> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -1114,6 +1205,18 @@ A te la scelta!`;
             choices: this.extractChoicesFromQuestion(sessionState.lastQuestionAsked)
           };
         }
+      }
+
+      // 🚨 CONTROLLO PROGRAMMATICO: Verifica se dovremmo saltare domande strutturate
+      const shouldSkipToDirectResponse = this.checkForQuestionSkipping(sessionState, message);
+      if (shouldSkipToDirectResponse) {
+        console.log('🎯 PROGRAMMATIC SKIP: Generating direct response instead of structured questions');
+        sessionState.conversationHistory.push({ role: "assistant", content: shouldSkipToDirectResponse.content });
+        return {
+          content: shouldSkipToDirectResponse.content,
+          hasChoices: shouldSkipToDirectResponse.hasChoices || false,
+          choices: shouldSkipToDirectResponse.choices
+        };
       }
 
       // Enhance the message with RAG context
