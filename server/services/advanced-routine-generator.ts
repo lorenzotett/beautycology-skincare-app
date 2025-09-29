@@ -681,16 +681,22 @@ export class AdvancedRoutineGenerator {
 
     // 👤 SKIN TYPE COMPATIBILITY  
     let skinTypeExplanation = '';
-    if (userAnalysis.skin_type_detected.includes('grassa')) {
+    const skinTypeLower = userAnalysis.skin_type_detected.toLowerCase();
+    
+    if (skinTypeLower.includes('grassa')) {
       skinTypeExplanation = 'La formula oil-free e non comedogenica è ideale per pelli grasse, con texture leggera che non occlude i pori';
-    } else if (userAnalysis.skin_type_detected.includes('secca')) {
+    } else if (skinTypeLower.includes('secca')) {
       skinTypeExplanation = 'La formula ricca e nutriente compensa la carenza lipidica tipica delle pelli secche, con ingredienti filmogeni protettivi';
-    } else if (userAnalysis.skin_type_detected.includes('mista')) {
+    } else if (skinTypeLower.includes('mista')) {
       skinTypeExplanation = 'La formula equilibrata si adatta alle diverse zone del viso, regolando la zona T senza seccare le guance';
-    } else if (userAnalysis.skin_type_detected.includes('sensibile')) {
+    } else if (skinTypeLower.includes('sensibile')) {
       skinTypeExplanation = 'Formula ipoallergenica dermatologicamente testata, priva di fragranze e con pH fisiologico per pelli reattive';
+    } else if (skinTypeLower.includes('asfittica')) {
+      skinTypeExplanation = 'Formula purificante specifica per pelli asfittiche, con azione sebo-regolatrice e antibatterica mirata';
     } else {
-      skinTypeExplanation = 'Formula bilanciata adatta a mantenere l\'equilibrio fisiologico della pelle normale';
+      // Debug per capire cosa sta arrivando
+      console.log(`🔍 DEBUG: skin_type_detected ricevuto: "${userAnalysis.skin_type_detected}" (non riconosciuto)`);
+      skinTypeExplanation = `Formula scientificamente bilanciata e dermatologicamente testata, adatta per il tuo tipo di pelle ${userAnalysis.skin_type_detected}`;
     }
 
     // Build complete scientific explanation
