@@ -1370,22 +1370,87 @@ export class BeautycologyAIService {
     const lowerText = text.toLowerCase();
     const problems: string[] = [];
     
-    if (lowerText.includes('acne') || lowerText.includes('tanti brufoli') || lowerText.includes('brufoli grossi')) {
+    // 🔍 ACNE/BRUFOLI - Patterns più completi
+    const acnePatterns = [
+      'acne', 'tanti brufoli', 'brufoli grossi', 'brufolo', 'brufoli',
+      'foruncoli', 'pustole', 'papule', 'comedoni infiammati', 'eruzioni cutanee',
+      'sfoghi', 'imperfezioni', 'lesioni acneiche', 'cisti', 'noduli',
+      'brufoli sottopelle', 'acne cistica', 'acne giovanile', 'acne ormonale',
+      'sfoghi sul viso', 'pelle impura', 'brufoletti', 'microcomedoni',
+      'acne tardiva', 'acne adulta', 'pustoline', 'brufoli infiammati',
+      'comedoni chiusi', 'punti bianchi', 'acne da stress'
+    ];
+    if (acnePatterns.some(pattern => lowerText.includes(pattern))) {
       problems.push('Acne/Brufoli');
     }
-    if (lowerText.includes('punti neri') || lowerText.includes('comedoni') || lowerText.includes('naso con punti neri')) {
+    
+    // 🔍 PUNTI NERI - Patterns più completi
+    const puntiNeriPatterns = [
+      'punti neri', 'comedoni', 'naso con punti neri', 'blackheads',
+      'comedoni aperti', 'pori ostruiti', 'occlusi', 'punti neri sul naso',
+      'comedoni sul mento', 'buchi neri', 'puntini neri', 'ossidazione',
+      'sebo ossidato', 'filamenti sebacei', 'micropunti neri',
+      'zona t con punti neri', 'fronte con comedoni', 'punti scuri',
+      'follicoli ostruiti', 'tappi di sebo'
+    ];
+    if (puntiNeriPatterns.some(pattern => lowerText.includes(pattern))) {
       problems.push('Punti neri');
     }
-    if (lowerText.includes('macchie') || lowerText.includes('discromie') || lowerText.includes('macchie scure') || lowerText.includes('iperpigmentazione')) {
+    
+    // 🔍 MACCHIE SCURE - Patterns più completi
+    const macchiePatterns = [
+      'macchie', 'discromie', 'macchie scure', 'iperpigmentazione',
+      'melasma', 'cloasma', 'lentigo', 'macchie solari', 'macchie dell\'età',
+      'macchie post-acne', 'cicatrici pigmentate', 'segni scuri',
+      'chiazze scure', 'alterazioni cromatiche', 'discolorazioni',
+      'macchie marroni', 'macchie senili', 'iper-pigmentazione',
+      'zone più scure', 'segni di iperpigmentazione', 'alone scuro',
+      'macchie da sole', 'foto-invecchiamento', 'pigmentazione irregolare',
+      'macchie sulla fronte', 'discromie del viso'
+    ];
+    if (macchiePatterns.some(pattern => lowerText.includes(pattern))) {
       problems.push('Macchie scure');
     }
-    if (lowerText.includes('rughe') || lowerText.includes('linee sottili') || lowerText.includes('segni espressione')) {
+    
+    // 🔍 RUGHE/INVECCHIAMENTO - Patterns più completi
+    const rughePatterns = [
+      'rughe', 'linee sottili', 'segni espressione', 'ruga',
+      'linee di espressione', 'zampe di gallina', 'rughe periorali',
+      'solchi naso-labiali', 'rughe glabellari', 'rughe frontali',
+      'linee del sorriso', 'rughe del contorno occhi', 'segni del tempo',
+      'invecchiamento cutaneo', 'perdita di elasticità', 'rilassamento',
+      'pelle che cede', 'linee di invecchiamento', 'solchi profondi',
+      'segni di maturità', 'età che avanza', 'pelle matura',
+      'perdita di tono', 'rugosità', 'texture irregolare'
+    ];
+    if (rughePatterns.some(pattern => lowerText.includes(pattern))) {
       problems.push('Rughe/Invecchiamento');
     }
-    if (lowerText.includes('rossori') || lowerText.includes('arrossamenti') || lowerText.includes('couperose') || lowerText.includes('capillari')) {
+    
+    // 🔍 ROSACEA/ROSSORI - Patterns più completi
+    const rossoriPatterns = [
+      'rossori', 'arrossamenti', 'couperose', 'capillari', 'rosacea',
+      'eritema', 'teleangectasie', 'capillari visibili', 'vene visibili',
+      'arrossamenti persistenti', 'rossore costante', 'flushing',
+      'vampate di calore', 'eritrosi', 'rush cutaneo', 'irritazioni rosse',
+      'infiammazioni', 'zone arrossate', 'cute arrossata', 'reticolo venoso',
+      'capillari rotti', 'fragilità capillare', 'sensibilità con rossore',
+      'rossore sulle guance', 'naso rosso', 'eritema diffuso'
+    ];
+    if (rossoriPatterns.some(pattern => lowerText.includes(pattern))) {
       problems.push('Rosacea');
     }
-    if (lowerText.includes('pori dilatati') || lowerText.includes('pori grandi') || lowerText.includes('pori visibili')) {
+    
+    // 🔍 PORI DILATATI - Patterns più completi
+    const poriPatterns = [
+      'pori dilatati', 'pori grandi', 'pori visibili', 'pori aperti',
+      'pori allargati', 'micropori', 'texture ruvida', 'grana irregolare',
+      'superficie porosa', 'pelle a buccia d\'arancia', 'follicoli dilatati',
+      'pori evidenti', 'texture granulosa', 'grana della pelle',
+      'porosità cutanea', 'pelle porosa', 'micro-rilievi',
+      'superficie irregolare', 'pelle non liscia', 'grana grossa'
+    ];
+    if (poriPatterns.some(pattern => lowerText.includes(pattern))) {
       problems.push('Pori dilatati');
     }
     
