@@ -1645,19 +1645,34 @@ export class BeautycologyAIService {
     const detectedSkinType = this.analyzeSkinTypeFromText(userMessage);
     const detectedAge = this.analyzeAgeFromText(userMessage);
     
-    // Registra le informazioni trovate
+    // Registra il tipo di pelle trovato
     if (detectedSkinType && !state.structuredFlowAnswers.skinType) {
       state.structuredFlowAnswers.skinType = detectedSkinType;
       console.log(`✅ Auto-extracted skin type: ${detectedSkinType}`);
     }
     
+    // Registra tutti i problemi trovati (non solo il principale)
     if (detectedProblems.length > 0) {
+      // Salva sempre tutti i problemi rilevati
+      if (!state.structuredFlowAnswers.skinProblems) {
+        state.structuredFlowAnswers.skinProblems = [];
+      }
+      
+      // Aggiungi nuovi problemi evitando duplicati
+      for (const problem of detectedProblems) {
+        if (!state.structuredFlowAnswers.skinProblems.includes(problem)) {
+          state.structuredFlowAnswers.skinProblems.push(problem);
+        }
+      }
+      
+      console.log(`✅ All detected skin problems: ${state.structuredFlowAnswers.skinProblems.join(', ')}`);
+      
       if (!state.structuredFlowAnswers.mainIssue) {
         // Primo caso: non c'è ancora un mainIssue, settalo
         state.structuredFlowAnswers.mainIssue = detectedProblems[0];
-        console.log(`✅ Auto-extracted skin problems: ${detectedProblems.join(', ')}`);
+        console.log(`✅ Setting main issue: ${detectedProblems[0]}`);
       } else {
-        // 🔧 NUOVO: C'è già un mainIssue, controlla se l'analisi della foto dovrebbe sovrascriverlo
+        // 🔧 C'è già un mainIssue, controlla se l'analisi della foto dovrebbe sovrascriverlo
         const overrideCheck = this.shouldOverrideMainIssueWithPhotoAnalysis(sessionId, state.structuredFlowAnswers.mainIssue);
         
         if (overrideCheck.shouldOverride && overrideCheck.newMainIssue) {
@@ -1665,16 +1680,24 @@ export class BeautycologyAIService {
           console.log(`📋 Reason: ${overrideCheck.reason}`);
           state.structuredFlowAnswers.mainIssue = overrideCheck.newMainIssue;
         } else {
-          console.log(`ℹ️ Keeping existing mainIssue: ${state.structuredFlowAnswers.mainIssue} (photo analysis: ${detectedProblems.join(', ')})`);
-          console.log(`📋 Reason: ${overrideCheck.reason}`);
+          console.log(`ℹ️ Keeping existing mainIssue: ${state.structuredFlowAnswers.mainIssue}`);
         }
       }
     }
     
+    // Registra l'età trovata
     if (detectedAge && !state.structuredFlowAnswers.age) {
       state.structuredFlowAnswers.age = detectedAge;
       console.log(`✅ Auto-extracted age: ${detectedAge}`);
     }
+    
+    // Log completo delle informazioni estratte
+    console.log('📊 Current extracted info:', {
+      skinType: state.structuredFlowAnswers.skinType || 'not detected',
+      age: state.structuredFlowAnswers.age || 'not detected',
+      mainIssue: state.structuredFlowAnswers.mainIssue || 'not detected',
+      allProblems: state.structuredFlowAnswers.skinProblems || []
+    });
   }
 
   private generateAutoInfoContext(sessionState: any): string {
@@ -5159,52 +5182,55 @@ Questa routine è stata studiata per coprire tutti gli step fondamentali di una 
 
   // Extract skin information from user message
   private extractSkinInfoFromMessage(message: string): { skinType?: string, concerns: string[] } {
-    const lowerMessage = message.toLowerCase();
     const result: { skinType?: string, concerns: string[] } = { concerns: [] };
     
-    // Extract skin type
-    if (lowerMessage.includes('pelle mista')) {
-      result.skinType = 'mista';
-    } else if (lowerMessage.includes('pelle grassa')) {
-      result.skinType = 'grassa';
-    } else if (lowerMessage.includes('pelle secca')) {
-      result.skinType = 'secca';
-    } else if (lowerMessage.includes('pelle normale')) {
-      result.skinType = 'normale';
-    } else if (lowerMessage.includes('pelle sensibile')) {
-      result.skinType = 'sensibile';
-    } else if (lowerMessage.includes('pelle asfittica')) {
-      result.skinType = 'asfittica';
+    // Usa le funzioni più sofisticate già definite
+    const detectedSkinType = this.analyzeSkinTypeFromText(message);
+    if (detectedSkinType) {
+      // Converti il formato (es: "Grassa" -> "grassa", "Asfittica" -> "sensibile")
+      if (detectedSkinType === 'Asfittica') {
+        result.skinType = 'sensibile';
+      } else {
+        result.skinType = detectedSkinType.toLowerCase();
+      }
     }
     
-    // Extract concerns
-    if (lowerMessage.includes('acne') || lowerMessage.includes('brufoli')) {
-      result.concerns.push('acne');
+    // Estrai i problemi usando la funzione già definita
+    const detectedProblems = this.analyzeSkinProblemsFromText(message);
+    
+    // Mappa i problemi nel formato per concerns
+    const problemMapping: Record<string, string> = {
+      'Acne/Brufoli': 'acne',
+      'Macchie scure': 'macchie',
+      'Rughe/Invecchiamento': 'rughe',
+      'Rosacea': 'rossori',
+      'Punti neri': 'punti neri',
+      'Pori dilatati': 'pori dilatati'
+    };
+    
+    for (const problem of detectedProblems) {
+      const mappedConcern = problemMapping[problem];
+      if (mappedConcern && !result.concerns.includes(mappedConcern)) {
+        result.concerns.push(mappedConcern);
+      }
     }
-    if (lowerMessage.includes('macchi')) {
-      result.concerns.push('macchie');
-    }
-    if (lowerMessage.includes('rughe') || lowerMessage.includes('invecchiamento') || lowerMessage.includes('anti-age')) {
-      result.concerns.push('rughe');
-    }
-    if (lowerMessage.includes('rossori') || lowerMessage.includes('rosacea')) {
-      result.concerns.push('rossori');
-    }
-    if (lowerMessage.includes('punti neri')) {
-      result.concerns.push('punti neri');
-    }
-    if (lowerMessage.includes('pori dilatati') || lowerMessage.includes('pori')) {
-      result.concerns.push('pori dilatati');
-    }
+    
+    // Aggiungi anche altri problemi non mappati ma comunque rilevanti
+    const lowerMessage = message.toLowerCase();
     if (lowerMessage.includes('occhiaie')) {
       result.concerns.push('occhiaie');
     }
-    if (lowerMessage.includes('sebo') || lowerMessage.includes('lucidità')) {
+    if ((lowerMessage.includes('sebo') || lowerMessage.includes('lucidità')) && !result.concerns.includes('acne')) {
       result.concerns.push('eccesso di sebo');
     }
-    if (lowerMessage.includes('disidratazione') || lowerMessage.includes('disidratata')) {
+    if ((lowerMessage.includes('disidratazione') || lowerMessage.includes('disidratata')) && result.skinType !== 'secca') {
       result.concerns.push('disidratazione');
     }
+    
+    console.log('📊 Extracted from message:', {
+      skinType: result.skinType || 'not detected',
+      concerns: result.concerns.length > 0 ? result.concerns : ['none detected']
+    });
     
     return result;
   }
