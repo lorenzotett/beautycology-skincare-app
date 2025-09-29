@@ -1649,26 +1649,61 @@ export class BeautycologyAIService {
     if (!answers) return '';
     
     let context = '';
+    let hasAutoExtractedInfo = false;
+    
+    // Costruisci l'header solo se abbiamo informazioni rilevate
+    if (answers.skinType || answers.age || answers.mainIssue) {
+      context += `\n\n**🤖 INFORMAZIONI AUTO-ESTRATTE DAL TESTO DELL'UTENTE:**\n`;
+      hasAutoExtractedInfo = true;
+    }
     
     if (answers.skinType) {
-      context += `\n\n**🤖 INFORMAZIONI AUTO-ESTRATTE DAL TESTO DELL'UTENTE:**\n`;
-      context += `• **Tipologia pelle rilevata automaticamente**: ${answers.skinType.toUpperCase()}\n`;
-      context += '\n**🚨 REGOLA CRITICA:**\n';
-      context += '• **NON CHIEDERE** "Che tipo di pelle hai?" perché è già stato rilevato automaticamente\n';
-      context += '• **RICONOSCI** le informazioni rilevate: "Perfetto! Ho capito che hai la pelle ' + answers.skinType.toLowerCase() + '"\n';
-      context += '• **SALTA** alla domanda successiva (età) direttamente\n';
+      context += `• **Tipologia pelle rilevata**: ${answers.skinType.toUpperCase()}\n`;
     }
     
     if (answers.age) {
-      if (!context) context = '\n\n**🤖 INFORMAZIONI AUTO-ESTRATTE DAL TESTO DELL\'UTENTE:**\n';
-      context += `• **Età rilevata automaticamente**: ${answers.age}\n`;
-      context += '• **NON CHIEDERE** l\'età perché è già stata rilevata\n';
+      context += `• **Età rilevata**: ${answers.age}\n`;
     }
     
     if (answers.mainIssue) {
-      if (!context) context = '\n\n**🤖 INFORMAZIONI AUTO-ESTRATTE DAL TESTO DELL\'UTENTE:**\n';
       context += `• **Problematica principale rilevata**: ${answers.mainIssue}\n`;
-      context += '• **NON CHIEDERE** la problematica principale perché è già stata rilevata\n';
+    }
+    
+    // Se abbiamo informazioni rilevate, aggiungi le regole critiche
+    if (hasAutoExtractedInfo) {
+      context += '\n**🚨 REGOLE CRITICHE PER SALTARE LE DOMANDE:**\n';
+      
+      if (answers.skinType) {
+        context += `• **NON CHIEDERE MAI** "Che tipo di pelle hai?" - È GIÀ RILEVATO: ${answers.skinType}\n`;
+        context += `• **RICONOSCI SEMPRE** l'informazione: "Perfetto! Ho capito che hai la pelle ${answers.skinType.toLowerCase()}"\n`;
+        context += `• **SALTA IMMEDIATAMENTE** alla domanda successiva\n`;
+      }
+      
+      if (answers.age) {
+        context += `• **NON CHIEDERE MAI** l'età - È GIÀ RILEVATA: ${answers.age}\n`;
+        context += `• **RICONOSCI** l'età rilevata e procedi oltre\n`;
+      }
+      
+      if (answers.mainIssue) {
+        context += `• **NON CHIEDERE MAI** "Qual è la tua problematica principale?" - È GIÀ RILEVATA: ${answers.mainIssue}\n`;
+        context += `• **RICONOSCI** il problema: "Ho capito che il tuo problema principale è ${answers.mainIssue.toLowerCase()}"\n`;
+        context += `• **PROCEDI DIRETTAMENTE** con consigli o domande di approfondimento\n`;
+      }
+      
+      // Regole generali per una migliore gestione del flusso
+      context += '\n**📋 REGOLE GENERALI:**\n';
+      context += '• Se l\'utente ha già descritto problemi di pelle, NON rifare domande sui problemi\n';
+      context += '• Se l\'utente ha già descritto il tipo di pelle, NON rifare domande sul tipo\n';
+      context += '• RICONOSCI sempre le informazioni che l\'utente ha già fornito\n';
+      context += '• PROCEDI con domande di approfondimento o consigli diretti\n';
+      context += '• EVITA la ripetizione di domande su informazioni già disponibili\n';
+      
+      // Istruzioni comportamentali specifiche
+      context += '\n**🎯 COMPORTAMENTO RICHIESTO:**\n';
+      context += '• Quando l\'utente descrive la pelle/problemi, SEMPRE riconoscere e saltare domande correlate\n';
+      context += '• Usare frasi come "Perfetto, ho capito che..." per riconoscere le info già fornite\n';
+      context += '• Passare immediatamente a domande non ancora coperte o dare consigli\n';
+      context += '• NON essere ripetitivo con domande su info già note\n';
     }
     
     return context;
