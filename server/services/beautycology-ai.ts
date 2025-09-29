@@ -1307,7 +1307,10 @@ export class BeautycologyAIService {
       'oleosa', 'grassa sui punti', 'facilmente oleosa', 'sebacea', 'sebo in eccesso',
       'produce troppo sebo', 'sempre lucida', 'zona t grassa', 'fronte grassa',
       'naso oleoso', 'molto sebaceo', 'ho la pelle che produce sebo', 'iper-sebacea',
-      'grassa al tatto', 'untuosa', 'lucidissima', 'grassa e lucida'
+      'grassa al tatto', 'untuosa', 'lucidissima', 'grassa e lucida',
+      'la mia pelle è grassa', 'ho la pelle grassa', 'pelle molto grassa',
+      'tendenzialmente grassa', 'piuttosto grassa', 'abbastanza grassa',
+      'principalmente grassa', 'decisamente grassa', 'estremamente grassa'
     ];
     if (grassaPatterns.some(pattern => lowerText.includes(pattern))) {
       return 'Grassa';
@@ -1319,7 +1322,11 @@ export class BeautycologyAIService {
       'molto secca', 'super secca', 'disidratata', 'squamosa', 'pellicine',
       'si screpola', 'tirante', 'sempre secca', 'pelle arida', 'xerosi',
       'manca di idratazione', 'pelle spenta', 'ruvida al tatto', 'poco idratata',
-      'secca come carta', 'pelle che si stacca', 'tendente al secco'
+      'secca come carta', 'pelle che si stacca', 'tendente al secco',
+      'la mia pelle è secca', 'ho la pelle secca', 'pelle molto secca',
+      'tendenzialmente secca', 'piuttosto secca', 'abbastanza secca',
+      'principalmente secca', 'decisamente secca', 'estremamente secca',
+      'sento la pelle secca', 'mi sento la pelle secca'
     ];
     if (seccaPatterns.some(pattern => lowerText.includes(pattern))) {
       return 'Secca';
@@ -1332,7 +1339,9 @@ export class BeautycologyAIService {
       'fronte grassa guance normali', 'zone diverse', 'zona t lucida',
       'alcune zone oleose altre secche', 'grassa solo sulla t', 'fronte naso oleosi',
       'guance normali zona t grassa', 'disomogenea', 'zone oleose e zone secche',
-      'combinata', 'pelle non uniforme', 'metà grassa metà secca'
+      'combinata', 'pelle non uniforme', 'metà grassa metà secca',
+      'la mia pelle è mista', 'ho la pelle mista', 'pelle di tipo misto',
+      'tipo misto', 'mista/combinata', 'combination skin', 'pelle combination'
     ];
     if (mistaPatterns.some(pattern => lowerText.includes(pattern))) {
       return 'Mista';
@@ -1344,7 +1353,9 @@ export class BeautycologyAIService {
       'né secca né grassa', 'bilanciata', 'perfetta', 'senza problemi',
       'equilibrio idro-lipidico', 'buono stato', 'pelle sana', 'nella norma',
       'va bene così', 'non ha problemi', 'tutto ok', 'pelle regolare',
-      'né troppo secca né troppo grassa', 'ideale', 'ottimale', 'ben bilanciata'
+      'né troppo secca né troppo grassa', 'ideale', 'ottimale', 'ben bilanciata',
+      'la mia pelle è normale', 'ho la pelle normale', 'pelle ok',
+      'sto bene con la mia pelle', 'non ho particolari problemi'
     ];
     if (normalePatterns.some(pattern => lowerText.includes(pattern))) {
       return 'Normale';
@@ -1357,7 +1368,10 @@ export class BeautycologyAIService {
       'reagisce subito', 'brucia facilmente', 'si infiamma', 'couperose',
       'capillari visibili', 'tende ad arrossarsi', 'molto delicata', 'facilmente arrossabile',
       'pelle che brucia', 'fastidio al contatto', 'prurito frequente', 'rosacea',
-      'dermatite', 'sempre arrossata', 'problemi di sensibilità', 'pelle problematica'
+      'dermatite', 'sempre arrossata', 'problemi di sensibilità', 'pelle problematica',
+      'la mia pelle è sensibile', 'ho la pelle sensibile', 'pelle molto sensibile',
+      'pelle asfittica', 'cute sensibile', 'allergica a molti prodotti',
+      'intollerante ai cosmetici', 'reagisce male ai prodotti'
     ];
     if (sensibilePatterns.some(pattern => lowerText.includes(pattern))) {
       return 'Asfittica'; // ✨ Mappatura corretta per le opzioni del sistema
@@ -1378,7 +1392,10 @@ export class BeautycologyAIService {
       'brufoli sottopelle', 'acne cistica', 'acne giovanile', 'acne ormonale',
       'sfoghi sul viso', 'pelle impura', 'brufoletti', 'microcomedoni',
       'acne tardiva', 'acne adulta', 'pustoline', 'brufoli infiammati',
-      'comedoni chiusi', 'punti bianchi', 'acne da stress'
+      'comedoni chiusi', 'punti bianchi', 'acne da stress',
+      'ho l\'acne', 'soffro di acne', 'problema di acne', 'ho dei brufoli',
+      'mi vengono i brufoli', 'ho tanti brufoletti', 'pelle con acne',
+      'tendenza acneica', 'cute acneica', 'problemi di brufoli'
     ];
     if (acnePatterns.some(pattern => lowerText.includes(pattern))) {
       problems.push('Acne/Brufoli');
@@ -1406,7 +1423,10 @@ export class BeautycologyAIService {
       'macchie marroni', 'macchie senili', 'iper-pigmentazione',
       'zone più scure', 'segni di iperpigmentazione', 'alone scuro',
       'macchie da sole', 'foto-invecchiamento', 'pigmentazione irregolare',
-      'macchie sulla fronte', 'discromie del viso'
+      'macchie sulla fronte', 'discromie del viso',
+      'ho delle macchie', 'ho macchie scure', 'problema di macchie',
+      'soffro di macchie', 'macchie sul viso', 'voglio schiarire le macchie',
+      'eliminare le macchie', 'togliere le macchie'
     ];
     if (macchiePatterns.some(pattern => lowerText.includes(pattern))) {
       problems.push('Macchie scure');
@@ -1421,7 +1441,10 @@ export class BeautycologyAIService {
       'invecchiamento cutaneo', 'perdita di elasticità', 'rilassamento',
       'pelle che cede', 'linee di invecchiamento', 'solchi profondi',
       'segni di maturità', 'età che avanza', 'pelle matura',
-      'perdita di tono', 'rugosità', 'texture irregolare'
+      'perdita di tono', 'rugosità', 'texture irregolare',
+      'ho le rughe', 'stanno venendo le rughe', 'prime rughe',
+      'anti-età', 'anti-age', 'antiage', 'antirughe', 'anti rughe',
+      'prevenire le rughe', 'combattere le rughe'
     ];
     if (rughePatterns.some(pattern => lowerText.includes(pattern))) {
       problems.push('Rughe/Invecchiamento');
@@ -1448,7 +1471,10 @@ export class BeautycologyAIService {
       'superficie porosa', 'pelle a buccia d\'arancia', 'follicoli dilatati',
       'pori evidenti', 'texture granulosa', 'grana della pelle',
       'porosità cutanea', 'pelle porosa', 'micro-rilievi',
-      'superficie irregolare', 'pelle non liscia', 'grana grossa'
+      'superficie irregolare', 'pelle non liscia', 'grana grossa',
+      'ho i pori dilatati', 'pori molto aperti', 'pori larghi',
+      'vedo i pori', 'stringere i pori', 'minimizzare i pori',
+      'restringere i pori', 'pori troppo visibili'
     ];
     if (poriPatterns.some(pattern => lowerText.includes(pattern))) {
       problems.push('Pori dilatati');
@@ -1460,32 +1486,39 @@ export class BeautycologyAIService {
   private analyzeAgeFromText(text: string): string | undefined {
     const lowerText = text.toLowerCase();
     
-    // Cerca pattern diretti dell'età
-    const ageMatch = lowerText.match(/(\d{2})\s*(anni?|years?)/i);
-    if (ageMatch) {
-      const age = parseInt(ageMatch[1]);
-      if (age >= 16 && age <= 25) return '16-25';
-      if (age >= 26 && age <= 35) return '26-35';
-      if (age >= 36 && age <= 45) return '36-45';
-      if (age >= 46 && age <= 55) return '46-55';
-      if (age >= 56) return '56+';
+    // Cerca pattern diretti dell'età con numeri
+    const agePatterns = [
+      /(\d{1,2})\s*(anni?|years?)/i,
+      /ho\s*(\d{1,2})\s*anni/i,
+      /sono\s*un[a]?\s*(\d{1,2})enne/i,
+      /(\d{1,2})enne/i
+    ];
+    
+    for (const pattern of agePatterns) {
+      const ageMatch = lowerText.match(pattern);
+      if (ageMatch) {
+        const age = parseInt(ageMatch[1]);
+        if (age >= 16 && age <= 25) return '16-25';
+        if (age >= 26 && age <= 35) return '26-35';
+        if (age >= 36 && age <= 45) return '36-45';
+        if (age >= 46 && age <= 55) return '46-55';
+        if (age >= 56) return '56+';
+      }
     }
     
-    // Cerca pattern descrittivi  
-    if (lowerText.includes('sono giovane') || lowerText.includes('sono ancora giovane') || lowerText.includes('20 anni') || lowerText.includes('vent')) {
-      return '16-25';
-    }
-    if (lowerText.includes('trentenne') || lowerText.includes('30 anni') || lowerText.includes('trent')) {
-      return '26-35';
-    }
-    if (lowerText.includes('quarantenne') || lowerText.includes('40 anni') || lowerText.includes('quarant')) {
-      return '36-45';
-    }
-    if (lowerText.includes('cinquantenne') || lowerText.includes('50 anni') || lowerText.includes('cinquant')) {
-      return '46-55';
-    }
-    if (lowerText.includes('over 50') || lowerText.includes('over cinquanta') || lowerText.includes('matura')) {
-      return '56+';
+    // Cerca pattern descrittivi più ampi
+    const ageDescriptors = [
+      { patterns: ['sono giovane', 'sono ancora giovane', 'vent\'anni', 'ventenne', 'teenager', 'adolescente', 'ragazza giovane', 'ragazzo giovane', 'under 25', 'ho meno di 25'], range: '16-25' },
+      { patterns: ['trentenne', 'trent\'anni', 'sui trenta', 'intorno ai 30', 'circa 30', 'under 35', 'tra i 26 e i 35'], range: '26-35' },
+      { patterns: ['quarantenne', 'quarant\'anni', 'sui quaranta', 'intorno ai 40', 'circa 40', 'under 45', 'tra i 36 e i 45'], range: '36-45' },
+      { patterns: ['cinquantenne', 'cinquant\'anni', 'sui cinquanta', 'intorno ai 50', 'circa 50', 'under 55', 'tra i 46 e i 55'], range: '46-55' },
+      { patterns: ['over 50', 'over cinquanta', 'sessantenne', 'settantenne', 'pelle matura', 'età matura', 'senior', 'più di 55', 'oltre i 55'], range: '56+' }
+    ];
+    
+    for (const descriptor of ageDescriptors) {
+      if (descriptor.patterns.some(pattern => lowerText.includes(pattern))) {
+        return descriptor.range;
+      }
     }
     
     return undefined;
