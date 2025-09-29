@@ -152,16 +152,11 @@ const parseContentWithLinkButtons = (content: string) => {
 // Function to remove choice options from content when they're displayed as buttons
 const removeChoicesFromContent = (content: string): string => {
   // Remove lines that match choice patterns like "A) option", "B) option", etc.
-  const choicePattern = /^\s*[A-E]\)\s+.+$/gm;
+  // Use a single replace operation to avoid regex state issues with global flag
+  const cleanedContent = content.replace(/^\s*[A-E]\)\s.*(?:\n|$)/gm, '');
   
-  // Split content into lines
-  const lines = content.split('\n');
-  
-  // Filter out lines that match the choice pattern
-  const filteredLines = lines.filter(line => !choicePattern.test(line));
-  
-  // Rejoin the lines and clean up extra whitespace
-  return filteredLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  // Clean up extra whitespace and empty lines
+  return cleanedContent.replace(/\n{3,}/g, '\n\n').trim();
 };
 
 // Function to parse skin analysis data from message content
