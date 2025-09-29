@@ -2640,18 +2640,38 @@ export class BeautycologyAIService {
       // State-driven approach: Force buttons based on conversation state
       // But NEVER for product information requests
       if (!isProductInfoRequest && state.structuredFlowActive && state.currentStep === 'awaiting_skin_type') {
-        console.log(`🎯 Structured flow active - forcing skin type buttons for session ${sessionId}`);
-        hasChoices = true;
-        choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
+        // ✨ CHECK IF SKIN TYPE WAS AUTO-EXTRACTED - If so, skip this question!
+        const autoExtractedSkinType = state.structuredFlowAnswers?.skinType;
         
-        // Remove text choices from response since we're showing buttons
-        responseText = this.removeChoicesFromContent(responseText);
-        
-        // Ensure the response ends with the skin type question
-        const skinTypeQuestion = "\n\nChe tipo di pelle hai?";
-        if (!responseText.toLowerCase().includes('che tipo di pelle')) {
-          responseText += skinTypeQuestion;
-          console.log(`📝 Appended skin type question to response`);
+        if (autoExtractedSkinType) {
+          console.log(`🚀 SMART SKIP: Skin type auto-extracted as "${autoExtractedSkinType}" - skipping redundant question`);
+          console.log(`📝 Moving directly to next step: age_question`);
+          
+          // Skip to next step - age question
+          state.currentStep = 'age_question';
+          hasChoices = true;
+          choices = ["16-25", "26-35", "36-45", "46-55", "56+"];
+          
+          // Generate age question instead with proper multiple choice format
+          responseText = `Perfetto! Ho capito che hai la pelle ${autoExtractedSkinType.toLowerCase()}${state.structuredFlowAnswers?.mainIssue ? ` con problematiche di ${state.structuredFlowAnswers.mainIssue.toLowerCase()}` : ''}. Ora, per consigliarti al meglio, dimmi:\n\nQuanti anni hai?\n\nA) 16-25\nB) 26-35\nC) 36-45\nD) 46-55\nE) 56+`;
+          
+          // Set next expected step
+          state.currentStep = 'awaiting_age';
+          console.log(`📝 Generated age question with auto-extracted context`);
+        } else {
+          console.log(`🎯 Structured flow active - forcing skin type buttons for session ${sessionId}`);
+          hasChoices = true;
+          choices = ["Mista", "Secca", "Grassa", "Normale", "Asfittica"];
+          
+          // Remove text choices from response since we're showing buttons
+          responseText = this.removeChoicesFromContent(responseText);
+          
+          // Ensure the response ends with the skin type question
+          const skinTypeQuestion = "\n\nChe tipo di pelle hai?";
+          if (!responseText.toLowerCase().includes('che tipo di pelle')) {
+            responseText += skinTypeQuestion;
+            console.log(`📝 Appended skin type question to response`);
+          }
         }
       }
 
