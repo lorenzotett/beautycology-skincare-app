@@ -149,6 +149,21 @@ const parseContentWithLinkButtons = (content: string) => {
   };
 };
 
+// Function to remove choice options from content when they're displayed as buttons
+const removeChoicesFromContent = (content: string): string => {
+  // Remove lines that match choice patterns like "A) option", "B) option", etc.
+  const choicePattern = /^\s*[A-E]\)\s+.+$/gm;
+  
+  // Split content into lines
+  const lines = content.split('\n');
+  
+  // Filter out lines that match the choice pattern
+  const filteredLines = lines.filter(line => !choicePattern.test(line));
+  
+  // Rejoin the lines and clean up extra whitespace
+  return filteredLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+};
+
 // Function to parse skin analysis data from message content
 const parseSkinAnalysis = (content: string) => {
   // Check if this is a skin analysis message
@@ -344,6 +359,9 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
 
   // Parse link buttons from content
   const contentWithButtons = !isUser ? parseContentWithLinkButtons(cleanedContent) : { content: cleanedContent, linkButtons: [] };
+  
+  // Remove choice options from content when they're displayed as buttons
+  const finalContent = hasChoices ? removeChoicesFromContent(contentWithButtons.content) : contentWithButtons.content;
 
 
 
@@ -413,12 +431,12 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       {skinAnalysis ? (
         <>
           {/* Show intro text if present */}
-          {contentWithButtons.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim() && (
+          {finalContent.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim() && (
             <div
               className="text-sm leading-relaxed whitespace-pre-wrap mb-3"
               style={{color: 'black'}}
               dangerouslySetInnerHTML={{ 
-                __html: formatMarkdown(contentWithButtons.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim()) 
+                __html: formatMarkdown(finalContent.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim()) 
               }}
             />
           )}
@@ -445,7 +463,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
         <div
           className="text-sm leading-relaxed whitespace-pre-wrap"
           style={{color: 'black'}}
-          dangerouslySetInnerHTML={{ __html: formatMarkdown(contentWithButtons.content) }}
+          dangerouslySetInnerHTML={{ __html: formatMarkdown(finalContent) }}
         />
       )}
 
