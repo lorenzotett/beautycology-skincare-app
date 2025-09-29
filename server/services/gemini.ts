@@ -758,16 +758,28 @@ export class GeminiService implements AIService {
   private extractAndRegisterUserInfo(sessionId: string, userMessage: string): void {
     const sessionState = this.getSessionState(sessionId);
     
+    console.log(`🔍 [DEBUG] Analyzing user message for auto-extraction: "${userMessage}"`);
+    
     // Analizza il testo per estrarre informazioni
     const detectedSkinType = this.analyzeSkinTypeFromText(userMessage);
     const detectedProblems = this.analyzeSkinProblemsFromText(userMessage);
     const detectedSensitivity = this.analyzeSensitivityFromText(userMessage);
     const detectedBlackheads = this.analyzeBlackheadsFromText(userMessage);
     
+    console.log(`🔍 [DEBUG] Extraction results:`, {
+      detectedSkinType,
+      detectedProblems,
+      detectedSensitivity,
+      detectedBlackheads,
+      currentSkinType: sessionState.autoExtractedInfo.skinType
+    });
+    
     // Registra le informazioni trovate
     if (detectedSkinType && !sessionState.autoExtractedInfo.skinType) {
       sessionState.autoExtractedInfo.skinType = detectedSkinType;
       console.log(`✅ Auto-extracted skin type: ${detectedSkinType}`);
+    } else if (detectedSkinType) {
+      console.log(`⚠️ [DEBUG] Skin type already extracted: ${sessionState.autoExtractedInfo.skinType}, new detection: ${detectedSkinType}`);
     }
     
     if (detectedProblems.length > 0) {
@@ -795,6 +807,8 @@ export class GeminiService implements AIService {
     const info = sessionState.autoExtractedInfo;
     let context = '\n\n**🤖 INFORMAZIONI AUTO-ESTRATTE DAL TESTO DELL\'UTENTE:**\n';
     let hasInfo = false;
+    
+    console.log(`🔍 [DEBUG] Generating auto info context:`, info);
     
     if (info.skinType) {
       context += `• **Tipologia pelle rilevata automaticamente**: ${info.skinType.toUpperCase()}\n`;
@@ -824,9 +838,12 @@ export class GeminiService implements AIService {
       context += '• **RICONOSCI E CONFERMA** le informazioni già rilevate: "Perfetto! Ho capito che hai la pelle [tipo rilevato] con problematiche di [problemi rilevati]"\n';
       context += '• **PASSA ALLE DOMANDE SUCCESSIVE** che non sono ancora state coperte dalle informazioni auto-estratte\n';
       context += '• **ESEMPIO**: Se ho rilevato "pelle grassa" e "acne", NON chiedere "Che tipo di pelle hai?" ma inizia con "Perfetto! Ho capito che hai la pelle grassa con problemi di acne. Ora dimmi: quanti anni hai?"\n';
+      
+      console.log(`🔍 [DEBUG] Generated context with auto-extracted info:`, context);
       return context;
     }
     
+    console.log(`🔍 [DEBUG] No auto-extracted info found, returning empty context`);
     return ''; // Non aggiungere contesto se non ci sono informazioni estratte
   }
 
@@ -1247,6 +1264,12 @@ A te la scelta!`;
         'L\'utente HA caricato una foto iniziale. Puoi procedere con la generazione del prima/dopo se richiesto.' : 
         'L\'utente NON ha caricato una foto iniziale. NON generare mai il trigger GENERATE_BEFORE_AFTER_IMAGES e non chiedere del prima/dopo.'}` + 
         autoInfoContext;
+      
+      console.log(`🔍 [DEBUG] Enhanced system instruction length: ${enhancedSystemInstruction.length} chars`);
+      console.log(`🔍 [DEBUG] Auto-info context included: ${autoInfoContext.length > 0 ? 'YES' : 'NO'}`);
+      if (autoInfoContext.length > 0) {
+        console.log(`🔍 [DEBUG] Auto-info context preview: ${autoInfoContext.substring(0, 200)}...`);
+      }
 
       const response = await this.callGeminiWithRetry({
         model: "gemini-2.5-flash",
