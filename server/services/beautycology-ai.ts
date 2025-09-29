@@ -2652,7 +2652,7 @@ export class BeautycologyAIService {
           hasChoices = true;
           choices = ["16-25", "26-35", "36-45", "46-55", "56+"];
           
-          // Generate age question instead with proper multiple choice format
+          // Generate age question with proper text options (backend needs them for analytics/validation)
           responseText = `Perfetto! Ho capito che hai la pelle ${autoExtractedSkinType.toLowerCase()}${state.structuredFlowAnswers?.mainIssue ? ` con problematiche di ${state.structuredFlowAnswers.mainIssue.toLowerCase()}` : ''}. Ora, per consigliarti al meglio, dimmi:\n\nQuanti anni hai?\n\nA) 16-25\nB) 26-35\nC) 36-45\nD) 46-55\nE) 56+`;
           
           // Set next expected step
