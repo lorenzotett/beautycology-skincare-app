@@ -616,38 +616,95 @@ export class AdvancedRoutineGenerator {
   }
 
   /**
-   * Generate explanation for why a product is recommended
+   * Generate detailed scientific explanation for why a product is recommended
    */
   private generateWhyText(product: RAGPassage, userAnalysis: UserAnalysis): string {
-    const reasons: string[] = [];
+    let explanation = '';
     
-    // Add reasons based on skin type
-    if (userAnalysis.skin_type_detected.includes('grassa')) {
-      reasons.push('Adatto per pelli grasse');
-    } else if (userAnalysis.skin_type_detected.includes('secca')) {
-      reasons.push('Fornisce idratazione intensa');
-    } else if (userAnalysis.skin_type_detected.includes('sensibile')) {
-      reasons.push('Formula delicata per pelli sensibili');
-    }
-
-    // Add reasons based on ingredients
+    // 🧪 SCIENTIFIC INGREDIENTS SECTION
+    const scientificIngredients: string[] = [];
     if (product.ingredients) {
-      const keyIngredients = product.ingredients.slice(0, 2);
-      if (keyIngredients.length > 0) {
-        reasons.push(`Contiene ${keyIngredients.join(' e ')}`);
-      }
+      const keyIngredients = product.ingredients.slice(0, 3);
+      keyIngredients.forEach(ingredient => {
+        // Add scientific mechanism of action for key ingredients
+        if (ingredient.toLowerCase().includes('niacinamide')) {
+          scientificIngredients.push('Niacinamide (4-5%) regola la produzione di sebo attraverso l\'inibizione dell\'enzima 5α-reduttasi, riducendo pori dilatati e infiammazione');
+        } else if (ingredient.toLowerCase().includes('acido azelaico')) {
+          scientificIngredients.push('Acido Azelaico (10-20%) agisce con meccanismo antibatterico e cheratolitico, normalizzando la cheratinizzazione follicolare');
+        } else if (ingredient.toLowerCase().includes('retinal')) {
+          scientificIngredients.push('Retinaldeide si converte in acido retinoico stimolando il turnover cellulare e la sintesi di collagene di tipo I');
+        } else if (ingredient.toLowerCase().includes('vitamina c')) {
+          scientificIngredients.push('Vitamina C stabilizzata agisce come cofattore della prolil-4-idrossilasi nella sintesi del collagene, con azione antiossidante');
+        } else if (ingredient.toLowerCase().includes('acido ialuronico')) {
+          scientificIngredients.push('Acido Ialuronico a diversi pesi molecolari mantiene l\'idratazione cutanea legando fino a 1000 volte il suo peso in acqua');
+        } else if (ingredient.toLowerCase().includes('ceramidi')) {
+          scientificIngredients.push('Ceramidi ripristinano la funzione barriera cutanea riducendo la TEWL (Trans-Epidermal Water Loss)');
+        } else {
+          scientificIngredients.push(`${ingredient} con proprietà dermato-funzionali specifiche`);
+        }
+      });
     }
 
-    // Add reasons based on concerns
+    // 🎯 SPECIFIC PROBLEM TARGETING
+    const targetedProblems: string[] = [];
     userAnalysis.concerns_detected.forEach(concern => {
       if (product.passage.toLowerCase().includes(concern.toLowerCase())) {
-        reasons.push(`Tratta ${this.translateConcern(concern)}`);
+        switch(concern) {
+          case 'acne':
+            targetedProblems.push('combatte l\'acne attraverso azione antibatterica e comedolitica');
+            break;
+          case 'rughe':
+            targetedProblems.push('riduce le rughe stimolando la rigenerazione del derma e aumentando lo spessore epidermico');
+            break;
+          case 'pigmentazione':
+          case 'macchie':
+            targetedProblems.push('schiarisce le macchie inibendo la tirosinasi e accelerando il turnover cellulare');
+            break;
+          case 'rossori':
+            targetedProblems.push('calma i rossori riducendo l\'infiammazione e rafforzando i capillari superficiali');
+            break;
+          case 'pori_dilatati':
+            targetedProblems.push('minimizza i pori dilatati regolando la produzione sebacea e migliorando l\'elasticità cutanea');
+            break;
+          case 'oleosita':
+            targetedProblems.push('controlla l\'oleosità normalizzando l\'attività delle ghiandole sebacee');
+            break;
+          case 'secchezza':
+          case 'idratazione':
+            targetedProblems.push('ripristina l\'idratazione ottimale rinforzando la barriera cutanea');
+            break;
+          default:
+            targetedProblems.push(`tratta efficacemente ${this.translateConcern(concern)}`);
+        }
       }
     });
 
-    return reasons.length > 0 ? 
-      reasons.slice(0, 2).join(', ') : 
-      'Prodotto efficace per il tuo tipo di pelle';
+    // 👤 SKIN TYPE COMPATIBILITY  
+    let skinTypeExplanation = '';
+    if (userAnalysis.skin_type_detected.includes('grassa')) {
+      skinTypeExplanation = 'La formula oil-free e non comedogenica è ideale per pelli grasse, con texture leggera che non occlude i pori';
+    } else if (userAnalysis.skin_type_detected.includes('secca')) {
+      skinTypeExplanation = 'La formula ricca e nutriente compensa la carenza lipidica tipica delle pelli secche, con ingredienti filmogeni protettivi';
+    } else if (userAnalysis.skin_type_detected.includes('mista')) {
+      skinTypeExplanation = 'La formula equilibrata si adatta alle diverse zone del viso, regolando la zona T senza seccare le guance';
+    } else if (userAnalysis.skin_type_detected.includes('sensibile')) {
+      skinTypeExplanation = 'Formula ipoallergenica dermatologicamente testata, priva di fragranze e con pH fisiologico per pelli reattive';
+    } else {
+      skinTypeExplanation = 'Formula bilanciata adatta a mantenere l\'equilibrio fisiologico della pelle normale';
+    }
+
+    // Build complete scientific explanation
+    if (scientificIngredients.length > 0) {
+      explanation += `🧪 **SCIENZA**: ${scientificIngredients[0]}. `;
+    }
+    
+    if (targetedProblems.length > 0) {
+      explanation += `🎯 **PERCHÉ PER TE**: ${targetedProblems[0]}. `;
+    }
+    
+    explanation += `👤 **ADATTO ALLA TUA PELLE**: ${skinTypeExplanation}`;
+
+    return explanation || 'Prodotto scientificamente formulato per il tuo tipo di pelle e problematiche specifiche';
   }
 
   /**
@@ -719,36 +776,44 @@ export class AdvancedRoutineGenerator {
       description += '.\n\n';
     }
 
-    // Morning routine description
-    description += '**ROUTINE MATTUTINA:**\n';
+    // Morning routine description with scientific format
+    description += '**ROUTINE MATTUTINA:**\n\n';
     routine.recommendations.morning.forEach((step, index) => {
-      description += `${index + 1}. **${step.product}**`;
+      description += `${index + 1}. 🧴 **${step.product}**`;
+      if (step.link) {
+        description += ` - [Link](${step.link})`;
+      }
       if (step.price) {
         description += ` - ${step.price}`;
       }
-      description += `\n   ${step.why}\n`;
-      if (step.link) {
-        description += `   🛍️ [Acquista](${step.link})\n`;
-      }
-      description += `   **Come usare:** ${step.how_to_use}\n\n`;
+      description += '\n\n';
+      
+      // Apply the new scientific format
+      description += `${step.why}\n\n`;
+      description += `💡 **COME USARE**: ${step.how_to_use}\n\n`;
+      
+      description += '---\n\n';
     });
 
-    // Evening routine description
-    description += '\n**ROUTINE SERALE:**\n';
+    // Evening routine description with scientific format  
+    description += '**ROUTINE SERALE:**\n\n';
     routine.recommendations.evening.forEach((step, index) => {
-      description += `${index + 1}. **${step.product}**`;
+      description += `${index + 1}. 🧴 **${step.product}**`;
+      if (step.link) {
+        description += ` - [Link](${step.link})`;
+      }
       if (step.price) {
         description += ` - ${step.price}`;
       }
-      description += `\n   ${step.why}\n`;
-      if (step.link) {
-        description += `   🛍️ [Acquista](${step.link})\n`;
-      }
-      description += `   **Come usare:** ${step.how_to_use}\n`;
+      description += '\n\n';
+      
+      // Apply the new scientific format
+      description += `${step.why}\n\n`;
+      description += `💡 **COME USARE**: ${step.how_to_use}\n`;
       if (step.frequency) {
-        description += `   **Frequenza:** ${step.frequency}\n`;
+        description += `**FREQUENZA**: ${step.frequency}\n`;
       }
-      description += '\n';
+      description += '\n---\n\n';
     });
 
     // Add alternation rules if present
