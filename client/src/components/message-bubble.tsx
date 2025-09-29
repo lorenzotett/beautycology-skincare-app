@@ -342,8 +342,25 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       remainingContent: null
     } : parseSkinAnalysis(cleanedContent)) : null;
 
+  // Function to remove choice options from content when buttons are present
+  const removeChoiceOptionsFromContent = (content: string, hasChoices: boolean): string => {
+    if (!hasChoices) return content;
+    
+    // Remove lines that contain choice options (A) B) C) D) E))
+    const lines = content.split('\n');
+    const filteredLines = lines.filter(line => {
+      // Remove lines that match the pattern: optional whitespace + letter + ) + text
+      return !line.match(/^\s*[A-E]\)\s+.+$/);
+    });
+    
+    return filteredLines.join('\n').trim();
+  };
+
   // Parse link buttons from content
   const contentWithButtons = !isUser ? parseContentWithLinkButtons(cleanedContent) : { content: cleanedContent, linkButtons: [] };
+
+  // Remove choice options from content if there are buttons to avoid duplication
+  const finalContent = removeChoiceOptionsFromContent(contentWithButtons.content, hasChoices);
 
 
 
@@ -413,12 +430,12 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
       {skinAnalysis ? (
         <>
           {/* Show intro text if present */}
-          {contentWithButtons.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim() && (
+          {finalContent.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim() && (
             <div
               className="text-sm leading-relaxed whitespace-pre-wrap mb-3"
               style={{color: 'black'}}
               dangerouslySetInnerHTML={{ 
-                __html: formatMarkdown(contentWithButtons.content.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim()) 
+                __html: formatMarkdown(finalContent.split('📊 **ANALISI COMPLETA DELLA PELLE:**')[0].trim()) 
               }}
             />
           )}
@@ -445,7 +462,7 @@ export function MessageBubble({ message, onChoiceSelect, isAnswered = false, use
         <div
           className="text-sm leading-relaxed whitespace-pre-wrap"
           style={{color: 'black'}}
-          dangerouslySetInnerHTML={{ __html: formatMarkdown(contentWithButtons.content) }}
+          dangerouslySetInnerHTML={{ __html: formatMarkdown(finalContent) }}
         />
       )}
 
